@@ -1,0 +1,299 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "构建分支 (e.g. release, new-test, feature/xxx)"
+        required: true
+        type: string
+        default: "new-test"
+      env:
+        description: "选择构建环境"
+        required: true
+        type: choice
+        options:
+          - "prod"
+          - "test"
+          - "dev"
+        default: "prod"
+      package:
+        description: "选择要构建的应用端"
+        required: true
+        type: choice
+        options:
+          - all
+          - pos
+          - kds
+          - shop
+          - assistant
+          - tablet
+          - qds
+        default: "all"
+      base_url:
+        description: "选择API基础URL"
+        required: true
+        type: choice
+        default: "https://ttpos-test1.ttpos.com/api/v1"
+        options:
+          - "https://ttpos-test1.ttpos.com/api/v1"
+          - "https://api.ttpos.com/api/v1"
+          - "https://ttpos-pro.keli.vip/api/v1"
+      base_ws_url:
+        description: "选择WebSocket基础URL"
+        required: true
+        type: choice
+        default: "wss://ttpos-test1.ttpos.com/ws"
+        options:
+          - "wss://ttpos-test1.ttpos.com/ws"
+          - "wss://api.ttpos.com/ws"
+          - "wss://ttpos-pro.keli.vip/ws"
+      scp:
+        description: "是否启用SCP传输"
+        required: true
+        default: "off"
+        type: choice
+        options:
+          - "on"
+          - "off"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [pos, kds, shop, assistant, tablet, qds]
+        include:
+          - package: pos
+            apk_name: TTPOS-Cashier
+            gcs_folder: Cashier
+          - package: assistant
+            apk_name: TTPOS-Assistant
+            gcs_folder: Assistant
+          - package: kds
+            apk_name: TTPOS-Kitchen
+            gcs_folder: Kitchen
+          - package: tablet
+            apk_name: TTPOS-Menu
+            gcs_folder: Menu
+          - package: shop
+            apk_name: TTPOS-Shop
+            gcs_folder: Shop
+          - package: qds
+            apk_name: TTPOS-Queue
+            gcs_folder: Qds
+    env:
+      APK_OUTPUT_PATH: releases
+      GCS_PATH: ${{ inputs.branch == 'release' && format('dc_apk/TTPOS/Prod/{0}/', matrix.gcs_folder) || format('dc_apk/TTPOS/Test/{0}/', matrix.gcs_folder) }}
+      SCP_S_PATH: ${{ inputs.branch == 'release' && format('/hitosea/ttpos-apk/Prod/{0}/', matrix.package) || format('/hitosea/ttpos-apk/Test/{0}/', matrix.package) }}
+      SCP_D_PATH: ${{ inputs.branch == 'release' && format('/root/web/web/restant/out/downloads/{0}/', matrix.gcs_folder) || format('/root/web/web/restant/out/downloads/Test/{0}/', matrix.gcs_folder) }}
+    steps:
+      - name: 检查是否需要构建此应用端
+        id: check
+        run: |
+          if [ "${{ inputs.package }}" = "all" ] || [ "${{ inputs.package }}" = "${{ matrix.package }}" ]; then
+            echo "should_run=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_run=false" >> $GITHUB_OUTPUT
+            echo "跳过 ${{ matrix.package }} (选择的应用端: ${{ inputs.package }})"
+          fi
+
+      - name: 显示构建信息
+        if: steps.check.outputs.should_run == 'true'
+        run: |
+          echo "========================================="
+          echo "构建信息"
+          echo "========================================="
+          echo "应用端: ${{ matrix.package }}"
+          echo "分支: ${{ inputs.branch }}"
+          echo "环境: ${{ inputs.env }}"
+          echo "API URL: ${{ inputs.base_url }}"
+          echo "WebSocket URL: ${{ inputs.base_ws_url }}"
+          echo "SCP传输: ${{ inputs.scp }}"
+          echo "========================================="
+
+      - name: Checkout the code
+        if: steps.check.outputs.should_run == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: innet8/ttpos-flutter
+          token: ${{ secrets.PRIVATE_REPO_PAT }}
+          ref: ${{ inputs.branch }}
+
+      - name: Set up Flutter
+        if: steps.check.outputs.should_run == 'true'
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+          flutter-version: "3.27.3"
+
+      - name: Install Melos
+        if: steps.check.outputs.should_run == 'true'
+        run: |
+          flutter --version
+          dart pub global activate melos
+
+      - name: Set up JDK
+        if: steps.check.outputs.should_run == 'true'
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "18"
+          cache: "gradle"
+
+      - name: Melos Init
+        if: steps.check.outputs.should_run == 'true'
+        env:
+          PUB_HOSTED_URL: https://pub.flutter-io.cn
+          FLUTTER_STORAGE_BASE_URL: https://storage.flutter-io.cn
+        run: |
+          melos bs
+          melos run env:setup -- --env=${{ inputs.env }}
+
+      - name: 生成环境变量文件
+        if: steps.check.outputs.should_run == 'true'
+        env:
+          API_URL: ${{ inputs.base_url }}
+          WS_URL: ${{ inputs.base_ws_url }}
+        run: |
+          # 根据 env 输入选择对应的环境文件(与 scripts/utils.dart getEnv() 保持一致)
+          case "${{ inputs.env }}" in
+            dev)  ENV_SUFFIX="development" ;;
+            test) ENV_SUFFIX="test" ;;
+            *)    ENV_SUFFIX="production" ;;
+          esac
+
+          ENV_PATH="apps/${{ matrix.package }}/.env.${ENV_SUFFIX}.local"
+          ENV_TEMPLATE="apps/${{ matrix.package }}/.env.${ENV_SUFFIX}"
+
+          if [ ! -f "$ENV_PATH" ]; then
+            if [ -f "$ENV_TEMPLATE" ]; then
+              cp "$ENV_TEMPLATE" "$ENV_PATH"
+            else
+              touch "$ENV_PATH"
+            fi
+          fi
+
+          sed -i "s|^API_BASE_URL=.*|API_BASE_URL=${API_URL}|" "$ENV_PATH"
+          sed -i "s|^WS_BASE_URL=.*|WS_BASE_URL=${WS_URL}|" "$ENV_PATH"
+
+          # 保存 ENV_SUFFIX 供后续步骤使用
+          echo "ENV_SUFFIX=$ENV_SUFFIX" >> $GITHUB_ENV
+
+          echo "--- 环境变量文件内容 ($ENV_PATH) ---"
+          cat "$ENV_PATH"
+
+      - name: 设置 SENTRY_DSN(仅 release 分支)
+        if: steps.check.outputs.should_run == 'true' && inputs.branch == 'release'
+        env:
+          SENTRYDSN_POS: ${{ secrets.SENTRYDSN_POS }}
+          SENTRYDSN_KDS: ${{ secrets.SENTRYDSN_KDS }}
+          SENTRYDSN_ASSISTANT: ${{ secrets.SENTRYDSN_ASSISTANT }}
+          SENTRYDSN_TABLET: ${{ secrets.SENTRYDSN_TABLET }}
+          SENTRYDSN_SHOP: ${{ secrets.SENTRYDSN_SHOP }}
+          SENTRYDSN_QDS: ${{ secrets.SENTRYDSN_QDS }}
+        run: |
+          ENV_PATH="apps/${{ matrix.package }}/.env.${{ env.ENV_SUFFIX }}.local"
+          case "${{ matrix.package }}" in
+            pos)       DSN="$SENTRYDSN_POS" ;;
+            kds)       DSN="$SENTRYDSN_KDS" ;;
+            assistant) DSN="$SENTRYDSN_ASSISTANT" ;;
+            tablet)    DSN="$SENTRYDSN_TABLET" ;;
+            shop)      DSN="$SENTRYDSN_SHOP" ;;
+            qds)       DSN="$SENTRYDSN_QDS" ;;
+          esac
+          sed -i "s|^SENTRY_DSN=.*|SENTRY_DSN=${DSN}|" "$ENV_PATH"
+
+      - name: 设置环境变量
+        if: steps.check.outputs.should_run == 'true'
+        run: |
+          version=$(awk '/version:/ {print $2}' apps/${{ matrix.package }}/pubspec.yaml | cut -d'+' -f1)
+          echo "VERSION=$version" >> $GITHUB_ENV
+          echo "VERSION_APK=${{ matrix.apk_name }}-V${version}.apk" >> $GITHUB_ENV
+          echo "LATEST_NAME=${{ matrix.apk_name }}-latest.apk" >> $GITHUB_ENV
+
+      - name: Build APK
+        if: steps.check.outputs.should_run == 'true'
+        run: |
+          dart run ./scripts/build_android.dart --env=${{ inputs.env }} --package=${{ matrix.package }}
+          # Rename APK to standardized name
+          cd ${{ env.APK_OUTPUT_PATH }}/${{ matrix.package }}/${{ env.VERSION }}
+          apk_file=$(ls *.apk 2>/dev/null | head -1)
+          if [ -n "$apk_file" ] && [ "$apk_file" != "${{ env.VERSION_APK }}" ]; then
+            mv "$apk_file" "${{ env.VERSION_APK }}"
+          fi
+
+      - name: 检查构建产物
+        if: steps.check.outputs.should_run == 'true'
+        run: |
+          APK_DIR="${{ env.APK_OUTPUT_PATH }}/${{ matrix.package }}/${{ env.VERSION }}"
+          if [ ! -f "${APK_DIR}/${{ env.VERSION_APK }}" ]; then
+            echo "错误：未找到构建产物: ${APK_DIR}/${{ env.VERSION_APK }}"
+            exit 1
+          fi
+          echo "构建产物存在: ${APK_DIR}/${{ env.VERSION_APK }}"
+          ls -lh "${APK_DIR}"
+
+      - name: 上传构建产物到 Artifact
+        if: steps.check.outputs.should_run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.apk_name }}-${{ env.VERSION }}
+          path: ${{ env.APK_OUTPUT_PATH }}/${{ matrix.package }}/${{ env.VERSION }}/
+          retention-days: 1
+          compression-level: 0
+
+      - name: Upload to Google Cloud Storage
+        if: steps.check.outputs.should_run == 'true'
+        uses: "google-github-actions/auth@v2"
+        with:
+          credentials_json: "${{ secrets.GOOGLE_STORAGE_CREDENTIALS }}"
+
+      - name: 上传构建产物到 Google Cloud Storage
+        if: steps.check.outputs.should_run == 'true'
+        uses: "google-github-actions/upload-cloud-storage@v2"
+        with:
+          path: ${{ env.APK_OUTPUT_PATH }}/${{ matrix.package }}/${{ env.VERSION }}
+          destination: ${{ env.GCS_PATH }}
+          parent: false
+
+      - name: SCP-UPLOAD
+        if: steps.check.outputs.should_run == 'true' && inputs.scp == 'on'
+        uses: Comori/ssh@v0.0.7
+        with:
+          host: ${{ secrets.SCP_S_HOST }}
+          username: ${{ secrets.SCP_S_USER }}
+          privateKey: ${{ secrets.SCP_S_RIVATEKEY }}
+          command: |
+            # 传输到最终服务器
+            scp ${{ env.SCP_S_PATH }}${{ env.VERSION_APK }} ${{ secrets.SCP_D_USER }}@${{ secrets.SCP_D_HOST }}:${{ env.SCP_D_PATH }}
+          sourceFiles: |
+            ${{ env.APK_OUTPUT_PATH }}/${{ matrix.package }}/${{ env.VERSION }}/*.apk
+          targetDir: ${{ env.SCP_S_PATH }}
+          scpFirst: true
+
+      - name: Create latest symlink
+        if: steps.check.outputs.should_run == 'true' && inputs.scp == 'on'
+        uses: Comori/ssh@v0.0.7
+        with:
+          host: ${{ secrets.SCP_S_HOST }}
+          username: ${{ secrets.SCP_S_USER }}
+          privateKey: ${{ secrets.SCP_S_RIVATEKEY }}
+          command: |
+            # 在最终服务器创建软链
+            ssh -o StrictHostKeyChecking=no ${{ secrets.SCP_D_USER }}@${{ secrets.SCP_D_HOST }} "cd ${{ env.SCP_D_PATH }} && ln -sf ${{ env.VERSION_APK }} ${{ env.LATEST_NAME }}"
+            echo "Created symlink: ${{ env.LATEST_NAME }} -> ${{ env.VERSION_APK }}"
+
+      - name: 构建完成总结
+        if: always() && steps.check.outputs.should_run == 'true'
+        run: |
+          echo "========================================="
+          echo "构建任务完成"
+          echo "========================================="
+          echo "应用端: ${{ matrix.package }}"
+          echo "版本: ${{ env.VERSION }}"
+          echo "分支: ${{ inputs.branch }}"
+          echo "环境: ${{ inputs.env }}"
+          echo "========================================="

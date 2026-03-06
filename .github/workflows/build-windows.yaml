@@ -1,0 +1,294 @@
+name: Build Windows Inno Setup
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "构建分支 (e.g. release, new-test, feature/xxx)"
+        required: true
+        type: string
+        default: "new-test"
+      env:
+        description: "选择构建环境"
+        required: true
+        type: choice
+        options:
+          - "prod"
+          - "test"
+          - "dev"
+        default: "prod"
+      package:
+        description: "选择要构建的应用端"
+        required: true
+        type: choice
+        options:
+          - all
+          - pos
+          - kds
+          - assistant
+          - tablet
+          - shop
+        default: "all"
+      base_url:
+        description: "选择API基础URL"
+        required: true
+        type: choice
+        default: "https://ttpos-test1.ttpos.com/api/v1"
+        options:
+          - "https://ttpos-test1.ttpos.com/api/v1"
+          - "https://api.ttpos.com/api/v1"
+          - "https://ttpos-pro.keli.vip/api/v1"
+      base_ws_url:
+        description: "选择WebSocket基础URL"
+        required: true
+        type: choice
+        default: "wss://ttpos-test1.ttpos.com/ws"
+        options:
+          - "wss://ttpos-test1.ttpos.com/ws"
+          - "wss://api.ttpos.com/ws"
+          - "wss://ttpos-pro.keli.vip/ws"
+      scp:
+        description: "是否启用SCP传输"
+        required: true
+        default: "on"
+        type: choice
+        options:
+          - "on"
+          - "off"
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [pos, kds, assistant, tablet, shop]
+        include:
+          - package: pos
+            exe_prefix: "TTPOS"
+            gcs_folder: "Cashier"
+          - package: kds
+            exe_prefix: "TTPOS-Kitchen"
+            gcs_folder: "Kitchen"
+          - package: assistant
+            exe_prefix: "TTPOS-Go"
+            gcs_folder: "Assistant"
+          - package: tablet
+            exe_prefix: "TTPOS-Menu"
+            gcs_folder: "Menu"
+          - package: shop
+            exe_prefix: "TTPOS-Shop"
+            gcs_folder: "Shop"
+    env:
+      output_path: releases
+      GCS_PATH: ${{ inputs.branch == 'release' && format('dc_apk/TTPOS/Prod/Windows/{0}/', matrix.gcs_folder) || format('dc_apk/TTPOS/Test/Windows/{0}/', matrix.gcs_folder) }}
+      SCP_S_PATH: ${{ inputs.branch == 'release' && format('/hitosea/ttpos-windows/Prod/{0}/', matrix.package) || format('/hitosea/ttpos-windows/Test/{0}/', matrix.package) }}
+      SCP_D_PATH: ${{ inputs.branch == 'release' && format('/root/web/web/restant/out/downloads/Windows/{0}/', matrix.gcs_folder) || format('/root/web/web/restant/out/downloads/Windows/Test/{0}/', matrix.gcs_folder) }}
+    steps:
+      - name: 检查是否需要构建此应用端
+        id: check
+        shell: pwsh
+        run: |
+          if ("${{ inputs.package }}" -eq "all" -or "${{ inputs.package }}" -eq "${{ matrix.package }}") {
+            echo "should_run=true" >> $env:GITHUB_OUTPUT
+          } else {
+            Write-Host "跳过 ${{ matrix.package }} (选择的应用端: ${{ inputs.package }})"
+            echo "should_run=false" >> $env:GITHUB_OUTPUT
+          }
+
+      - name: 显示构建信息
+        if: steps.check.outputs.should_run == 'true'
+        run: |
+          Write-Host "========================================="
+          Write-Host "构建信息"
+          Write-Host "========================================="
+          Write-Host "应用端: ${{ matrix.package }}"
+          Write-Host "分支: ${{ inputs.branch }}"
+          Write-Host "环境: ${{ inputs.env }}"
+          Write-Host "API URL: ${{ inputs.base_url }}"
+          Write-Host "WebSocket URL: ${{ inputs.base_ws_url }}"
+          Write-Host "SCP传输: ${{ inputs.scp }}"
+          Write-Host "========================================="
+
+      - name: Checkout the code
+        if: steps.check.outputs.should_run == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: innet8/ttpos-flutter
+          token: ${{ secrets.PRIVATE_REPO_PAT }}
+          ref: ${{ inputs.branch }}
+          fetch-depth: 0
+
+      - name: Setup Flutter
+        if: steps.check.outputs.should_run == 'true'
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.27.3'
+          channel: 'stable'
+          cache: true
+
+      - name: Install Melos
+        if: steps.check.outputs.should_run == 'true'
+        run: |
+          flutter --version
+          dart --version
+          dart pub global activate melos
+
+      - name: Melos Init
+        if: steps.check.outputs.should_run == 'true'
+        env:
+          PUB_HOSTED_URL: https://pub.flutter-io.cn
+          FLUTTER_STORAGE_BASE_URL: https://storage.flutter-io.cn
+        run: |
+          melos bs
+          melos run env:setup -- --env=${{ inputs.env }}
+
+      - name: 生成环境变量文件
+        if: steps.check.outputs.should_run == 'true'
+        shell: pwsh
+        run: |
+          $pkgName = "${{ matrix.package }}"
+          if (-not $pkgName) {
+            Write-Error "错误：包名 (package) 为空."
+            exit 1
+          }
+
+          # 根据 env 输入选择对应的环境文件(与 scripts/utils.dart getEnv() 保持一致)
+          $envSuffix = switch ("${{ inputs.env }}") {
+            "dev"  { "development" }
+            "test" { "test" }
+            default { "production" }
+          }
+
+          $envDir = "apps/$pkgName"
+          $envPath = "$envDir/.env.$envSuffix.local"
+          $envTemplate = "$envDir/.env.$envSuffix"
+
+          if (-not (Test-Path $envPath)) {
+            if (Test-Path $envTemplate) {
+              Copy-Item $envTemplate $envPath
+            } else {
+              New-Item -ItemType File -Path $envPath -Force
+            }
+          }
+
+          $api_url = "${{ inputs.base_url }}"
+          $ws_url = "${{ inputs.base_ws_url }}"
+
+          (Get-Content $envPath) -replace '^API_BASE_URL=.*', "API_BASE_URL=$api_url" | Set-Content $envPath
+          (Get-Content $envPath) -replace '^WS_BASE_URL=.*', "WS_BASE_URL=$ws_url" | Set-Content $envPath
+
+          # 保存 envSuffix 供后续步骤使用
+          echo "ENV_SUFFIX=$envSuffix" >> $env:GITHUB_ENV
+
+          Write-Host "--- 环境变量文件内容 ($envPath) ---"
+          Get-Content $envPath
+
+      - name: 设置 SENTRY_DSN(仅 release 分支)
+        if: steps.check.outputs.should_run == 'true' && inputs.branch == 'release'
+        shell: pwsh
+        run: |
+          $envPath = "apps/${{ matrix.package }}/.env.${{ env.ENV_SUFFIX }}.local"
+          $dsn = switch ("${{ matrix.package }}") {
+            "assistant" { "${{ secrets.SENTRYDSN_ASSISTANT }}" }
+            "kds" { "${{ secrets.SENTRYDSN_KDS }}" }
+            "pos" { "${{ secrets.SENTRYDSN_POS }}" }
+            "tablet" { "${{ secrets.SENTRYDSN_TABLET }}" }
+            "shop" { "${{ secrets.SENTRYDSN_SHOP }}" }
+            default { "" }
+          }
+          if ($dsn -ne "") {
+            (Get-Content $envPath) -replace '^SENTRY_DSN=.*', "SENTRY_DSN=$dsn" | Set-Content $envPath
+            Write-Host "已设置 SENTRY_DSN 到 $envPath"
+          }
+
+      - name: 设置环境变量
+        if: steps.check.outputs.should_run == 'true'
+        run: |
+          $env:MELOS_PACKAGE_NAME = "${{ matrix.package }}"
+          $version = (Get-Content apps/${{ matrix.package }}/pubspec.yaml | Select-String 'version:' | ForEach-Object { $_.Line.Split(':')[1].Trim() }).Split('+')[0]
+          $env:MELOS_PACKAGE_VERSION = $version
+          echo "MELOS_PACKAGE_NAME=$env:MELOS_PACKAGE_NAME" >> $env:GITHUB_ENV
+          echo "MELOS_PACKAGE_VERSION=$env:MELOS_PACKAGE_VERSION" >> $env:GITHUB_ENV
+
+      - name: 构建 Windows 安装包
+        if: steps.check.outputs.should_run == 'true'
+        run: |
+          dart run ./scripts/build_win_innosetup.dart --env=${{ inputs.env }} --package=${{ matrix.package }}
+
+      - name: 检查构建产物
+        if: steps.check.outputs.should_run == 'true'
+        run: |
+          $exeName = "${{ matrix.exe_prefix }}-$env:MELOS_PACKAGE_VERSION.exe"
+          $exePath = ".\releases\${{ matrix.package }}\$env:MELOS_PACKAGE_VERSION\$exeName"
+          if (-not (Test-Path $exePath)) {
+            Write-Error "未找到构建产物: $exePath"
+            exit 1
+          }
+          Write-Host "构建产物存在: $exePath"
+          $fileInfo = Get-Item $exePath
+          Write-Host "文件大小: $([math]::Round($fileInfo.Length / 1MB, 2)) MB"
+
+      - name: 上传构建产物到 Artifact
+        if: steps.check.outputs.should_run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.exe_prefix }}-${{ env.MELOS_PACKAGE_VERSION }}
+          path: releases/${{ matrix.package }}/${{ env.MELOS_PACKAGE_VERSION }}/
+          retention-days: 1
+          compression-level: 0
+
+      - name: SCP-UPLOAD
+        if: steps.check.outputs.should_run == 'true' && inputs.scp == 'on'
+        uses: Comori/ssh@v0.0.7
+        with:
+          host: ${{ secrets.SCP_S_HOST }}
+          username: ${{ secrets.SCP_S_USER }}
+          privateKey: ${{ secrets.SCP_S_RIVATEKEY }}
+          command: |
+            mkdir -p ${{ env.SCP_S_PATH }}
+            # 传输到最终服务器
+            scp -o StrictHostKeyChecking=no ${{ env.SCP_S_PATH }}${{ matrix.exe_prefix }}-${{ env.MELOS_PACKAGE_VERSION }}.exe ${{ secrets.SCP_D_USER }}@${{ secrets.SCP_D_HOST }}:${{ env.SCP_D_PATH }}
+          sourceFiles: |
+            releases/${{ matrix.package }}/${{ env.MELOS_PACKAGE_VERSION }}/${{ matrix.exe_prefix }}-${{ env.MELOS_PACKAGE_VERSION }}.exe
+          targetDir: ${{ env.SCP_S_PATH }}
+          scpFirst: true
+
+      - name: Create latest symlink
+        if: steps.check.outputs.should_run == 'true' && inputs.scp == 'on'
+        uses: Comori/ssh@v0.0.7
+        with:
+          host: ${{ secrets.SCP_S_HOST }}
+          username: ${{ secrets.SCP_S_USER }}
+          privateKey: ${{ secrets.SCP_S_RIVATEKEY }}
+          command: |
+            # 在最终服务器创建软链
+            ssh -o StrictHostKeyChecking=no ${{ secrets.SCP_D_USER }}@${{ secrets.SCP_D_HOST }} "mkdir -p ${{ env.SCP_D_PATH }} && cd ${{ env.SCP_D_PATH }} && ln -sf ${{ matrix.exe_prefix }}-${{ env.MELOS_PACKAGE_VERSION }}.exe ${{ matrix.exe_prefix }}-latest.exe"
+            echo "Created symlink: ${{ matrix.exe_prefix }}-latest.exe -> ${{ matrix.exe_prefix }}-${{ env.MELOS_PACKAGE_VERSION }}.exe"
+
+      - name: Upload to Google Cloud Storage
+        if: steps.check.outputs.should_run == 'true'
+        uses: "google-github-actions/auth@v2"
+        with:
+          credentials_json: "${{ secrets.GOOGLE_STORAGE_CREDENTIALS }}"
+
+      - name: 上传构建产物到 Google Cloud Storage
+        id: "upload-files"
+        if: steps.check.outputs.should_run == 'true'
+        uses: "google-github-actions/upload-cloud-storage@v2"
+        with:
+          path: releases/${{ matrix.package }}/${{ env.MELOS_PACKAGE_VERSION }}
+          destination: ${{ env.GCS_PATH }}
+          parent: false
+
+      - name: 构建完成总结
+        if: always() && steps.check.outputs.should_run == 'true'
+        run: |
+          Write-Host "========================================="
+          Write-Host "构建任务完成"
+          Write-Host "========================================="
+          Write-Host "应用端: ${{ matrix.package }}"
+          Write-Host "版本: $env:MELOS_PACKAGE_VERSION"
+          Write-Host "分支: ${{ inputs.branch }}"
+          Write-Host "环境: ${{ inputs.env }}"
+          Write-Host "========================================="

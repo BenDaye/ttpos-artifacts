@@ -1,0 +1,881 @@
+name: Build macOS App
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: "选择构建类型"
+        required: true
+        type: choice
+        options:
+          - single
+          - all
+        default: single
+      branch:
+        description: "构建分支 (e.g. release, new-test, feature/xxx)"
+        required: true
+        type: string
+        default: "release"
+      env:
+        description: "选择构建环境"
+        required: true
+        type: choice
+        options:
+          - prod
+          - test
+          - dev
+        default: prod
+      package_name:
+        description: "选择要构建的应用端"
+        required: true
+        type: choice
+        options:
+          - pos
+          - assistant
+          - kds
+          - tablet
+          - shop
+        default: pos
+      base_url:
+        description: "选择 API 基础 URL"
+        required: true
+        type: choice
+        options:
+          - https://ttpos-test1.ttpos.com/api/v1
+          - https://api.ttpos.com/api/v1
+          - https://ttpos-pro.keli.vip/api/v1
+      base_ws_url:
+        description: "选择 WebSocket 基础 URL"
+        required: true
+        type: choice
+        options:
+          - wss://ttpos-test1.ttpos.com/ws
+          - wss://api.ttpos.com/ws
+          - wss://ttpos-pro.keli.vip/ws
+      upload_to_storage:
+        description: "是否上传到存储桶"
+        required: false
+        default: true
+        type: boolean
+      upload_to_web:
+        description: "是否上传到 web 服务器"
+        required: false
+        default: true
+        type: boolean
+
+jobs:
+  build-single:
+    if: github.event.inputs.build_type == 'single'
+    runs-on: macos-latest
+    env:
+      PACKAGE_NAME: ${{ github.event.inputs.package_name }}
+      BUILD_ENV: ${{ github.event.inputs.env }}
+      BRANCH_NAME: ${{ github.event.inputs.branch }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      MAC_KEYCHAIN_PASSWORD: ${{ secrets.MAC_KEYCHAIN_PASSWORD }}
+      UPLOAD_TO_STORAGE: ${{ github.event.inputs.upload_to_storage }}
+      UPLOAD_TO_WEB: ${{ github.event.inputs.upload_to_web }}
+      # 存储桶路径
+      assistant_path: ${{ github.event.inputs.branch == 'release' && 'dc_apk/TTPOS/Prod/MacOS/Assistant/' || 'dc_apk/TTPOS/Test/MacOS/Assistant/' }}
+      kds_path: ${{ github.event.inputs.branch == 'release' && 'dc_apk/TTPOS/Prod/MacOS/Kitchen/' || 'dc_apk/TTPOS/Test/MacOS/Kitchen/' }}
+      tablet_path: ${{ github.event.inputs.branch == 'release' && 'dc_apk/TTPOS/Prod/MacOS/Menu/' || 'dc_apk/TTPOS/Test/MacOS/Menu/' }}
+      pos_path: ${{ github.event.inputs.branch == 'release' && 'dc_apk/TTPOS/Prod/MacOS/Cashier/' || 'dc_apk/TTPOS/Test/MacOS/Cashier/' }}
+      shop_path: ${{ github.event.inputs.branch == 'release' && 'dc_apk/TTPOS/Prod/MacOS/Shop/' || 'dc_apk/TTPOS/Test/MacOS/Shop/' }}
+      # 中转服务器路径
+      scp_s_assistant: ${{ github.event.inputs.branch == 'release' && '/hitosea/ttpos-apk/Prod/assistant/' || '/hitosea/ttpos-apk/Test/assistant/' }}
+      scp_s_kds: ${{ github.event.inputs.branch == 'release' && '/hitosea/ttpos-apk/Prod/kds/' || '/hitosea/ttpos-apk/Test/kds/' }}
+      scp_s_tablet: ${{ github.event.inputs.branch == 'release' && '/hitosea/ttpos-apk/Prod/tablet/' || '/hitosea/ttpos-apk/Test/tablet/' }}
+      scp_s_pos: ${{ github.event.inputs.branch == 'release' && '/hitosea/ttpos-apk/Prod/pos/' || '/hitosea/ttpos-apk/Test/pos/' }}
+      scp_s_shop: ${{ github.event.inputs.branch == 'release' && '/hitosea/ttpos-apk/Prod/shop/' || '/hitosea/ttpos-apk/Test/shop/' }}
+      # 最终下载路径：www.ttpos.com/downloads
+      scp_d_assistant: ${{ github.event.inputs.branch == 'release' && '/root/web/web/restant/out/downloads/MacOS/Assistant/' || '/root/web/web/restant/out/downloads/MacOS/Test/Assistant/' }}
+      scp_d_kds: ${{ github.event.inputs.branch == 'release' && '/root/web/web/restant/out/downloads/MacOS/Kitchen/' || '/root/web/web/restant/out/downloads/MacOS/Test/Kitchen/' }}
+      scp_d_tablet: ${{ github.event.inputs.branch == 'release' && '/root/web/web/restant/out/downloads/MacOS/Menu/' || '/root/web/web/restant/out/downloads/MacOS/Test/Menu/' }}
+      scp_d_pos: ${{ github.event.inputs.branch == 'release' && '/root/web/web/restant/out/downloads/MacOS/Cashier/' || '/root/web/web/restant/out/downloads/MacOS/Test/Cashier/' }}
+      scp_d_shop: ${{ github.event.inputs.branch == 'release' && '/root/web/web/restant/out/downloads/MacOS/Shop/' || '/root/web/web/restant/out/downloads/MacOS/Test/Shop/' }}
+    steps: &mac_steps
+      - name: 显示构建信息
+        shell: bash
+        run: |
+          echo "========================================="
+          echo "macOS 构建信息"
+          echo "========================================="
+          echo "应用端: $PACKAGE_NAME"
+          echo "分支: $BRANCH_NAME"
+          echo "环境: $BUILD_ENV"
+          echo "API URL: ${{ github.event.inputs.base_url }}"
+          echo "WebSocket URL: ${{ github.event.inputs.base_ws_url }}"
+          echo "========================================="
+
+      - name: Checkout the code
+        uses: actions/checkout@v4
+        with:
+          repository: innet8/ttpos-flutter
+          token: ${{ secrets.PRIVATE_REPO_PAT }}
+          ref: ${{ github.event.inputs.branch }}
+
+
+      - name: 配置 App Store Connect 登录
+        shell: bash
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          if [ -z "${APPLE_ID}" ] || [ -z "${APPLE_APP_SPECIFIC_PASSWORD}" ] || [ -z "${APPLE_TEAM_ID}" ]; then
+            echo "缺少 App Store Connect 登录所需凭据, 跳过登录"
+            exit 0
+          fi
+          echo "LOGGED_IN_WITH_APPLE_ID=true" >> "$GITHUB_ENV"
+      - name: 创建临时钥匙串并导入证书
+        shell: bash
+        env:
+          MAC_SIGNING_CERT_BASE64: ${{ secrets.MAC_SIGNING_CERT_BASE64 }}
+          MAC_SIGNING_CERT_PASSWORD: ${{ secrets.MAC_SIGNING_CERT_PASSWORD }}
+          MAC_KEYCHAIN_PASSWORD: ${{ secrets.MAC_KEYCHAIN_PASSWORD || 'github-actions-secure-2024' }}
+        run: |
+          set -euo pipefail
+          
+          # 检查必要的 Secrets
+          if [ -z "${MAC_SIGNING_CERT_BASE64}" ] || [ -z "${MAC_SIGNING_CERT_PASSWORD}" ]; then
+            echo "错误: 缺少必要的证书 Secrets"
+            echo "请确保配置了以下 Secrets:"
+            echo "- MAC_SIGNING_CERT_BASE64: .p12 证书的 Base64 编码"
+            echo "- MAC_SIGNING_CERT_PASSWORD: .p12 证书的密码"
+            exit 1
+          fi
+          
+          # 创建临时钥匙串
+          KEYCHAIN_PASSWORD="${MAC_KEYCHAIN_PASSWORD}"
+          KEYCHAIN_PATH="$RUNNER_TEMP/mac-signing.keychain-db"
+          
+          echo "创建临时钥匙串: $KEYCHAIN_PATH"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          
+          # 设置钥匙串列表
+          security list-keychain -d user -s "$KEYCHAIN_PATH"
+          
+          # 导入证书
+          CERT_PATH="$RUNNER_TEMP/developer_id_cert.p12"
+          echo "解码并导入证书..."
+          echo "$MAC_SIGNING_CERT_BASE64" | base64 --decode > "$CERT_PATH"
+          
+          # 导入证书到钥匙串
+          security import "$CERT_PATH" -P "$MAC_SIGNING_CERT_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          
+          # 设置钥匙串分区列表
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          
+          # 验证证书导入
+          echo "验证导入的证书:"
+          security find-identity -v -p codesigning "$KEYCHAIN_PATH"
+          
+          # 设置环境变量
+          echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
+          echo "MAC_KEYCHAIN_PASSWORD=$KEYCHAIN_PASSWORD" >> "$GITHUB_ENV"
+          
+          echo "证书导入完成!"
+      - name: 安装开发描述文件
+        shell: bash
+        env:
+          MAC_POS_PROFILE_BASE64: ${{ secrets.MAC_POS_PROFILE_BASE64 }}
+          MAC_ASSISTANT_PROFILE_BASE64: ${{ secrets.MAC_ASSISTANT_PROFILE_BASE64 }}
+          MAC_KDS_PROFILE_BASE64: ${{ secrets.MAC_KDS_PROFILE_BASE64 }}
+          MAC_TABLET_PROFILE_BASE64: ${{ secrets.MAC_TABLET_PROFILE_BASE64 }}
+          MAC_SHOP_PROFILE_BASE64: ${{ secrets.MAC_SHOP_PROFILE_BASE64 }}
+        run: |
+          set -e
+          echo "🔧 开始安装 macOS 开发描述文件..."
+          echo "当前 PACKAGE_NAME=${PACKAGE_NAME}"
+          PROFILE_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
+          mkdir -p "$PROFILE_DIR"
+          if [ "$PACKAGE_NAME" = "all" ]; then
+            echo "🚀 构建模式为 all, 开始安装所有应用的描述文件..."
+            for pkg in pos assistant kds tablet shop; do
+              VAR_NAME="MAC_${pkg^^}_PROFILE_BASE64"
+              PROFILE_VALUE="${!VAR_NAME}"
+              if [ -z "$PROFILE_VALUE" ]; then
+                echo "⚠️ 未配置 $VAR_NAME, 跳过 $pkg"
+                continue
+              fi
+              PROFILE_PATH="$RUNNER_TEMP/mac_${pkg}_profile.provisionprofile"
+              PLIST_PATH="$RUNNER_TEMP/mac_${pkg}_profile.plist"
+              echo "$PROFILE_VALUE" | base64 --decode > "$PROFILE_PATH"
+              security cms -D -i "$PROFILE_PATH" > "$PLIST_PATH"
+              PROFILE_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" "$PLIST_PATH" 2>/dev/null || true)
+              if [ -z "$PROFILE_UUID" ]; then
+                echo "❌ 无法解析 $pkg 的描述文件 UUID, 可能文件损坏"
+                continue
+              fi
+              cp "$PROFILE_PATH" "$PROFILE_DIR/${PROFILE_UUID}.provisionprofile"
+              echo "✅ 已安装 $pkg 的描述文件 (${PROFILE_UUID})"
+            done
+          else
+            case "${PACKAGE_NAME}" in
+              pos)
+                ERR_PROFILE_VAR="MAC_POS_PROFILE_BASE64"
+                MAC_DEV_PROFILE_BASE64="${MAC_POS_PROFILE_BASE64}"
+                ;;
+              assistant)
+                ERR_PROFILE_VAR="MAC_ASSISTANT_PROFILE_BASE64"
+                MAC_DEV_PROFILE_BASE64="${MAC_ASSISTANT_PROFILE_BASE64}"
+                ;;
+              kds)
+                ERR_PROFILE_VAR="MAC_KDS_PROFILE_BASE64"
+                MAC_DEV_PROFILE_BASE64="${MAC_KDS_PROFILE_BASE64}"
+                ;;
+              tablet)
+                ERR_PROFILE_VAR="MAC_TABLET_PROFILE_BASE64"
+                MAC_DEV_PROFILE_BASE64="${MAC_TABLET_PROFILE_BASE64}"
+                ;;
+              shop)
+                ERR_PROFILE_VAR="MAC_SHOP_PROFILE_BASE64"
+                MAC_DEV_PROFILE_BASE64="${MAC_SHOP_PROFILE_BASE64}"
+                ;;
+              *)
+                echo "未知的包名: ${PACKAGE_NAME}, 跳过描述文件安装"
+                exit 0
+                ;;
+            esac
+            if [ -z "${MAC_DEV_PROFILE_BASE64}" ]; then
+              echo "未配置 ${ERR_PROFILE_VAR} 描述文件, 跳过安装"
+              exit 0
+            fi
+            PROFILE_PATH="$RUNNER_TEMP/mac_${PACKAGE_NAME}_profile.provisionprofile"
+            PLIST_PATH="$RUNNER_TEMP/mac_${PACKAGE_NAME}_profile.plist"
+            echo "$MAC_DEV_PROFILE_BASE64" | base64 --decode > "$PROFILE_PATH"
+            security cms -D -i "$PROFILE_PATH" > "$PLIST_PATH"
+            PROFILE_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" "$PLIST_PATH" 2>/dev/null || true)
+            if [ -z "$PROFILE_UUID" ]; then
+              echo "❌ 无法解析描述文件 UUID, 文件可能损坏"
+              exit 1
+            fi
+            cp "$PROFILE_PATH" "$PROFILE_DIR/${PROFILE_UUID}.provisionprofile"
+            echo "✅ 已安装 ${PACKAGE_NAME} 的描述文件 (${PROFILE_UUID})"
+          fi
+          echo "📁 当前已安装的描述文件："
+          ls -l "$PROFILE_DIR" || echo "(未检测到任何文件)"
+      - name: 设置默认钥匙串
+        shell: bash
+        run: |
+          if [ -z "${KEYCHAIN_PATH:-}" ]; then
+            echo "缺少 KEYCHAIN_PATH" >&2
+            exit 1
+          fi
+          security default-keychain -s "$KEYCHAIN_PATH"
+          security unlock-keychain -p "${MAC_KEYCHAIN_PASSWORD:-github-actions-secure-2024}" "$KEYCHAIN_PATH"
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.27.3"
+          channel: stable
+          cache: true
+
+      - name: Enable macOS desktop
+        shell: bash
+        run: flutter config --enable-macos-desktop
+
+      - name: Precache Flutter artifacts
+        shell: bash
+        run: flutter precache --macos
+
+      - name: Install Melos
+        shell: bash
+        run: |
+          dart --version
+          dart pub global activate melos
+          echo "${HOME}/.pub-cache/bin" >> "$GITHUB_PATH"
+      - name: Melos Init
+        env:
+          PUB_HOSTED_URL: https://pub.flutter-io.cn
+          FLUTTER_STORAGE_BASE_URL: https://storage.flutter-io.cn
+        shell: bash
+        run: |
+          melos run init
+          melos bs
+          brew install automake libtool
+      - name: 更新环境变量文件
+        shell: bash
+        run: |
+          sed -i '' 's|^API_BASE_URL=.*|API_BASE_URL=${{ github.event.inputs.base_url }}|' apps/assistant/.env.production.local apps/kds/.env.production.local apps/pos/.env.production.local apps/tablet/.env.production.local apps/shop/.env.production.local
+          sed -i '' 's|^WS_BASE_URL=.*|WS_BASE_URL=${{ github.event.inputs.base_ws_url }}|' apps/assistant/.env.production.local apps/kds/.env.production.local apps/pos/.env.production.local apps/tablet/.env.production.local apps/shop/.env.production.local
+          echo "更新后的环境文件内容:";
+          cat ./apps/assistant/.env.production.local
+      - name: 设置构建环境变量
+        id: build_meta
+        shell: bash
+        run: |
+          VERSION=$(grep '^version:' -m1 "apps/${PACKAGE_NAME}/pubspec.yaml" | awk '{print $2}' | cut -d'+' -f1)
+          if [ -z "$VERSION" ]; then
+            echo "无法解析版本号" >&2
+            exit 1
+          fi
+          echo "MELOS_PACKAGE_NAME=${PACKAGE_NAME}" >> "$GITHUB_ENV"
+          echo "MELOS_PACKAGE_VERSION=${VERSION}" >> "$GITHUB_ENV"
+          case "$PACKAGE_NAME" in
+            pos) APP_NAME="TTPOS" ;;
+            assistant) APP_NAME="TTPOS-Go" ;;
+            kds) APP_NAME="TTPOS-Kitchen" ;;
+            tablet) APP_NAME="TTPOS-Menu" ;;
+            shop) APP_NAME="TTPOS-Shop" ;;
+            *) echo "不支持的包: $PACKAGE_NAME" >&2; exit 1 ;;
+          esac
+          echo "APP_DISPLAY_NAME=${APP_NAME}" >> "$GITHUB_ENV"
+          # 根据 matrix 判断包名和对应的软链名
+          case "${PACKAGE_NAME}" in
+              "pos")
+                  L_NAME="TTPOS-latest.dmg"
+                  V_DMG="TTPOS-${VERSION}.dmg"
+                  ;;
+              "assistant")
+                  L_NAME="TTPOS-Go-latest.dmg"
+                  V_DMG="TTPOS-Go-${VERSION}.dmg"
+                  ;;
+              "kds")
+                  L_NAME="TTPOS-Kitchen-latest.dmg"
+                  V_DMG="TTPOS-Kitchen-${VERSION}.dmg"
+                  ;;
+              "tablet")
+                  L_NAME="TTPOS-Menu-latest.dmg"
+                  V_DMG="TTPOS-Menu-${VERSION}.dmg"
+                  ;;
+              "shop")
+                  L_NAME="TTPOS-Shop-latest.dmg"
+                  V_DMG="TTPOS-Shop-${VERSION}.dmg"
+                  ;;
+              *)
+                  L_NAME="TTPOS-${PACKAGE_NAME}-latest.dmg"
+                  V_DMG="TTPOS-${PACKAGE_NAME}-${VERSION}.dmg"
+                  ;;
+          esac
+          echo "LATEST_NAME=${L_NAME}" >> $GITHUB_ENV
+          echo "VERSION_DMG=${V_DMG}" >> $GITHUB_ENV
+          echo "解析到版本号: $VERSION"
+      - name: 获取签名身份
+        shell: bash
+        env:
+          MAC_SIGNING_IDENTITY_SECRET: ${{ secrets.MAC_SIGNING_IDENTITY }}
+          MAC_SIGNING_TEAM_ID_SECRET: ${{ secrets.MAC_SIGNING_TEAM_ID }}
+          KEYCHAIN_PATH: ${{ env.KEYCHAIN_PATH }}
+        run: |
+          set -euo pipefail
+          
+          # 获取实际的签名身份
+          echo "获取可用的签名身份..."
+          AVAILABLE_IDENTITIES=$(security find-identity -v -p codesigning "$KEYCHAIN_PATH" | grep "Developer ID Application" | head -1)
+          if [ -z "$AVAILABLE_IDENTITIES" ]; then
+            echo "错误: 在钥匙串中未找到 Developer ID Application 证书" >&2
+            echo "可用的证书列表:"
+            security find-identity -v -p codesigning "$KEYCHAIN_PATH"
+            exit 1
+          fi
+          
+          # 提取签名身份名称
+          SIGNING_IDENTITY=$(echo "$AVAILABLE_IDENTITIES" | sed 's/.*"\(.*\)".*/\1/')
+          TEAM_ID="${MAC_SIGNING_TEAM_ID_SECRET:-N278MM4R33}"
+          
+          echo "使用签名身份: $SIGNING_IDENTITY"
+          echo "使用团队 ID: $TEAM_ID"
+          
+          # 设置环境变量
+          echo "MAC_SIGNING_IDENTITY=$SIGNING_IDENTITY" >> "$GITHUB_ENV"
+          echo "MAC_SIGNING_TEAM_ID=$TEAM_ID" >> "$GITHUB_ENV"
+      - name: 构建 macOS 应用(单包)
+        shell: bash
+        env:
+          KEYCHAIN_PATH: ${{ env.KEYCHAIN_PATH }}
+          APPLE_TEAM_ID: ${{ env.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          if [ -z "${KEYCHAIN_PATH}" ]; then
+            echo "缺少 KEYCHAIN_PATH 环境变量" >&2
+            exit 1
+          fi
+          security default-keychain -s "$KEYCHAIN_PATH"
+          security unlock-keychain -p "${MAC_KEYCHAIN_PASSWORD:-github-actions}" "$KEYCHAIN_PATH"
+          echo "构建单个应用: $PACKAGE_NAME"
+          dart run ./scripts/build_mac.dart --env=${BUILD_ENV} --package=${PACKAGE_NAME}
+      - name: 准备构建产物(单包)
+        shell: bash
+        run: |
+          set -euo pipefail
+          PACKAGE_DIR="apps/${PACKAGE_NAME}"
+          BUILD_OUTPUT_DIR="${PACKAGE_DIR}/build/macos/Build/Products/Release"
+          if [ ! -d "$BUILD_OUTPUT_DIR" ]; then
+            echo "未找到构建输出目录: $BUILD_OUTPUT_DIR" >&2
+            exit 1
+          fi
+          APP_SOURCE=$(find "$BUILD_OUTPUT_DIR" -maxdepth 1 -type d -name "*.app" | head -n 1)
+          if [ -z "$APP_SOURCE" ]; then
+            echo "未在 $BUILD_OUTPUT_DIR 中找到 .app 文件" >&2
+            ls -al "$BUILD_OUTPUT_DIR"
+            exit 1
+          fi
+          TARGET_DIR="releases/${PACKAGE_NAME}/${MELOS_PACKAGE_VERSION}"
+          mkdir -p "$TARGET_DIR"
+          TARGET_APP="$TARGET_DIR/${APP_DISPLAY_NAME}-${MELOS_PACKAGE_VERSION}.app"
+          rm -rf "$TARGET_APP"
+          cp -R "$APP_SOURCE" "$TARGET_APP"
+          echo "TARGET_DIR=$TARGET_DIR" >> "$GITHUB_ENV"
+          echo "APP_PATH=$TARGET_APP" >> "$GITHUB_ENV"
+          echo "已复制应用到: $TARGET_APP"
+      - name: 调试文件系统结构
+        shell: bash
+        run: |
+          echo "=== 调试文件系统结构 ==="
+          echo "当前工作目录: $(pwd)"
+          echo "PACKAGE_NAME: ${PACKAGE_NAME}"
+          echo ""
+          echo "=== 检查 apps 目录 ==="
+          ls -la apps/ || echo "apps 目录不存在"
+          echo ""
+          echo "=== 检查具体应用目录 ==="
+          ls -la "apps/${PACKAGE_NAME}/" || echo "应用目录不存在"
+          echo ""
+          echo "=== 检查 macOS 目录 ==="
+          ls -la "apps/${PACKAGE_NAME}/macos/" || echo "macOS 目录不存在"
+          echo ""
+          echo "=== 检查 Runner 目录 ==="
+          ls -la "apps/${PACKAGE_NAME}/macos/Runner/" || echo "Runner 目录不存在"
+          echo ""
+          echo "=== 检查权限文件 ==="
+          find "apps/${PACKAGE_NAME}/macos/Runner/" -name "*.entitlements" -type f || echo "未找到权限文件"
+      - name: 代码签名 .app(单包)
+        shell: bash
+        env:
+          MAC_SIGNING_IDENTITY: ${{ env.MAC_SIGNING_IDENTITY }}
+          MAC_SIGNING_ENTITLEMENTS: ${{ secrets.MAC_SIGNING_ENTITLEMENTS_PATH }}
+          KEYCHAIN_PATH: ${{ env.KEYCHAIN_PATH }}
+        run: |
+          set -euo pipefail
+          
+          if [ -z "${MAC_SIGNING_IDENTITY}" ]; then
+            echo "错误: 未配置签名标识 MAC_SIGNING_IDENTITY" >&2
+            exit 1
+          fi
+          
+          # 设置默认钥匙串
+          security default-keychain -s "$KEYCHAIN_PATH"
+          security unlock-keychain -p "${MAC_KEYCHAIN_PASSWORD}" "$KEYCHAIN_PATH"
+          
+          # 签名单个应用的函数
+          sign_app() {
+            local package="$1"
+            local app_path="$2"
+            
+            echo "开始签名 $package 应用: $app_path"
+            
+            # 查找权限文件
+            local entitlements_path="${MAC_SIGNING_ENTITLEMENTS:-apps/${package}/macos/Runner/Release.entitlements}"
+            if [ ! -f "$entitlements_path" ]; then
+              echo "警告: 未找到权限文件: $entitlements_path"
+              echo "尝试查找其他权限文件..."
+              # 尝试查找其他可能的权限文件
+              local alternative_paths=(
+                "apps/${package}/macos/Runner/DebugProfile.entitlements"
+                "apps/${package}/macos/Runner/Release.entitlements"
+              )
+              
+              for alt_path in "${alternative_paths[@]}"; do
+                if [ -f "$alt_path" ]; then
+                  entitlements_path="$alt_path"
+                  echo "找到权限文件: $entitlements_path"
+                  break
+                fi
+              done
+              
+              if [ ! -f "$entitlements_path" ]; then
+                echo "警告: 未找到任何权限文件, 将使用默认权限"
+                entitlements_path=""
+              fi
+            fi
+            
+            echo "使用签名身份: ${MAC_SIGNING_IDENTITY}"
+            echo "权限文件: ${entitlements_path:-无}"
+            
+            # 签名内部二进制文件(包括 Sparkle 框架内的组件)
+            echo "签名内部二进制文件..."
+            
+            # 1. 签名所有 .dylib, .so, .metallib 文件
+            if find "${app_path}" -type f \( -name "*.dylib" -o -name "*.so" -o -name "*.metallib" \) -print0 | grep -q .; then
+              find "${app_path}" -type f \( -name "*.dylib" -o -name "*.so" -o -name "*.metallib" \) -print0 | while IFS= read -r -d '' ITEM; do
+                echo "签名库文件: $ITEM"
+                codesign --force --timestamp --options runtime --sign "$MAC_SIGNING_IDENTITY" "$ITEM"
+              done
+            else
+              echo "未找到需要签名的库文件"
+            fi
+            
+            # 2. 签名所有可执行文件(包括 Sparkle 框架内的 Updater, Autoupdate 等)
+            echo "签名可执行文件..."
+            find "${app_path}" -type f -perm +111 -exec file {} \; | grep -E "(Mach-O|executable)" | cut -d: -f1 | while read -r binary; do
+              if [ -f "$binary" ]; then
+                echo "签名可执行文件: $binary"
+                codesign --force --timestamp --options runtime --sign "$MAC_SIGNING_IDENTITY" "$binary"
+              fi
+            done
+            
+            # 3. 签名所有 .app 包(包括嵌套的, 如 Sparkle 的 Updater.app)
+            echo "签名应用包..."
+            find "${app_path}" -name "*.app" -type d | while read -r app_bundle; do
+              echo "签名应用包: $app_bundle"
+              codesign --force --timestamp --options runtime --sign "$MAC_SIGNING_IDENTITY" "$app_bundle"
+            done
+            
+            # 4. 签名所有 .xpc 服务(Sparkle 的 XPC 服务)
+            echo "签名 XPC 服务..."
+            find "${app_path}" -name "*.xpc" -type d | while read -r xpc_bundle; do
+              echo "签名 XPC 服务: $xpc_bundle"
+              codesign --force --timestamp --options runtime --sign "$MAC_SIGNING_IDENTITY" "$xpc_bundle"
+            done
+            
+            # 5. 签名所有框架(包括 Sparkle.framework)
+            echo "签名框架..."
+            if find "${app_path}" -type d -name "*.framework" -print0 | grep -q .; then
+              find "${app_path}" -type d -name "*.framework" -print0 | while IFS= read -r -d '' FW; do
+                echo "签名框架: $FW"
+                codesign --force --timestamp --options runtime --sign "$MAC_SIGNING_IDENTITY" "$FW"
+              done
+            else
+              echo "未找到需要签名的框架"
+            fi
+            
+            # 6. 最后签名主应用包
+            echo "签名主应用..."
+            if [ -n "$entitlements_path" ] && [ -f "$entitlements_path" ]; then
+              echo "使用权限文件: $entitlements_path"
+              codesign --force --timestamp --options runtime --entitlements "$entitlements_path" --sign "$MAC_SIGNING_IDENTITY" "$app_path"
+            else
+              echo "不使用权限文件进行签名"
+              codesign --force --timestamp --options runtime --sign "$MAC_SIGNING_IDENTITY" "$app_path"
+            fi
+            
+            # 验证签名
+            echo "验证签名..."
+            codesign --verify --deep --strict "$app_path"
+            
+            echo "$package 应用签名完成!"
+          }
+          
+          echo "签名单个应用: $PACKAGE_NAME"
+          sign_app "$PACKAGE_NAME" "$APP_PATH"
+      - name: 创建 DMG(单包)
+        shell: bash
+        run: |
+          set -euo pipefail
+          
+          # 安装 create-dmg
+          if ! command -v create-dmg &> /dev/null; then
+            echo "安装 create-dmg..."
+            brew install create-dmg
+          fi
+          
+          # 配置参数
+          package="$PACKAGE_NAME"
+          version="$MELOS_PACKAGE_VERSION"
+          
+          # 配置参数 (参考 scripts/pack_mac.dart)
+          window_size="800 400"
+          window_pos="200 120"
+          icon_size="100"
+          app_icon_pos="200 190"
+          drop_link_pos="600 185"
+          
+          case "$package" in
+            pos)
+              app_name="TTPOS"
+              vol_name="TTPOS"
+              dmg_file_prefix="TTPOS"
+              icon_path="TTPOS.app/Contents/Resources/AppIcon.icns"
+              ;;
+            assistant)
+              app_name="TTPOS Go"
+              vol_name="TTPOS Go"
+              dmg_file_prefix="TTPOS-Go"
+              icon_path="TTPOS Go.app/Contents/Resources/AppIcon.icns"
+              ;;
+            kds)
+              app_name="TTPOS Kitchen"
+              vol_name="TTPOS Kitchen"
+              dmg_file_prefix="TTPOS-Kitchen"
+              icon_path="TTPOS Kitchen.app/Contents/Resources/AppIcon.icns"
+              ;;
+            tablet)
+              app_name="TTPOS Menu"
+              vol_name="TTPOS Menu"
+              dmg_file_prefix="TTPOS-Menu"
+              icon_path="TTPOS Menu.app/Contents/Resources/AppIcon.icns"
+              ;;
+            shop)
+              app_name="TTPOS Shop"
+              vol_name="TTPOS Shop"
+              dmg_file_prefix="TTPOS-Shop"
+              icon_path="TTPOS Shop.app/Contents/Resources/AppIcon.icns"
+              ;;
+          esac
+          
+          release_dir="releases/${package}/${version}"
+          dmg_name="${dmg_file_prefix}-${version}.dmg"
+          
+          echo "正在为 $package 创建 DMG..."
+          
+          # 进入发布目录
+          pushd "$release_dir" > /dev/null
+          
+          # 查找并重命名 .app (如果需要)
+          current_app=$(find . -maxdepth 1 -name "*.app" | head -n 1)
+          if [ -z "$current_app" ]; then
+             echo "错误: 未找到 .app 文件"
+             exit 1
+          fi
+          
+          if [ "$(basename "$current_app")" != "${app_name}.app" ]; then
+             echo "重命名 $(basename "$current_app") -> ${app_name}.app"
+             mv "$current_app" "${app_name}.app"
+          fi
+          
+          # 清理旧的 DMG
+          rm -f "$dmg_name"
+          
+          # 执行 create-dmg
+          create-dmg \
+            --volname "${vol_name}" \
+            --volicon "${icon_path}" \
+            --window-pos ${window_pos} \
+            --window-size ${window_size} \
+            --icon-size "${icon_size}" \
+            --icon "${app_name}.app" ${app_icon_pos} \
+            --hide-extension "${app_name}.app" \
+            --app-drop-link ${drop_link_pos} \
+            "${dmg_name}" \
+            "${app_name}.app"
+            
+          result=$?
+          popd > /dev/null
+          
+          if [ $result -eq 0 ]; then
+             full_dmg_path="${release_dir}/${dmg_name}"
+             echo "DMG 创建成功: $full_dmg_path"
+             echo "DMG_PATH=$full_dmg_path" >> "$GITHUB_ENV"
+          else
+             echo "DMG 创建失败"
+             exit 1
+          fi
+
+      - name: 签名 DMG(单包)
+        shell: bash
+        env:
+          MAC_SIGNING_IDENTITY: ${{ env.MAC_SIGNING_IDENTITY }}
+          KEYCHAIN_PATH: ${{ env.KEYCHAIN_PATH }}
+        run: |
+          set -euo pipefail
+          
+          if [ -z "${MAC_SIGNING_IDENTITY}" ]; then
+            echo "未配置签名标识 MAC_SIGNING_IDENTITY" >&2
+            exit 1
+          fi
+          
+          # 设置默认钥匙串
+          security default-keychain -s "$KEYCHAIN_PATH"
+          security unlock-keychain -p "${MAC_KEYCHAIN_PASSWORD}" "$KEYCHAIN_PATH"
+          
+          echo "开始签名 $PACKAGE_NAME DMG: $DMG_PATH"
+          echo "使用签名身份: ${MAC_SIGNING_IDENTITY}"
+          
+          # 签名 DMG
+          codesign --force --sign "$MAC_SIGNING_IDENTITY" "$DMG_PATH"
+          
+          echo "验证 $PACKAGE_NAME DMG 签名..."
+          codesign --verify "$DMG_PATH"
+          
+          echo ""
+          echo "$PACKAGE_NAME DMG 签名信息:"
+          codesign -dvv "$DMG_PATH" 2>&1 | head -20 || true
+      - name: 判断是否需要公证
+        id: notarize_flag
+        shell: bash
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          if [ -n "${APPLE_ID}" ] && [ -n "${APPLE_APP_SPECIFIC_PASSWORD}" ] && [ -n "${APPLE_TEAM_ID}" ]; then
+            echo "APPLE_NOTARIZE=true" >> "$GITHUB_ENV"
+            echo "need_notarize=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "APPLE_NOTARIZE=false" >> "$GITHUB_ENV"
+            echo "need_notarize=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: 公证 DMG (可选)
+        if: ${{ env.APPLE_NOTARIZE == 'true' }}
+        continue-on-error: true
+        shell: bash
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set +e  # 允许错误继续
+          
+          echo "开始公证 DMG..."
+          echo "Apple ID: ${APPLE_ID}"
+          echo "Team ID: ${APPLE_TEAM_ID}"
+          
+          # 检查凭据是否有效
+          if [ -z "${APPLE_ID}" ] || [ -z "${APPLE_APP_SPECIFIC_PASSWORD}" ] || [ -z "${APPLE_TEAM_ID}" ]; then
+            echo "警告: Apple 公证凭据不完整, 跳过公证"
+            echo "如需公证, 请配置以下 Secrets:"
+            echo "- APPLE_ID: Apple ID 邮箱"
+            echo "- APPLE_APP_SPECIFIC_PASSWORD: App 专用密码"
+            echo "- APPLE_TEAM_ID: Apple 开发者团队 ID"
+            exit 0
+          fi
+          
+          # 提交公证
+          echo "正在提交公证请求..."
+          xcrun notarytool submit "$DMG_PATH" --wait --apple-id "$APPLE_ID" --password "$APPLE_APP_SPECIFIC_PASSWORD" --team-id "$APPLE_TEAM_ID" > /tmp/notary_output.txt 2>&1
+          NOTARIZE_RESULT=$?
+          
+          # 检查公证结果
+          if [ $NOTARIZE_RESULT -eq 0 ]; then
+            # 提取公证状态
+            NOTARIZE_STATUS=$(grep -i "status:" /tmp/notary_output.txt | tail -1 | awk '{print $NF}')
+            
+            if [ "$NOTARIZE_STATUS" = "Accepted" ]; then
+              echo "✅ 公证成功！状态: $NOTARIZE_STATUS"
+              # 钉住公证票据
+              echo "正在钉住公证票据..."
+              xcrun stapler staple "$DMG_PATH"
+              STAPLE_RESULT=$?
+              
+              if [ $STAPLE_RESULT -eq 0 ]; then
+                echo "✅ 已成功钉住公证票据"
+              else
+                echo "⚠️ 钉住公证票据失败(退出代码: $STAPLE_RESULT)"
+                echo "应用已公证, 但未钉住票据"
+              fi
+            else
+              echo "❌ 公证被拒绝或失败"
+              echo "公证状态: $NOTARIZE_STATUS"
+              echo "完整输出:"
+              cat /tmp/notary_output.txt
+              
+              # 提取提交 ID 并查询详细日志
+              SUBMISSION_ID=$(grep "id:" /tmp/notary_output.txt | head -1 | awk '{print $2}')
+              if [ -n "$SUBMISSION_ID" ]; then
+                echo ""
+                echo "==========================================="
+                echo "查询详细公证日志 (Submission ID: $SUBMISSION_ID)"
+                echo "==========================================="
+                xcrun notarytool log "$SUBMISSION_ID" --apple-id "$APPLE_ID" --password "$APPLE_APP_SPECIFIC_PASSWORD" --team-id "$APPLE_TEAM_ID" || true
+                echo "==========================================="
+              fi
+              
+              echo ""
+              echo "应用已构建并签名, 但未通过 Apple 公证"
+              echo "未公证的应用仍可运行, 但首次启动时需要用户信任"
+            fi
+          else
+            echo "❌ 公证提交失败(退出代码: $NOTARIZE_RESULT)"
+            echo "完整输出:"
+            cat /tmp/notary_output.txt
+            echo ""
+            echo "这可能是由于："
+            echo "1. App 专用密码无效"
+            echo "2. Apple ID 或 Team ID 错误"
+            echo "3. 网络问题"
+            echo "4. DMG 签名问题"
+            echo ""
+            echo "应用已构建并签名, 但不包含 Apple 公证"
+            echo "未公证的应用仍可运行, 但首次启动时需要用户信任"
+          fi
+          
+          # 清理临时文件
+          rm -f /tmp/notary_output.txt
+      - name: 上传构建产物(单包)
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-${{ env.PACKAGE_NAME }}-${{ env.MELOS_PACKAGE_VERSION }}
+          path: ${{ env.DMG_PATH }}
+          if-no-files-found: error
+
+      - name: 上传到 Google Cloud Storage
+        if: ${{ env.UPLOAD_TO_STORAGE == 'true' }}
+        uses: "google-github-actions/auth@v2"
+        with:
+          credentials_json: "${{ secrets.GOOGLE_STORAGE_CREDENTIALS }}"
+
+      - name: 上传 DMG 到存储桶(单包)
+        if: ${{ env.UPLOAD_TO_STORAGE == 'true' }}
+        id: "upload-storage"
+        uses: "google-github-actions/upload-cloud-storage@v2"
+        with:
+          path: ${{ env.DMG_PATH }}
+          destination: ${{ env[format('{0}_path', env.PACKAGE_NAME)] }}
+          parent: false
+
+      - name: 上传到 Web 服务器(单包)
+        if: ${{ env.UPLOAD_TO_WEB == 'true' }}
+        uses: Comori/ssh@v0.0.7
+        with:
+          host: ${{ secrets.SCP_S_HOST }}
+          username: ${{ secrets.SCP_S_USER }}
+          privateKey: ${{ secrets.SCP_S_RIVATEKEY }}
+          command: |
+            echo "传输 ${{ env.VERSION_DMG }} 到最终服务器..."
+            scp ${{ env[format('scp_s_{0}', env.PACKAGE_NAME)] }}${{ env.VERSION_DMG }} "${{ secrets.SCP_D_USER }}@${{ secrets.SCP_D_HOST }}:${{ env[format('scp_d_{0}', env.PACKAGE_NAME)] }}"
+          sourceFiles: |
+            ${{ env.DMG_PATH }}
+          targetDir: ${{ env[format('scp_s_{0}', env.PACKAGE_NAME)] }}
+          scpFirst: true
+
+      - name: 上传到 Web 服务器(单包)
+        if: ${{ env.UPLOAD_TO_WEB == 'true' }}
+        uses: Comori/ssh@v0.0.7
+        with:
+          host: ${{ secrets.SCP_S_HOST }}
+          username: ${{ secrets.SCP_S_USER }}
+          privateKey: ${{ secrets.SCP_S_RIVATEKEY }}
+          command: |
+            echo "在最终服务器创建软链..."
+            ssh -o StrictHostKeyChecking=no "${{ secrets.SCP_D_USER }}@${{ secrets.SCP_D_HOST }}" "cd ${{ env[format('scp_d_{0}', env.PACKAGE_NAME)] }} && ln -sf ${{ env.VERSION_DMG }} ${{ env.LATEST_NAME }}" 
+  
+  build-all:
+    if: github.event.inputs.build_type == 'all'
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        pkg: [pos, assistant, kds, tablet, shop]
+      fail-fast: false
+    env:
+      PACKAGE_NAME: ${{ matrix.pkg }}
+      BUILD_ENV: ${{ github.event.inputs.env }}
+      BRANCH_NAME: ${{ github.event.inputs.branch }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      MAC_KEYCHAIN_PASSWORD: ${{ secrets.MAC_KEYCHAIN_PASSWORD }}
+      UPLOAD_TO_STORAGE: ${{ github.event.inputs.upload_to_storage }}
+      UPLOAD_TO_WEB: ${{ github.event.inputs.upload_to_web }}
+      assistant_path: ${{ github.event.inputs.branch == 'release' && 'dc_apk/TTPOS/Prod/MacOS/Assistant/' || 'dc_apk/TTPOS/Test/MacOS/Assistant/' }}
+      kds_path: ${{ github.event.inputs.branch == 'release' && 'dc_apk/TTPOS/Prod/MacOS/Kitchen/' || 'dc_apk/TTPOS/Test/MacOS/Kitchen/' }}
+      tablet_path: ${{ github.event.inputs.branch == 'release' && 'dc_apk/TTPOS/Prod/MacOS/Menu/' || 'dc_apk/TTPOS/Test/MacOS/Menu/' }}
+      pos_path: ${{ github.event.inputs.branch == 'release' && 'dc_apk/TTPOS/Prod/MacOS/Cashier/' || 'dc_apk/TTPOS/Test/MacOS/Cashier/' }}
+      shop_path: ${{ github.event.inputs.branch == 'release' && 'dc_apk/TTPOS/Prod/MacOS/Shop/' || 'dc_apk/TTPOS/Test/MacOS/Shop/' }}
+      scp_s_assistant: ${{ github.event.inputs.branch == 'release' && '/hitosea/ttpos-apk/Prod/assistant/' || '/hitosea/ttpos-apk/Test/assistant/' }}
+      scp_s_kds: ${{ github.event.inputs.branch == 'release' && '/hitosea/ttpos-apk/Prod/kds/' || '/hitosea/ttpos-apk/Test/kds/' }}
+      scp_s_tablet: ${{ github.event.inputs.branch == 'release' && '/hitosea/ttpos-apk/Prod/tablet/' || '/hitosea/ttpos-apk/Test/tablet/' }}
+      scp_s_pos: ${{ github.event.inputs.branch == 'release' && '/hitosea/ttpos-apk/Prod/pos/' || '/hitosea/ttpos-apk/Test/pos/' }}
+      scp_s_shop: ${{ github.event.inputs.branch == 'release' && '/hitosea/ttpos-apk/Prod/shop/' || '/hitosea/ttpos-apk/Test/shop/' }}
+      scp_d_assistant: ${{ github.event.inputs.branch == 'release' && '/root/web/web/restant/out/downloads/MacOS/Assistant/' || '/root/web/web/restant/out/downloads/MacOS/Test/Assistant/' }}
+      scp_d_kds: ${{ github.event.inputs.branch == 'release' && '/root/web/web/restant/out/downloads/MacOS/Kitchen/' || '/root/web/web/restant/out/downloads/MacOS/Test/Kitchen/' }}
+      scp_d_tablet: ${{ github.event.inputs.branch == 'release' && '/root/web/web/restant/out/downloads/MacOS/Menu/' || '/root/web/web/restant/out/downloads/MacOS/Test/Menu/' }}
+      scp_d_pos: ${{ github.event.inputs.branch == 'release' && '/root/web/web/restant/out/downloads/MacOS/Cashier/' || '/root/web/web/restant/out/downloads/MacOS/Test/Cashier/' }}
+      scp_d_shop: ${{ github.event.inputs.branch == 'release' && '/root/web/web/restant/out/downloads/MacOS/Shop/' || '/root/web/web/restant/out/downloads/MacOS/Test/Shop/' }}
+    steps: *mac_steps
