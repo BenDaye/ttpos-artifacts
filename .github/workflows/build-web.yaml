@@ -48,7 +48,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
@@ -62,7 +62,6 @@ jobs:
             image_name: ttpos-web-member
     env:
       REGISTRY: ghcr.io
-      IMAGE_TAG: ${{ inputs.branch == 'release' && '' || 'test-' }}
     steps:
       - name: 检查是否需要构建此应用端
         id: check
@@ -73,6 +72,11 @@ jobs:
             echo "should_run=false" >> $GITHUB_OUTPUT
             echo "跳过 ${{ matrix.package }} (选择的应用端: ${{ inputs.package }})"
           fi
+
+      - name: 设置镜像所有者（GHCR 要求小写）
+        if: steps.check.outputs.should_run == 'true'
+        run: |
+          echo "IMAGE_OWNER=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       - name: 显示构建信息
         if: steps.check.outputs.should_run == 'true'
@@ -85,7 +89,7 @@ jobs:
           echo "环境: ${{ inputs.env }}"
           echo "API URL: ${{ inputs.base_url }}"
           echo "WebSocket URL: ${{ inputs.base_ws_url }}"
-          echo "镜像仓库: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.image_name }}"
+          echo "镜像仓库: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/${{ matrix.image_name }}"
           echo "========================================="
 
       - name: Checkout the code
@@ -190,6 +194,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: 提取 Docker 元数据
+        if: steps.check.outputs.should_run == 'true'
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/${{ matrix.image_name }}
+          tags: |
+            type=raw,value=latest,enable=${{ inputs.branch == 'release' }}
+            type=raw,value=test-latest,enable=${{ inputs.branch != 'release' }}
+            type=raw,value=${{ steps.git_info.outputs.COMMIT_ID }},enable=${{ inputs.branch == 'release' }}
+            type=raw,value=test-${{ steps.git_info.outputs.COMMIT_ID }},enable=${{ inputs.branch != 'release' }}
+
       - name: 构建并推送 Docker 镜像
         if: steps.check.outputs.should_run == 'true'
         uses: docker/build-push-action@v6
@@ -197,20 +213,11 @@ jobs:
           context: ./
           file: Dockerfile.${{ matrix.package }}
           push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.image_name }}:${{ env.IMAGE_TAG }}${{ steps.git_info.outputs.COMMIT_ID }}
-            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.image_name }}:${{ env.IMAGE_TAG }}latest
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64
-          build-args: |
-            - BUILD_ENV=${{ inputs.env }}
-            - BUILD_BRANCH=${{ inputs.branch }}
-            - BUILD_PACKAGE=${{ matrix.package }}
-            - BUILD_COMMIT_ID=${{ steps.git_info.outputs.COMMIT_ID }}
-            - BUILD_IMAGE_NAME=${{ matrix.image_name }}
-            - BUILD_REGISTRY=${{ env.REGISTRY }}
-            - BUILD_REPOSITORY_OWNER=${{ github.repository_owner }}
 
       - name: 构建完成总结
         if: always() && steps.check.outputs.should_run == 'true'
@@ -221,23 +228,6 @@ jobs:
           echo "应用端: ${{ matrix.package }}"
           echo "分支: ${{ inputs.branch }}"
           echo "环境: ${{ inputs.env }}"
-          echo "镜像: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.image_name }}:${{ env.IMAGE_TAG }}${{ steps.git_info.outputs.COMMIT_ID }}"
+          echo "镜像标签:"
+          echo "${{ steps.meta.outputs.tags }}"
           echo "========================================="
-
-  # update-test-server:
-  #   runs-on: ubuntu-22.04
-  #   needs: build
-  #   if: needs.build.result == 'success' && (github.event.inputs.branch != 'release')
-  #   env:
-  #     BRANCH: ${{ github.event_name == 'push' && github.ref || github.event.inputs.branch }}
-  #
-  #   steps:
-  #     - name: Change Test Images Member
-  #       uses: appleboy/ssh-action@v1
-  #       with:
-  #         host: ${{ secrets.SSH_MOBILE_MENU_TEST_HOST }}
-  #         username: ${{ secrets.SSH_USER_MOBILE_MENU_TEST_HOST }}
-  #         key: ${{ secrets.SSH_RIVATEKEY_MOBILE_MENU_TEST_HOST }}
-  #         script: |
-  #           cd /ttpos-flutter
-  #           ./cmd update
