@@ -141,7 +141,7 @@ jobs:
           FLUTTER_STORAGE_BASE_URL: https://storage.flutter-io.cn
         run: |
           melos bs
-          melos run env:setup -- --env=${{ inputs.env }}
+          melos run env:setup -- --env=${{ inputs.env }} --file=${{ inputs.env }}
 
       - name: 生成环境变量文件
         if: steps.check.outputs.should_run == 'true'
