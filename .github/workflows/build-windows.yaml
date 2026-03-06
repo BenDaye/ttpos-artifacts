@@ -50,7 +50,7 @@ on:
       scp:
         description: "是否启用SCP传输"
         required: true
-        default: "on"
+        default: "off"
         type: choice
         options:
           - "on"
@@ -190,10 +190,10 @@ jobs:
         run: |
           $envPath = "apps/${{ matrix.package }}/.env.${{ env.ENV_SUFFIX }}.local"
           $dsn = switch ("${{ matrix.package }}") {
-            "assistant" { "${{ secrets.SENTRYDSN_ASSISTANT }}" }
-            "kds" { "${{ secrets.SENTRYDSN_KDS }}" }
             "pos" { "${{ secrets.SENTRYDSN_POS }}" }
+            "assistant" { "${{ secrets.SENTRYDSN_ASSISTANT }}" }
             "tablet" { "${{ secrets.SENTRYDSN_TABLET }}" }
+            "kds" { "${{ secrets.SENTRYDSN_KDS }}" }
             "shop" { "${{ secrets.SENTRYDSN_SHOP }}" }
             default { "" }
           }
@@ -235,7 +235,7 @@ jobs:
         with:
           name: ${{ matrix.exe_prefix }}-${{ env.MELOS_PACKAGE_VERSION }}
           path: releases/${{ matrix.package }}/${{ env.MELOS_PACKAGE_VERSION }}/
-          retention-days: 1
+          retention-days: 7
           compression-level: 0
 
       - name: SCP-UPLOAD
