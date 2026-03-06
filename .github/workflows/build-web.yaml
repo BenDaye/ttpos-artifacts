@@ -49,6 +49,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     strategy:
       fail-fast: false
       matrix:
@@ -73,11 +76,6 @@ jobs:
             echo "跳过 ${{ matrix.package }} (选择的应用端: ${{ inputs.package }})"
           fi
 
-      - name: 设置镜像所有者（GHCR 要求小写）
-        if: steps.check.outputs.should_run == 'true'
-        run: |
-          echo "IMAGE_OWNER=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
-
       - name: 显示构建信息
         if: steps.check.outputs.should_run == 'true'
         run: |
@@ -89,7 +87,7 @@ jobs:
           echo "环境: ${{ inputs.env }}"
           echo "API URL: ${{ inputs.base_url }}"
           echo "WebSocket URL: ${{ inputs.base_ws_url }}"
-          echo "镜像仓库: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/${{ matrix.image_name }}"
+          echo "镜像仓库: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.image_name }}"
           echo "========================================="
 
       - name: Checkout the code
@@ -199,7 +197,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/${{ matrix.image_name }}
+          images: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.image_name }}
           tags: |
             type=raw,value=latest,enable=${{ inputs.branch == 'release' }}
             type=raw,value=test-latest,enable=${{ inputs.branch != 'release' }}
