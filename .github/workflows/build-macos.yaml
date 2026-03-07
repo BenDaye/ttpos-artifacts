@@ -62,6 +62,11 @@ on:
         required: false
         default: true
         type: boolean
+      faynosync:
+        description: "是否上传到 FaynoSync"
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   build-single:
@@ -77,6 +82,7 @@ jobs:
       MAC_KEYCHAIN_PASSWORD: ${{ secrets.MAC_KEYCHAIN_PASSWORD }}
       UPLOAD_TO_STORAGE: ${{ github.event.inputs.upload_to_storage }}
       UPLOAD_TO_WEB: ${{ github.event.inputs.upload_to_web }}
+      UPLOAD_TO_FAYNOSYNC: ${{ github.event.inputs.faynosync }}
       # 存储桶路径
       assistant_path: ${{ github.event.inputs.branch == 'release' && 'dc_apk/TTPOS/Prod/MacOS/Assistant/' || 'dc_apk/TTPOS/Test/MacOS/Assistant/' }}
       kds_path: ${{ github.event.inputs.branch == 'release' && 'dc_apk/TTPOS/Prod/MacOS/Kitchen/' || 'dc_apk/TTPOS/Test/MacOS/Kitchen/' }}
@@ -845,7 +851,49 @@ jobs:
           command: |
             echo "在最终服务器创建软链..."
             ssh -o StrictHostKeyChecking=no "${{ secrets.SCP_D_USER }}@${{ secrets.SCP_D_HOST }}" "cd ${{ env[format('scp_d_{0}', env.PACKAGE_NAME)] }} && ln -sf ${{ env.VERSION_DMG }} ${{ env.LATEST_NAME }}" 
-  
+
+      - name: 上传到 FaynoSync
+        if: ${{ env.UPLOAD_TO_FAYNOSYNC == 'true' }}
+        continue-on-error: true
+        shell: bash
+        env:
+          FAYNOSYNC_URL: ${{ secrets.FAYNOSYNC_URL }}
+          FAYNOSYNC_TOKEN: ${{ secrets.FAYNOSYNC_TOKEN }}
+        run: |
+          if [ ! -f "$DMG_PATH" ]; then
+            echo "DMG 文件不存在，跳过 FaynoSync 上传"
+            exit 0
+          fi
+
+          if [ -z "$FAYNOSYNC_URL" ] || [ -z "$FAYNOSYNC_TOKEN" ]; then
+            echo "未配置 FAYNOSYNC_URL 或 FAYNOSYNC_TOKEN，跳过上传"
+            exit 0
+          fi
+
+          case "$PACKAGE_NAME" in
+            pos)       FAYNOSYNC_APP="TTPOS" ;;
+            assistant) FAYNOSYNC_APP="TTPOS Go" ;;
+            kds)       FAYNOSYNC_APP="TTPOS Kitchen" ;;
+            tablet)    FAYNOSYNC_APP="TTPOS Menu" ;;
+            shop)      FAYNOSYNC_APP="TTPOS Shop" ;;
+            *)         echo "未知包名: $PACKAGE_NAME"; exit 0 ;;
+          esac
+
+          CHANNEL="$BUILD_ENV"
+          ARCH=$(uname -m)
+          if [ "$ARCH" = "x86_64" ]; then
+            FS_ARCH="amd64"
+          else
+            FS_ARCH="arm64"
+          fi
+
+          echo "上传到 FaynoSync: ${FAYNOSYNC_APP} v${MELOS_PACKAGE_VERSION} (${CHANNEL}/macos/${FS_ARCH})"
+          curl -f -X POST "${FAYNOSYNC_URL}/upload" \
+            -H "Authorization: Bearer ${FAYNOSYNC_TOKEN}" \
+            -F "file=@${DMG_PATH}" \
+            -F "data={\"app_name\":\"${FAYNOSYNC_APP}\",\"version\":\"${MELOS_PACKAGE_VERSION}\",\"channel\":\"${CHANNEL}\",\"publish\":true,\"critical\":false,\"platform\":\"macos\",\"arch\":\"${FS_ARCH}\",\"changelog\":\"Build from ${BRANCH_NAME}\"}"
+          echo "FaynoSync 上传完成"
+
   build-all:
     if: github.event.inputs.build_type == 'all'
     runs-on: macos-latest
@@ -863,6 +911,7 @@ jobs:
       MAC_KEYCHAIN_PASSWORD: ${{ secrets.MAC_KEYCHAIN_PASSWORD }}
       UPLOAD_TO_STORAGE: ${{ github.event.inputs.upload_to_storage }}
       UPLOAD_TO_WEB: ${{ github.event.inputs.upload_to_web }}
+      UPLOAD_TO_FAYNOSYNC: ${{ github.event.inputs.faynosync }}
       assistant_path: ${{ github.event.inputs.branch == 'release' && 'dc_apk/TTPOS/Prod/MacOS/Assistant/' || 'dc_apk/TTPOS/Test/MacOS/Assistant/' }}
       kds_path: ${{ github.event.inputs.branch == 'release' && 'dc_apk/TTPOS/Prod/MacOS/Kitchen/' || 'dc_apk/TTPOS/Test/MacOS/Kitchen/' }}
       tablet_path: ${{ github.event.inputs.branch == 'release' && 'dc_apk/TTPOS/Prod/MacOS/Menu/' || 'dc_apk/TTPOS/Test/MacOS/Menu/' }}

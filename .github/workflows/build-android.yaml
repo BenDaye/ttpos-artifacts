@@ -56,6 +56,11 @@ on:
         options:
           - "on"
           - "off"
+      faynosync:
+        description: "是否上传到 FaynoSync"
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   build:
@@ -68,21 +73,27 @@ jobs:
           - package: pos
             apk_name: TTPOS-Cashier
             gcs_folder: Cashier
+            faynosync_name: "TTPOS"
           - package: assistant
             apk_name: TTPOS-Assistant
             gcs_folder: Assistant
+            faynosync_name: "TTPOS Go"
           - package: kds
             apk_name: TTPOS-Kitchen
             gcs_folder: Kitchen
+            faynosync_name: "TTPOS Kitchen"
           - package: tablet
             apk_name: TTPOS-Menu
             gcs_folder: Menu
+            faynosync_name: "TTPOS Menu"
           - package: shop
             apk_name: TTPOS-Shop
             gcs_folder: Shop
+            faynosync_name: "TTPOS Shop"
           - package: qds
             apk_name: TTPOS-Queue
             gcs_folder: Qds
+            faynosync_name: "TTPOS Queue"
     env:
       APK_OUTPUT_PATH: releases
       GCS_PATH: ${{ inputs.branch == 'release' && format('dc_apk/TTPOS/Prod/{0}/', matrix.gcs_folder) || format('dc_apk/TTPOS/Test/{0}/', matrix.gcs_folder) }}
@@ -285,6 +296,33 @@ jobs:
           path: ${{ env.APK_OUTPUT_PATH }}/${{ matrix.package }}/${{ env.VERSION }}
           destination: ${{ env.GCS_PATH }}
           parent: false
+
+      - name: 上传到 FaynoSync
+        if: steps.check.outputs.should_run == 'true' && inputs.faynosync == true
+        continue-on-error: true
+        env:
+          FAYNOSYNC_URL: ${{ secrets.FAYNOSYNC_URL }}
+          FAYNOSYNC_TOKEN: ${{ secrets.FAYNOSYNC_TOKEN }}
+        run: |
+          FILE_PATH="${{ env.APK_OUTPUT_PATH }}/${{ matrix.package }}/${{ env.VERSION }}/${{ env.VERSION_APK }}"
+          if [ ! -f "$FILE_PATH" ]; then
+            echo "构建产物不存在，跳过 FaynoSync 上传"
+            exit 0
+          fi
+
+          if [ -z "$FAYNOSYNC_URL" ] || [ -z "$FAYNOSYNC_TOKEN" ]; then
+            echo "未配置 FAYNOSYNC_URL 或 FAYNOSYNC_TOKEN，跳过上传"
+            exit 0
+          fi
+
+          CHANNEL="${{ inputs.env }}"
+
+          echo "上传到 FaynoSync: ${{ matrix.faynosync_name }} v${{ env.VERSION }} (${CHANNEL}/android/arm64)"
+          curl -f -X POST "${FAYNOSYNC_URL}/upload" \
+            -H "Authorization: Bearer ${FAYNOSYNC_TOKEN}" \
+            -F "file=@${FILE_PATH}" \
+            -F "data={\"app_name\":\"${{ matrix.faynosync_name }}\",\"version\":\"${{ env.VERSION }}\",\"channel\":\"${CHANNEL}\",\"publish\":true,\"critical\":false,\"platform\":\"android\",\"arch\":\"arm64\",\"changelog\":\"Build from ${{ inputs.branch }}\"}"
+          echo "FaynoSync 上传完成"
 
       - name: 构建完成总结
         if: always() && steps.check.outputs.should_run == 'true'
