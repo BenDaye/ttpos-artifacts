@@ -16,7 +16,7 @@ on:
           - "prod"
           - "test"
           - "dev"
-        default: "prod"
+        default: "test"
       package:
         description: "选择要构建的应用端"
         required: true
