@@ -133,8 +133,8 @@ jobs:
         if: steps.check.outputs.should_run == 'true'
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.27.3'
-          channel: 'stable'
+          flutter-version: "3.27.3"
+          channel: "stable"
           cache: true
 
       - name: Install Melos
@@ -316,7 +316,7 @@ jobs:
           curl -f -X POST "${FAYNOSYNC_URL}/upload" \
             -H "Authorization: Bearer ${FAYNOSYNC_TOKEN}" \
             -F "file=@${FILE_PATH}" \
-            -F "data={\"app_name\":\"${{ matrix.faynosync_name }}\",\"version\":\"${{ env.MELOS_PACKAGE_VERSION }}\",\"channel\":\"${CHANNEL}\",\"publish\":true,\"critical\":false,\"platform\":\"windows\",\"arch\":\"amd64\",\"changelog\":\"Build from ${{ inputs.branch }}\"}"
+            -F "data={\"app_name\":\"${{ matrix.faynosync_name }}\",\"version\":\"${{ env.MELOS_PACKAGE_VERSION }}\",\"channel\":\"${CHANNEL}\",\"publish\":false,\"critical\":false,\"platform\":\"windows\",\"arch\":\"amd64\",\"changelog\":\"Build from ${{ inputs.branch }}\"}"
           echo "FaynoSync 上传完成"
 
       - name: 构建完成总结

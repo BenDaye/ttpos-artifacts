@@ -122,7 +122,6 @@ jobs:
           token: ${{ secrets.PRIVATE_REPO_PAT }}
           ref: ${{ github.event.inputs.branch }}
 
-
       - name: 配置 App Store Connect 登录
         shell: bash
         env:
@@ -144,7 +143,7 @@ jobs:
           MAC_KEYCHAIN_PASSWORD: ${{ secrets.MAC_KEYCHAIN_PASSWORD || 'github-actions-secure-2024' }}
         run: |
           set -euo pipefail
-          
+
           # 检查必要的 Secrets
           if [ -z "${MAC_SIGNING_CERT_BASE64}" ] || [ -z "${MAC_SIGNING_CERT_PASSWORD}" ]; then
             echo "错误: 缺少必要的证书 Secrets"
@@ -153,38 +152,38 @@ jobs:
             echo "- MAC_SIGNING_CERT_PASSWORD: .p12 证书的密码"
             exit 1
           fi
-          
+
           # 创建临时钥匙串
           KEYCHAIN_PASSWORD="${MAC_KEYCHAIN_PASSWORD}"
           KEYCHAIN_PATH="$RUNNER_TEMP/mac-signing.keychain-db"
-          
+
           echo "创建临时钥匙串: $KEYCHAIN_PATH"
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          
+
           # 设置钥匙串列表
           security list-keychain -d user -s "$KEYCHAIN_PATH"
-          
+
           # 导入证书
           CERT_PATH="$RUNNER_TEMP/developer_id_cert.p12"
           echo "解码并导入证书..."
           echo "$MAC_SIGNING_CERT_BASE64" | base64 --decode > "$CERT_PATH"
-          
+
           # 导入证书到钥匙串
           security import "$CERT_PATH" -P "$MAC_SIGNING_CERT_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
-          
+
           # 设置钥匙串分区列表
           security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          
+
           # 验证证书导入
           echo "验证导入的证书:"
           security find-identity -v -p codesigning "$KEYCHAIN_PATH"
-          
+
           # 设置环境变量
           echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
           echo "MAC_KEYCHAIN_PASSWORD=$KEYCHAIN_PASSWORD" >> "$GITHUB_ENV"
-          
+
           echo "证书导入完成!"
       - name: 安装开发描述文件
         shell: bash
@@ -370,7 +369,7 @@ jobs:
           KEYCHAIN_PATH: ${{ env.KEYCHAIN_PATH }}
         run: |
           set -euo pipefail
-          
+
           # 获取实际的签名身份
           echo "获取可用的签名身份..."
           AVAILABLE_IDENTITIES=$(security find-identity -v -p codesigning "$KEYCHAIN_PATH" | grep "Developer ID Application" | head -1)
@@ -380,14 +379,14 @@ jobs:
             security find-identity -v -p codesigning "$KEYCHAIN_PATH"
             exit 1
           fi
-          
+
           # 提取签名身份名称
           SIGNING_IDENTITY=$(echo "$AVAILABLE_IDENTITIES" | sed 's/.*"\(.*\)".*/\1/')
           TEAM_ID="${MAC_SIGNING_TEAM_ID_SECRET:-N278MM4R33}"
-          
+
           echo "使用签名身份: $SIGNING_IDENTITY"
           echo "使用团队 ID: $TEAM_ID"
-          
+
           # 设置环境变量
           echo "MAC_SIGNING_IDENTITY=$SIGNING_IDENTITY" >> "$GITHUB_ENV"
           echo "MAC_SIGNING_TEAM_ID=$TEAM_ID" >> "$GITHUB_ENV"
@@ -459,16 +458,16 @@ jobs:
           KEYCHAIN_PATH: ${{ env.KEYCHAIN_PATH }}
         run: |
           set -euo pipefail
-          
+
           if [ -z "${MAC_SIGNING_IDENTITY}" ]; then
             echo "错误: 未配置签名标识 MAC_SIGNING_IDENTITY" >&2
             exit 1
           fi
-          
+
           # 设置默认钥匙串
           security default-keychain -s "$KEYCHAIN_PATH"
           security unlock-keychain -p "${MAC_KEYCHAIN_PASSWORD}" "$KEYCHAIN_PATH"
-          
+
           # 签名单个应用的函数
           sign_app() {
             local package="$1"
@@ -567,31 +566,31 @@ jobs:
             
             echo "$package 应用签名完成!"
           }
-          
+
           echo "签名单个应用: $PACKAGE_NAME"
           sign_app "$PACKAGE_NAME" "$APP_PATH"
       - name: 创建 DMG(单包)
         shell: bash
         run: |
           set -euo pipefail
-          
+
           # 安装 create-dmg
           if ! command -v create-dmg &> /dev/null; then
             echo "安装 create-dmg..."
             brew install create-dmg
           fi
-          
+
           # 配置参数
           package="$PACKAGE_NAME"
           version="$MELOS_PACKAGE_VERSION"
-          
+
           # 配置参数 (参考 scripts/pack_mac.dart)
           window_size="800 400"
           window_pos="200 120"
           icon_size="100"
           app_icon_pos="200 190"
           drop_link_pos="600 185"
-          
+
           case "$package" in
             pos)
               app_name="TTPOS"
@@ -624,30 +623,30 @@ jobs:
               icon_path="TTPOS Shop.app/Contents/Resources/AppIcon.icns"
               ;;
           esac
-          
+
           release_dir="releases/${package}/${version}"
           dmg_name="${dmg_file_prefix}-${version}.dmg"
-          
+
           echo "正在为 $package 创建 DMG..."
-          
+
           # 进入发布目录
           pushd "$release_dir" > /dev/null
-          
+
           # 查找并重命名 .app (如果需要)
           current_app=$(find . -maxdepth 1 -name "*.app" | head -n 1)
           if [ -z "$current_app" ]; then
              echo "错误: 未找到 .app 文件"
              exit 1
           fi
-          
+
           if [ "$(basename "$current_app")" != "${app_name}.app" ]; then
              echo "重命名 $(basename "$current_app") -> ${app_name}.app"
              mv "$current_app" "${app_name}.app"
           fi
-          
+
           # 清理旧的 DMG
           rm -f "$dmg_name"
-          
+
           # 执行 create-dmg
           create-dmg \
             --volname "${vol_name}" \
@@ -663,7 +662,7 @@ jobs:
             
           result=$?
           popd > /dev/null
-          
+
           if [ $result -eq 0 ]; then
              full_dmg_path="${release_dir}/${dmg_name}"
              echo "DMG 创建成功: $full_dmg_path"
@@ -680,25 +679,25 @@ jobs:
           KEYCHAIN_PATH: ${{ env.KEYCHAIN_PATH }}
         run: |
           set -euo pipefail
-          
+
           if [ -z "${MAC_SIGNING_IDENTITY}" ]; then
             echo "未配置签名标识 MAC_SIGNING_IDENTITY" >&2
             exit 1
           fi
-          
+
           # 设置默认钥匙串
           security default-keychain -s "$KEYCHAIN_PATH"
           security unlock-keychain -p "${MAC_KEYCHAIN_PASSWORD}" "$KEYCHAIN_PATH"
-          
+
           echo "开始签名 $PACKAGE_NAME DMG: $DMG_PATH"
           echo "使用签名身份: ${MAC_SIGNING_IDENTITY}"
-          
+
           # 签名 DMG
           codesign --force --sign "$MAC_SIGNING_IDENTITY" "$DMG_PATH"
-          
+
           echo "验证 $PACKAGE_NAME DMG 签名..."
           codesign --verify "$DMG_PATH"
-          
+
           echo ""
           echo "$PACKAGE_NAME DMG 签名信息:"
           codesign -dvv "$DMG_PATH" 2>&1 | head -20 || true
@@ -728,11 +727,11 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           set +e  # 允许错误继续
-          
+
           echo "开始公证 DMG..."
           echo "Apple ID: ${APPLE_ID}"
           echo "Team ID: ${APPLE_TEAM_ID}"
-          
+
           # 检查凭据是否有效
           if [ -z "${APPLE_ID}" ] || [ -z "${APPLE_APP_SPECIFIC_PASSWORD}" ] || [ -z "${APPLE_TEAM_ID}" ]; then
             echo "警告: Apple 公证凭据不完整, 跳过公证"
@@ -742,12 +741,12 @@ jobs:
             echo "- APPLE_TEAM_ID: Apple 开发者团队 ID"
             exit 0
           fi
-          
+
           # 提交公证
           echo "正在提交公证请求..."
           xcrun notarytool submit "$DMG_PATH" --wait --apple-id "$APPLE_ID" --password "$APPLE_APP_SPECIFIC_PASSWORD" --team-id "$APPLE_TEAM_ID" > /tmp/notary_output.txt 2>&1
           NOTARIZE_RESULT=$?
-          
+
           # 检查公证结果
           if [ $NOTARIZE_RESULT -eq 0 ]; then
             # 提取公证状态
@@ -801,7 +800,7 @@ jobs:
             echo "应用已构建并签名, 但不包含 Apple 公证"
             echo "未公证的应用仍可运行, 但首次启动时需要用户信任"
           fi
-          
+
           # 清理临时文件
           rm -f /tmp/notary_output.txt
       - name: 上传构建产物(单包)
@@ -850,7 +849,7 @@ jobs:
           privateKey: ${{ secrets.SCP_S_RIVATEKEY }}
           command: |
             echo "在最终服务器创建软链..."
-            ssh -o StrictHostKeyChecking=no "${{ secrets.SCP_D_USER }}@${{ secrets.SCP_D_HOST }}" "cd ${{ env[format('scp_d_{0}', env.PACKAGE_NAME)] }} && ln -sf ${{ env.VERSION_DMG }} ${{ env.LATEST_NAME }}" 
+            ssh -o StrictHostKeyChecking=no "${{ secrets.SCP_D_USER }}@${{ secrets.SCP_D_HOST }}" "cd ${{ env[format('scp_d_{0}', env.PACKAGE_NAME)] }} && ln -sf ${{ env.VERSION_DMG }} ${{ env.LATEST_NAME }}"
 
       - name: 上传到 FaynoSync
         if: ${{ env.UPLOAD_TO_FAYNOSYNC == 'true' }}
@@ -891,7 +890,7 @@ jobs:
           curl -f -X POST "${FAYNOSYNC_URL}/upload" \
             -H "Authorization: Bearer ${FAYNOSYNC_TOKEN}" \
             -F "file=@${DMG_PATH}" \
-            -F "data={\"app_name\":\"${FAYNOSYNC_APP}\",\"version\":\"${MELOS_PACKAGE_VERSION}\",\"channel\":\"${CHANNEL}\",\"publish\":true,\"critical\":false,\"platform\":\"macos\",\"arch\":\"${FS_ARCH}\",\"changelog\":\"Build from ${BRANCH_NAME}\"}"
+            -F "data={\"app_name\":\"${FAYNOSYNC_APP}\",\"version\":\"${MELOS_PACKAGE_VERSION}\",\"channel\":\"${CHANNEL}\",\"publish\":false,\"critical\":false,\"platform\":\"macos\",\"arch\":\"${FS_ARCH}\",\"changelog\":\"Build from ${BRANCH_NAME}\"}"
           echo "FaynoSync 上传完成"
 
   build-all:
