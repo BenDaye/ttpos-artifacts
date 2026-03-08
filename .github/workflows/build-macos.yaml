@@ -207,7 +207,7 @@ jobs:
           mkdir -p "$PROFILE_DIR"
 
           pkg="${{ matrix.package }}"
-          VAR_NAME="MAC_${pkg^^}_PROFILE_BASE64"
+          VAR_NAME="MAC_$(echo "$pkg" | tr '[:lower:]' '[:upper:]')_PROFILE_BASE64"
           PROFILE_VALUE="${!VAR_NAME}"
 
           if [ -z "$PROFILE_VALUE" ]; then
