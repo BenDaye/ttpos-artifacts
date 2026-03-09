@@ -1,0 +1,508 @@
+name: Build iOS IPA
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "构建分支 (e.g. release, new-test, feature/xxx)"
+        required: true
+        type: string
+        default: "new-test"
+      env:
+        description: "选择构建环境"
+        required: true
+        type: choice
+        options:
+          - "prod"
+          - "test"
+          - "dev"
+        default: "test"
+      package:
+        description: "选择要构建的应用端"
+        required: true
+        type: choice
+        options:
+          - all
+          - pos
+          - assistant
+          - kds
+          - tablet
+          - shop
+        default: "all"
+      base_url:
+        description: "选择API基础URL"
+        required: true
+        type: choice
+        default: "https://ttpos-test1.ttpos.com/api/v1"
+        options:
+          - "https://ttpos-test1.ttpos.com/api/v1"
+          - "https://api.ttpos.com/api/v1"
+          - "https://ttpos-pro.keli.vip/api/v1"
+      base_ws_url:
+        description: "选择WebSocket基础URL"
+        required: true
+        type: choice
+        default: "wss://ttpos-test1.ttpos.com/ws"
+        options:
+          - "wss://ttpos-test1.ttpos.com/ws"
+          - "wss://api.ttpos.com/ws"
+          - "wss://ttpos-pro.keli.vip/ws"
+      upload_testflight:
+        description: "是否上传到 TestFlight"
+        required: false
+        default: true
+        type: boolean
+      faynosync:
+        description: "是否上传到 FaynoSync"
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  build:
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [pos, assistant, kds, tablet, shop]
+        include:
+          - package: pos
+            app_name: TTPOS
+            gcs_folder: Cashier
+            faynosync_name: "TTPOS"
+          - package: assistant
+            app_name: TTPOS-Go
+            gcs_folder: Assistant
+            faynosync_name: "TTPOS Go"
+          - package: kds
+            app_name: TTPOS-Kitchen
+            gcs_folder: Kitchen
+            faynosync_name: "TTPOS Kitchen"
+          - package: tablet
+            app_name: TTPOS-Menu
+            gcs_folder: Menu
+            faynosync_name: "TTPOS Menu"
+          - package: shop
+            app_name: TTPOS-Shop
+            gcs_folder: Shop
+            faynosync_name: "TTPOS Shop"
+    env:
+      GCS_PATH: ${{ inputs.branch == 'release' && format('dc_apk/TTPOS/Prod/iOS/{0}/', matrix.gcs_folder) || format('dc_apk/TTPOS/Test/iOS/{0}/', matrix.gcs_folder) }}
+    steps:
+      - name: 检查是否需要构建此应用端
+        id: check
+        run: |
+          if [ "${{ inputs.package }}" = "all" ] || [ "${{ inputs.package }}" = "${{ matrix.package }}" ]; then
+            echo "should_run=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_run=false" >> $GITHUB_OUTPUT
+            echo "跳过 ${{ matrix.package }} (选择的应用端: ${{ inputs.package }})"
+          fi
+
+      - name: 显示构建信息
+        if: steps.check.outputs.should_run == 'true'
+        run: |
+          echo "========================================="
+          echo "iOS 构建信息"
+          echo "========================================="
+          echo "应用端: ${{ matrix.package }}"
+          echo "分支: ${{ inputs.branch }}"
+          echo "环境: ${{ inputs.env }}"
+          echo "API URL: ${{ inputs.base_url }}"
+          echo "WebSocket URL: ${{ inputs.base_ws_url }}"
+          echo "上传 TestFlight: ${{ inputs.upload_testflight }}"
+          echo "========================================="
+
+      - name: Checkout the code
+        if: steps.check.outputs.should_run == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: innet8/ttpos-flutter
+          token: ${{ secrets.PRIVATE_REPO_PAT }}
+          ref: ${{ inputs.branch }}
+
+      # ========== iOS 签名准备 ==========
+
+      - name: 创建临时钥匙串并导入证书
+        if: steps.check.outputs.should_run == 'true'
+        shell: bash
+        env:
+          IOS_SIGNING_CERT_BASE64: ${{ secrets.IOS_SIGNING_CERT_BASE64 }}
+          IOS_SIGNING_CERT_PASSWORD: ${{ secrets.IOS_SIGNING_CERT_PASSWORD }}
+          IOS_KEYCHAIN_PASSWORD: ${{ secrets.IOS_KEYCHAIN_PASSWORD || 'github-actions-ios-2024' }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${IOS_SIGNING_CERT_BASE64}" ] || [ -z "${IOS_SIGNING_CERT_PASSWORD}" ]; then
+            echo "错误: 缺少必要的证书 Secrets"
+            echo "请确保配置了以下 Secrets:"
+            echo "- IOS_SIGNING_CERT_BASE64: Apple Distribution 证书 (.p12) 的 Base64 编码"
+            echo "- IOS_SIGNING_CERT_PASSWORD: .p12 证书的密码"
+            exit 1
+          fi
+
+          KEYCHAIN_PASSWORD="${IOS_KEYCHAIN_PASSWORD}"
+          KEYCHAIN_PATH="$RUNNER_TEMP/ios-signing.keychain-db"
+
+          echo "创建临时钥匙串: $KEYCHAIN_PATH"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychain -d user -s "$KEYCHAIN_PATH"
+
+          CERT_PATH="$RUNNER_TEMP/apple_distribution_cert.p12"
+          echo "解码并导入 Apple Distribution 证书..."
+          echo "$IOS_SIGNING_CERT_BASE64" | base64 --decode > "$CERT_PATH"
+          security import "$CERT_PATH" -P "$IOS_SIGNING_CERT_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          echo "验证导入的证书:"
+          security find-identity -v -p codesigning "$KEYCHAIN_PATH"
+
+          echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
+          echo "IOS_KEYCHAIN_PASSWORD=$KEYCHAIN_PASSWORD" >> "$GITHUB_ENV"
+
+      - name: 安装 App Store 描述文件
+        if: steps.check.outputs.should_run == 'true'
+        shell: bash
+        env:
+          IOS_POS_PROFILE_BASE64: ${{ secrets.IOS_POS_PROFILE_BASE64 }}
+          IOS_ASSISTANT_PROFILE_BASE64: ${{ secrets.IOS_ASSISTANT_PROFILE_BASE64 }}
+          IOS_KDS_PROFILE_BASE64: ${{ secrets.IOS_KDS_PROFILE_BASE64 }}
+          IOS_TABLET_PROFILE_BASE64: ${{ secrets.IOS_TABLET_PROFILE_BASE64 }}
+          IOS_SHOP_PROFILE_BASE64: ${{ secrets.IOS_SHOP_PROFILE_BASE64 }}
+        run: |
+          set -e
+          PROFILE_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
+          mkdir -p "$PROFILE_DIR"
+
+          pkg="${{ matrix.package }}"
+          VAR_NAME="IOS_$(echo "$pkg" | tr '[:lower:]' '[:upper:]')_PROFILE_BASE64"
+          PROFILE_VALUE="${!VAR_NAME}"
+
+          if [ -z "$PROFILE_VALUE" ]; then
+            echo "未配置 ${VAR_NAME}, 跳过描述文件安装"
+            exit 0
+          fi
+
+          PROFILE_PATH="$RUNNER_TEMP/ios_${pkg}_profile.mobileprovision"
+          PLIST_PATH="$RUNNER_TEMP/ios_${pkg}_profile.plist"
+          echo "$PROFILE_VALUE" | base64 --decode > "$PROFILE_PATH"
+          security cms -D -i "$PROFILE_PATH" > "$PLIST_PATH"
+
+          PROFILE_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" "$PLIST_PATH" 2>/dev/null || true)
+          if [ -z "$PROFILE_UUID" ]; then
+            echo "无法解析描述文件 UUID, 文件可能损坏"
+            exit 1
+          fi
+
+          PROFILE_NAME=$(/usr/libexec/PlistBuddy -c "Print Name" "$PLIST_PATH" 2>/dev/null || true)
+
+          cp "$PROFILE_PATH" "$PROFILE_DIR/${PROFILE_UUID}.mobileprovision"
+          echo "已安装 ${pkg} 的 iOS 描述文件 (UUID: ${PROFILE_UUID}, Name: ${PROFILE_NAME})"
+
+          echo "IOS_PROFILE_UUID=$PROFILE_UUID" >> "$GITHUB_ENV"
+          echo "IOS_PROFILE_NAME=$PROFILE_NAME" >> "$GITHUB_ENV"
+
+      - name: 设置默认钥匙串
+        if: steps.check.outputs.should_run == 'true'
+        shell: bash
+        run: |
+          security default-keychain -s "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$IOS_KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+      # ========== Flutter 环境 ==========
+
+      - name: Setup Flutter
+        if: steps.check.outputs.should_run == 'true'
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.27.3"
+          channel: stable
+          cache: true
+
+      - name: Precache Flutter iOS artifacts
+        if: steps.check.outputs.should_run == 'true'
+        run: flutter precache --ios
+
+      - name: Install Melos
+        if: steps.check.outputs.should_run == 'true'
+        run: |
+          flutter --version
+          dart pub global activate melos
+
+      - name: Melos Init
+        if: steps.check.outputs.should_run == 'true'
+        env:
+          PUB_HOSTED_URL: https://pub.flutter-io.cn
+          FLUTTER_STORAGE_BASE_URL: https://storage.flutter-io.cn
+        run: |
+          melos run init
+          melos bs
+          melos run env:setup -- --env=${{ inputs.env }} --file=${{ inputs.env }}
+
+      - name: Install CocoaPods dependencies
+        if: steps.check.outputs.should_run == 'true'
+        working-directory: apps/${{ matrix.package }}/ios
+        run: pod install --repo-update
+        env:
+          CP_HOME_DIR: ${{ runner.temp }}/cocoapods
+
+      # ========== 环境变量配置 ==========
+
+      - name: 生成环境变量文件
+        if: steps.check.outputs.should_run == 'true'
+        env:
+          API_URL: ${{ inputs.base_url }}
+          WS_URL: ${{ inputs.base_ws_url }}
+        run: |
+          case "${{ inputs.env }}" in
+            dev)  ENV_SUFFIX="development" ;;
+            test) ENV_SUFFIX="test" ;;
+            *)    ENV_SUFFIX="production" ;;
+          esac
+
+          ENV_PATH="apps/${{ matrix.package }}/.env.${ENV_SUFFIX}.local"
+          ENV_TEMPLATE="apps/${{ matrix.package }}/.env.${ENV_SUFFIX}"
+
+          if [ ! -f "$ENV_PATH" ]; then
+            if [ -f "$ENV_TEMPLATE" ]; then
+              cp "$ENV_TEMPLATE" "$ENV_PATH"
+            else
+              touch "$ENV_PATH"
+            fi
+          fi
+
+          sed -i '' "s|^API_BASE_URL=.*|API_BASE_URL=${API_URL}|" "$ENV_PATH"
+          sed -i '' "s|^WS_BASE_URL=.*|WS_BASE_URL=${WS_URL}|" "$ENV_PATH"
+
+          echo "ENV_SUFFIX=$ENV_SUFFIX" >> $GITHUB_ENV
+
+          echo "--- 环境变量文件内容 ($ENV_PATH) ---"
+          cat "$ENV_PATH"
+
+      - name: 设置 SENTRY_DSN(仅 release 分支)
+        if: steps.check.outputs.should_run == 'true' && inputs.branch == 'release'
+        env:
+          SENTRYDSN_POS: ${{ secrets.SENTRYDSN_POS }}
+          SENTRYDSN_KDS: ${{ secrets.SENTRYDSN_KDS }}
+          SENTRYDSN_ASSISTANT: ${{ secrets.SENTRYDSN_ASSISTANT }}
+          SENTRYDSN_TABLET: ${{ secrets.SENTRYDSN_TABLET }}
+          SENTRYDSN_SHOP: ${{ secrets.SENTRYDSN_SHOP }}
+        run: |
+          ENV_PATH="apps/${{ matrix.package }}/.env.${{ env.ENV_SUFFIX }}.local"
+          case "${{ matrix.package }}" in
+            pos)       DSN="$SENTRYDSN_POS" ;;
+            assistant) DSN="$SENTRYDSN_ASSISTANT" ;;
+            tablet)    DSN="$SENTRYDSN_TABLET" ;;
+            kds)       DSN="$SENTRYDSN_KDS" ;;
+            shop)      DSN="$SENTRYDSN_SHOP" ;;
+          esac
+          sed -i '' "s|^SENTRY_DSN=.*|SENTRY_DSN=${DSN}|" "$ENV_PATH"
+
+      - name: 设置环境变量
+        if: steps.check.outputs.should_run == 'true'
+        run: |
+          VERSION=$(awk '/version:/ {print $2}' apps/${{ matrix.package }}/pubspec.yaml | cut -d'+' -f1)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "VERSION_IPA=${{ matrix.app_name }}-${VERSION}.ipa" >> $GITHUB_ENV
+
+      # ========== 构建 ==========
+
+      - name: 构建 iOS 应用 (build_ios.dart → xcarchive)
+        if: steps.check.outputs.should_run == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          security default-keychain -s "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$IOS_KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          echo "构建 iOS 应用: ${{ matrix.package }}"
+          dart run ./scripts/build_ios.dart --env=${{ inputs.env }} --package=${{ matrix.package }}
+
+      - name: 生成 ExportOptions.plist 并导出 IPA
+        if: steps.check.outputs.should_run == 'true'
+        shell: bash
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+
+          # 如果 build_ios.dart 已经产出了 IPA, 直接使用
+          EXISTING_IPA=$(find "apps/${{ matrix.package }}/build/ios/ipa" -name "*.ipa" 2>/dev/null | head -n 1)
+          if [ -n "$EXISTING_IPA" ]; then
+            echo "build_ios.dart 已产出 IPA: $EXISTING_IPA"
+            IPA_DIR="releases/${{ matrix.package }}/${{ env.VERSION }}"
+            mkdir -p "$IPA_DIR"
+            cp "$EXISTING_IPA" "$IPA_DIR/${{ env.VERSION_IPA }}"
+            echo "IPA_PATH=$IPA_DIR/${{ env.VERSION_IPA }}" >> "$GITHUB_ENV"
+            ls -lh "$IPA_DIR/${{ env.VERSION_IPA }}"
+            exit 0
+          fi
+
+          # 否则, 从 xcarchive 导出 IPA
+          echo "未找到现成 IPA, 从 xcarchive 导出..."
+
+          ARCHIVE_PATH="apps/${{ matrix.package }}/build/ios/archive/Runner.xcarchive"
+          if [ ! -d "$ARCHIVE_PATH" ]; then
+            ARCHIVE_PATH=$(find "apps/${{ matrix.package }}/build/ios" -name "*.xcarchive" -type d 2>/dev/null | head -n 1)
+          fi
+          if [ -z "$ARCHIVE_PATH" ] || [ ! -d "$ARCHIVE_PATH" ]; then
+            echo "错误: 未找到 .xcarchive" >&2
+            find "apps/${{ matrix.package }}/build" -maxdepth 4 -type d 2>/dev/null || true
+            exit 1
+          fi
+          echo "找到 xcarchive: $ARCHIVE_PATH"
+
+          BUNDLE_ID=$(/usr/libexec/PlistBuddy -c "Print :ApplicationProperties:CFBundleIdentifier" "$ARCHIVE_PATH/Info.plist" 2>/dev/null || true)
+          if [ -z "$BUNDLE_ID" ]; then
+            APP_INFO=$(find "$ARCHIVE_PATH/Products/Applications" -name "Info.plist" 2>/dev/null | head -n 1)
+            [ -n "$APP_INFO" ] && BUNDLE_ID=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$APP_INFO" 2>/dev/null || true)
+          fi
+          if [ -z "$BUNDLE_ID" ]; then
+            echo "错误: 无法确定 Bundle ID" >&2
+            exit 1
+          fi
+          echo "Bundle ID: $BUNDLE_ID"
+
+          EXPORT_PLIST="$RUNNER_TEMP/ExportOptions.plist"
+          /usr/libexec/PlistBuddy -c "Clear dict" "$EXPORT_PLIST" 2>/dev/null || plutil -create xml1 "$EXPORT_PLIST"
+          /usr/libexec/PlistBuddy -c "Add :method string app-store-connect" "$EXPORT_PLIST"
+          /usr/libexec/PlistBuddy -c "Add :teamID string ${APPLE_TEAM_ID}" "$EXPORT_PLIST"
+          /usr/libexec/PlistBuddy -c "Add :uploadSymbols bool true" "$EXPORT_PLIST"
+          /usr/libexec/PlistBuddy -c "Add :signingStyle string manual" "$EXPORT_PLIST"
+          /usr/libexec/PlistBuddy -c "Add :provisioningProfiles dict" "$EXPORT_PLIST"
+          /usr/libexec/PlistBuddy -c "Add :provisioningProfiles:${BUNDLE_ID} string ${IOS_PROFILE_NAME}" "$EXPORT_PLIST"
+          echo "生成的 ExportOptions.plist:"
+          cat "$EXPORT_PLIST"
+
+          security default-keychain -s "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$IOS_KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          EXPORT_DIR="$RUNNER_TEMP/ipa_export"
+          mkdir -p "$EXPORT_DIR"
+          xcodebuild -exportArchive \
+            -archivePath "$ARCHIVE_PATH" \
+            -exportOptionsPlist "$EXPORT_PLIST" \
+            -exportPath "$EXPORT_DIR" \
+            -allowProvisioningUpdates
+
+          IPA_SOURCE=$(find "$EXPORT_DIR" -maxdepth 1 -name "*.ipa" | head -n 1)
+          if [ -z "$IPA_SOURCE" ]; then
+            echo "错误: 导出 IPA 失败" >&2
+            ls -al "$EXPORT_DIR"
+            exit 1
+          fi
+
+          IPA_DIR="releases/${{ matrix.package }}/${{ env.VERSION }}"
+          mkdir -p "$IPA_DIR"
+          cp "$IPA_SOURCE" "$IPA_DIR/${{ env.VERSION_IPA }}"
+          echo "IPA_PATH=$IPA_DIR/${{ env.VERSION_IPA }}" >> "$GITHUB_ENV"
+          echo "IPA 导出成功: $IPA_DIR/${{ env.VERSION_IPA }}"
+          ls -lh "$IPA_DIR/${{ env.VERSION_IPA }}"
+
+      # ========== 分发 ==========
+
+      - name: 配置 App Store Connect API Key
+        if: steps.check.outputs.should_run == 'true' && inputs.upload_testflight == true
+        shell: bash
+        env:
+          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_API_KEY_BASE64: ${{ secrets.ASC_API_KEY_BASE64 }}
+        run: |
+          set -euo pipefail
+          if [ -z "${ASC_API_KEY_ID}" ] || [ -z "${ASC_ISSUER_ID}" ] || [ -z "${ASC_API_KEY_BASE64}" ]; then
+            echo "错误: 缺少 App Store Connect API Key 配置"
+            echo "需要: ASC_API_KEY_ID, ASC_ISSUER_ID, ASC_API_KEY_BASE64"
+            exit 1
+          fi
+          API_KEY_DIR="$HOME/.appstoreconnect/private_keys"
+          mkdir -p "$API_KEY_DIR"
+          echo "$ASC_API_KEY_BASE64" | base64 --decode > "$API_KEY_DIR/AuthKey_${ASC_API_KEY_ID}.p8"
+          echo "已配置 App Store Connect API Key: $ASC_API_KEY_ID"
+
+      - name: 上传到 TestFlight
+        if: steps.check.outputs.should_run == 'true' && inputs.upload_testflight == true
+        shell: bash
+        env:
+          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          echo "正在上传 IPA 到 TestFlight..."
+          echo "IPA: $IPA_PATH"
+
+          xcrun altool --upload-app \
+            --type ios \
+            --file "$IPA_PATH" \
+            --apiKey "$ASC_API_KEY_ID" \
+            --apiIssuer "$ASC_ISSUER_ID"
+
+          echo "TestFlight 上传成功!"
+
+      - name: 上传构建产物到 Artifact
+        if: steps.check.outputs.should_run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-${{ matrix.app_name }}-${{ env.VERSION }}
+          path: ${{ env.IPA_PATH }}
+          retention-days: 7
+          compression-level: 0
+
+      - name: Upload to Google Cloud Storage
+        if: steps.check.outputs.should_run == 'true' && inputs.upload_testflight == true
+        uses: "google-github-actions/auth@v2"
+        with:
+          credentials_json: "${{ secrets.GOOGLE_STORAGE_CREDENTIALS }}"
+
+      - name: 上传构建产物到 Google Cloud Storage
+        if: steps.check.outputs.should_run == 'true' && inputs.upload_testflight == true
+        uses: "google-github-actions/upload-cloud-storage@v2"
+        with:
+          path: ${{ env.IPA_PATH }}
+          destination: ${{ env.GCS_PATH }}
+          parent: false
+
+      - name: 上传到 FaynoSync
+        if: steps.check.outputs.should_run == 'true' && inputs.faynosync == true
+        continue-on-error: true
+        env:
+          FAYNOSYNC_URL: ${{ secrets.FAYNOSYNC_URL }}
+          FAYNOSYNC_TOKEN: ${{ secrets.FAYNOSYNC_TOKEN }}
+        run: |
+          if [ ! -f "$IPA_PATH" ]; then
+            echo "构建产物不存在，跳过 FaynoSync 上传"
+            exit 0
+          fi
+          if [ -z "$FAYNOSYNC_URL" ] || [ -z "$FAYNOSYNC_TOKEN" ]; then
+            echo "未配置 FAYNOSYNC_URL 或 FAYNOSYNC_TOKEN，跳过上传"
+            exit 0
+          fi
+          CHANNEL="${{ inputs.env }}"
+          echo "上传到 FaynoSync: ${{ matrix.faynosync_name }} v${{ env.VERSION }} (${CHANNEL}/ios/arm64)"
+          curl -f -X POST "${FAYNOSYNC_URL}/upload" \
+            -H "Authorization: Bearer ${FAYNOSYNC_TOKEN}" \
+            -F "file=@${IPA_PATH}" \
+            -F "data={\"app_name\":\"${{ matrix.faynosync_name }}\",\"version\":\"${{ env.VERSION }}\",\"channel\":\"${CHANNEL}\",\"publish\":false,\"critical\":false,\"platform\":\"ios\",\"arch\":\"arm64\",\"changelog\":\"Build from ${{ inputs.branch }}\"}"
+          echo "FaynoSync 上传完成"
+
+      # ========== 清理 ==========
+
+      - name: 清理临时钥匙串
+        if: always() && steps.check.outputs.should_run == 'true'
+        run: |
+          security delete-keychain "$KEYCHAIN_PATH" 2>/dev/null || true
+          rm -rf "$HOME/.appstoreconnect/private_keys" 2>/dev/null || true
+
+      - name: 构建完成总结
+        if: always() && steps.check.outputs.should_run == 'true'
+        run: |
+          echo "========================================="
+          echo "iOS 构建任务完成"
+          echo "========================================="
+          echo "应用端: ${{ matrix.package }}"
+          echo "版本: ${{ env.VERSION }}"
+          echo "分支: ${{ inputs.branch }}"
+          echo "环境: ${{ inputs.env }}"
+          echo "TestFlight: ${{ inputs.upload_testflight }}"
+          echo "========================================="
