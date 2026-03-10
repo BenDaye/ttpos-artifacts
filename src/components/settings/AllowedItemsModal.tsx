@@ -60,10 +60,10 @@ export const AllowedItemsModal: React.FC<AllowedItemsModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-4 border-b border-border flex justify-between items-center">
-          <h2 className="text-xl font-bold text-theme-primary">{title}</h2>
+          <h2 className="text-xl font-bold text-foreground">{title}</h2>
           <button
             onClick={onClose}
-            className="text-theme-primary hover:text-theme-danger"
+            className="text-foreground hover:text-destructive"
           >
             <i className="fas fa-times text-xl"></i>
           </button>
@@ -78,9 +78,9 @@ export const AllowedItemsModal: React.FC<AllowedItemsModalProps> = ({
                   id={`item-${item.id}`}
                   checked={selected.includes(item.id)}
                   onChange={() => handleToggleItem(item.id)}
-                  className="mr-3 accent-purple-500 w-5 h-5 border border-theme rounded transition-all duration-150 focus:ring-2 focus:ring-purple-400 focus:border-purple-400 bg-theme-input shadow-sm"
+                  className="mr-3 accent-primary w-5 h-5 border border-border rounded transition-all duration-150 focus-visible:ring-2 focus-visible:ring-ring bg-muted shadow-sm"
                 />
-                <label htmlFor={`item-${item.id}`} className="text-theme-primary font-semibold">
+                <label htmlFor={`item-${item.id}`} className="text-foreground font-semibold">
                   {item.name}
                 </label>
               </div>

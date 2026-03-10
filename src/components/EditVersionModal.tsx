@@ -604,18 +604,18 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
         successMessage="Changes saved successfully!"
         error={error}
         setError={setError}
-        className="w-[800px] max-h-[90vh] overflow-y-auto relative"
+        className="w-[800px] max-h-[90vh] overflow-y-auto"
       >
         <div className="mb-4">
-          <p className="text-theme-primary">App Name: {appName}</p>
-          <p className="text-theme-primary">Version: {version}</p>
-          <p className="text-theme-primary">Channel: {channel}</p>
+          <p className="text-foreground">App Name: {appName}</p>
+          <p className="text-foreground">Version: {version}</p>
+          <p className="text-foreground">Channel: {channel}</p>
         </div>
 
         {hasValidArtifacts ? (
           <div className="mb-6">
             <div className="flex justify-between items-center mb-3">
-              <h3 className="text-xl font-bold text-theme-primary font-roboto">Existing Artifacts</h3>
+              <h3 className="text-xl font-bold text-foreground font-roboto">Existing Artifacts</h3>
               {appData?.Tuf && (
                 <button
                   onClick={handleTufPublish}
@@ -665,13 +665,13 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
               {formData.Artifacts.map((artifact, index) => (
                 <div
                   key={index}
-                  className="bg-theme-card p-4 rounded-lg text-theme-primary hover:bg-theme-card-hover transition-colors"
+                  className="bg-card p-4 rounded-lg text-foreground hover:bg-accent transition-colors"
                 >
                   <div className="flex justify-between items-center">
                     <div>
                       <p className="font-semibold">{artifact.platform}</p>
-                      <p className="text-sm text-gray-300">Architecture: {artifact.arch}</p>
-                      <p className="text-sm text-gray-300">Package: {artifact.package}</p>
+                      <p className="text-sm text-muted-foreground">Architecture: {artifact.arch}</p>
+                      <p className="text-sm text-muted-foreground">Package: {artifact.package}</p>
                       {artifact.TufTaskID && (
                         <div className="mt-1 flex items-center gap-2">
                           <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${
@@ -722,7 +722,7 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
                       </button>
                       <button
                         onClick={() => handleDeleteArtifact(index, artifact.platform, artifact.arch)}
-                        className="text-theme-danger hover:text-red-400 ml-4"
+                        className="text-destructive hover:text-red-400 ml-4"
                         type="button"
                       >
                         <i className="fas fa-times"></i>
@@ -743,7 +743,7 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
 
         <form onSubmit={handleSubmit} className="space-y-6" noValidate>
           <div>
-            <label className="block text-theme-primary mb-2 font-roboto font-semibold">
+            <label className="block text-foreground mb-2 font-roboto font-semibold">
               Add New Files
             </label>
             <div className="relative">
@@ -757,7 +757,7 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
               />
               <label
                 htmlFor="file-upload"
-                className="w-full px-4 py-2 bg-theme-button-primary text-theme-primary rounded-lg cursor-pointer hover:bg-theme-input transition-colors duration-200 flex items-center justify-center font-roboto"
+                className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-lg cursor-pointer hover:bg-muted transition-colors duration-200 flex items-center justify-center font-roboto"
               >
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
@@ -770,21 +770,21 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
                 {selectedFiles.map((file, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between bg-theme-input bg-opacity-50 p-3 rounded-lg"
+                    className="flex items-center justify-between bg-muted bg-opacity-50 p-3 rounded-lg"
                   >
                     <div className="flex items-center space-x-2">
-                      <svg className="w-5 h-5 text-theme-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-5 h-5 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                       <div>
-                        <div className="text-theme-primary font-roboto">{file.name}</div>
-                        <div className="text-purple-200 text-sm font-roboto">{formatFileSize(file.size)}</div>
+                        <div className="text-foreground font-roboto">{file.name}</div>
+                        <div className="text-muted-foreground text-sm font-roboto">{formatFileSize(file.size)}</div>
                       </div>
                     </div>
                     <button
                       type="button"
                       onClick={() => removeFile(index)}
-                      className="text-theme-primary hover:text-red-300 transition-colors duration-200"
+                      className="text-foreground hover:text-red-300 transition-colors duration-200"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -798,14 +798,14 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
               <div className="grid grid-cols-2 gap-4 mt-4">
                 {platforms.length > 0 && (
                   <div>
-                    <label className="block text-theme-primary mb-2 font-roboto font-semibold">
+                    <label className="block text-foreground mb-2 font-roboto font-semibold">
                       Platform
                     </label>
                     <div className="relative dropdown-container">
                       <button
                         type="button"
                         onClick={() => handleDropdownClick('platform')}
-                        className="w-full min-w-0 bg-theme-card text-theme-primary rounded-lg p-2 pr-8 flex items-center justify-between hover:bg-theme-card-hover transition-colors"
+                        className="w-full min-w-0 bg-card text-foreground rounded-lg p-2 pr-8 flex items-center justify-between hover:bg-accent transition-colors"
                       >
                         <span className="block min-w-0 flex-1 truncate text-left">{platform || 'Select platform'}</span>
                         <svg 
@@ -818,19 +818,19 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
                           strokeWidth="2" 
                           strokeLinecap="round" 
                           strokeLinejoin="round"
-                          className={`text-theme-primary transition-transform flex-shrink-0 ml-2 ${openDropdown === 'platform' ? 'rotate-180' : ''}`}
+                          className={`text-foreground transition-transform flex-shrink-0 ml-2 ${openDropdown === 'platform' ? 'rotate-180' : ''}`}
                         >
                           <polyline points="6 9 12 15 18 9"></polyline>
                         </svg>
                       </button>
                       {openDropdown === 'platform' && (
-                        <div className="absolute top-full left-0 right-0 mt-1 bg-theme-card backdrop-blur-lg rounded-lg shadow-lg z-10 border border-theme-card-hover">
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-card backdrop-blur-lg rounded-lg shadow-lg z-10 border border-border">
                           {platforms.map((p) => (
                             <button
                               key={p.ID}
                               type="button"
                               onClick={() => handleOptionClick('platform', p.PlatformName)}
-                              className="w-full text-left truncate px-4 py-2 text-theme-primary hover:bg-theme-card-hover transition-colors first:rounded-t-lg last:rounded-b-lg"
+                              className="w-full text-left truncate px-4 py-2 text-foreground hover:bg-accent transition-colors first:rounded-t-lg last:rounded-b-lg"
                             >
                               {p.PlatformName}
                             </button>
@@ -842,14 +842,14 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
                 )}
                 {architectures.length > 0 && (
                   <div>
-                    <label className="block text-theme-primary mb-2 font-roboto font-semibold">
+                    <label className="block text-foreground mb-2 font-roboto font-semibold">
                       Architecture
                     </label>
                     <div className="relative dropdown-container">
                       <button
                         type="button"
                         onClick={() => handleDropdownClick('arch')}
-                        className="w-full min-w-0 bg-theme-card text-theme-primary rounded-lg p-2 pr-8 flex items-center justify-between hover:bg-theme-card-hover transition-colors"
+                        className="w-full min-w-0 bg-card text-foreground rounded-lg p-2 pr-8 flex items-center justify-between hover:bg-accent transition-colors"
                       >
                         <span className="block min-w-0 flex-1 truncate text-left">{arch || 'Select architecture'}</span>
                         <svg 
@@ -862,19 +862,19 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
                           strokeWidth="2" 
                           strokeLinecap="round" 
                           strokeLinejoin="round"
-                          className={`text-theme-primary transition-transform flex-shrink-0 ml-2 ${openDropdown === 'arch' ? 'rotate-180' : ''}`}
+                          className={`text-foreground transition-transform flex-shrink-0 ml-2 ${openDropdown === 'arch' ? 'rotate-180' : ''}`}
                         >
                           <polyline points="6 9 12 15 18 9"></polyline>
                         </svg>
                       </button>
                       {openDropdown === 'arch' && (
-                        <div className="absolute top-full left-0 right-0 mt-1 bg-theme-card backdrop-blur-lg rounded-lg shadow-lg z-10 border border-theme-card-hover">
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-card backdrop-blur-lg rounded-lg shadow-lg z-10 border border-border">
                           {architectures.map((a) => (
                             <button
                               key={a.ID}
                               type="button"
                               onClick={() => handleOptionClick('arch', a.ArchID)}
-                              className="w-full text-left truncate px-4 py-2 text-theme-primary hover:bg-theme-card-hover transition-colors first:rounded-t-lg last:rounded-b-lg"
+                              className="w-full text-left truncate px-4 py-2 text-foreground hover:bg-accent transition-colors first:rounded-t-lg last:rounded-b-lg"
                             >
                               {a.ArchID}
                             </button>
@@ -886,9 +886,9 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
                 )}
                                  {showUpdaterDropdown && (
                    <div>
-                     <label className="block text-theme-primary mb-2 font-roboto font-semibold">
+                     <label className="block text-foreground mb-2 font-roboto font-semibold">
                        Updater
-                       <span className="text-sm text-theme-secondary ml-2">
+                       <span className="text-sm text-muted-foreground ml-2">
                          (This platform has multiple enabled updaters, select desired updater if necessary)
                        </span>
                      </label>
@@ -896,7 +896,7 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
                       <button
                         type="button"
                         onClick={() => handleDropdownClick('updater')}
-                        className="w-full min-w-0 bg-theme-card text-theme-primary rounded-lg p-2 pr-8 flex items-center justify-between hover:bg-theme-card-hover transition-colors"
+                        className="w-full min-w-0 bg-card text-foreground rounded-lg p-2 pr-8 flex items-center justify-between hover:bg-accent transition-colors"
                       >
                                                  <span className="block min-w-0 flex-1 truncate text-left">{updater || 'manual (default)'}</span>
                         <svg 
@@ -909,19 +909,19 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
                           strokeWidth="2" 
                           strokeLinecap="round" 
                           strokeLinejoin="round"
-                          className={`text-theme-primary transition-transform flex-shrink-0 ml-2 ${openDropdown === 'updater' ? 'rotate-180' : ''}`}
+                          className={`text-foreground transition-transform flex-shrink-0 ml-2 ${openDropdown === 'updater' ? 'rotate-180' : ''}`}
                         >
                           <polyline points="6 9 12 15 18 9"></polyline>
                         </svg>
                       </button>
                                              {openDropdown === 'updater' && (
-                         <div className="absolute top-full left-0 right-0 mt-1 bg-theme-card backdrop-blur-lg rounded-lg shadow-lg z-10 border border-theme-card-hover">
+                         <div className="absolute top-full left-0 right-0 mt-1 bg-card backdrop-blur-lg rounded-lg shadow-lg z-10 border border-border">
                            {availableUpdaters.map((u) => (
                              <button
                                key={u.type}
                                type="button"
                                onClick={() => handleOptionClick('updater', u.type)}
-                               className="w-full text-left truncate px-4 py-2 text-theme-primary hover:bg-theme-card-hover transition-colors first:rounded-t-lg last:rounded-b-lg"
+                               className="w-full text-left truncate px-4 py-2 text-foreground hover:bg-accent transition-colors first:rounded-t-lg last:rounded-b-lg"
                              >
                                {u.type}
                              </button>
@@ -936,7 +936,7 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
 
             {updater === 'tauri' && (
               <div>
-                <label className="block text-theme-primary mb-2 font-roboto font-semibold">
+                <label className="block text-foreground mb-2 font-roboto font-semibold">
                   Signature
                 </label>
                 <input
@@ -944,7 +944,7 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
                   name="signature"
                   value={signature}
                   onChange={(e) => setSignature(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg font-roboto bg-theme-input text-theme-primary border border-theme transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 placeholder:text-theme-secondary shadow-sm"
+                  className="w-full px-4 py-2 rounded-lg font-roboto bg-muted text-foreground border border-border transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring placeholder:text-muted-foreground shadow-sm"
                   placeholder="Enter signature for Tauri updater"
                   required
                 />
@@ -953,34 +953,34 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-theme-primary mb-2 font-roboto font-semibold">
+            <label className="block text-foreground mb-2 font-roboto font-semibold">
               Changelog
             </label>
             <div className="flex gap-2 mb-2">
               <button
                 type="button"
                 onClick={() => setIsPreview(!isPreview)}
-                className="text-theme-primary text-sm hover:text-gray-300"
+                className="text-foreground text-sm hover:text-muted-foreground"
               >
                 {isPreview ? 'Edit' : 'Preview'}
               </button>
             </div>
             {isPreview ? (
-              <div className="bg-white dark:bg-white p-4 rounded prose prose-sm max-w-none">
+              <div className="bg-muted text-foreground p-4 rounded-lg prose prose-sm max-w-none dark:prose-invert">
                 <ReactMarkdown>{formData.Changelog}</ReactMarkdown>
               </div>
             ) : (
               <textarea
                 value={formData.Changelog}
                 onChange={(e) => setFormData({ ...formData, Changelog: e.target.value })}
-                className="w-full px-4 py-2 rounded-lg font-roboto bg-theme-input text-theme-primary border border-theme transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 placeholder:text-theme-secondary shadow-sm"
+                className="w-full px-4 py-2 rounded-lg font-roboto bg-muted text-foreground border border-border transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring placeholder:text-muted-foreground shadow-sm"
                 placeholder="Enter changelog in Markdown format..."
               />
             )}
           </div>
 
           <div className="flex gap-4">
-            <label className="flex items-center text-theme-primary font-roboto">
+            <label className="flex items-center text-foreground font-roboto">
               <input
                 type="checkbox"
                 checked={formData.Published}
@@ -989,7 +989,7 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
               />
               Published
             </label>
-            <label className="flex items-center text-theme-primary font-roboto">
+            <label className="flex items-center text-foreground font-roboto">
               <input
                 type="checkbox"
                 checked={formData.Critical}
@@ -998,7 +998,7 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
               />
               Critical
             </label>
-            <label className="flex items-center text-theme-primary font-roboto">
+            <label className="flex items-center text-foreground font-roboto">
               <input
                 type="checkbox"
                 checked={formData.Intermediate}
@@ -1013,13 +1013,13 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-roboto hover:bg-gray-300 transition-all duration-150 border border-gray-300 shadow-sm"
+              className="bg-secondary text-foreground px-4 py-2 rounded-lg font-roboto hover:bg-accent transition-all duration-150 border border-border shadow-sm"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="bg-theme-button-primary text-theme-primary px-4 py-2 rounded-lg font-roboto hover:bg-theme-input transition-colors duration-200"
+              className="bg-primary text-primary-foreground px-4 py-2 rounded-lg font-roboto hover:bg-muted transition-colors duration-200"
               disabled={Boolean(selectedFiles.length > 0 && 
                 ((platforms.length > 0 && !platform) || 
                  (architectures.length > 0 && !arch) || 
@@ -1045,7 +1045,7 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
       )}
 
       {deleteSuccess && (
-        <div className="fixed top-4 right-4 bg-green-500 text-theme-primary px-6 py-3 rounded-lg shadow-lg flex items-center space-x-3 z-[12000] animate-fade-in">
+        <div className="fixed top-4 right-4 bg-green-500 text-foreground px-6 py-3 rounded-lg shadow-lg flex items-center space-x-3 z-[12000] animate-fade-in">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
           </svg>
@@ -1054,7 +1054,7 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
       )}
 
       {deleteError && (
-        <div className="fixed top-4 right-4 bg-red-500 text-theme-primary px-6 py-3 rounded-lg shadow-lg z-[12000] animate-fade-in">
+        <div className="fixed top-4 right-4 bg-red-500 text-foreground px-6 py-3 rounded-lg shadow-lg z-[12000] animate-fade-in">
           <div className="flex items-center space-x-3">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -1063,7 +1063,7 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
             {deleteError.details && (
               <button
                 onClick={() => setShowDetails(!showDetails)}
-                className="ml-2 text-theme-primary hover:text-theme-primary-hover"
+                className="ml-2 text-foreground"
               >
                 <svg
                   className={`w-4 h-4 transform transition-transform ${showDetails ? 'rotate-180' : ''}`}
@@ -1085,7 +1085,7 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
       )}
 
       {unsignSuccess && (
-        <div className="fixed top-4 right-4 bg-green-500 text-theme-primary px-6 py-3 rounded-lg shadow-lg flex items-center space-x-3 z-[12000] animate-fade-in">
+        <div className="fixed top-4 right-4 bg-green-500 text-foreground px-6 py-3 rounded-lg shadow-lg flex items-center space-x-3 z-[12000] animate-fade-in">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
           </svg>
@@ -1094,7 +1094,7 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
       )}
 
       {unsignError && (
-        <div className="fixed top-4 right-4 bg-red-500 text-theme-primary px-6 py-3 rounded-lg shadow-lg z-[12000] animate-fade-in">
+        <div className="fixed top-4 right-4 bg-red-500 text-foreground px-6 py-3 rounded-lg shadow-lg z-[12000] animate-fade-in">
           <div className="flex items-center space-x-3">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -1103,7 +1103,7 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
             {unsignError.details && (
               <button
                 onClick={() => setShowDetails(!showDetails)}
-                className="ml-2 text-theme-primary hover:text-theme-primary-hover"
+                className="ml-2 text-foreground"
               >
                 <svg
                   className={`w-4 h-4 transform transition-transform ${showDetails ? 'rotate-180' : ''}`}

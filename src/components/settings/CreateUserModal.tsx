@@ -287,7 +287,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
   return (
     <>
       {error && (
-        <div className="fixed top-4 right-4 bg-red-500 text-theme-primary px-6 py-3 rounded-lg shadow-lg z-[60] animate-fade-in">
+        <div className="fixed top-4 right-4 bg-red-500 text-foreground px-6 py-3 rounded-lg shadow-lg z-[60] animate-fade-in">
           <div className="flex items-center space-x-3">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -296,7 +296,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
             {error && (
               <button
                 onClick={() => setShowDetails(!showDetails)}
-                className="ml-2 text-theme-primary hover:text-theme-primary-hover"
+                className="ml-2 text-foreground"
               >
                 <svg
                   className={`w-4 h-4 transform transition-transform ${showDetails ? 'rotate-180' : ''}`}
@@ -321,30 +321,30 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
         onClick={handleBackdropClick}
       >
         <div className='bg-card border border-border p-8 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto'>
-          <h2 className='text-2xl font-bold mb-4 text-theme-primary font-roboto'>
+          <h2 className='text-2xl font-bold mb-4 text-foreground font-roboto'>
             Create New User
           </h2>
           
           <div className='grid grid-cols-2 gap-6'>
             <div>
               <div className='mb-4'>
-                <label className='block text-theme-primary mb-2 font-roboto font-semibold'>Username</label>
+                <label className='block text-foreground mb-2 font-roboto font-semibold'>Username</label>
                 <input
                   type='text'
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className='w-full px-4 py-2 rounded-lg font-roboto bg-theme-input text-theme-primary border border-theme transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 placeholder:text-theme-secondary shadow-sm'
+                  className='w-full px-4 py-2 rounded-lg font-roboto bg-muted text-foreground border border-border transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring placeholder:text-muted-foreground shadow-sm'
                   placeholder='Enter username'
                 />
               </div>
               <div className='mb-4'>
-                <label className='block text-theme-primary mb-2 font-roboto font-semibold'>Password</label>
+                <label className='block text-foreground mb-2 font-roboto font-semibold'>Password</label>
                 <div className='flex'>
                   <input
                     type='password'
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className='w-full px-4 py-2 rounded-lg font-roboto bg-theme-input text-theme-primary border border-theme transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 placeholder:text-theme-secondary shadow-sm'
+                    className='w-full px-4 py-2 rounded-lg font-roboto bg-muted text-foreground border border-border transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring placeholder:text-muted-foreground shadow-sm'
                     placeholder='Enter password'
                   />
                   <button
@@ -371,55 +371,55 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
             </div>
             
             <div>
-              <h3 className='text-lg font-bold mb-3 text-theme-primary font-roboto'>Default Permissions</h3>
+              <h3 className='text-lg font-bold mb-3 text-foreground font-roboto'>Default Permissions</h3>
               
               <div className='mb-4'>
-                <h4 className='font-bold text-theme-primary mb-2'>Apps</h4>
+                <h4 className='font-bold text-foreground mb-2'>Apps</h4>
                 <div className='grid grid-cols-2 gap-2'>
                   <label className='flex items-center'>
                     <input
                       type='checkbox'
                       checked={permissions.apps.create}
                       onChange={(e) => handlePermissionChange('apps', 'create', e.target.checked)}
-                      className='mr-3 accent-purple-500 w-5 h-5 border border-theme rounded transition-all duration-150 focus:ring-2 focus:ring-purple-400 focus:border-purple-400 bg-theme-input shadow-sm'
+                      className='mr-3 accent-primary w-5 h-5 border border-border rounded transition-all duration-150 focus-visible:ring-2 focus-visible:ring-ring bg-muted shadow-sm'
                     />
-                    <span className='text-theme-primary font-semibold'>Create</span>
+                    <span className='text-foreground font-semibold'>Create</span>
                   </label>
                   <label className='flex items-center'>
                     <input
                       type='checkbox'
                       checked={permissions.apps.delete}
                       onChange={(e) => handlePermissionChange('apps', 'delete', e.target.checked)}
-                      className='mr-3 accent-purple-500 w-5 h-5 border border-theme rounded transition-all duration-150 focus:ring-2 focus:ring-purple-400 focus:border-purple-400 bg-theme-input shadow-sm'
+                      className='mr-3 accent-primary w-5 h-5 border border-border rounded transition-all duration-150 focus-visible:ring-2 focus-visible:ring-ring bg-muted shadow-sm'
                     />
-                    <span className='text-theme-primary font-semibold'>Delete</span>
+                    <span className='text-foreground font-semibold'>Delete</span>
                   </label>
                   <label className='flex items-center'>
                     <input
                       type='checkbox'
                       checked={permissions.apps.edit}
                       onChange={(e) => handlePermissionChange('apps', 'edit', e.target.checked)}
-                      className='mr-3 accent-purple-500 w-5 h-5 border border-theme rounded transition-all duration-150 focus:ring-2 focus:ring-purple-400 focus:border-purple-400 bg-theme-input shadow-sm'
+                      className='mr-3 accent-primary w-5 h-5 border border-border rounded transition-all duration-150 focus-visible:ring-2 focus-visible:ring-ring bg-muted shadow-sm'
                     />
-                    <span className='text-theme-primary font-semibold'>Edit</span>
+                    <span className='text-foreground font-semibold'>Edit</span>
                   </label>
                   <label className='flex items-center'>
                     <input
                       type='checkbox'
                       checked={permissions.apps.download}
                       onChange={(e) => handlePermissionChange('apps', 'download', e.target.checked)}
-                      className='mr-3 accent-purple-500 w-5 h-5 border border-theme rounded transition-all duration-150 focus:ring-2 focus:ring-purple-400 focus:border-purple-400 bg-theme-input shadow-sm'
+                      className='mr-3 accent-primary w-5 h-5 border border-border rounded transition-all duration-150 focus-visible:ring-2 focus-visible:ring-ring bg-muted shadow-sm'
                     />
-                    <span className='text-theme-primary font-semibold'>Download</span>
+                    <span className='text-foreground font-semibold'>Download</span>
                   </label>
                   <label className='flex items-center'>
                     <input
                       type='checkbox'
                       checked={permissions.apps.upload}
                       onChange={(e) => handlePermissionChange('apps', 'upload', e.target.checked)}
-                      className='mr-3 accent-purple-500 w-5 h-5 border border-theme rounded transition-all duration-150 focus:ring-2 focus:ring-purple-400 focus:border-purple-400 bg-theme-input shadow-sm'
+                      className='mr-3 accent-primary w-5 h-5 border border-border rounded transition-all duration-150 focus-visible:ring-2 focus-visible:ring-ring bg-muted shadow-sm'
                     />
-                    <span className='text-theme-primary font-semibold'>Upload</span>
+                    <span className='text-foreground font-semibold'>Upload</span>
                   </label>
                 </div>
                 
@@ -428,9 +428,9 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                     <button
                       type='button'
                       onClick={() => setShowAppsDropdown(!showAppsDropdown)}
-                      className='w-full bg-theme-input text-theme-primary border border-theme rounded-lg px-4 py-2 pr-8 flex items-center justify-between hover:bg-theme-card-hover transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 shadow-sm'
+                      className='w-full bg-muted text-foreground border border-border rounded-lg px-4 py-2 pr-8 flex items-center justify-between hover:bg-accent transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring shadow-sm'
                     >
-                      <span className='text-theme-primary'>
+                      <span className='text-foreground'>
                         {permissions.apps.allowed.length > 0 
                           ? `${permissions.apps.allowed.length} items selected` 
                           : 'Select allowed apps'}
@@ -445,20 +445,20 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                         strokeWidth="2" 
                         strokeLinecap="round" 
                         strokeLinejoin="round"
-                        className={`text-theme-primary transition-transform ${showAppsDropdown ? 'rotate-180' : ''}`}
+                        className={`text-foreground transition-transform ${showAppsDropdown ? 'rotate-180' : ''}`}
                       >
                         <polyline points="6 9 12 15 18 9"></polyline>
                       </svg>
                     </button>
                     
                     {showAppsDropdown && (
-                      <div className='absolute z-10 mt-1 w-full bg-theme-input border border-theme rounded-lg shadow-lg backdrop-blur-lg max-h-60 overflow-y-auto'>
+                      <div className='absolute z-10 mt-1 w-full bg-muted border border-border rounded-lg shadow-lg backdrop-blur-lg max-h-60 overflow-y-auto'>
                         {Array.isArray(apps) && apps.map(app => {
                           const isSelected = permissions.apps.allowed.includes(app.ID);
                           return (
                             <div 
                               key={app.ID}
-                              className='p-2 hover:bg-theme-card-hover cursor-pointer flex items-center'
+                              className='p-2 hover:bg-accent cursor-pointer flex items-center'
                               onClick={() => {
                                 if (isSelected) {
                                   handleRemoveAllowedItem('apps', app.ID);
@@ -471,9 +471,9 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                                 type='checkbox'
                                 checked={isSelected}
                                 onChange={() => {}}
-                                className='mr-3 accent-purple-500 w-5 h-5 border border-theme rounded transition-all duration-150 focus:ring-2 focus:ring-purple-400 focus:border-purple-400 bg-theme-input shadow-sm'
+                                className='mr-3 accent-primary w-5 h-5 border border-border rounded transition-all duration-150 focus-visible:ring-2 focus-visible:ring-ring bg-muted shadow-sm'
                               />
-                              <span className='text-theme-primary'>{app.AppName}</span>
+                              <span className='text-foreground'>{app.AppName}</span>
                             </div>
                           );
                         })}
@@ -486,13 +486,13 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                       {permissions.apps.allowed.map(id => (
                         <div 
                           key={id}
-                          className='bg-theme-button-primary text-theme-primary px-2 py-1 rounded-lg flex items-center'
+                          className='bg-primary text-primary-foreground px-2 py-1 rounded-lg flex items-center'
                         >
                           <span>{getNameById(id, 'app')}</span>
                           <button
                             type='button'
                             onClick={() => handleRemoveAllowedItem('apps', id)}
-                            className='ml-2 text-theme-primary hover:text-theme-danger'
+                            className='ml-2 text-foreground hover:text-destructive'
                           >
                             <i className='fas fa-times'></i>
                           </button>
@@ -504,34 +504,34 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
               </div>
               
               <div className='mb-4'>
-                <h4 className='font-bold text-theme-primary mb-2'>Channels</h4>
+                <h4 className='font-bold text-foreground mb-2'>Channels</h4>
                 <div className='grid grid-cols-2 gap-2'>
                   <label className='flex items-center'>
                     <input
                       type='checkbox'
                       checked={permissions.channels.create}
                       onChange={(e) => handlePermissionChange('channels', 'create', e.target.checked)}
-                      className='mr-3 accent-purple-500 w-5 h-5 border border-theme rounded transition-all duration-150 focus:ring-2 focus:ring-purple-400 focus:border-purple-400 bg-theme-input shadow-sm'
+                      className='mr-3 accent-primary w-5 h-5 border border-border rounded transition-all duration-150 focus-visible:ring-2 focus-visible:ring-ring bg-muted shadow-sm'
                     />
-                    <span className='text-theme-primary font-semibold'>Create</span>
+                    <span className='text-foreground font-semibold'>Create</span>
                   </label>
                   <label className='flex items-center'>
                     <input
                       type='checkbox'
                       checked={permissions.channels.delete}
                       onChange={(e) => handlePermissionChange('channels', 'delete', e.target.checked)}
-                      className='mr-3 accent-purple-500 w-5 h-5 border border-theme rounded transition-all duration-150 focus:ring-2 focus:ring-purple-400 focus:border-purple-400 bg-theme-input shadow-sm'
+                      className='mr-3 accent-primary w-5 h-5 border border-border rounded transition-all duration-150 focus-visible:ring-2 focus-visible:ring-ring bg-muted shadow-sm'
                     />
-                    <span className='text-theme-primary font-semibold'>Delete</span>
+                    <span className='text-foreground font-semibold'>Delete</span>
                   </label>
                   <label className='flex items-center'>
                     <input
                       type='checkbox'
                       checked={permissions.channels.edit}
                       onChange={(e) => handlePermissionChange('channels', 'edit', e.target.checked)}
-                      className='mr-3 accent-purple-500 w-5 h-5 border border-theme rounded transition-all duration-150 focus:ring-2 focus:ring-purple-400 focus:border-purple-400 bg-theme-input shadow-sm'
+                      className='mr-3 accent-primary w-5 h-5 border border-border rounded transition-all duration-150 focus-visible:ring-2 focus-visible:ring-ring bg-muted shadow-sm'
                     />
-                    <span className='text-theme-primary font-semibold'>Edit</span>
+                    <span className='text-foreground font-semibold'>Edit</span>
                   </label>
                 </div>
                 
@@ -540,9 +540,9 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                     <button
                       type='button'
                       onClick={() => setShowChannelsDropdown(!showChannelsDropdown)}
-                      className='w-full bg-theme-input text-theme-primary border border-theme rounded-lg px-4 py-2 pr-8 flex items-center justify-between hover:bg-theme-card-hover transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 shadow-sm'
+                      className='w-full bg-muted text-foreground border border-border rounded-lg px-4 py-2 pr-8 flex items-center justify-between hover:bg-accent transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring shadow-sm'
                     >
-                      <span className='text-theme-primary'>
+                      <span className='text-foreground'>
                         {permissions.channels.allowed.length > 0 
                           ? `${permissions.channels.allowed.length} items selected` 
                           : 'Select allowed channels'}
@@ -557,20 +557,20 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                         strokeWidth="2" 
                         strokeLinecap="round" 
                         strokeLinejoin="round"
-                        className={`text-theme-primary transition-transform ${showChannelsDropdown ? 'rotate-180' : ''}`}
+                        className={`text-foreground transition-transform ${showChannelsDropdown ? 'rotate-180' : ''}`}
                       >
                         <polyline points="6 9 12 15 18 9"></polyline>
                       </svg>
                     </button>
                     
                     {showChannelsDropdown && (
-                      <div className='absolute z-10 mt-1 w-full bg-theme-input border border-theme rounded-lg shadow-lg backdrop-blur-lg max-h-60 overflow-y-auto'>
+                      <div className='absolute z-10 mt-1 w-full bg-muted border border-border rounded-lg shadow-lg backdrop-blur-lg max-h-60 overflow-y-auto'>
                         {Array.isArray(channels) && channels.map(channel => {
                           const isSelected = permissions.channels.allowed.includes(channel.ID);
                           return (
                             <div 
                               key={channel.ID}
-                              className='p-2 hover:bg-theme-card-hover cursor-pointer flex items-center'
+                              className='p-2 hover:bg-accent cursor-pointer flex items-center'
                               onClick={() => {
                                 if (isSelected) {
                                   handleRemoveAllowedItem('channels', channel.ID);
@@ -583,9 +583,9 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                                 type='checkbox'
                                 checked={isSelected}
                                 onChange={() => {}}
-                                className='mr-3 accent-purple-500 w-5 h-5 border border-theme rounded transition-all duration-150 focus:ring-2 focus:ring-purple-400 focus:border-purple-400 bg-theme-input shadow-sm'
+                                className='mr-3 accent-primary w-5 h-5 border border-border rounded transition-all duration-150 focus-visible:ring-2 focus-visible:ring-ring bg-muted shadow-sm'
                               />
-                              <span className='text-theme-primary'>{channel.ChannelName}</span>
+                              <span className='text-foreground'>{channel.ChannelName}</span>
                             </div>
                           );
                         })}
@@ -598,13 +598,13 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                       {permissions.channels.allowed.map(id => (
                         <div 
                           key={id}
-                          className='bg-theme-button-primary text-theme-primary px-2 py-1 rounded-lg flex items-center'
+                          className='bg-primary text-primary-foreground px-2 py-1 rounded-lg flex items-center'
                         >
                           <span>{getNameById(id, 'channel')}</span>
                           <button
                             type='button'
                             onClick={() => handleRemoveAllowedItem('channels', id)}
-                            className='ml-2 text-theme-primary hover:text-theme-danger'
+                            className='ml-2 text-foreground hover:text-destructive'
                           >
                             <i className='fas fa-times'></i>
                           </button>
@@ -616,34 +616,34 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
               </div>
               
               <div className='mb-4'>
-                <h4 className='font-bold text-theme-primary mb-2'>Platforms</h4>
+                <h4 className='font-bold text-foreground mb-2'>Platforms</h4>
                 <div className='grid grid-cols-2 gap-2'>
                   <label className='flex items-center'>
                     <input
                       type='checkbox'
                       checked={permissions.platforms.create}
                       onChange={(e) => handlePermissionChange('platforms', 'create', e.target.checked)}
-                      className='mr-3 accent-purple-500 w-5 h-5 border border-theme rounded transition-all duration-150 focus:ring-2 focus:ring-purple-400 focus:border-purple-400 bg-theme-input shadow-sm'
+                      className='mr-3 accent-primary w-5 h-5 border border-border rounded transition-all duration-150 focus-visible:ring-2 focus-visible:ring-ring bg-muted shadow-sm'
                     />
-                    <span className='text-theme-primary font-semibold'>Create</span>
+                    <span className='text-foreground font-semibold'>Create</span>
                   </label>
                   <label className='flex items-center'>
                     <input
                       type='checkbox'
                       checked={permissions.platforms.delete}
                       onChange={(e) => handlePermissionChange('platforms', 'delete', e.target.checked)}
-                      className='mr-3 accent-purple-500 w-5 h-5 border border-theme rounded transition-all duration-150 focus:ring-2 focus:ring-purple-400 focus:border-purple-400 bg-theme-input shadow-sm'
+                      className='mr-3 accent-primary w-5 h-5 border border-border rounded transition-all duration-150 focus-visible:ring-2 focus-visible:ring-ring bg-muted shadow-sm'
                     />
-                    <span className='text-theme-primary font-semibold'>Delete</span>
+                    <span className='text-foreground font-semibold'>Delete</span>
                   </label>
                   <label className='flex items-center'>
                     <input
                       type='checkbox'
                       checked={permissions.platforms.edit}
                       onChange={(e) => handlePermissionChange('platforms', 'edit', e.target.checked)}
-                      className='mr-3 accent-purple-500 w-5 h-5 border border-theme rounded transition-all duration-150 focus:ring-2 focus:ring-purple-400 focus:border-purple-400 bg-theme-input shadow-sm'
+                      className='mr-3 accent-primary w-5 h-5 border border-border rounded transition-all duration-150 focus-visible:ring-2 focus-visible:ring-ring bg-muted shadow-sm'
                     />
-                    <span className='text-theme-primary font-semibold'>Edit</span>
+                    <span className='text-foreground font-semibold'>Edit</span>
                   </label>
                 </div>
                 
@@ -652,9 +652,9 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                     <button
                       type='button'
                       onClick={() => setShowPlatformsDropdown(!showPlatformsDropdown)}
-                      className='w-full bg-theme-input text-theme-primary border border-theme rounded-lg px-4 py-2 pr-8 flex items-center justify-between hover:bg-theme-card-hover transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 shadow-sm'
+                      className='w-full bg-muted text-foreground border border-border rounded-lg px-4 py-2 pr-8 flex items-center justify-between hover:bg-accent transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring shadow-sm'
                     >
-                      <span className='text-theme-primary'>
+                      <span className='text-foreground'>
                         {permissions.platforms.allowed.length > 0 
                           ? `${permissions.platforms.allowed.length} items selected` 
                           : 'Select allowed platforms'}
@@ -669,20 +669,20 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                         strokeWidth="2" 
                         strokeLinecap="round" 
                         strokeLinejoin="round"
-                        className={`text-theme-primary transition-transform ${showPlatformsDropdown ? 'rotate-180' : ''}`}
+                        className={`text-foreground transition-transform ${showPlatformsDropdown ? 'rotate-180' : ''}`}
                       >
                         <polyline points="6 9 12 15 18 9"></polyline>
                       </svg>
                     </button>
                     
                     {showPlatformsDropdown && (
-                      <div className='absolute z-10 mt-1 w-full bg-theme-input border border-theme rounded-lg shadow-lg backdrop-blur-lg max-h-60 overflow-y-auto'>
+                      <div className='absolute z-10 mt-1 w-full bg-muted border border-border rounded-lg shadow-lg backdrop-blur-lg max-h-60 overflow-y-auto'>
                         {Array.isArray(platforms) && platforms.map(platform => {
                           const isSelected = permissions.platforms.allowed.includes(platform.ID);
                           return (
                             <div 
                               key={platform.ID}
-                              className='p-2 hover:bg-theme-card-hover cursor-pointer flex items-center'
+                              className='p-2 hover:bg-accent cursor-pointer flex items-center'
                               onClick={() => {
                                 if (isSelected) {
                                   handleRemoveAllowedItem('platforms', platform.ID);
@@ -695,9 +695,9 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                                 type='checkbox'
                                 checked={isSelected}
                                 onChange={() => {}}
-                                className='mr-3 accent-purple-500 w-5 h-5 border border-theme rounded transition-all duration-150 focus:ring-2 focus:ring-purple-400 focus:border-purple-400 bg-theme-input shadow-sm'
+                                className='mr-3 accent-primary w-5 h-5 border border-border rounded transition-all duration-150 focus-visible:ring-2 focus-visible:ring-ring bg-muted shadow-sm'
                               />
-                              <span className='text-theme-primary'>{platform.PlatformName}</span>
+                              <span className='text-foreground'>{platform.PlatformName}</span>
                             </div>
                           );
                         })}
@@ -710,13 +710,13 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                       {permissions.platforms.allowed.map(id => (
                         <div 
                           key={id}
-                          className='bg-theme-button-primary text-theme-primary px-2 py-1 rounded-lg flex items-center'
+                          className='bg-primary text-primary-foreground px-2 py-1 rounded-lg flex items-center'
                         >
                           <span>{getNameById(id, 'platform')}</span>
                           <button
                             type='button'
                             onClick={() => handleRemoveAllowedItem('platforms', id)}
-                            className='ml-2 text-theme-primary hover:text-theme-danger'
+                            className='ml-2 text-foreground hover:text-destructive'
                           >
                             <i className='fas fa-times'></i>
                           </button>
@@ -728,34 +728,34 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
               </div>
               
               <div className='mb-4'>
-                <h4 className='font-bold text-theme-primary mb-2'>Architectures</h4>
+                <h4 className='font-bold text-foreground mb-2'>Architectures</h4>
                 <div className='grid grid-cols-2 gap-2'>
                   <label className='flex items-center'>
                     <input
                       type='checkbox'
                       checked={permissions.archs.create}
                       onChange={(e) => handlePermissionChange('archs', 'create', e.target.checked)}
-                      className='mr-3 accent-purple-500 w-5 h-5 border border-theme rounded transition-all duration-150 focus:ring-2 focus:ring-purple-400 focus:border-purple-400 bg-theme-input shadow-sm'
+                      className='mr-3 accent-primary w-5 h-5 border border-border rounded transition-all duration-150 focus-visible:ring-2 focus-visible:ring-ring bg-muted shadow-sm'
                     />
-                    <span className='text-theme-primary font-semibold'>Create</span>
+                    <span className='text-foreground font-semibold'>Create</span>
                   </label>
                   <label className='flex items-center'>
                     <input
                       type='checkbox'
                       checked={permissions.archs.delete}
                       onChange={(e) => handlePermissionChange('archs', 'delete', e.target.checked)}
-                      className='mr-3 accent-purple-500 w-5 h-5 border border-theme rounded transition-all duration-150 focus:ring-2 focus:ring-purple-400 focus:border-purple-400 bg-theme-input shadow-sm'
+                      className='mr-3 accent-primary w-5 h-5 border border-border rounded transition-all duration-150 focus-visible:ring-2 focus-visible:ring-ring bg-muted shadow-sm'
                     />
-                    <span className='text-theme-primary font-semibold'>Delete</span>
+                    <span className='text-foreground font-semibold'>Delete</span>
                   </label>
                   <label className='flex items-center'>
                     <input
                       type='checkbox'
                       checked={permissions.archs.edit}
                       onChange={(e) => handlePermissionChange('archs', 'edit', e.target.checked)}
-                      className='mr-3 accent-purple-500 w-5 h-5 border border-theme rounded transition-all duration-150 focus:ring-2 focus:ring-purple-400 focus:border-purple-400 bg-theme-input shadow-sm'
+                      className='mr-3 accent-primary w-5 h-5 border border-border rounded transition-all duration-150 focus-visible:ring-2 focus-visible:ring-ring bg-muted shadow-sm'
                     />
-                    <span className='text-theme-primary font-semibold'>Edit</span>
+                    <span className='text-foreground font-semibold'>Edit</span>
                   </label>
                 </div>
                 
@@ -764,9 +764,9 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                     <button
                       type='button'
                       onClick={() => setShowArchsDropdown(!showArchsDropdown)}
-                      className='w-full bg-theme-input text-theme-primary border border-theme rounded-lg px-4 py-2 pr-8 flex items-center justify-between hover:bg-theme-card-hover transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 shadow-sm'
+                      className='w-full bg-muted text-foreground border border-border rounded-lg px-4 py-2 pr-8 flex items-center justify-between hover:bg-accent transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring shadow-sm'
                     >
-                      <span className='text-theme-primary'>
+                      <span className='text-foreground'>
                         {permissions.archs.allowed.length > 0 
                           ? `${permissions.archs.allowed.length} items selected` 
                           : 'Select allowed architectures'}
@@ -781,20 +781,20 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                         strokeWidth="2" 
                         strokeLinecap="round" 
                         strokeLinejoin="round"
-                        className={`text-theme-primary transition-transform ${showArchsDropdown ? 'rotate-180' : ''}`}
+                        className={`text-foreground transition-transform ${showArchsDropdown ? 'rotate-180' : ''}`}
                       >
                         <polyline points="6 9 12 15 18 9"></polyline>
                       </svg>
                     </button>
                     
                     {showArchsDropdown && (
-                      <div className='absolute z-10 mt-1 w-full bg-theme-input border border-theme rounded-lg shadow-lg backdrop-blur-lg max-h-60 overflow-y-auto'>
+                      <div className='absolute z-10 mt-1 w-full bg-muted border border-border rounded-lg shadow-lg backdrop-blur-lg max-h-60 overflow-y-auto'>
                         {Array.isArray(architectures) && architectures.map(arch => {
                           const isSelected = permissions.archs.allowed.includes(arch.ID);
                           return (
                             <div 
                               key={arch.ID}
-                              className='p-2 hover:bg-theme-card-hover cursor-pointer flex items-center'
+                              className='p-2 hover:bg-accent cursor-pointer flex items-center'
                               onClick={() => {
                                 if (isSelected) {
                                   handleRemoveAllowedItem('archs', arch.ID);
@@ -807,9 +807,9 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                                 type='checkbox'
                                 checked={isSelected}
                                 onChange={() => {}}
-                                className='mr-3 accent-purple-500 w-5 h-5 border border-theme rounded transition-all duration-150 focus:ring-2 focus:ring-purple-400 focus:border-purple-400 bg-theme-input shadow-sm'
+                                className='mr-3 accent-primary w-5 h-5 border border-border rounded transition-all duration-150 focus-visible:ring-2 focus-visible:ring-ring bg-muted shadow-sm'
                               />
-                              <span className='text-theme-primary'>{arch.ArchID}</span>
+                              <span className='text-foreground'>{arch.ArchID}</span>
                             </div>
                           );
                         })}
@@ -822,13 +822,13 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                       {permissions.archs.allowed.map(id => (
                         <div 
                           key={id}
-                          className='bg-theme-button-primary text-theme-primary px-2 py-1 rounded-lg flex items-center'
+                          className='bg-primary text-primary-foreground px-2 py-1 rounded-lg flex items-center'
                         >
                           <span>{getNameById(id, 'arch')}</span>
                           <button
                             type='button'
                             onClick={() => handleRemoveAllowedItem('archs', id)}
-                            className='ml-2 text-theme-primary hover:text-theme-danger'
+                            className='ml-2 text-foreground hover:text-destructive'
                           >
                             <i className='fas fa-times'></i>
                           </button>
@@ -845,7 +845,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
             <button
               type='button'
               onClick={onClose}
-              className='bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-roboto hover:bg-gray-300 transition-all duration-150 mr-2 border border-gray-300 shadow-sm'>
+              className='bg-secondary text-foreground px-4 py-2 rounded-lg font-roboto hover:bg-accent transition-all duration-150 mr-2 border border-border shadow-sm'>
               Cancel
             </button>
             <button

@@ -1,8 +1,8 @@
-import { PropsWithChildren, FC } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { FC } from 'react';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../providers/authProvider.tsx';
 
-export const PublicRoute: FC<PropsWithChildren> = ({ children }) => {
+export const PublicRoute: FC = () => {
   const { token } = useAuth();
   const location = useLocation();
 
@@ -11,5 +11,5 @@ export const PublicRoute: FC<PropsWithChildren> = ({ children }) => {
     return <Navigate to={from} replace />;
   }
 
-  return children;
+  return <Outlet />;
 };

@@ -464,7 +464,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 strokeWidth="2" 
                 strokeLinecap="round" 
                 strokeLinejoin="round"
-                className="text-theme-primary-hover"
+                className="text-muted-foreground"
               >
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                 <path d="M12 8v8"></path>

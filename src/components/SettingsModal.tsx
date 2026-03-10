@@ -73,7 +73,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
       >
         {/* Sidebar */}
         <div className="w-48 bg-background p-4">
-          <h2 className="text-lg font-bold text-theme-primary mb-4">Settings</h2>
+          <h2 className="text-lg font-bold text-foreground mb-4">Settings</h2>
           <nav>
             {menuItems.map((item) => (
               <button
@@ -88,8 +88,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
                 }}
                 className={`w-full text-left px-3 py-1.5 rounded-lg mb-1.5 flex items-center text-sm ${
                   currentPage === item.id
-                    ? 'bg-theme-button-primary bg-opacity-50 text-theme-primary'
-                    : 'text-theme-primary hover:bg-theme-button-primary-hover hover:bg-opacity-50'
+                    ? 'bg-primary bg-opacity-50 text-foreground'
+                    : 'text-foreground hover:bg-primary/90 hover:bg-opacity-50'
                 }`}
               >
                 <i className={`fas ${item.icon} mr-2`}></i>
@@ -103,12 +103,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
         {/* Content */}
         <div className="flex-1 p-6 overflow-auto bg-background">
           <div className="flex justify-between items-center mb-4">
-            <h1 className="text-xl font-bold text-theme-primary">
+            <h1 className="text-xl font-bold text-foreground">
               {menuItems.find(item => item.id === currentPage)?.label}
             </h1>
             <button
               onClick={onClose}
-              className="text-theme-primary hover:text-theme-danger"
+              className="text-foreground hover:text-destructive"
             >
               <i className="fas fa-times text-lg"></i>
             </button>
@@ -119,12 +119,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
           {/* <div className="flex justify-end mt-4 space-x-2">
             <button 
               onClick={onClose}
-              className="px-3 py-1.5 bg-theme-button-primary text-theme-primary rounded-lg text-sm hover:bg-opacity-80"
+              className="px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-opacity-80"
             >
               Cancel
             </button>
             <button 
-              className="px-3 py-1.5 bg-theme-button-primary text-theme-primary rounded-lg text-sm hover:bg-opacity-80"
+              className="px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-opacity-80"
             >
               Save
             </button>

@@ -50,43 +50,10 @@ export default {
       fontFamily: {
         sans: ['Inter', 'Urbanist', 'system-ui', 'sans-serif'],
       },
-      keyframes: {
-        'fade-in': {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
-        },
-        'fade-out': {
-          '0%': { opacity: '1' },
-          '100%': { opacity: '0' },
-        },
-        'zoom-in': {
-          '0%': { transform: 'scale(0.95)' },
-          '100%': { transform: 'scale(1)' },
-        },
-        'zoom-out-95': {
-          '0%': { transform: 'scale(1)' },
-          '100%': { transform: 'scale(0.95)' },
-        },
-        'zoom-in-95': {
-          '0%': { transform: 'scale(0.95)' },
-          '100%': { transform: 'scale(1)' },
-        },
-        'slide-in-from-top-2': {
-          '0%': { transform: 'translateY(-0.5rem)' },
-          '100%': { transform: 'translateY(0)' },
-        },
-        'slide-in-from-bottom-2': {
-          '0%': { transform: 'translateY(0.5rem)' },
-          '100%': { transform: 'translateY(0)' },
-        },
-      },
-      animation: {
-        'in': 'fade-in 0.15s ease-out, zoom-in-95 0.15s ease-out',
-        'out': 'fade-out 0.15s ease-out, zoom-out-95 0.15s ease-out',
-      },
     },
   },
   plugins: [
+    require('tailwindcss-animate'),
     require('@tailwindcss/typography'),
   ],
 };

@@ -132,7 +132,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
       <div className="fixed inset-0 flex items-center justify-center modal-overlay-high">
         <div className="bg-card border border-border rounded-lg p-8 w-[500px] max-h-[80vh] overflow-y-auto relative">
           <div className="flex justify-center items-center h-40">
-            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-theme-primary"></div>
+            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-foreground"></div>
           </div>
         </div>
       </div>
@@ -149,28 +149,28 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
       >
         <button 
           onClick={onClose}
-          className="absolute top-4 right-4 text-theme-primary hover:text-theme-primary-hover"
+          className="absolute top-4 right-4 text-foreground"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
 
-        <h2 className="text-2xl font-bold text-theme-primary mb-6 font-roboto">User Profile</h2>
+        <h2 className="text-2xl font-bold text-foreground mb-6 font-roboto">User Profile</h2>
 
         {userData && (
           <div className="mb-6">
             <div className="flex items-center mb-4">
-              <div className="w-16 h-16 bg-theme-button-primary rounded-full flex items-center justify-center mr-4">
+              <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mr-4">
                 <i className={`fas ${userData.is_admin ? 'fa-crown text-yellow-500 text-2xl' : 'fa-user text-blue-500 text-2xl'}`}></i>
               </div>
               <div>
-                <h3 className="text-xl font-bold text-theme-primary">{userData.username}</h3>
-                <p className="text-theme-modal-text">
+                <h3 className="text-xl font-bold text-foreground">{userData.username}</h3>
+                <p className="text-foreground">
                   {userData.is_admin ? 'Administrator' : 'Team User'}
                 </p>
                 {!userData.is_admin && userData.owner && (
-                  <p className="text-theme-modal-text text-sm">
+                  <p className="text-foreground text-sm">
                     Owner: {userData.owner}
                   </p>
                 )}
@@ -179,16 +179,16 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
 
             {userData.is_admin ? (
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-theme-primary mb-3">Change Password</h3>
+                <h3 className="text-lg font-semibold text-foreground mb-3">Change Password</h3>
                 <form onSubmit={handlePasswordChange}>
                   <div className="mb-3">
-                    <label className="block text-theme-primary mb-1 font-roboto font-semibold">New Password</label>
+                    <label className="block text-foreground mb-1 font-roboto font-semibold">New Password</label>
                     <div className="flex">
                       <input
                         type="password"
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
-                        className="w-full px-4 py-2 rounded-lg bg-theme-input text-theme-primary font-roboto border border-theme transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 placeholder:text-theme-secondary shadow-sm"
+                        className="w-full px-4 py-2 rounded-lg bg-muted text-foreground font-roboto border border-border transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring placeholder:text-muted-foreground shadow-sm"
                         required
                       />
                       <button
@@ -210,12 +210,12 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
                     </div>
                   </div>
                   <div className="mb-3">
-                    <label className="block text-theme-primary mb-1 font-roboto font-semibold">Confirm New Password</label>
+                    <label className="block text-foreground mb-1 font-roboto font-semibold">Confirm New Password</label>
                     <input
                       type="password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full px-4 py-2 rounded-lg bg-theme-input text-theme-primary font-roboto border border-theme transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 placeholder:text-theme-secondary shadow-sm"
+                      className="w-full px-4 py-2 rounded-lg bg-muted text-foreground font-roboto border border-border transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring placeholder:text-muted-foreground shadow-sm"
                       required
                     />
                   </div>
@@ -247,11 +247,11 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
             ) : userData.permissions && (
               <>
                 <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-theme-primary mb-3">Permissions</h3>
+                  <h3 className="text-lg font-semibold text-foreground mb-3">Permissions</h3>
                   <div className="overflow-x-auto">
-                    <table className="min-w-full bg-theme-input bg-opacity-50 rounded-lg overflow-hidden">
+                    <table className="min-w-full bg-muted bg-opacity-50 rounded-lg overflow-hidden">
                       <thead>
-                        <tr className="bg-theme-button-primary text-theme-primary">
+                        <tr className="bg-primary text-primary-foreground">
                           <th className="px-4 py-2 text-left">Resource</th>
                           <th className="px-4 py-2 text-left">Create</th>
                           <th className="px-4 py-2 text-left">Edit</th>
@@ -261,30 +261,30 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
                       </thead>
                       <tbody>
                         {Object.entries(userData.permissions).map(([resource, permissions]: [string, any]) => (
-                          <tr key={resource} className="border-t border-theme-modal">
-                            <td className="px-4 py-2 text-theme-primary font-medium">{resource}</td>
-                            <td className="px-4 py-2 text-theme-primary">
+                          <tr key={resource} className="border-t border-border">
+                            <td className="px-4 py-2 text-foreground font-medium">{resource}</td>
+                            <td className="px-4 py-2 text-foreground">
                               {permissions.Create ? (
                                 <i className="fas fa-check text-green-500"></i>
                               ) : (
                                 <i className="fas fa-times text-red-500"></i>
                               )}
                             </td>
-                            <td className="px-4 py-2 text-theme-primary">
+                            <td className="px-4 py-2 text-foreground">
                               {permissions.Edit ? (
                                 <i className="fas fa-check text-green-500"></i>
                               ) : (
                                 <i className="fas fa-times text-red-500"></i>
                               )}
                             </td>
-                            <td className="px-4 py-2 text-theme-primary">
+                            <td className="px-4 py-2 text-foreground">
                               {permissions.Delete ? (
                                 <i className="fas fa-check text-green-500"></i>
                               ) : (
                                 <i className="fas fa-times text-red-500"></i>
                               )}
                             </td>
-                            <td className="px-4 py-2 text-theme-primary">
+                            <td className="px-4 py-2 text-foreground">
                               {permissions.Allowed && permissions.Allowed.length > 0 ? (
                                 <div className="max-h-20 overflow-y-auto">
                                   {permissions.Allowed.map((id: string) => {
@@ -313,11 +313,11 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
                 
                 {userData.permissions.Apps && (
                   <div className="mb-6">
-                    <h3 className="text-lg font-semibold text-theme-primary mb-3">File Actions</h3>
-                    <div className="bg-theme-input bg-opacity-50 rounded-lg p-4">
+                    <h3 className="text-lg font-semibold text-foreground mb-3">File Actions</h3>
+                    <div className="bg-muted bg-opacity-50 rounded-lg p-4">
                       <div className="flex items-center mb-2">
-                        <span className="text-theme-primary font-medium mr-2">Upload:</span>
-                        <span className="text-theme-modal-text">
+                        <span className="text-foreground font-medium mr-2">Upload:</span>
+                        <span className="text-foreground">
                           {userData.permissions.Apps.Upload ? (
                             <i className="fas fa-check text-green-500"></i>
                           ) : (
@@ -326,8 +326,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
                         </span>
                       </div>
                       <div className="flex items-center">
-                        <span className="text-theme-primary font-medium mr-2">Download:</span>
-                        <span className="text-theme-modal-text">
+                        <span className="text-foreground font-medium mr-2">Download:</span>
+                        <span className="text-foreground">
                           {userData.permissions.Apps.Download ? (
                             <i className="fas fa-check text-green-500"></i>
                           ) : (

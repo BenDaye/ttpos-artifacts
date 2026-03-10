@@ -87,7 +87,7 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
   return (
     <>
       {error && (
-        <div className="fixed top-4 right-4 bg-red-500 text-theme-primary px-6 py-3 rounded-lg shadow-lg z-[60] animate-fade-in">
+        <div className="fixed top-4 right-4 bg-red-500 text-foreground px-6 py-3 rounded-lg shadow-lg z-[60] animate-fade-in">
           <div className="flex items-center space-x-3">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -96,7 +96,7 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
             {error && (
               <button
                 onClick={() => setShowDetails(!showDetails)}
-                className="ml-2 text-theme-primary hover:text-theme-primary-hover"
+                className="ml-2 text-foreground"
               >
                 <svg
                   className={`w-4 h-4 transform transition-transform ${showDetails ? 'rotate-180' : ''}`}
@@ -121,27 +121,27 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
         onClick={handleBackdropClick}
       >
         <div className='bg-card border border-border p-8 rounded-lg w-full max-w-md max-h-[90vh]'>
-          <h2 className='text-2xl font-bold mb-4 text-theme-primary font-roboto'>
+          <h2 className='text-2xl font-bold mb-4 text-foreground font-roboto'>
             Edit User
           </h2>
           <div className='mb-4'>
-            <label className='block text-theme-primary mb-2 font-roboto font-semibold'>Username</label>
+            <label className='block text-foreground mb-2 font-roboto font-semibold'>Username</label>
             <input
               type='text'
               value={newUsername}
               onChange={(e) => setNewUsername(e.target.value)}
-              className='w-full px-4 py-2 rounded-lg font-roboto bg-theme-input text-theme-primary border border-theme transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 placeholder:text-theme-secondary shadow-sm'
+              className='w-full px-4 py-2 rounded-lg font-roboto bg-muted text-foreground border border-border transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring placeholder:text-muted-foreground shadow-sm'
               placeholder='Enter username'
             />
           </div>
           <div className='mb-4'>
-            <label className='block text-theme-primary mb-2 font-roboto font-semibold'>New Password</label>
+            <label className='block text-foreground mb-2 font-roboto font-semibold'>New Password</label>
             <div className='flex'>
               <input
                 type='password'
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className='w-full px-4 py-2 rounded-lg font-roboto bg-theme-input text-theme-primary border border-theme transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 placeholder:text-theme-secondary shadow-sm'
+                className='w-full px-4 py-2 rounded-lg font-roboto bg-muted text-foreground border border-border transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring placeholder:text-muted-foreground shadow-sm'
                 placeholder='Enter new password'
               />
               <button
@@ -172,7 +172,7 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
             <button
               type='button'
               onClick={onClose}
-              className='bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-roboto hover:bg-gray-300 transition-all duration-150 mr-2 border border-gray-300 shadow-sm'>
+              className='bg-secondary text-foreground px-4 py-2 rounded-lg font-roboto hover:bg-accent transition-all duration-150 mr-2 border border-border shadow-sm'>
               Cancel
             </button>
             <button

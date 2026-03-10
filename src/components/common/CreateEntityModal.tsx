@@ -56,7 +56,7 @@ export const CreateEntityModal: React.FC<CreateEntityModalProps> = ({
   return (
     <>
       {error && (
-        <div className="fixed top-4 right-4 bg-red-500 text-theme-primary px-6 py-3 rounded-lg shadow-lg z-[60] animate-fade-in">
+        <div className="fixed top-4 right-4 bg-red-500 text-foreground px-6 py-3 rounded-lg shadow-lg z-[60] animate-fade-in">
           <div className="flex items-center space-x-3">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -65,7 +65,7 @@ export const CreateEntityModal: React.FC<CreateEntityModalProps> = ({
             {error.details && (
               <button
                 onClick={() => setShowDetails(!showDetails)}
-                className="ml-2 text-theme-primary hover:text-theme-primary-hover"
+                className="ml-2 text-foreground"
               >
                 <svg
                   className={`w-4 h-4 transform transition-transform ${showDetails ? 'rotate-180' : ''}`}
@@ -91,12 +91,12 @@ export const CreateEntityModal: React.FC<CreateEntityModalProps> = ({
       >
         <div className="bg-card border border-border p-8 rounded-lg w-96 max-h-[80vh] overflow-y-auto">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold text-theme-primary font-roboto">
+            <h2 className="text-2xl font-bold text-foreground font-roboto">
               {title}
             </h2>
             <button
               onClick={onClose}
-              className="text-theme-primary hover:text-theme-primary-hover transition-colors duration-200"
+              className="text-foreground transition-colors duration-200"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -105,7 +105,7 @@ export const CreateEntityModal: React.FC<CreateEntityModalProps> = ({
           </div>
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
-              <label htmlFor="name" className="block text-theme-primary mb-2 font-roboto font-semibold">
+              <label htmlFor="name" className="block text-foreground mb-2 font-roboto font-semibold">
                 {entityName}
               </label>
               <input
@@ -114,7 +114,7 @@ export const CreateEntityModal: React.FC<CreateEntityModalProps> = ({
                 name="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-2 rounded-lg font-roboto bg-theme-input text-theme-primary border border-theme transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 placeholder:text-theme-secondary shadow-sm"
+                className="w-full px-4 py-2 rounded-lg font-roboto bg-muted text-foreground border border-border transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring placeholder:text-muted-foreground shadow-sm"
                 required
               />
             </div>
@@ -122,7 +122,7 @@ export const CreateEntityModal: React.FC<CreateEntityModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-roboto hover:bg-gray-300 transition-all duration-150 mr-2 border border-gray-300 shadow-sm"
+                className="bg-secondary text-foreground px-4 py-2 rounded-lg font-roboto hover:bg-accent transition-all duration-150 mr-2 border border-border shadow-sm"
               >
                 Cancel
               </button>

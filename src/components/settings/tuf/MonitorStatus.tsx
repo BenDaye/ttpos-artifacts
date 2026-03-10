@@ -26,9 +26,9 @@ export const MonitorStatus: React.FC<MonitorStatusProps> = ({
   }
 
   return (
-    <div className="bg-theme-card p-6 rounded-lg border border-theme-card-hover">
+    <div className="bg-card p-6 rounded-lg border border-border">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-bold text-theme-primary font-roboto">
+        <h2 className="text-lg font-bold text-foreground font-roboto">
           Monitor Status
         </h2>
         <div className={`flex items-center ${getStatusColor(step3Status)}`}>
@@ -42,7 +42,7 @@ export const MonitorStatus: React.FC<MonitorStatusProps> = ({
           <button
             onClick={onCheckBootstrapStatus}
             disabled={!selectedApp}
-            className="bg-theme-button-primary text-theme-primary px-4 py-2 rounded-lg font-roboto hover:bg-theme-button-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-primary text-primary-foreground px-4 py-2 rounded-lg font-roboto hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <i className="fas fa-sync mr-2"></i>
             Check Bootstrap Status
@@ -50,7 +50,7 @@ export const MonitorStatus: React.FC<MonitorStatusProps> = ({
           {/* <button
             onClick={onCheckTufTasks}
             disabled={!bootstrapTaskId && !bootstrapStatus?.task_id}
-            className="bg-theme-button-primary text-theme-primary px-4 py-2 rounded-lg font-roboto hover:bg-theme-button-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-primary text-primary-foreground px-4 py-2 rounded-lg font-roboto hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <i className="fas fa-tasks mr-2"></i>
             Check TUF Task
@@ -58,26 +58,26 @@ export const MonitorStatus: React.FC<MonitorStatusProps> = ({
         </div>
 
         {bootstrapStatus ? (
-          <div className="p-4 bg-theme-input rounded-lg border border-theme">
-            <h3 className="text-theme-primary font-semibold mb-2">Bootstrap Status</h3>
+          <div className="p-4 bg-muted rounded-lg border border-border">
+            <h3 className="text-foreground font-semibold mb-2">Bootstrap Status</h3>
             <div className="space-y-2 text-sm">
               <div>
-                <span className="text-theme-primary opacity-70">Task ID: </span>
-                <span className="text-theme-primary font-mono">{bootstrapStatus.task_id}</span>
+                <span className="text-foreground opacity-70">Task ID: </span>
+                <span className="text-foreground font-mono">{bootstrapStatus.task_id}</span>
               </div>
               <div>
-                <span className="text-theme-primary opacity-70">State: </span>
+                <span className="text-foreground opacity-70">State: </span>
                 <span className={getTaskStateColor(bootstrapStatus.state)}>
                   {bootstrapStatus.state}
                 </span>
               </div>
               {bootstrapStatus.result && (
                 <>
-                  <div className="text-theme-primary">{bootstrapStatus.result.message}</div>
+                  <div className="text-foreground">{bootstrapStatus.result.message}</div>
                   {bootstrapStatus.result.last_update && (
                     <div>
-                      <span className="text-theme-primary opacity-70">Last Update: </span>
-                      <span className="text-theme-primary">
+                      <span className="text-foreground opacity-70">Last Update: </span>
+                      <span className="text-foreground">
                         {new Date(bootstrapStatus.result.last_update).toLocaleString()}
                       </span>
                     </div>
@@ -90,9 +90,9 @@ export const MonitorStatus: React.FC<MonitorStatusProps> = ({
             </div>
           </div>
         ) : (
-          <div className="p-4 bg-theme-input rounded-lg border border-theme">
-            <h3 className="text-theme-primary font-semibold mb-2">Bootstrap Status</h3>
-            <div className="text-sm text-theme-primary opacity-70">
+          <div className="p-4 bg-muted rounded-lg border border-border">
+            <h3 className="text-foreground font-semibold mb-2">Bootstrap Status</h3>
+            <div className="text-sm text-foreground opacity-70">
               <i className="fas fa-info-circle mr-2"></i>
               Bootstrap has not been started yet. System is available for bootstrap.
             </div>
@@ -100,22 +100,22 @@ export const MonitorStatus: React.FC<MonitorStatusProps> = ({
         )}
 
         {tufTasks.length > 0 && (
-          <div className="p-4 bg-theme-input rounded-lg border border-theme">
-            <h3 className="text-theme-primary font-semibold mb-2">TUF Tasks</h3>
+          <div className="p-4 bg-muted rounded-lg border border-border">
+            <h3 className="text-foreground font-semibold mb-2">TUF Tasks</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-theme-card-hover">
-                    <th className="text-left py-2 px-2 text-theme-primary">Task ID</th>
-                    <th className="text-left py-2 px-2 text-theme-primary">State</th>
-                    <th className="text-left py-2 px-2 text-theme-primary">Message</th>
-                    <th className="text-left py-2 px-2 text-theme-primary">Last Update</th>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-2 px-2 text-foreground">Task ID</th>
+                    <th className="text-left py-2 px-2 text-foreground">State</th>
+                    <th className="text-left py-2 px-2 text-foreground">Message</th>
+                    <th className="text-left py-2 px-2 text-foreground">Last Update</th>
                   </tr>
                 </thead>
                 <tbody>
                   {tufTasks.map((task) => (
-                    <tr key={task.task_id} className="border-b border-theme-card-hover">
-                      <td className="py-2 px-2 text-theme-primary font-mono text-xs">
+                    <tr key={task.task_id} className="border-b border-border">
+                      <td className="py-2 px-2 text-foreground font-mono text-xs">
                         {task.task_id}
                       </td>
                       <td className="py-2 px-2">
@@ -123,12 +123,12 @@ export const MonitorStatus: React.FC<MonitorStatusProps> = ({
                           {task.state}
                         </span>
                       </td>
-                      <td className="py-2 px-2 text-theme-primary">
+                      <td className="py-2 px-2 text-foreground">
                         {task.state === 'FAILURE' && task.result?.error
                           ? task.result.error
                           : task.result?.message || '-'}
                       </td>
-                      <td className="py-2 px-2 text-theme-primary text-xs">
+                      <td className="py-2 px-2 text-foreground text-xs">
                         {task.result?.last_update
                           ? new Date(task.result.last_update).toLocaleString()
                           : '-'}

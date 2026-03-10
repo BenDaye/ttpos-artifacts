@@ -44,15 +44,15 @@ export const AppSelection: React.FC<AppSelectionProps> = ({
   };
 
   return (
-    <div className="bg-theme-card p-4 rounded-lg border border-theme-card-hover">
-      <label className="block text-theme-primary mb-2 font-roboto font-semibold">
+    <div className="bg-card p-4 rounded-lg border border-border">
+      <label className="block text-foreground mb-2 font-roboto font-semibold">
         Select App
       </label>
       <div className="relative dropdown-container">
         <button
           type="button"
           onClick={() => setOpenDropdown(openDropdown === 'app' ? null : 'app')}
-          className="w-full min-w-0 bg-theme-input text-theme-primary border border-theme rounded-lg px-4 py-2 pr-8 flex items-center justify-between hover:bg-theme-card-hover transition-all duration-150"
+          className="w-full min-w-0 bg-muted text-foreground border border-border rounded-lg px-4 py-2 pr-8 flex items-center justify-between hover:bg-accent transition-all duration-150"
         >
           <span className="block min-w-0 flex-1 truncate text-left">{selectedApp || 'Select an app with TUF enabled'}</span>
           <svg 
@@ -65,28 +65,28 @@ export const AppSelection: React.FC<AppSelectionProps> = ({
             strokeWidth="2" 
             strokeLinecap="round" 
             strokeLinejoin="round"
-            className={`text-theme-primary transition-transform flex-shrink-0 ml-2 ${openDropdown === 'app' ? 'rotate-180' : ''}`}
+            className={`text-foreground transition-transform flex-shrink-0 ml-2 ${openDropdown === 'app' ? 'rotate-180' : ''}`}
           >
             <polyline points="6 9 12 15 18 9"></polyline>
           </svg>
         </button>
         {openDropdown === 'app' && (
-          <div className="absolute top-full left-0 right-0 mt-1 bg-theme-card backdrop-blur-lg rounded-lg shadow-lg z-10 border border-theme-card-hover max-h-60 overflow-y-auto">
+          <div className="absolute top-full left-0 right-0 mt-1 bg-card backdrop-blur-lg rounded-lg shadow-lg z-10 border border-border max-h-60 overflow-y-auto">
             {tufApps.length > 0 ? (
               tufApps.map((app) => (
                 <button
                   key={app.ID}
                   type="button"
                   onClick={() => handleAppSelect(app.AppName)}
-                  className={`w-full text-left truncate px-4 py-2 text-theme-primary hover:bg-theme-card-hover transition-colors ${
-                    selectedApp === app.AppName ? 'bg-theme-button-primary bg-opacity-50' : ''
+                  className={`w-full text-left truncate px-4 py-2 text-foreground hover:bg-accent transition-colors ${
+                    selectedApp === app.AppName ? 'bg-primary bg-opacity-50' : ''
                   }`}
                 >
                   {app.AppName}
                 </button>
               ))
             ) : (
-              <div className="px-4 py-3 text-theme-primary text-center">
+              <div className="px-4 py-3 text-foreground text-center">
                 No apps with TUF enabled found
               </div>
             )}
@@ -94,7 +94,7 @@ export const AppSelection: React.FC<AppSelectionProps> = ({
         )}
       </div>
       {tufApps.length > 0 && (
-        <p className="text-sm text-theme-primary opacity-70 mt-2">
+        <p className="text-sm text-foreground opacity-70 mt-2">
           <i className="fas fa-info-circle mr-1"></i>
           Only apps with TUF enabled are shown
         </p>

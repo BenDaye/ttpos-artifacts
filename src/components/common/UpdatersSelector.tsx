@@ -33,7 +33,7 @@ const AVAILABLE_UPDATERS = [
     label: 'Sparkle', 
     description: 'Sparkle framework for macOS updates (Not implemented)',
     icon: '✨',
-    color: 'from-purple-500 to-purple-600'
+    color: 'from-primary to-primary/90'
   },
   { 
     type: 'electron-builder', 
@@ -136,8 +136,8 @@ export const UpdatersSelector: React.FC<UpdatersSelectorProps> = ({ updaters, on
   return (
     <div className="space-y-4">
       <div className="flex items-center space-x-3">
-        <h3 className="text-lg font-semibold text-theme-primary font-roboto">Updaters</h3>
-        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-theme-secondary to-transparent opacity-30"></div>
+        <h3 className="text-lg font-semibold text-foreground font-roboto">Updaters</h3>
+        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-muted-foreground to-transparent opacity-30"></div>
         <button
           onClick={handleExpandClick}
           onMouseDown={(e) => {
@@ -148,11 +148,11 @@ export const UpdatersSelector: React.FC<UpdatersSelectorProps> = ({ updaters, on
             e.preventDefault();
             e.stopPropagation();
           }}
-          className="p-2 rounded-lg hover:bg-theme-secondary hover:bg-opacity-20 transition-all duration-200 group"
+          className="p-2 rounded-lg hover:bg-muted hover:bg-opacity-20 transition-all duration-200 group"
           aria-label={isExpanded ? 'Collapse updaters' : 'Expand updaters'}
         >
           <svg
-            className={`w-5 h-5 text-theme-secondary group-hover:text-theme-primary transition-transform duration-200 ${
+            className={`w-5 h-5 text-muted-foreground group-hover:text-foreground transition-transform duration-200 ${
               isExpanded ? 'rotate-180' : ''
             }`}
             fill="none"
@@ -177,11 +177,11 @@ export const UpdatersSelector: React.FC<UpdatersSelectorProps> = ({ updaters, on
                   className={`
                     relative group transition-all duration-300 ease-in-out
                     ${isSelected 
-                      ? 'ring-2 ring-purple-500 ring-opacity-50 shadow-lg scale-[1.02]' 
+                      ? 'ring-2 ring-ring shadow-lg scale-[1.02]' 
                       : 'hover:shadow-md hover:scale-[1.01]'
                     }
                     ${type === 'manual' ? 'cursor-default' : 'cursor-pointer'}
-                    bg-theme-input border border-theme rounded-xl p-4
+                    bg-muted border border-border rounded-xl p-4
                   `}
                   onClick={() => handleUpdaterToggle(type, !isSelected)}
                 >
@@ -197,8 +197,8 @@ export const UpdatersSelector: React.FC<UpdatersSelectorProps> = ({ updaters, on
                     <div className={`
                       w-5 h-5 rounded-full border-2 transition-all duration-200
                       ${isSelected 
-                        ? 'bg-purple-500 border-purple-500' 
-                        : 'border-theme-secondary group-hover:border-purple-300'
+                        ? 'bg-primary border-primary' 
+                        : 'border-border group-hover:border-ring'
                       }
                       flex items-center justify-center
                     `}>
@@ -221,17 +221,17 @@ export const UpdatersSelector: React.FC<UpdatersSelectorProps> = ({ updaters, on
 
                   {/* Content */}
                   <div className="space-y-2">
-                    <h4 className="font-semibold text-theme-primary font-roboto">
+                    <h4 className="font-semibold text-foreground font-roboto">
                       {label}
                     </h4>
-                    <p className="text-sm text-theme-secondary font-roboto leading-relaxed">
+                    <p className="text-sm text-muted-foreground font-roboto leading-relaxed">
                       {description}
                     </p>
                     
                     {/* Default selector */}
                     {isSelected && (
                       <div 
-                        className="pt-3 border-t border-theme-secondary border-opacity-30"
+                        className="pt-3 border-t border-border border-opacity-30"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <label className="flex items-center space-x-2 cursor-pointer group/default">
@@ -249,8 +249,8 @@ export const UpdatersSelector: React.FC<UpdatersSelectorProps> = ({ updaters, on
                             <div className={`
                               w-4 h-4 rounded-full border-2 transition-all duration-200
                               ${isDefault 
-                                ? 'border-purple-500 bg-purple-500' 
-                                : 'border-theme-secondary group-hover/default:border-purple-300'
+                                ? 'border-primary bg-primary' 
+                                : 'border-border group-hover/default:border-ring'
                               }
                               flex items-center justify-center
                             `}>
@@ -261,7 +261,7 @@ export const UpdatersSelector: React.FC<UpdatersSelectorProps> = ({ updaters, on
                           </div>
                           <span className={`
                             text-sm font-medium transition-colors duration-200
-                            ${isDefault ? 'text-purple-500' : 'text-theme-secondary group-hover/default:text-theme-primary'}
+                            ${isDefault ? 'text-primary' : 'text-muted-foreground group-hover/default:text-foreground'}
                           `}>
                             Set as default
                           </span>
@@ -272,7 +272,7 @@ export const UpdatersSelector: React.FC<UpdatersSelectorProps> = ({ updaters, on
 
                   {/* Hover effect */}
                   <div className={`
-                    absolute inset-0 rounded-xl bg-gradient-to-br from-purple-500/5 to-transparent
+                    absolute inset-0 rounded-xl bg-gradient-to-br from-primary/5 to-transparent
                     opacity-0 group-hover:opacity-100 transition-opacity duration-300
                     pointer-events-none
                   `}></div>
@@ -284,12 +284,12 @@ export const UpdatersSelector: React.FC<UpdatersSelectorProps> = ({ updaters, on
           {/* Status message */}
           {updaters.length === 0 && (
             <div className="text-center py-6">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-theme-secondary bg-opacity-20 flex items-center justify-center">
-                <svg className="w-8 h-8 text-theme-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted bg-opacity-20 flex items-center justify-center">
+                <svg className="w-8 h-8 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
               </div>
-              <p className="text-theme-secondary font-roboto">
+              <p className="text-muted-foreground font-roboto">
                 No updaters selected. Please select at least one updater.
               </p>
             </div>
@@ -299,12 +299,12 @@ export const UpdatersSelector: React.FC<UpdatersSelectorProps> = ({ updaters, on
 
       {/* Selected updaters summary - always visible */}
       {updaters.length > 0 && (
-        <div className="mt-6 p-4 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-xl border border-purple-500/20">
+        <div className="mt-6 p-4 bg-gradient-to-r from-primary/10 to-blue-500/10 rounded-xl border border-primary/20">
           <div className="flex items-center space-x-2 mb-2">
-            <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span className="font-semibold text-theme-primary font-roboto">
+            <span className="font-semibold text-foreground font-roboto">
               Selected Updaters ({updaters.length})
             </span>
           </div>
@@ -317,8 +317,8 @@ export const UpdatersSelector: React.FC<UpdatersSelectorProps> = ({ updaters, on
                   className={`
                     flex items-center space-x-2 px-3 py-1 rounded-full text-sm font-medium
                     ${updater.default 
-                      ? 'bg-purple-500 text-white shadow-lg' 
-                      : 'bg-theme-input text-theme-primary border border-theme'
+                      ? 'bg-primary text-primary-foreground shadow-lg' 
+                      : 'bg-muted text-foreground border border-border'
                     }
                   `}
                 >

@@ -1,6 +1,7 @@
 import React from "react";
-import { Sidebar } from "./Sidebar";
+import { useOutletContext } from "react-router-dom";
 import { Header } from "./Header";
+import type { MainLayoutContext } from "./MainLayout";
 
 interface AppLayoutProps {
   title: string;
@@ -21,25 +22,20 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   additionalButton,
   children,
 }) => {
-  const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
+  const { onMenuClick } = useOutletContext<MainLayoutContext>();
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans">
-      <div className="flex">
-        <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-        <main className="flex-1 min-w-0 p-6 lg:p-8">
-          <Header
-            title={title}
-            onCreateClick={onCreateClick}
-            createButtonText={createButtonText}
-            additionalButton={additionalButton}
-            onSearchChange={onSearchChange}
-            hideSearch={hideSearch}
-            onMenuClick={() => setIsSidebarOpen(true)}
-          />
-          <div className="mt-6">{children}</div>
-        </main>
-      </div>
-    </div>
+    <>
+      <Header
+        title={title}
+        onCreateClick={onCreateClick}
+        createButtonText={createButtonText}
+        additionalButton={additionalButton}
+        onSearchChange={onSearchChange}
+        hideSearch={hideSearch}
+        onMenuClick={onMenuClick}
+      />
+      <div className="mt-6">{children}</div>
+    </>
   );
 };

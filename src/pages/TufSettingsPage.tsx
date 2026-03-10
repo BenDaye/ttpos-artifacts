@@ -22,7 +22,7 @@ export const TufSettingsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-theme-gradient font-sans">
+    <div className="min-h-screen bg-background font-sans">
       <div className="flex flex-col lg:flex-row">
         <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
         <main className="flex-1 p-2 sm:p-4 md:p-8">
@@ -35,9 +35,9 @@ export const TufSettingsPage = () => {
           />
           
           <div className="mt-4 sm:mt-8">
-            <div className="bg-theme-card rounded-lg shadow-md p-4 sm:p-6">
+            <div className="bg-card rounded-lg shadow-md p-4 sm:p-6">
               {/* Navigation Tabs */}
-              <div className="mb-6 border-b border-theme-card-hover">
+              <div className="mb-6 border-b border-border">
                 <nav className="flex space-x-4">
                   {menuItems.map((item) => (
                     <button
@@ -45,8 +45,8 @@ export const TufSettingsPage = () => {
                       onClick={() => handlePageChange(item.id as 'users' | 'tuf')}
                       className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
                         item.id === 'tuf'
-                          ? 'bg-theme-button-primary bg-opacity-50 text-theme-primary border-b-2 border-blue-500'
-                          : 'text-theme-primary opacity-70 hover:opacity-100 hover:bg-theme-card-hover'
+                          ? 'bg-primary bg-opacity-50 text-foreground border-b-2 border-blue-500'
+                          : 'text-foreground opacity-70 hover:opacity-100 hover:bg-accent'
                       }`}
                     >
                       <i className={`fas ${item.icon} mr-2`}></i>

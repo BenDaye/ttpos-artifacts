@@ -17,7 +17,7 @@
 .sharedCard:hover {
   transform: translateY(-4px) scale(1.025);
   box-shadow: 0 8px 40px 0 rgba(16, 24, 40, 0.22);
-  border-color: var(--card-color, #8B5CF6);
+  border-color: var(--card-color, hsl(var(--primary)));
 }
 .sharedCardIcon {
   position: relative;
@@ -75,7 +75,7 @@
 .sharedCard--compact:hover {
   transform: translateY(-4px) scale(1.025);
   box-shadow: 0 8px 40px 0 rgba(16, 24, 40, 0.22);
-  border-color: var(--card-color, #8B5CF6);
+  border-color: var(--card-color, hsl(var(--primary)));
 }
 .sharedCard.sharedCard--compact {
   padding: 1.5rem 2rem !important;
@@ -87,7 +87,7 @@
 .sharedCard.sharedCard--compact:hover {
   transform: translateY(-4px) scale(1.025);
   box-shadow: 0 8px 40px 0 rgba(16, 24, 40, 0.22);
-  border-color: var(--card-color, #8B5CF6);
+  border-color: var(--card-color, hsl(var(--primary)));
 }
 
 /* Auth card styles without icons */
@@ -113,24 +113,29 @@
 .sharedCard--auth:hover {
   transform: translateY(-4px) scale(1.02);
   box-shadow: 0 8px 40px 0 rgba(16, 24, 40, 0.22);
-  border-color: var(--card-color, #8B5CF6);
+  border-color: var(--card-color, hsl(var(--primary)));
 } 
-/* Modern users table styles harmonized with card design */
+/* Modern users table styles - theme-aware for light and dark modes */
 .users-table-container {
-  background: linear-gradient(135deg, #ffffff1a, #ffffff0d);
-  border-radius: 1.5rem;
-  border: 2px solid rgba(255, 255, 255, 0.18);
-  box-shadow: 0 4px 32px 0 rgba(16, 24, 40, 0.18);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background-color: hsl(var(--card));
+  border-radius: 1rem;
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08);
   padding: 1.5rem 1rem;
   margin-bottom: 2rem;
   transition: box-shadow 0.18s cubic-bezier(0.4,0,0.2,1), border 0.18s cubic-bezier(0.4,0,0.2,1);
 }
 
+.dark .users-table-container {
+  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.3);
+}
+
 .users-table-container:hover {
-  box-shadow: 0 8px 40px 0 rgba(16, 24, 40, 0.22);
-  border-color: var(--card-color, #8B5CF6);
+  box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.12);
+}
+
+.dark .users-table-container:hover {
+  box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.4);
 }
 
 .users-table {
@@ -142,22 +147,21 @@
 
 .users-table th, .users-table td {
   background: transparent;
-  color: #fff;
-  border-right: 1px solid rgba(255,255,255,0.15);
-  border-bottom: 1px solid rgba(255,255,255,0.15);
+  color: hsl(var(--foreground));
+  border-right: 1px solid hsl(var(--border));
+  border-bottom: 1px solid hsl(var(--border));
   padding: 0.375rem 0.125rem;
   font-size: 0.875rem;
 }
 
 .users-table th {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(139, 92, 246, 0.08));
+  background-color: hsl(var(--accent));
   font-weight: 700;
   position: sticky;
   top: 0;
   z-index: 2;
-  border-bottom: 2px solid rgba(139, 92, 246, 0.3);
-  color: #fff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  border-bottom: 2px solid hsl(var(--border));
+  color: hsl(var(--foreground));
 }
 
 .users-table tr:last-child td {
@@ -169,15 +173,19 @@
 }
 
 .users-table tbody tr:hover {
-  background: rgba(139, 92, 246, 0.08);
+  background-color: hsl(var(--accent));
 }
 
 .users-table tbody tr:nth-child(even) {
-  background: rgba(255, 255, 255, 0.02);
+  background-color: hsl(var(--card));
+}
+
+.dark .users-table tbody tr:nth-child(even) {
+  background-color: hsl(0 0% 6%);
 }
 
 .users-table tbody tr:nth-child(even):hover {
-  background: rgba(139, 92, 246, 0.12);
+  background-color: hsl(var(--accent));
 }
 
 .users-table td {
@@ -202,12 +210,11 @@
 }
 
 .users-table-action-btn {
-  background: rgba(139, 92, 246, 0.18);
-  color: #fff;
+  background-color: hsl(var(--secondary));
+  color: hsl(var(--foreground));
   border-radius: 0.5rem;
-  border: 1px solid rgba(139, 92, 246, 0.18);
+  border: 1px solid hsl(var(--border));
   transition: background 0.18s cubic-bezier(0.4,0,0.2,1), border 0.18s cubic-bezier(0.4,0,0.2,1), transform 0.18s cubic-bezier(0.4,0,0.2,1);
-  box-shadow: 0 2px 8px 0 rgba(139, 92, 246, 0.08);
   font-weight: 500;
   display: flex;
   align-items: center;
@@ -218,17 +225,16 @@
 }
 
 .users-table-action-btn:hover, .users-table-action-btn:focus {
-  background: rgba(139, 92, 246, 0.28);
-  border-color: #8B5CF6;
+  background-color: hsl(var(--accent));
+  border-color: hsl(var(--border));
   transform: translateY(-1px) scale(1.02);
 }
 
 .users-table .users-settings-checkbox {
-  accent-color: #8B5CF6 !important;
+  accent-color: hsl(var(--primary));
   border-radius: 0.25rem;
   width: 1rem;
   height: 1rem;
-  box-shadow: 0 1px 2px 0 rgba(139, 92, 246, 0.10);
 }
 
 @media (max-width: 768px) {

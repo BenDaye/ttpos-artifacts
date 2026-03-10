@@ -96,7 +96,7 @@ export const DownloadArtifactsModal: React.FC<DownloadArtifactsModalProps> = ({
       onClick={handleBackdropClick}
     >
       <div className="bg-card border border-border p-8 rounded-lg w-96 max-h-[80vh] overflow-y-auto flex flex-col">
-        <h2 className="text-2xl font-bold mb-4 text-theme-primary font-roboto">
+        <h2 className="text-2xl font-bold mb-4 text-foreground font-roboto">
           Select Artifact to Download
         </h2>
         {copyError && (
@@ -108,15 +108,15 @@ export const DownloadArtifactsModal: React.FC<DownloadArtifactsModalProps> = ({
           {artifacts.map((artifact, index) => (
             <div
               key={index}
-              className="bg-theme-card p-4 rounded-lg text-theme-primary hover:bg-theme-card-hover transition-colors cursor-pointer"
+              className="bg-card p-4 rounded-lg text-foreground hover:bg-accent transition-colors cursor-pointer"
               onClick={() => handleDownload(artifact)}
             >
               <div className="flex flex-col">
                 <div className="flex justify-between items-start mb-2">
                   <div>
                     <p className="font-semibold">{artifact.platform}</p>
-                    <p className="text-sm text-gray-300">Architecture: {artifact.arch}</p>
-                    <p className="text-sm text-gray-300">Package: {artifact.package}</p>
+                    <p className="text-sm text-muted-foreground">Architecture: {artifact.arch}</p>
+                    <p className="text-sm text-muted-foreground">Package: {artifact.package}</p>
                     {artifact.TufTaskID && (
                       <div className="mt-1 flex items-center gap-1">
                         <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${
@@ -145,7 +145,7 @@ export const DownloadArtifactsModal: React.FC<DownloadArtifactsModalProps> = ({
                   <i className="fas fa-download text-green-500 ml-4 flex-shrink-0"></i>
                 </div>
                 <div className="mt-3">
-                  <p className="text-sm text-gray-300 mb-1">Share link:</p>
+                  <p className="text-sm text-muted-foreground mb-1">Share link:</p>
                   <div className="flex items-center gap-2">
                     <div className="min-w-0 flex-1">
                       <div className="overflow-x-auto pb-1" style={{
@@ -163,10 +163,10 @@ export const DownloadArtifactsModal: React.FC<DownloadArtifactsModalProps> = ({
                         e.stopPropagation();
                         handleCopyLink(artifact.link, index);
                       }}
-                      className="p-1 hover:bg-theme-card-hover rounded transition-colors flex-shrink-0"
+                      className="p-1 hover:bg-accent rounded transition-colors flex-shrink-0"
                       title="Copy link"
                     >
-                      <i className={`fas ${copiedIndex === index ? 'fa-check text-green-500' : 'fa-copy text-gray-300'}`}></i>
+                      <i className={`fas ${copiedIndex === index ? 'fa-check text-green-500' : 'fa-copy text-muted-foreground'}`}></i>
                     </button>
                   </div>
                 </div>
@@ -177,7 +177,7 @@ export const DownloadArtifactsModal: React.FC<DownloadArtifactsModalProps> = ({
         <div className="mt-6 flex justify-end">
           <button
             onClick={onClose}
-            className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-roboto hover:bg-gray-300 transition-all duration-150 border border-gray-300 shadow-sm"
+            className="bg-secondary text-foreground px-4 py-2 rounded-lg font-roboto hover:bg-accent transition-all duration-150 border border-border shadow-sm"
           >
             Close
           </button>

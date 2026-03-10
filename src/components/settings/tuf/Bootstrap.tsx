@@ -77,9 +77,9 @@ export const Bootstrap: React.FC<BootstrapProps> = ({
   }
 
   return (
-    <div className="bg-theme-card p-6 rounded-lg border border-theme-card-hover">
+    <div className="bg-card p-6 rounded-lg border border-border">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-bold text-theme-primary font-roboto">
+        <h2 className="text-lg font-bold text-foreground font-roboto">
           Step 2: Start TUF Bootstrapping
         </h2>
         <div className={`flex items-center ${getStatusColor(step2Status)}`}>
@@ -94,17 +94,17 @@ export const Bootstrap: React.FC<BootstrapProps> = ({
           <i className="fas fa-info-circle text-blue-500 mr-3 mt-0.5 text-xl"></i>
           <div className="flex-1">
             <h3 className="text-blue-500 font-semibold mb-2 font-roboto">About Root Keys Location</h3>
-            <p className="text-theme-primary text-sm leading-relaxed mb-2">
-              <strong>Important:</strong> Root keys are <strong>not required</strong> to be in <code className="bg-theme-input px-1 rounded">ONLINE_KEY_DIR</code> for bootstrapping.
+            <p className="text-foreground text-sm leading-relaxed mb-2">
+              <strong>Important:</strong> Root keys are <strong>not required</strong> to be in <code className="bg-muted px-1 rounded">ONLINE_KEY_DIR</code> for bootstrapping.
             </p>
-            <p className="text-theme-primary text-sm leading-relaxed mb-2">
-              <strong>Recommendation:</strong> It is recommended to download root keys locally and remove them from <code className="bg-theme-input px-1 rounded">ONLINE_KEY_DIR</code> for better security.
+            <p className="text-foreground text-sm leading-relaxed mb-2">
+              <strong>Recommendation:</strong> It is recommended to download root keys locally and remove them from <code className="bg-muted px-1 rounded">ONLINE_KEY_DIR</code> for better security.
             </p>
-            <p className="text-theme-primary text-sm leading-relaxed mb-2">
+            <p className="text-foreground text-sm leading-relaxed mb-2">
               The location of root keys only affects the choice between <strong>Online</strong> and <strong>Offline</strong> flow in the <strong>Rotate Root Keys</strong> section:
             </p>
-            <ul className="text-theme-primary text-sm leading-relaxed list-disc list-inside ml-2 space-y-1">
-              <li>If keys are kept in <code className="bg-theme-input px-1 rounded">ONLINE_KEY_DIR</code> → choose <strong>Online Flow</strong></li>
+            <ul className="text-foreground text-sm leading-relaxed list-disc list-inside ml-2 space-y-1">
+              <li>If keys are kept in <code className="bg-muted px-1 rounded">ONLINE_KEY_DIR</code> → choose <strong>Online Flow</strong></li>
               <li>If keys are downloaded locally → choose <strong>Offline Flow</strong></li>
             </ul>
           </div>
@@ -113,7 +113,7 @@ export const Bootstrap: React.FC<BootstrapProps> = ({
 
       <div className="space-y-4">
         <div>
-          <label className="block text-theme-primary mb-2 font-roboto">Payload Source</label>
+          <label className="block text-foreground mb-2 font-roboto">Payload Source</label>
           <div className="space-y-2">
             {/* <label className="flex items-center">
               <input
@@ -125,7 +125,7 @@ export const Bootstrap: React.FC<BootstrapProps> = ({
                 disabled={!generatedPayload}
                 className="mr-2"
               />
-              <span className="text-theme-primary">
+              <span className="text-foreground">
                 Use generated payload (from Step 1)
                 {!generatedPayload && <span className="text-gray-500 ml-2">(Not available)</span>}
               </span>
@@ -139,21 +139,21 @@ export const Bootstrap: React.FC<BootstrapProps> = ({
                 onChange={(e) => setPayloadSource(e.target.value as 'generated' | 'custom')}
                 className="mr-2"
               />
-              <span className="text-theme-primary">Use custom payload</span>
+              <span className="text-foreground">Use custom payload</span>
             </label>
           </div>
         </div>
 
         {payloadSource === 'custom' && (
           <div>
-            <label className="block text-theme-primary mb-2 font-roboto">Custom Payload</label>
+            <label className="block text-foreground mb-2 font-roboto">Custom Payload</label>
             <textarea
               value={customPayload}
               onChange={(e) => handleCustomPayloadChange(e.target.value)}
               placeholder="Paste JSON payload here..."
               rows={8}
-              className={`w-full bg-theme-input text-theme-primary border rounded-lg px-4 py-2 font-mono text-sm ${
-                customPayloadError ? 'border-red-500' : 'border-theme'
+              className={`w-full bg-muted text-foreground border rounded-lg px-4 py-2 font-mono text-sm ${
+                customPayloadError ? 'border-red-500' : 'border-border'
               }`}
             />
             {customPayloadError && (
@@ -168,7 +168,7 @@ export const Bootstrap: React.FC<BootstrapProps> = ({
             handleStartBootstrap();
           }}
           disabled={step2Status === 'waiting' || step2Status === 'in-progress' || step2Status === 'disabled'}
-          className="bg-theme-button-primary text-theme-primary px-4 py-2 rounded-lg font-roboto hover:bg-theme-button-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-primary text-primary-foreground px-4 py-2 rounded-lg font-roboto hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {step2Status === 'in-progress' ? (
             <>
@@ -184,37 +184,37 @@ export const Bootstrap: React.FC<BootstrapProps> = ({
         </button>
 
         {bootstrapTaskId && (
-          <div className="mt-4 p-4 bg-theme-input rounded-lg border border-theme">
+          <div className="mt-4 p-4 bg-muted rounded-lg border border-border">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-theme-primary font-semibold">Bootstrap Status</span>
+              <span className="text-foreground font-semibold">Bootstrap Status</span>
               {lastChecked && (
-                <span className="text-sm text-theme-primary opacity-70">
+                <span className="text-sm text-foreground opacity-70">
                   Last checked: {lastChecked}
                 </span>
               )}
             </div>
             <div className="space-y-2 text-sm">
               <div>
-                <span className="text-theme-primary opacity-70">Task ID: </span>
-                <span className="text-theme-primary font-mono">{bootstrapTaskId}</span>
+                <span className="text-foreground opacity-70">Task ID: </span>
+                <span className="text-foreground font-mono">{bootstrapTaskId}</span>
               </div>
               {bootstrapLastUpdate && (
                 <div>
-                  <span className="text-theme-primary opacity-70">Last Update: </span>
-                  <span className="text-theme-primary">
+                  <span className="text-foreground opacity-70">Last Update: </span>
+                  <span className="text-foreground">
                     {new Date(bootstrapLastUpdate).toLocaleString()}
                   </span>
                 </div>
               )}
               {bootstrapStatus && (
                 <div>
-                  <span className="text-theme-primary opacity-70">Status: </span>
+                  <span className="text-foreground opacity-70">Status: </span>
                   <span className={getTaskStateColor(bootstrapStatus.state)}>
                     {bootstrapStatus.state}
                   </span>
                   {bootstrapStatus.result && (
-                    <div className="mt-2 pl-4 border-l-2 border-theme-card-hover">
-                      <div className="text-theme-primary">{bootstrapStatus.result.message}</div>
+                    <div className="mt-2 pl-4 border-l-2 border-border">
+                      <div className="text-foreground">{bootstrapStatus.result.message}</div>
                       {bootstrapStatus.result.error && (
                         <div className="text-red-500 mt-1">{bootstrapStatus.result.error}</div>
                       )}

@@ -110,11 +110,11 @@ export const Config: React.FC<ConfigProps> = ({
   }
 
   return (
-    <div className="bg-theme-card p-6 rounded-lg border border-theme-card-hover">
+    <div className="bg-card p-6 rounded-lg border border-border">
       <div className="flex items-center justify-between mb-4">
         <button
           onClick={() => setShowConfig(!showConfig)}
-          className="flex items-center gap-3 text-theme-primary hover:text-theme-button-primary transition-colors"
+          className="flex items-center gap-3 text-foreground hover:text-primary transition-colors"
         >
           <h2 className="text-lg font-bold font-roboto">
             Update tuf config
@@ -127,7 +127,7 @@ export const Config: React.FC<ConfigProps> = ({
             handleRefresh();
           }}
           disabled={configLoading}
-          className="text-theme-primary hover:text-theme-button-primary transition-colors disabled:opacity-50"
+          className="text-foreground hover:text-primary transition-colors disabled:opacity-50"
           title="Reload config"
         >
           <i className={`fas fa-sync ${configLoading ? 'fa-spin' : ''} mr-2`}></i>
@@ -139,112 +139,112 @@ export const Config: React.FC<ConfigProps> = ({
         <>
           {configLoading ? (
             <div className="text-center py-8">
-              <i className="fas fa-spinner fa-spin text-theme-primary text-2xl mb-2"></i>
-              <p className="text-theme-primary opacity-70">Loading config...</p>
+              <i className="fas fa-spinner fa-spin text-foreground text-2xl mb-2"></i>
+              <p className="text-foreground opacity-70">Loading config...</p>
             </div>
           ) : tufConfig ? (
             <div className="space-y-6">
               {/* Read-only fields */}
               <div>
-                <h3 className="text-md font-semibold text-theme-primary mb-3 font-roboto">Configuration Details</h3>
+                <h3 className="text-md font-semibold text-foreground mb-3 font-roboto">Configuration Details</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <div className="bg-theme-input p-3 rounded-lg border border-theme">
-                    <div className="text-sm text-theme-primary opacity-70 mb-1">Bootstrap ID</div>
-                    <div className="text-theme-primary font-mono text-sm">{tufConfig.bootstrap}</div>
+                  <div className="bg-muted p-3 rounded-lg border border-border">
+                    <div className="text-sm text-foreground opacity-70 mb-1">Bootstrap ID</div>
+                    <div className="text-foreground font-mono text-sm">{tufConfig.bootstrap}</div>
                   </div>
-                  <div className="bg-theme-input p-3 rounded-lg border border-theme">
-                    <div className="text-sm text-theme-primary opacity-70 mb-1">Role Expiration</div>
-                    <div className="text-theme-primary">{tufConfig.role_expiration} days</div>
+                  <div className="bg-muted p-3 rounded-lg border border-border">
+                    <div className="text-sm text-foreground opacity-70 mb-1">Role Expiration</div>
+                    <div className="text-foreground">{tufConfig.role_expiration} days</div>
                   </div>
-                  <div className="bg-theme-input p-3 rounded-lg border border-theme">
-                    <div className="text-sm text-theme-primary opacity-70 mb-1">Root Expiration</div>
-                    <div className="text-theme-primary">{tufConfig.root_expiration} days</div>
+                  <div className="bg-muted p-3 rounded-lg border border-border">
+                    <div className="text-sm text-foreground opacity-70 mb-1">Root Expiration</div>
+                    <div className="text-foreground">{tufConfig.root_expiration} days</div>
                   </div>
-                  <div className="bg-theme-input p-3 rounded-lg border border-theme">
-                    <div className="text-sm text-theme-primary opacity-70 mb-1">Root Keys</div>
-                    <div className="text-theme-primary">{tufConfig.root_num_keys}</div>
+                  <div className="bg-muted p-3 rounded-lg border border-border">
+                    <div className="text-sm text-foreground opacity-70 mb-1">Root Keys</div>
+                    <div className="text-foreground">{tufConfig.root_num_keys}</div>
                   </div>
-                  <div className="bg-theme-input p-3 rounded-lg border border-theme">
-                    <div className="text-sm text-theme-primary opacity-70 mb-1">Root Threshold</div>
-                    <div className="text-theme-primary">{tufConfig.root_threshold}</div>
+                  <div className="bg-muted p-3 rounded-lg border border-border">
+                    <div className="text-sm text-foreground opacity-70 mb-1">Root Threshold</div>
+                    <div className="text-foreground">{tufConfig.root_threshold}</div>
                   </div>
-                  <div className="bg-theme-input p-3 rounded-lg border border-theme">
-                    <div className="text-sm text-theme-primary opacity-70 mb-1">Snapshot Keys</div>
-                    <div className="text-theme-primary">{tufConfig.snapshot_num_keys}</div>
+                  <div className="bg-muted p-3 rounded-lg border border-border">
+                    <div className="text-sm text-foreground opacity-70 mb-1">Snapshot Keys</div>
+                    <div className="text-foreground">{tufConfig.snapshot_num_keys}</div>
                   </div>
-                  <div className="bg-theme-input p-3 rounded-lg border border-theme">
-                    <div className="text-sm text-theme-primary opacity-70 mb-1">Snapshot Threshold</div>
-                    <div className="text-theme-primary">{tufConfig.snapshot_threshold}</div>
+                  <div className="bg-muted p-3 rounded-lg border border-border">
+                    <div className="text-sm text-foreground opacity-70 mb-1">Snapshot Threshold</div>
+                    <div className="text-foreground">{tufConfig.snapshot_threshold}</div>
                   </div>
-                  <div className="bg-theme-input p-3 rounded-lg border border-theme">
-                    <div className="text-sm text-theme-primary opacity-70 mb-1">Targets Keys</div>
-                    <div className="text-theme-primary">{tufConfig.targets_num_keys}</div>
+                  <div className="bg-muted p-3 rounded-lg border border-border">
+                    <div className="text-sm text-foreground opacity-70 mb-1">Targets Keys</div>
+                    <div className="text-foreground">{tufConfig.targets_num_keys}</div>
                   </div>
-                  <div className="bg-theme-input p-3 rounded-lg border border-theme">
-                    <div className="text-sm text-theme-primary opacity-70 mb-1">Targets Online Key</div>
-                    <div className="text-theme-primary">{tufConfig.targets_online_key}</div>
+                  <div className="bg-muted p-3 rounded-lg border border-border">
+                    <div className="text-sm text-foreground opacity-70 mb-1">Targets Online Key</div>
+                    <div className="text-foreground">{tufConfig.targets_online_key}</div>
                   </div>
-                  <div className="bg-theme-input p-3 rounded-lg border border-theme">
-                    <div className="text-sm text-theme-primary opacity-70 mb-1">Targets Threshold</div>
-                    <div className="text-theme-primary">{tufConfig.targets_threshold}</div>
+                  <div className="bg-muted p-3 rounded-lg border border-border">
+                    <div className="text-sm text-foreground opacity-70 mb-1">Targets Threshold</div>
+                    <div className="text-foreground">{tufConfig.targets_threshold}</div>
                   </div>
-                  <div className="bg-theme-input p-3 rounded-lg border border-theme">
-                    <div className="text-sm text-theme-primary opacity-70 mb-1">Timestamp Keys</div>
-                    <div className="text-theme-primary">{tufConfig.timestamp_num_keys}</div>
+                  <div className="bg-muted p-3 rounded-lg border border-border">
+                    <div className="text-sm text-foreground opacity-70 mb-1">Timestamp Keys</div>
+                    <div className="text-foreground">{tufConfig.timestamp_num_keys}</div>
                   </div>
-                  <div className="bg-theme-input p-3 rounded-lg border border-theme">
-                    <div className="text-sm text-theme-primary opacity-70 mb-1">Timestamp Threshold</div>
-                    <div className="text-theme-primary">{tufConfig.timestamp_threshold}</div>
+                  <div className="bg-muted p-3 rounded-lg border border-border">
+                    <div className="text-sm text-foreground opacity-70 mb-1">Timestamp Threshold</div>
+                    <div className="text-foreground">{tufConfig.timestamp_threshold}</div>
                   </div>
                 </div>
               </div>
 
               {/* Editable expiration fields */}
               <div>
-                <h3 className="text-md font-semibold text-theme-primary mb-3 font-roboto">Expiration Settings (Editable)</h3>
+                <h3 className="text-md font-semibold text-foreground mb-3 font-roboto">Expiration Settings (Editable)</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="bg-theme-input p-4 rounded-lg border border-theme">
-                    <label className="block text-sm text-theme-primary mb-2 font-roboto">
+                  <div className="bg-muted p-4 rounded-lg border border-border">
+                    <label className="block text-sm text-foreground mb-2 font-roboto">
                       Targets Expiration (days)
                     </label>
                     <input
                       type="number"
                       value={localExpiration.targets}
                       onChange={(e) => setLocalExpiration(prev => ({ ...prev, targets: parseInt(e.target.value) || 0 }))}
-                      className="w-full bg-theme-card text-theme-primary border border-theme rounded-lg px-4 py-2"
+                      className="w-full bg-card text-foreground border border-border rounded-lg px-4 py-2"
                       min="1"
                     />
-                    <p className="text-xs text-theme-primary opacity-70 mt-1">
+                    <p className="text-xs text-foreground opacity-70 mt-1">
                       Current: {tufConfig.targets_expiration} days
                     </p>
                   </div>
-                  <div className="bg-theme-input p-4 rounded-lg border border-theme">
-                    <label className="block text-sm text-theme-primary mb-2 font-roboto">
+                  <div className="bg-muted p-4 rounded-lg border border-border">
+                    <label className="block text-sm text-foreground mb-2 font-roboto">
                       Snapshot Expiration (days)
                     </label>
                     <input
                       type="number"
                       value={localExpiration.snapshot}
                       onChange={(e) => setLocalExpiration(prev => ({ ...prev, snapshot: parseInt(e.target.value) || 0 }))}
-                      className="w-full bg-theme-card text-theme-primary border border-theme rounded-lg px-4 py-2"
+                      className="w-full bg-card text-foreground border border-border rounded-lg px-4 py-2"
                       min="1"
                     />
-                    <p className="text-xs text-theme-primary opacity-70 mt-1">
+                    <p className="text-xs text-foreground opacity-70 mt-1">
                       Current: {tufConfig.snapshot_expiration} days
                     </p>
                   </div>
-                  <div className="bg-theme-input p-4 rounded-lg border border-theme">
-                    <label className="block text-sm text-theme-primary mb-2 font-roboto">
+                  <div className="bg-muted p-4 rounded-lg border border-border">
+                    <label className="block text-sm text-foreground mb-2 font-roboto">
                       Timestamp Expiration (days)
                     </label>
                     <input
                       type="number"
                       value={localExpiration.timestamp}
                       onChange={(e) => setLocalExpiration(prev => ({ ...prev, timestamp: parseInt(e.target.value) || 0 }))}
-                      className="w-full bg-theme-card text-theme-primary border border-theme rounded-lg px-4 py-2"
+                      className="w-full bg-card text-foreground border border-border rounded-lg px-4 py-2"
                       min="1"
                     />
-                    <p className="text-xs text-theme-primary opacity-70 mt-1">
+                    <p className="text-xs text-foreground opacity-70 mt-1">
                       Current: {tufConfig.timestamp_expiration} days
                     </p>
                   </div>
@@ -255,7 +255,7 @@ export const Config: React.FC<ConfigProps> = ({
                 <button
                   onClick={handleUpdateConfig}
                   disabled={configUpdating}
-                  className="bg-theme-button-primary text-theme-primary px-6 py-2 rounded-lg font-roboto hover:bg-theme-button-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-primary text-primary-foreground px-6 py-2 rounded-lg font-roboto hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {configUpdating ? (
                     <>
@@ -278,7 +278,7 @@ export const Config: React.FC<ConfigProps> = ({
                     <i className="fas fa-info-circle text-blue-500 mr-3 mt-0.5 text-xl"></i>
                     <div className="flex-1">
                       <h3 className="text-blue-500 font-semibold mb-2 font-roboto">Update Metadata Files</h3>
-                      <p className="text-theme-primary text-sm leading-relaxed mb-3">
+                      <p className="text-foreground text-sm leading-relaxed mb-3">
                         After updating the configuration, you need to update the metadata files to apply the changes. 
                         Select which roles to update, or leave all unchecked to update all roles (timestamp, targets, snapshot).
                       </p>
@@ -288,7 +288,7 @@ export const Config: React.FC<ConfigProps> = ({
                   <div className="space-y-4">
                     {/* Role Selection */}
                     <div>
-                      <label className="block text-sm font-semibold text-theme-primary mb-3 font-roboto">
+                      <label className="block text-sm font-semibold text-foreground mb-3 font-roboto">
                         Select Roles to Update
                       </label>
                       <div className="flex flex-wrap gap-4 mb-3">
@@ -299,7 +299,7 @@ export const Config: React.FC<ConfigProps> = ({
                             onChange={() => handleRoleToggle('timestamp')}
                             className="mr-2 w-4 h-4 text-blue-500 rounded focus:ring-blue-500"
                           />
-                          <span className="text-theme-primary font-roboto">Timestamp</span>
+                          <span className="text-foreground font-roboto">Timestamp</span>
                         </label>
                         <label className="flex items-center cursor-pointer">
                           <input
@@ -308,7 +308,7 @@ export const Config: React.FC<ConfigProps> = ({
                             onChange={() => handleRoleToggle('targets')}
                             className="mr-2 w-4 h-4 text-blue-500 rounded focus:ring-blue-500"
                           />
-                          <span className="text-theme-primary font-roboto">Targets</span>
+                          <span className="text-foreground font-roboto">Targets</span>
                         </label>
                         <label className="flex items-center cursor-pointer">
                           <input
@@ -317,7 +317,7 @@ export const Config: React.FC<ConfigProps> = ({
                             onChange={() => handleRoleToggle('snapshot')}
                             className="mr-2 w-4 h-4 text-blue-500 rounded focus:ring-blue-500"
                           />
-                          <span className="text-theme-primary font-roboto">Snapshot</span>
+                          <span className="text-foreground font-roboto">Snapshot</span>
                         </label>
                       </div>
                       <div className="flex gap-2 mb-3">
@@ -327,7 +327,7 @@ export const Config: React.FC<ConfigProps> = ({
                         >
                           Select All
                         </button>
-                        <span className="text-theme-primary opacity-50">|</span>
+                        <span className="text-foreground opacity-50">|</span>
                         <button
                           onClick={handleClearAllRoles}
                           className="text-xs text-blue-500 hover:text-blue-600 font-roboto"
@@ -339,7 +339,7 @@ export const Config: React.FC<ConfigProps> = ({
 
                     {/* Custom Role Input */}
                     <div>
-                      <label className="block text-sm text-theme-primary mb-2 font-roboto">
+                      <label className="block text-sm text-foreground mb-2 font-roboto">
                         Custom Role (optional)
                       </label>
                       <input
@@ -347,9 +347,9 @@ export const Config: React.FC<ConfigProps> = ({
                         value={customRole}
                         onChange={(e) => setCustomRole(e.target.value)}
                         placeholder="Enter custom role name..."
-                        className="w-full bg-theme-input text-theme-primary border border-theme rounded-lg px-4 py-2 text-sm"
+                        className="w-full bg-muted text-foreground border border-border rounded-lg px-4 py-2 text-sm"
                       />
-                      <p className="text-xs text-theme-primary opacity-70 mt-1">
+                      <p className="text-xs text-foreground opacity-70 mt-1">
                         You can specify a custom role name to update
                       </p>
                     </div>
@@ -380,7 +380,7 @@ export const Config: React.FC<ConfigProps> = ({
             </div>
           ) : (
             <div className="text-center py-8">
-              <p className="text-theme-primary opacity-70">No config available</p>
+              <p className="text-foreground opacity-70">No config available</p>
             </div>
           )}
         </>

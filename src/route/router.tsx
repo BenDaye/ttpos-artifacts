@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Outlet } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import { PrivateRoute } from './privateRoute.tsx';
 import { PublicRoute } from './publicRoute.tsx';
@@ -6,8 +6,8 @@ import { AuthProvider } from '../providers/authProvider.tsx';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { MainLayout } from '../components/MainLayout';
 
-// Lazy load page components
 const SignInPage = lazy(() => import('../pages/signInPage.tsx').then(module => ({ default: module.SignInPage })));
 const SignUpPage = lazy(() => import('../pages/signUpPage.tsx').then(module => ({ default: module.SignUpPage })));
 const HomePage = lazy(() => import('../pages/homePage.tsx').then(module => ({ default: module.HomePage })));
@@ -17,62 +17,46 @@ const ArchitecturesPage = lazy(() => import('../pages/architecturesPage.tsx').th
 const StatisticsPage = lazy(() => import('../pages/StatisticsPage.tsx').then(module => ({ default: module.StatisticsPage })));
 const SettingsPage = lazy(() => import('../pages/SettingsPage.tsx').then(module => ({ default: module.SettingsPage })));
 
-const RootLayout = ({ children }: { children: React.ReactNode }) => (
+const RootLayout = () => (
   <AuthProvider>
     <ToastContainer />
     <Suspense fallback={<LoadingSpinner />}>
-    {children}
+      <Outlet />
     </Suspense>
   </AuthProvider>
 );
 
 export const router = createBrowserRouter([
   {
-    path: '/',
-    element: <RootLayout><PrivateRoute><HomePage /></PrivateRoute></RootLayout>,
-  },
-  {
-    path: '/applications',
-    element: <RootLayout><PrivateRoute><HomePage /></PrivateRoute></RootLayout>,
-  },
-  {
-    path: '/applications/:appName',
-    element: <RootLayout><PrivateRoute><HomePage /></PrivateRoute></RootLayout>,
-  },
-  {
-    path: '/channels',
-    element: <RootLayout><PrivateRoute><ChannelsPage /></PrivateRoute></RootLayout>,
-  },
-  {
-    path: '/platforms',
-    element: <RootLayout><PrivateRoute><PlatformsPage /></PrivateRoute></RootLayout>,
-  },
-  {
-    path: '/architectures',
-    element: <RootLayout><PrivateRoute><ArchitecturesPage /></PrivateRoute></RootLayout>,
-  },
-  {
-    path: '/statistics',
-    element: <RootLayout><PrivateRoute><StatisticsPage /></PrivateRoute></RootLayout>,
-  },
-  {
-    path: '/settings',
-    element: <RootLayout><PrivateRoute><SettingsPage /></PrivateRoute></RootLayout>,
-  },
-  {
-    path: '/settings/tuf',
-    element: <RootLayout><PrivateRoute><SettingsPage /></PrivateRoute></RootLayout>,
-  },
-  {
-    path: '/settings/tokens',
-    element: <RootLayout><PrivateRoute><SettingsPage /></PrivateRoute></RootLayout>,
-  },
-  {
-    path: '/signin',
-    element: <RootLayout><PublicRoute><SignInPage /></PublicRoute></RootLayout>,
-  },
-  {
-    path: '/signup',
-    element: <RootLayout><PublicRoute><SignUpPage /></PublicRoute></RootLayout>,
+    element: <RootLayout />,
+    children: [
+      {
+        element: <PrivateRoute />,
+        children: [
+          {
+            element: <MainLayout />,
+            children: [
+              { path: '/', element: <HomePage /> },
+              { path: '/applications', element: <HomePage /> },
+              { path: '/applications/:appName', element: <HomePage /> },
+              { path: '/channels', element: <ChannelsPage /> },
+              { path: '/platforms', element: <PlatformsPage /> },
+              { path: '/architectures', element: <ArchitecturesPage /> },
+              { path: '/statistics', element: <StatisticsPage /> },
+              { path: '/settings', element: <SettingsPage /> },
+              { path: '/settings/tuf', element: <SettingsPage /> },
+              { path: '/settings/tokens', element: <SettingsPage /> },
+            ],
+          },
+        ],
+      },
+      {
+        element: <PublicRoute />,
+        children: [
+          { path: '/signin', element: <SignInPage /> },
+          { path: '/signup', element: <SignUpPage /> },
+        ],
+      },
+    ],
   },
 ]);

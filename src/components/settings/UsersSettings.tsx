@@ -410,11 +410,11 @@ export const UsersSettings: React.FC = () => {
   };
 
   if (isLoading) {
-    return <div className="text-theme-primary">Loading...</div>;
+    return <div className="text-foreground">Loading...</div>;
   }
 
   if (error) {
-    return <div className="text-theme-danger">Error loading users data</div>;
+    return <div className="text-destructive">Error loading users data</div>;
   }
 
   return (
@@ -425,7 +425,7 @@ export const UsersSettings: React.FC = () => {
         <div className="mb-4 flex justify-end">
           <button
             onClick={() => setCreateModalOpen(true)}
-            className="bg-theme-button-primary text-theme-primary px-4 py-2 rounded-lg font-roboto hover:bg-theme-button-primary-hover transition-colors duration-200"
+            className="bg-primary text-primary-foreground px-4 py-2 rounded-lg font-roboto hover:bg-primary/90 transition-colors duration-200"
           >
             <i className="fas fa-user-plus mr-2"></i>
             Create User
@@ -433,7 +433,7 @@ export const UsersSettings: React.FC = () => {
         </div>
         
         {!usersData?.users || usersData.users.length === 0 ? (
-          <div className="text-theme-primary p-4 text-center">No users found</div>
+          <div className="text-foreground p-4 text-center">No users found</div>
         ) : (
           <>
             {/* Single scrollable container */}
@@ -586,7 +586,7 @@ export const UsersSettings: React.FC = () => {
                           <td className="px-2 py-1 text-center table-cell">
                             <button 
                               onClick={() => openAllowedModal(user.id, 'app', modifiedPermissions[user.id]?.permissions?.Apps?.Allowed || [])}
-                              className="flex items-center justify-center text-theme-primary hover:text-theme-button-primary"
+                              className="flex items-center justify-center text-foreground hover:text-primary"
                             >
                               <i className="fas fa-search"></i>
                               <span>{getAllowedCount(modifiedPermissions[user.id]?.permissions?.Apps?.Allowed)}</span>
@@ -620,7 +620,7 @@ export const UsersSettings: React.FC = () => {
                           <td className="px-2 py-1 text-center table-cell">
                             <button 
                               onClick={() => openAllowedModal(user.id, 'channel', modifiedPermissions[user.id]?.permissions?.Channels?.Allowed || [])}
-                              className="flex items-center justify-center text-theme-primary hover:text-theme-button-primary"
+                              className="flex items-center justify-center text-foreground hover:text-primary"
                             >
                               <i className="fas fa-search"></i>
                               <span>{getAllowedCount(modifiedPermissions[user.id]?.permissions?.Channels?.Allowed)}</span>
@@ -658,7 +658,7 @@ export const UsersSettings: React.FC = () => {
                                 'platform', 
                                 modifiedPermissions[user.id]?.permissions?.Platforms?.Allowed || []
                               )}
-                              className="flex items-center justify-center space-x-1 text-theme-primary hover:text-theme-button-primary"
+                              className="flex items-center justify-center space-x-1 text-foreground hover:text-primary"
                             >
                               <i className="fas fa-search"></i>
                               <span>{getAllowedCount(modifiedPermissions[user.id]?.permissions?.Platforms?.Allowed)}</span>
@@ -692,7 +692,7 @@ export const UsersSettings: React.FC = () => {
                           <td className="px-2 py-1 text-center table-cell">
                             <button 
                               onClick={() => openAllowedModal(user.id, 'arch', modifiedPermissions[user.id]?.permissions?.Archs?.Allowed || [])}
-                              className="flex items-center justify-center text-theme-primary hover:text-theme-button-primary"
+                              className="flex items-center justify-center text-foreground hover:text-primary"
                             >
                               <i className="fas fa-search"></i>
                               <span>{getAllowedCount(modifiedPermissions[user.id]?.permissions?.Archs?.Allowed)}</span>

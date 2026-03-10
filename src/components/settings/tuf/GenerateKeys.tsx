@@ -127,10 +127,10 @@ export const GenerateKeys: React.FC<GenerateKeysProps> = ({
   }
 
   return (
-    <div className="bg-theme-card p-6 rounded-lg border-2 border-red-500">
+    <div className="bg-card p-6 rounded-lg border-2 border-red-500">
       <button
         onClick={() => setShowStep1(!showStep1)}
-        className="flex items-center justify-between w-full text-theme-primary hover:text-theme-button-primary mb-4"
+        className="flex items-center justify-between w-full text-foreground hover:text-primary mb-4"
       >
         <div className="flex items-center gap-3">
           <h2 className="text-lg font-bold font-roboto">
@@ -152,7 +152,7 @@ export const GenerateKeys: React.FC<GenerateKeysProps> = ({
               <i className="fas fa-exclamation-triangle text-red-500 mr-3 mt-0.5 text-xl"></i>
               <div className="flex-1">
                 <h3 className="text-red-500 font-semibold mb-2 font-roboto">Danger Zone</h3>
-                <p className="text-theme-primary text-sm leading-relaxed">
+                <p className="text-foreground text-sm leading-relaxed">
                   <strong>Warning:</strong> This step generates private keys and stores them in the database. 
                   This operation should be performed <strong>only once</strong> for each application. 
                   Re-generating keys may cause security issues and disrupt the TUF infrastructure.
@@ -163,22 +163,22 @@ export const GenerateKeys: React.FC<GenerateKeysProps> = ({
 
           <div className="space-y-4">
             <div>
-              <label className="block text-theme-primary mb-2 font-roboto">App Name</label>
+              <label className="block text-foreground mb-2 font-roboto">App Name</label>
               <input
                 type="text"
                 value={selectedApp}
                 disabled
-                className="w-full bg-theme-input text-theme-primary border border-theme rounded-lg px-4 py-2 disabled:opacity-50"
+                className="w-full bg-muted text-foreground border border-border rounded-lg px-4 py-2 disabled:opacity-50"
               />
             </div>
 
             <div>
-              <label className="block text-theme-primary mb-2 font-roboto">Key Type</label>
+              <label className="block text-foreground mb-2 font-roboto">Key Type</label>
               <div className="relative dropdown-container">
                 <button
                   type="button"
                   onClick={() => setOpenDropdown(openDropdown === 'keyType' ? null : 'keyType')}
-                  className="w-full bg-theme-input text-theme-primary border border-theme rounded-lg px-4 py-2 pr-8 flex items-center justify-between hover:bg-theme-card-hover"
+                  className="w-full bg-muted text-foreground border border-border rounded-lg px-4 py-2 pr-8 flex items-center justify-between hover:bg-accent"
                 >
                   <span>{keyType}</span>
                   <svg 
@@ -191,13 +191,13 @@ export const GenerateKeys: React.FC<GenerateKeysProps> = ({
                     strokeWidth="2" 
                     strokeLinecap="round" 
                     strokeLinejoin="round"
-                    className={`text-theme-primary transition-transform ${openDropdown === 'keyType' ? 'rotate-180' : ''}`}
+                    className={`text-foreground transition-transform ${openDropdown === 'keyType' ? 'rotate-180' : ''}`}
                   >
                     <polyline points="6 9 12 15 18 9"></polyline>
                   </svg>
                 </button>
                 {openDropdown === 'keyType' && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-theme-card backdrop-blur-lg rounded-lg shadow-lg z-10 border border-theme-card-hover">
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-card backdrop-blur-lg rounded-lg shadow-lg z-10 border border-border">
                     {['ed25519', 'rsa', 'ecdsa'].map((type) => (
                       <button
                         key={type}
@@ -206,7 +206,7 @@ export const GenerateKeys: React.FC<GenerateKeysProps> = ({
                           setKeyType(type);
                           setOpenDropdown(null);
                         }}
-                        className="w-full text-left px-4 py-2 text-theme-primary hover:bg-theme-card-hover transition-colors"
+                        className="w-full text-left px-4 py-2 text-foreground hover:bg-accent transition-colors"
                       >
                         {type}
                       </button>
@@ -217,53 +217,53 @@ export const GenerateKeys: React.FC<GenerateKeysProps> = ({
             </div>
 
             <div>
-              <label className="block text-theme-primary mb-2 font-roboto">Role Name</label>
+              <label className="block text-foreground mb-2 font-roboto">Role Name</label>
               <input
                 type="text"
                 value={roleName}
                 onChange={(e) => setRoleName(e.target.value)}
                 placeholder="Enter role name (e.g., root, timestamp, snapshot, targets)"
-                className="w-full bg-theme-input text-theme-primary border border-theme rounded-lg px-4 py-2"
+                className="w-full bg-muted text-foreground border border-border rounded-lg px-4 py-2"
               />
             </div>
 
             <div>
-              <label className="block text-theme-primary mb-2 font-roboto">Expiration Settings</label>
+              <label className="block text-foreground mb-2 font-roboto">Expiration Settings</label>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-theme-primary mb-1">Root (days)</label>
+                  <label className="block text-sm text-foreground mb-1">Root (days)</label>
                   <input
                     type="number"
                     value={expiration.root}
                     onChange={(e) => setExpiration(prev => ({ ...prev, root: parseInt(e.target.value) || 0 }))}
-                    className="w-full bg-theme-input text-theme-primary border border-theme rounded-lg px-4 py-2"
+                    className="w-full bg-muted text-foreground border border-border rounded-lg px-4 py-2"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-theme-primary mb-1">Timestamp (days)</label>
+                  <label className="block text-sm text-foreground mb-1">Timestamp (days)</label>
                   <input
                     type="number"
                     value={expiration.timestamp}
                     onChange={(e) => setExpiration(prev => ({ ...prev, timestamp: parseInt(e.target.value) || 0 }))}
-                    className="w-full bg-theme-input text-theme-primary border border-theme rounded-lg px-4 py-2"
+                    className="w-full bg-muted text-foreground border border-border rounded-lg px-4 py-2"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-theme-primary mb-1">Snapshot (days)</label>
+                  <label className="block text-sm text-foreground mb-1">Snapshot (days)</label>
                   <input
                     type="number"
                     value={expiration.snapshot}
                     onChange={(e) => setExpiration(prev => ({ ...prev, snapshot: parseInt(e.target.value) || 0 }))}
-                    className="w-full bg-theme-input text-theme-primary border border-theme rounded-lg px-4 py-2"
+                    className="w-full bg-muted text-foreground border border-border rounded-lg px-4 py-2"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-theme-primary mb-1">Targets (days)</label>
+                  <label className="block text-sm text-foreground mb-1">Targets (days)</label>
                   <input
                     type="number"
                     value={expiration.targets}
                     onChange={(e) => setExpiration(prev => ({ ...prev, targets: parseInt(e.target.value) || 0 }))}
-                    className="w-full bg-theme-input text-theme-primary border border-theme rounded-lg px-4 py-2"
+                    className="w-full bg-muted text-foreground border border-border rounded-lg px-4 py-2"
                   />
                 </div>
               </div>
@@ -291,20 +291,20 @@ export const GenerateKeys: React.FC<GenerateKeysProps> = ({
               <div className="mt-4">
                 <button
                   onClick={() => setShowPayload(!showPayload)}
-                  className="text-theme-primary hover:text-theme-button-primary mb-2 flex items-center"
+                  className="text-foreground hover:text-primary mb-2 flex items-center"
                 >
                   <i className={`fas fa-chevron-${showPayload ? 'up' : 'down'} mr-2`}></i>
                   Generated Payload {showPayload ? '(click to hide)' : '(click to expand)'}
                 </button>
                 {showPayload && (
-                  <div className="bg-theme-input rounded-lg p-4 border border-theme">
-                    <pre className="text-sm text-theme-primary overflow-x-auto">
+                  <div className="bg-muted rounded-lg p-4 border border-border">
+                    <pre className="text-sm text-foreground overflow-x-auto">
                       {generatedPayload}
                     </pre>
                     <div className="mt-2 flex gap-2">
                       <button
                         onClick={handleCopyPayload}
-                        className="bg-theme-button-primary text-theme-primary px-3 py-1 rounded text-sm hover:bg-theme-button-primary-hover"
+                        className="bg-primary text-primary-foreground px-3 py-1 rounded text-sm hover:bg-primary/90"
                       >
                         <i className="fas fa-copy mr-1"></i>
                         Copy Payload
@@ -313,7 +313,7 @@ export const GenerateKeys: React.FC<GenerateKeysProps> = ({
                         onClick={() => {
                           onStartBootstrap(generatedPayload);
                         }}
-                        className="bg-theme-button-primary text-theme-primary px-3 py-1 rounded text-sm hover:bg-theme-button-primary-hover"
+                        className="bg-primary text-primary-foreground px-3 py-1 rounded text-sm hover:bg-primary/90"
                       >
                         <i className="fas fa-rocket mr-1"></i>
                         Start Bootstrap

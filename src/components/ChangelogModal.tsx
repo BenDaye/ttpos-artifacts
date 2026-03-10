@@ -30,21 +30,21 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({
         <div className="mb-4 overflow-y-auto min-h-0">
           {currentVersionChangelog ? (
             <>
-              <p className="text-gray-600 mb-2">
+              <p className="text-muted-foreground mb-2">
                 Date: {new Date(currentVersionChangelog.Date).toLocaleDateString()}
               </p>
-              <div className="prose prose-sm max-w-none bg-white dark:bg-white rounded p-4">
+              <div className="prose prose-sm max-w-none bg-muted text-foreground rounded-lg p-4 dark:prose-invert">
                 <ReactMarkdown>{currentVersionChangelog.Changes || 'No changes description'}</ReactMarkdown>
               </div>
             </>
           ) : (
-            <p className="text-gray-600">No changelog information available for this version</p>
+            <p className="text-muted-foreground">No changelog information available for this version</p>
           )}
         </div>
         <div className="flex justify-end">
           <button
             onClick={onClose}
-            className="bg-gray-300 text-gray-800 px-4 py-2 rounded-lg mr-2"
+            className="bg-secondary text-foreground px-4 py-2 rounded-lg mr-2 hover:bg-accent transition-all duration-150 border border-border"
           >
             Close
           </button>

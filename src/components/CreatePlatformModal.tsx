@@ -34,12 +34,12 @@ export const CreatePlatformModal: React.FC<CreatePlatformModalProps> = ({ onClos
     >
       <div className="bg-card border border-border p-8 rounded-lg w-[500px] max-h-[80vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold text-theme-primary font-roboto">
+          <h2 className="text-2xl font-bold text-foreground font-roboto">
             Create Platform
           </h2>
           <button
             onClick={onClose}
-            className="text-theme-primary hover:text-theme-primary-hover transition-colors duration-200"
+            className="text-foreground transition-colors duration-200"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -48,7 +48,7 @@ export const CreatePlatformModal: React.FC<CreatePlatformModalProps> = ({ onClos
         </div>
         <form onSubmit={handleSubmit}>
           <div className="mb-6">
-            <label htmlFor="name" className="block text-theme-primary mb-2 font-roboto font-semibold">
+            <label htmlFor="name" className="block text-foreground mb-2 font-roboto font-semibold">
               Platform Name
             </label>
             <input
@@ -57,7 +57,7 @@ export const CreatePlatformModal: React.FC<CreatePlatformModalProps> = ({ onClos
               name="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-2 rounded-lg font-roboto bg-theme-input text-theme-primary border border-theme transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 placeholder:text-theme-secondary shadow-sm"
+              className="w-full px-4 py-2 rounded-lg font-roboto bg-muted text-foreground border border-border transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring placeholder:text-muted-foreground shadow-sm"
               required
             />
           </div>
@@ -68,7 +68,7 @@ export const CreatePlatformModal: React.FC<CreatePlatformModalProps> = ({ onClos
             <button
               type="button"
               onClick={onClose}
-              className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-roboto hover:bg-gray-300 transition-all duration-150 mr-2 border border-gray-300 shadow-sm"
+              className="bg-secondary text-foreground px-4 py-2 rounded-lg font-roboto hover:bg-accent transition-all duration-150 mr-2 border border-border shadow-sm"
             >
               Cancel
             </button>

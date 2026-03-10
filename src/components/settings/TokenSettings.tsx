@@ -244,27 +244,27 @@ export const TokenSettings: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-lg p-4 border border-theme-card-hover">
-        <h2 className="text-lg font-semibold text-theme-primary mb-4">Create CI/CD Token</h2>
+      <div className="rounded-lg p-4 border border-border">
+        <h2 className="text-lg font-semibold text-foreground mb-4">Create CI/CD Token</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="md:col-span-2">
-            <label className="block text-sm text-theme-primary mb-2">Token name</label>
+            <label className="block text-sm text-foreground mb-2">Token name</label>
             <input
               type="text"
               value={name}
               onChange={(event) => setName(event.target.value)}
               placeholder="GitHub Actions - MyApp"
-              className="w-full rounded-lg border border-theme-modal bg-theme-input text-theme-primary px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full rounded-lg border border-border bg-muted text-foreground px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
           </div>
 
           <div>
-            <label className="block text-sm text-theme-primary mb-2">Expiration</label>
+            <label className="block text-sm text-foreground mb-2">Expiration</label>
             <select
               value={expiration}
               onChange={(event) => setExpiration(event.target.value as ExpirationValue)}
-              className="w-full rounded-lg border border-theme-modal bg-theme-input text-theme-primary px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full rounded-lg border border-border bg-muted text-foreground px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {expirationOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -278,7 +278,7 @@ export const TokenSettings: React.FC = () => {
         <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-3">
           <button
             onClick={() => setIsAllowedAppsModalOpen(true)}
-            className="bg-theme-button-primary text-theme-primary px-4 py-2 rounded-lg font-roboto hover:bg-theme-button-primary-hover transition-colors duration-200"
+            className="bg-primary text-primary-foreground px-4 py-2 rounded-lg font-roboto hover:bg-primary/90 transition-colors duration-200"
           >
             <i className="fas fa-search mr-2"></i>
             Select allowed apps ({selectedAppIds.length})
@@ -287,8 +287,8 @@ export const TokenSettings: React.FC = () => {
           <button
             onClick={handleCreateToken}
             disabled={isCreatingToken}
-            className={`bg-theme-button-primary text-theme-primary px-4 py-2 rounded-lg font-roboto transition-colors duration-200 ${
-              isCreatingToken ? 'opacity-60 cursor-not-allowed' : 'hover:bg-theme-button-primary-hover'
+            className={`bg-primary text-primary-foreground px-4 py-2 rounded-lg font-roboto transition-colors duration-200 ${
+              isCreatingToken ? 'opacity-60 cursor-not-allowed' : 'hover:bg-primary/90'
             }`}
           >
             {isCreatingToken ? (
@@ -306,23 +306,23 @@ export const TokenSettings: React.FC = () => {
         </div>
 
         {selectedAppsPreview.length > 0 && (
-          <div className="mt-3 text-sm text-theme-primary opacity-80">
+          <div className="mt-3 text-sm text-foreground opacity-80">
             {selectedAppsPreview.join(', ')}
           </div>
         )}
       </div>
 
       {lastCreatedToken && (
-        <div className="rounded-lg p-4 border border-theme-card-hover">
+        <div className="rounded-lg p-4 border border-border">
           <div className="flex flex-col gap-2">
-            <h3 className="text-md font-semibold text-theme-primary">New token (shown once)</h3>
-            <div className="break-all text-sm text-theme-primary bg-theme-input rounded-lg p-3 border border-theme-modal">
+            <h3 className="text-md font-semibold text-foreground">New token (shown once)</h3>
+            <div className="break-all text-sm text-foreground bg-muted rounded-lg p-3 border border-border">
               {lastCreatedToken.token}
             </div>
             <div className="flex">
               <button
                 onClick={handleCopyLastToken}
-                className="bg-theme-button-primary text-theme-primary px-3 py-2 rounded-lg font-roboto hover:bg-theme-button-primary-hover transition-colors duration-200"
+                className="bg-primary text-primary-foreground px-3 py-2 rounded-lg font-roboto hover:bg-primary/90 transition-colors duration-200"
               >
                 <i className="fas fa-copy mr-2"></i>
                 Copy token
@@ -332,12 +332,12 @@ export const TokenSettings: React.FC = () => {
         </div>
       )}
 
-      <div className="rounded-lg p-4 border border-theme-card-hover">
+      <div className="rounded-lg p-4 border border-border">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-theme-primary">Issued tokens</h2>
+          <h2 className="text-lg font-semibold text-foreground">Issued tokens</h2>
           <button
             onClick={() => loadTokens()}
-            className="text-theme-primary hover:text-theme-button-primary"
+            className="text-foreground hover:text-primary"
             title="Refresh tokens list"
           >
             <i className="fas fa-sync-alt mr-2"></i>
@@ -346,41 +346,41 @@ export const TokenSettings: React.FC = () => {
         </div>
 
         {isLoadingTokens ? (
-          <div className="text-theme-primary">Loading tokens...</div>
+          <div className="text-foreground">Loading tokens...</div>
         ) : tokens.length === 0 ? (
-          <div className="text-theme-primary opacity-80">No tokens found</div>
+          <div className="text-foreground opacity-80">No tokens found</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left border-b border-theme-modal">
-                  <th className="py-2 pr-3 text-theme-primary">Name</th>
-                  <th className="py-2 pr-3 text-theme-primary">Prefix</th>
-                  <th className="py-2 pr-3 text-theme-primary">Allowed apps</th>
-                  <th className="py-2 pr-3 text-theme-primary">Expires</th>
-                  <th className="py-2 pr-3 text-theme-primary">Created</th>
-                  <th className="py-2 pr-3 text-theme-primary">Last used</th>
-                  <th className="py-2 text-theme-primary">Actions</th>
+                <tr className="text-left border-b border-border">
+                  <th className="py-2 pr-3 text-foreground">Name</th>
+                  <th className="py-2 pr-3 text-foreground">Prefix</th>
+                  <th className="py-2 pr-3 text-foreground">Allowed apps</th>
+                  <th className="py-2 pr-3 text-foreground">Expires</th>
+                  <th className="py-2 pr-3 text-foreground">Created</th>
+                  <th className="py-2 pr-3 text-foreground">Last used</th>
+                  <th className="py-2 text-foreground">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {tokens.map((token) => (
-                  <tr key={token.id} className="border-b border-theme-modal last:border-b-0">
-                    <td className="py-2 pr-3 text-theme-primary">{token.name}</td>
-                    <td className="py-2 pr-3 text-theme-primary">{token.token_prefix}</td>
-                    <td className="py-2 pr-3 text-theme-primary">
+                  <tr key={token.id} className="border-b border-border last:border-b-0">
+                    <td className="py-2 pr-3 text-foreground">{token.name}</td>
+                    <td className="py-2 pr-3 text-foreground">{token.token_prefix}</td>
+                    <td className="py-2 pr-3 text-foreground">
                       {token.allowed_apps.length === 0
                         ? '-'
                         : token.allowed_apps.map((id) => appNameById.get(id) || id).join(', ')}
                     </td>
-                    <td className="py-2 pr-3 text-theme-primary">{formatDate(token.expires_at)}</td>
-                    <td className="py-2 pr-3 text-theme-primary">{formatDate(token.created_at)}</td>
-                    <td className="py-2 pr-3 text-theme-primary">{formatDate(token.last_used_at)}</td>
+                    <td className="py-2 pr-3 text-foreground">{formatDate(token.expires_at)}</td>
+                    <td className="py-2 pr-3 text-foreground">{formatDate(token.created_at)}</td>
+                    <td className="py-2 pr-3 text-foreground">{formatDate(token.last_used_at)}</td>
                     <td className="py-2">
                       <button
                         onClick={() => handleRevokeToken(token.id)}
                         disabled={isRevokingById[token.id]}
-                        className={`text-theme-primary hover:opacity-80 ${isRevokingById[token.id] ? 'opacity-60 cursor-not-allowed' : ''}`}
+                        className={`text-foreground hover:opacity-80 ${isRevokingById[token.id] ? 'opacity-60 cursor-not-allowed' : ''}`}
                         title="Revoke token"
                       >
                         {isRevokingById[token.id] ? (

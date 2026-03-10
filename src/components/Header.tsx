@@ -91,12 +91,12 @@ export const Header: React.FC<HeaderProps> = ({
                 placeholder="Search..."
                 value={searchTerm}
                 onChange={handleSearchChange}
-                className="header-search px-4 py-2 focus:outline-none focus:ring-2 focus:ring-theme-primary w-full"
+                className="header-search px-4 py-2 focus:outline-none focus:ring-2 focus:ring-ring w-full"
               />
               {searchTerm && (
                 <button
                   onClick={handleClearSearch}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-theme-primary hover:text-theme-primary-hover"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-foreground"
                   aria-label="Clear search"
                 >
                   <svg
@@ -146,11 +146,11 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="flex flex-col md:hidden gap-2 mt-0">
         <div className="flex justify-between items-center">
           <button
-            className="p-2 rounded-lg bg-theme-card shadow-lg focus:outline-none hover:bg-theme-card-hover transition-colors duration-200"
+            className="p-2 rounded-lg bg-card shadow-lg focus:outline-none hover:bg-accent transition-colors duration-200"
             aria-label="Open menu"
             onClick={onMenuClick}
           >
-            <svg className="w-7 h-7 text-theme-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-7 h-7 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
@@ -190,12 +190,12 @@ export const Header: React.FC<HeaderProps> = ({
               placeholder="Search..."
               value={searchTerm}
               onChange={handleSearchChange}
-              className="header-search px-4 py-2 focus:outline-none focus:ring-2 focus:ring-theme-primary w-full"
+              className="header-search px-4 py-2 focus:outline-none focus:ring-2 focus:ring-ring w-full"
             />
             {searchTerm && (
               <button
                 onClick={handleClearSearch}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-theme-primary hover:text-theme-primary-hover"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-foreground"
                 aria-label="Clear search"
               >
                 <svg
