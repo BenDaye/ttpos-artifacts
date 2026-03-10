@@ -16,6 +16,7 @@ Build workflows for TTPOS Flutter applications.
 | `build-android.yaml` | Android (APK) | `ubuntu-latest` | `workflow_dispatch` |
 | `build-macos.yaml` | macOS (DMG) | `macos-latest` | `workflow_dispatch` |
 | `build-web.yaml` | Web (Docker) | `ubuntu-22.04` | `workflow_dispatch` |
+| `build-dashboard.yaml` | Dashboard (Docker) | `ubuntu-latest` | `workflow_dispatch`, push to main/release |
 
 ### Required Secrets
 
@@ -58,6 +59,24 @@ Build workflows for TTPOS Flutter applications.
 ---
 
 ## FaynoSync Dashboard
+
+### CI/CD 构建
+
+Dashboard 通过 `build-dashboard.yaml` 自动构建并推送 Docker 镜像到 **GitHub Container Registry (ghcr.io)**：
+
+- **触发**：手动触发 (`workflow_dispatch`) 或 push 到 `main`/`release` 分支
+- **镜像**：`ghcr.io/<owner>/<repo>/faynosync-dashboard`
+- **标签**：`latest`、短 commit SHA、分支名
+
+### Conventional Commits
+
+本仓库要求 **Commit 信息符合 [Conventional Commits](https://www.conventionalcommits.org/) 规范**。PR 合并前会通过 `commitlint.yaml` 自动校验。
+
+格式示例：`feat(dashboard): 添加统计页面`、`fix: 修复登录跳转`
+
+本地校验：`yarn commitlint`（需配合 `git commit` 使用）
+
+---
 
 ![demo](https://github.com/user-attachments/assets/21b0bd02-484c-49fc-ad48-b1201f6e5d75)
 
