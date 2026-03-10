@@ -18,16 +18,15 @@ services:
       - faynosync
 
   dashboard:
-    image: ku9nov/faynosync-dashboard:latest
-    platform: linux/amd64
+    build:
+      context: ../src/dashboard
+      dockerfile: Dockerfile
     container_name: faynosync-dashboard
     restart: unless-stopped
     ports:
       - "${DASHBOARD_PORT:-3000}:3000"
     environment:
       - VITE_API_URL=${API_URL:-http://localhost:9000}
-      - VITE_PORT=3000
-    command: ["npx", "vite", "--host", "0.0.0.0", "--port", "3000"]
     depends_on:
       - api
     networks:
