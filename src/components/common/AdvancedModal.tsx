@@ -91,15 +91,15 @@ export const AdvancedModal: React.FC<AdvancedModalProps> = ({
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center animate-fade-in modal-overlay-high"
       onClick={handleBackdropClick}
     >
-      <div className="bg-theme-modal-gradient rounded-lg p-8 w-[500px] max-h-[80vh] overflow-y-auto relative">
+      <div className="bg-card border border-border rounded-lg p-8 w-[500px] max-h-[80vh] overflow-y-auto relative">
         {isLoading && (
-          <div className="fixed top-4 right-4 bg-theme-button-primary text-theme-primary px-6 py-3 rounded-lg shadow-lg flex items-center space-x-3 z-50">
-            <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-theme-primary"></div>
+          <div className="fixed top-4 right-4 bg-primary text-primary-foreground px-6 py-3 rounded-lg shadow-lg flex items-center space-x-3 z-50">
+            <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-primary-foreground"></div>
             <span className="font-roboto">Processing...</span>
           </div>
         )}
         {isSuccess && (
-          <div className="fixed top-4 right-4 bg-green-500 text-theme-primary px-6 py-3 rounded-lg shadow-lg flex items-center space-x-3 z-50 animate-fade-in">
+          <div className="fixed top-4 right-4 bg-green-500 text-primary-foreground px-6 py-3 rounded-lg shadow-lg flex items-center space-x-3 z-50 animate-fade-in">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
             </svg>
@@ -107,7 +107,7 @@ export const AdvancedModal: React.FC<AdvancedModalProps> = ({
           </div>
         )}
         {error && (
-          <div className="fixed top-4 right-4 bg-red-500 text-theme-primary px-6 py-3 rounded-lg shadow-lg z-[60] animate-fade-in">
+          <div className="fixed top-4 right-4 bg-destructive text-destructive-foreground px-6 py-3 rounded-lg shadow-lg z-[60] animate-fade-in">
             <div className="flex items-center space-x-3">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -116,7 +116,7 @@ export const AdvancedModal: React.FC<AdvancedModalProps> = ({
               {error.details && (
                 <button
                   onClick={() => setShowDetails(!showDetails)}
-                  className="ml-2 text-theme-primary hover:text-theme-primary-hover"
+                  className="ml-2 text-primary-foreground hover:text-primary-foreground/90"
                 >
                   <svg
                     className={`w-4 h-4 transform transition-transform ${showDetails ? 'rotate-180' : ''}`}
@@ -137,10 +137,10 @@ export const AdvancedModal: React.FC<AdvancedModalProps> = ({
           </div>
         )}
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold text-theme-primary font-roboto">{title}</h2>
+          <h2 className="text-2xl font-bold text-foreground font-roboto">{title}</h2>
           <button
             onClick={onClose}
-            className="text-theme-primary hover:text-theme-primary-hover transition-colors duration-200"
+            className="text-foreground hover:text-foreground/90 transition-colors duration-200"
             disabled={isLoading}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -160,7 +160,7 @@ export const AdvancedModal: React.FC<AdvancedModalProps> = ({
           
           {fileUploadConfig && (
             <div className="mb-4">
-              <label className="block text-theme-primary mb-2 font-roboto">{fileUploadConfig.label || 'Files'}</label>
+              <label className="block text-foreground mb-2 font-roboto">{fileUploadConfig.label || 'Files'}</label>
               <div className="relative">
                 <input
                   ref={fileInputRef}
@@ -174,7 +174,7 @@ export const AdvancedModal: React.FC<AdvancedModalProps> = ({
                 />
                 <label
                   htmlFor="file-upload"
-                  className="w-full px-4 py-2 bg-theme-button-primary text-theme-primary rounded-lg cursor-pointer hover:bg-theme-input transition-colors duration-200 flex items-center justify-center font-roboto"
+                  className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-lg cursor-pointer hover:bg-input transition-colors duration-200 flex items-center justify-center font-roboto"
                 >
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
@@ -187,21 +187,21 @@ export const AdvancedModal: React.FC<AdvancedModalProps> = ({
                   {files.map((fileInfo) => (
                     <div
                       key={fileInfo.id}
-                      className="flex items-center justify-between bg-theme-input bg-opacity-50 p-3 rounded-lg"
+                      className="flex items-center justify-between bg-muted/50 p-3 rounded-lg"
                     >
                       <div className="flex items-center space-x-2">
-                        <svg className="w-5 h-5 text-theme-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                         <div>
-                          <div className="text-theme-primary font-roboto">{fileInfo.file.name}</div>
-                          <div className="text-purple-200 text-sm font-roboto">{formatFileSize(fileInfo.file.size)}</div>
+                          <div className="text-foreground font-roboto">{fileInfo.file.name}</div>
+                          <div className="text-muted-foreground text-sm font-roboto">{formatFileSize(fileInfo.file.size)}</div>
                         </div>
                       </div>
                       <button
                         type="button"
                         onClick={() => removeFile(fileInfo.id)}
-                        className="text-theme-primary hover:text-red-300 transition-colors duration-200"
+                        className="text-foreground hover:text-destructive transition-colors duration-200"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -216,25 +216,25 @@ export const AdvancedModal: React.FC<AdvancedModalProps> = ({
 
           {showChangelogPreview !== undefined && onChangelogChange && (
             <div className="mb-4">
-              <label className="block text-theme-primary mb-2 font-roboto">Changelog</label>
+              <label className="block text-foreground mb-2 font-roboto">Changelog</label>
               <div className="mb-2">
                 <button
                   type="button"
                   onClick={onChangelogPreviewToggle}
-                  className="text-theme-primary text-sm hover:text-theme-primary-hover"
+                  className="text-foreground text-sm hover:text-foreground/90"
                 >
                   {showChangelogPreview ? 'Edit' : 'Preview'}
                 </button>
               </div>
               {showChangelogPreview ? (
-                <div className="bg-white dark:bg-white p-4 rounded prose prose-sm max-w-none">
+                <div className="bg-muted p-4 rounded prose prose-sm max-w-none prose-invert">
                   <ReactMarkdown>{changelogValue}</ReactMarkdown>
                 </div>
               ) : (
                 <textarea
                   value={changelogValue}
                   onChange={(e) => onChangelogChange(e.target.value)}
-                  className="w-full px-3 py-2 rounded font-roboto bg-theme-card text-theme-primary"
+                  className="w-full px-3 py-2 rounded font-roboto bg-card text-foreground border border-border"
                   rows={4}
                   placeholder="# Changes in this version&#10;- Added new feature&#10;- Fixed bug"
                 />
@@ -247,18 +247,18 @@ export const AdvancedModal: React.FC<AdvancedModalProps> = ({
               type="button"
               onClick={onClose}
               disabled={isLoading}
-              className="bg-gray-300 text-gray-800 px-4 py-2 rounded-lg mr-2 font-roboto hover:bg-gray-400 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-secondary text-secondary-foreground px-4 py-2 rounded-lg mr-2 font-roboto hover:bg-secondary/80 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="bg-theme-button-submit text-theme-primary px-4 py-2 rounded-lg font-roboto hover:bg-theme-button-submit-hover transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+              className="bg-primary text-primary-foreground px-4 py-2 rounded-lg font-roboto hover:bg-primary/90 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
             >
               {isLoading ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-theme-primary mr-2"></div>
+                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-primary-foreground mr-2"></div>
                   Processing...
                 </>
               ) : (

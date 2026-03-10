@@ -1,46 +1,47 @@
-import React from 'react';
+import React from "react";
+import { Card, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
 
 interface ChannelCardProps {
   name: string;
-  // description: string;
   onClick: () => void;
   onDelete?: () => void;
 }
 
 export const ChannelCard: React.FC<ChannelCardProps> = ({
   name,
-  // description,
   onClick,
   onDelete,
 }) => {
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (onDelete) {
-      onDelete();
-    }
+    onDelete?.();
   };
 
   return (
-    <div
-      className={"sharedCard sharedCard--compact bg-theme-card backdrop-blur-lg rounded-lg p-2 text-theme-primary hover:bg-theme-card-hover transition-colors cursor-pointer flex items-center"}
-      style={{ ['--card-color' as any]: '#8B5CF6' }}
+    <Card
       onClick={onClick}
+      className="cursor-pointer hover:border-muted-foreground/30 transition-colors"
     >
-      <div className="flex items-center min-w-0 w-full">
-        <h3
-          className="sharedCardTitle text-xl font-semibold truncate max-w-[200px] overflow-hidden"
-          title={name}
-        >
-          {name}
-        </h3>
-        <button
-          onClick={handleDeleteClick}
-          className="p-2 text-theme-danger hover:text-theme-primary-hover transition-colors duration-200 ml-auto"
-          title="Delete channel"
-        >
-          <i className="fas fa-trash"></i>
-        </button>
-      </div>
-    </div>
+      <CardHeader className="p-4">
+        <div className="flex items-center min-w-0 w-full">
+          <h3 className="text-base font-semibold truncate flex-1" title={name}>
+            {name}
+          </h3>
+          {onDelete && (
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={handleDeleteClick}
+              className="h-8 w-8 text-destructive hover:text-destructive shrink-0"
+              title="Delete channel"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+      </CardHeader>
+    </Card>
   );
-}; 
+};

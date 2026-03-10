@@ -1,6 +1,8 @@
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import './styles/animations.css';
 @import './styles/theme.css';
+@import './styles/linear-theme.css';
 @import './styles/cards.css';
 @import './styles/sidebar.css';
 @import './styles/header.css';
@@ -8,9 +10,16 @@
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
 body {
   margin: 0;
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Inter', 'Urbanist', system-ui, sans-serif;
 }
 
 @tailwind base;
@@ -105,7 +114,7 @@ body {
 }
 
 .text-theme-danger {
-  color: var(--warning-text);
+  color: var(--danger-text);
 }
 
 .bg-theme-auth-gradient {

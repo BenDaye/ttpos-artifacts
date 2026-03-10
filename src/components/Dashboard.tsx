@@ -15,6 +15,16 @@ import { useArchitectureQuery } from '../hooks/use-query/useArchitectureQuery';
 import { useChannelQuery } from '../hooks/use-query/useChannelQuery';
 import { useToast } from '../hooks/useToast';
 import ReactMarkdown from 'react-markdown';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { ArrowLeft, X } from 'lucide-react';
 import '../styles/cards.css';
 
 interface DashboardProps {
@@ -52,31 +62,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
     platform: '',
     arch: ''
   });
-
-  const [openDropdown, setOpenDropdown] = React.useState<string | null>(null);
-
-  const handleDropdownClick = (dropdownName: string) => {
-    setOpenDropdown(openDropdown === dropdownName ? null : dropdownName);
-  };
-
-  const handleOptionClick = (dropdownName: string, value: any) => {
-    setFilters(prev => ({ ...prev, [dropdownName]: value }));
-    setOpenDropdown(null);
-  };
-
-  React.useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (!target.closest('.dropdown-container')) {
-        setOpenDropdown(null);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
 
   React.useEffect(() => {
     if (!selectedApp || typeof window === 'undefined') {
@@ -417,33 +402,23 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   if (selectedApp) {
     return (
-      <div className="mt-8">
-        <button
+      <div>
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={onBackClick}
-          className="mb-4 px-4 py-2 bg-theme-card text-theme-primary rounded-lg hover:bg-theme-card-hover transition-colors flex items-center gap-2"
+          className="mb-6 -ml-2 text-muted-foreground hover:text-foreground"
         >
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            width="16" 
-            height="16" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="2" 
-            strokeLinecap="round" 
-            strokeLinejoin="round"
-          >
-            <path d="M19 12H5M12 19l-7-7 7-7"/>
-          </svg>
+          <ArrowLeft className="h-4 w-4" />
           Back
-        </button>
+        </Button>
         <div className="flex items-center gap-4 mb-6">
           {appData?.Logo ? (
             <div className="relative w-12 h-12">
               <img 
                 src={appData.Logo} 
                 alt={`${selectedApp} logo`}
-                className="w-full h-full rounded-lg object-contain bg-theme-card-hover transition-opacity duration-300"
+                className="w-full h-full rounded-lg object-contain transition-opacity duration-300"
                 loading="lazy"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
@@ -458,11 +433,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   target.style.opacity = '1';
                 }}
               />
-              <div className="absolute inset-0 rounded-lg bg-theme-card animate-pulse" />
+              <div className="absolute inset-0 rounded-lg bg-muted animate-pulse" />
               {appData?.Private && (
                       <div className="absolute -bottom-1 -right-1 bg-red-500 rounded-full p-1">
                         <svg 
-                          className="w-3 h-3 text-theme-primary" 
+                          className="w-3 h-3 text-primary-foreground" 
                           fill="none" 
                           stroke="currentColor" 
                           viewBox="0 0 24 24"
@@ -478,7 +453,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     )}
             </div>
           ) : (
-            <div className="w-12 h-12 rounded-lg bg-theme-card flex items-center justify-center">
+            <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
               <svg 
                 xmlns="http://www.w3.org/2000/svg" 
                 width="24" 
@@ -498,242 +473,106 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </div>
           )}
           <h2 
-            className="text-2xl font-bold text-theme-primary" 
+            className="text-2xl font-bold text-foreground" 
             title={selectedApp}
           >
             {selectedApp}
           </h2>
         </div>
 
-        {/* Filters Section */}
+        {/* Filters Section - Linear style */}
         <div className="mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
-            <div className="relative dropdown-container">
-              <button
-                onClick={() => handleDropdownClick('channel')}
-                className="w-full min-w-0 bg-theme-card text-theme-primary rounded-lg p-2 pr-8 flex items-center justify-between hover:bg-theme-card-hover transition-colors"
-              >
-                <span className="block min-w-0 flex-1 truncate text-left">{filters.channel || 'All Channels'}</span>
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  width="16" 
-                  height="16" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  strokeWidth="2" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                  className={`text-theme-primary transition-transform flex-shrink-0 ml-2 ${openDropdown === 'channel' ? 'rotate-180' : ''}`}
-                >
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-              </button>
-              {openDropdown === 'channel' && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-theme-card backdrop-blur-lg rounded-lg shadow-lg z-10 border border-theme-card-hover">
-                  <button
-                    onClick={() => handleOptionClick('channel', '')}
-                    className="w-full text-left truncate px-4 py-2 text-theme-primary hover:bg-theme-card-hover transition-colors first:rounded-t-lg"
-                  >
-                    All Channels
-                  </button>
-                  {channels.map(channel => (
-                    <button
-                      key={channel.ID}
-                      onClick={() => handleOptionClick('channel', channel.ChannelName)}
-                      className="w-full text-left truncate px-4 py-2 text-theme-primary hover:bg-theme-card-hover transition-colors last:rounded-b-lg"
-                    >
-                      {channel.ChannelName}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
+            <Select
+              value={filters.channel || '__all__'}
+              onValueChange={(v) => setFilters(prev => ({ ...prev, channel: v === '__all__' ? '' : v }))}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="All Channels" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">All Channels</SelectItem>
+                {channels.map(channel => (
+                  <SelectItem key={channel.ID} value={channel.ChannelName}>
+                    {channel.ChannelName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-            <div className="relative dropdown-container">
-              <button
-                onClick={() => handleDropdownClick('platform')}
-                className="w-full min-w-0 bg-theme-card text-theme-primary rounded-lg p-2 pr-8 flex items-center justify-between hover:bg-theme-card-hover transition-colors"
-              >
-                <span className="block min-w-0 flex-1 truncate text-left">{filters.platform || 'All Platforms'}</span>
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  width="16" 
-                  height="16" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  strokeWidth="2" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                  className={`text-theme-primary transition-transform flex-shrink-0 ml-2 ${openDropdown === 'platform' ? 'rotate-180' : ''}`}
-                >
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-              </button>
-              {openDropdown === 'platform' && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-theme-card backdrop-blur-lg rounded-lg shadow-lg z-10 border border-theme-card-hover">
-                  <button
-                    onClick={() => handleOptionClick('platform', '')}
-                    className="w-full text-left truncate px-4 py-2 text-theme-primary hover:bg-theme-card-hover transition-colors first:rounded-t-lg"
-                  >
-                    All Platforms
-                  </button>
-                  {platforms.map(platform => (
-                    <button
-                      key={platform.ID}
-                      onClick={() => handleOptionClick('platform', platform.PlatformName)}
-                      className="w-full text-left truncate px-4 py-2 text-theme-primary hover:bg-theme-card-hover transition-colors last:rounded-b-lg"
-                    >
-                      {platform.PlatformName}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            <Select
+              value={filters.platform || '__all__'}
+              onValueChange={(v) => setFilters(prev => ({ ...prev, platform: v === '__all__' ? '' : v }))}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="All Platforms" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">All Platforms</SelectItem>
+                {platforms.map(platform => (
+                  <SelectItem key={platform.ID} value={platform.PlatformName}>
+                    {platform.PlatformName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-            <div className="relative dropdown-container">
-              <button
-                onClick={() => handleDropdownClick('arch')}
-                className="w-full min-w-0 bg-theme-card text-theme-primary rounded-lg p-2 pr-8 flex items-center justify-between hover:bg-theme-card-hover transition-colors"
-              >
-                <span className="block min-w-0 flex-1 truncate text-left">{filters.arch || 'All Architectures'}</span>
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  width="16" 
-                  height="16" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  strokeWidth="2" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                  className={`text-theme-primary transition-transform flex-shrink-0 ml-2 ${openDropdown === 'arch' ? 'rotate-180' : ''}`}
-                >
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-              </button>
-              {openDropdown === 'arch' && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-theme-card backdrop-blur-lg rounded-lg shadow-lg z-10 border border-theme-card-hover">
-                  <button
-                    onClick={() => handleOptionClick('arch', '')}
-                    className="w-full text-left truncate px-4 py-2 text-theme-primary hover:bg-theme-card-hover transition-colors first:rounded-t-lg"
-                  >
-                    All Architectures
-                  </button>
-                  {architectures.map(arch => (
-                    <button
-                      key={arch.ID}
-                      onClick={() => handleOptionClick('arch', arch.ArchID)}
-                      className="w-full text-left truncate px-4 py-2 text-theme-primary hover:bg-theme-card-hover transition-colors last:rounded-b-lg"
-                    >
-                      {arch.ArchID}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            <Select
+              value={filters.arch || '__all__'}
+              onValueChange={(v) => setFilters(prev => ({ ...prev, arch: v === '__all__' ? '' : v }))}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="All Architectures" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">All Architectures</SelectItem>
+                {architectures.map(arch => (
+                  <SelectItem key={arch.ID} value={arch.ArchID}>
+                    {arch.ArchID}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-            <div className="relative dropdown-container">
-              <button
-                onClick={() => handleDropdownClick('published')}
-                className="w-full bg-theme-card text-theme-primary rounded-lg p-2 pr-8 flex items-center justify-between hover:bg-theme-card-hover transition-colors"
-              >
-                <span>
-                  {filters.published === null ? 'Publication Status' :
-                   filters.published ? 'Published' : 'Not Published'}
-                </span>
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  width="16" 
-                  height="16" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  strokeWidth="2" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                  className={`text-theme-primary transition-transform ${openDropdown === 'published' ? 'rotate-180' : ''}`}
-                >
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-              </button>
-              {openDropdown === 'published' && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-theme-card backdrop-blur-lg rounded-lg shadow-lg z-10 border border-theme-card-hover">
-                  <button
-                    onClick={() => handleOptionClick('published', null)}
-                    className="w-full text-left px-4 py-2 text-theme-primary hover:bg-theme-card-hover transition-colors first:rounded-t-lg"
-                  >
-                    Publication Status
-                  </button>
-                  <button
-                    onClick={() => handleOptionClick('published', true)}
-                    className="w-full text-left px-4 py-2 text-theme-primary hover:bg-theme-card-hover transition-colors"
-                  >
-                    Published
-                  </button>
-                  <button
-                    onClick={() => handleOptionClick('published', false)}
-                    className="w-full text-left px-4 py-2 text-theme-primary hover:bg-theme-card-hover transition-colors last:rounded-b-lg"
-                  >
-                    Not Published
-                  </button>
-                </div>
-              )}
-            </div>
+            <Select
+              value={filters.published === null ? '__all__' : String(filters.published)}
+              onValueChange={(v) => setFilters(prev => ({
+                ...prev,
+                published: v === '__all__' ? null : v === 'true'
+              }))}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Publication Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">Publication Status</SelectItem>
+                <SelectItem value="true">Published</SelectItem>
+                <SelectItem value="false">Not Published</SelectItem>
+              </SelectContent>
+            </Select>
 
-            <div className="relative dropdown-container">
-              <button
-                onClick={() => handleDropdownClick('critical')}
-                className="w-full bg-theme-card text-theme-primary rounded-lg p-2 pr-8 flex items-center justify-between hover:bg-theme-card-hover transition-colors"
-              >
-                <span>
-                  {filters.critical === null ? 'Critical Status' :
-                   filters.critical ? 'Critical' : 'Not Critical'}
-                </span>
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  width="16" 
-                  height="16" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  strokeWidth="2" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                  className={`text-theme-primary transition-transform ${openDropdown === 'critical' ? 'rotate-180' : ''}`}
-                >
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-              </button>
-              {openDropdown === 'critical' && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-theme-card backdrop-blur-lg rounded-lg shadow-lg z-10 border border-theme-card-hover">
-                  <button
-                    onClick={() => handleOptionClick('critical', null)}
-                    className="w-full text-left px-4 py-2 text-theme-primary hover:bg-theme-card-hover transition-colors first:rounded-t-lg"
-                  >
-                    Critical Status
-                  </button>
-                  <button
-                    onClick={() => handleOptionClick('critical', true)}
-                    className="w-full text-left px-4 py-2 text-theme-primary hover:bg-theme-card-hover transition-colors"
-                  >
-                    Critical
-                  </button>
-                  <button
-                    onClick={() => handleOptionClick('critical', false)}
-                    className="w-full text-left px-4 py-2 text-theme-primary hover:bg-theme-card-hover transition-colors last:rounded-b-lg"
-                  >
-                    Not Critical
-                  </button>
-                </div>
-              )}
-            </div>
+            <Select
+              value={filters.critical === null ? '__all__' : String(filters.critical)}
+              onValueChange={(v) => setFilters(prev => ({
+                ...prev,
+                critical: v === '__all__' ? null : v === 'true'
+              }))}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Critical Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">Critical Status</SelectItem>
+                <SelectItem value="true">Critical</SelectItem>
+                <SelectItem value="false">Not Critical</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          {/* Reset Filters Button */}
           {(filters.channel || filters.platform || filters.arch || filters.published !== null || filters.critical !== null) && (
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setFilters({
                 channel: '',
                 published: null,
@@ -741,34 +580,21 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 platform: '',
                 arch: ''
               })}
-              className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-card-hover text-theme-primary rounded-lg transition-colors"
+              className="text-muted-foreground hover:text-foreground"
             >
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                width="16" 
-                height="16" 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="2" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
-              >
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
+              <X className="h-4 w-4" />
               Reset Filters
-            </button>
+            </Button>
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {isLoading ? (
             <div className="col-span-full flex justify-center items-center h-64">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-theme-primary"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-2 border-muted border-t-primary"></div>
             </div>
           ) : appVersions.length === 0 ? (
-            <div className="col-span-full text-center text-theme-primary text-xl">
+            <div className="col-span-full text-center text-muted-foreground py-12">
               No versions have been uploaded yet.
             </div>
           ) : (
@@ -778,33 +604,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
               const artifactSummary = getArtifactSummary(app.Artifacts);
               
               return (
-              <div
+              <Card
                 key={app.ID}
-                className={`sharedCard backdrop-blur-lg rounded-lg p-6 text-theme-primary transition-all relative ${
+                className={`transition-all relative overflow-hidden ${
                   isDangerZone 
-                    ? 'border-2 border-red-500' 
-                    : 'bg-theme-card hover:bg-theme-card-hover'
+                    ? 'border-destructive bg-destructive/10' 
+                    : 'hover:border-muted-foreground/30'
                 }`}
-                style={{ 
-                  ['--card-color' as any]: isDangerZone ? '#EF4444' : '#8B5CF6',
-                  ...(isDangerZone ? {
-                    backgroundColor: 'rgba(239, 68, 68, 0.25)',
-                    boxShadow: '0 10px 25px -5px rgba(239, 68, 68, 0.5), 0 0 0 1px rgba(239, 68, 68, 0.3)',
-                    animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
-                  } : {})
-                }}
-                onMouseEnter={(e) => {
-                  if (isDangerZone) {
-                    (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(239, 68, 68, 0.35)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (isDangerZone) {
-                    (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(239, 68, 68, 0.25)';
-                  }
-                }}
               >
-                <div className="flex items-center justify-end mb-4 min-w-0 w-full">
+                <CardHeader className="p-4 pb-0">
+                <div className="flex items-center justify-end min-w-0 w-full">
                   <div className="flex gap-2 flex-shrink-0 items-center">
                     {tufStatus && (
                       <div className="flex items-center gap-1">
@@ -866,42 +675,35 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     />
                   </div>
                 </div>
-                <div className="sharedCardContent relative w-full min-w-0">
+                </CardHeader>
+                <CardContent className="p-4 pt-2">
                   <h3 
-                    className="sharedCardTitle text-2xl font-bold mb-3 text-white" 
-                    style={{
-                      background: 'linear-gradient(135deg, #ffffff 0%, #e5e7eb 100%)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      backgroundClip: 'text',
-                      textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                      letterSpacing: '0.025em'
-                    }}
+                    className="text-lg font-semibold mb-2 text-foreground" 
                     title={`Version ${app.Version}`}
                   >
                     Version {app.Version}
                   </h3>
                   <div className="flex items-center gap-2 mb-2">
-                    <p className="text-sm text-theme-primary/70 flex-1 sharedCardDescription">
+                    <p className="text-sm text-muted-foreground flex-1">
                       Channel: {app.Channel}
                     </p>
                   </div>
-                  <p className="mb-2 text-theme-primary/70 text-sm">
+                  <p className="mb-2 text-muted-foreground text-sm">
                     Last updated: {formatDate(app.Updated_at)}
                   </p>
-                  <div className="flex gap-2 mb-2">
-                    <span className={`px-2 py-1 rounded text-sm ${
-                      app.Published ? 'bg-green-500' : 'bg-red-500'
+                  <div className="flex gap-2 mb-2 flex-wrap">
+                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                      app.Published ? 'bg-green-500/20 text-green-600 dark:text-green-400' : 'bg-muted text-muted-foreground'
                     }`}>
                       {app.Published ? 'Published' : 'Not published'}
                     </span>
                     {app.Critical && (
-                      <span className="px-2 py-1 rounded text-sm bg-red-500">
+                      <span className="px-2 py-0.5 rounded text-xs font-medium bg-destructive/20 text-destructive">
                         Critical
                       </span>
                     )}
                     {app.Intermediate && (
-                      <span className="px-2 py-1 rounded text-sm bg-yellow-500">
+                      <span className="px-2 py-0.5 rounded text-xs font-medium bg-amber-500/20 text-amber-600 dark:text-amber-400">
                         Intermediate
                       </span>
                     )}
@@ -919,7 +721,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     >
                       <button
                         type="button"
-                        className="block w-full min-w-0 max-w-full truncate px-2 py-1 rounded text-xs bg-theme-card/70 border border-theme-card-hover text-theme-primary/90 hover:text-theme-primary transition-colors text-left"
+                        className="block w-full min-w-0 max-w-full truncate px-2 py-1 rounded text-xs bg-muted border border-border text-muted-foreground hover:text-foreground transition-colors text-left"
                         title={`Artifacts: ${artifactSummary.visibleSummary}${artifactSummary.hiddenGroupsCount > 0 ? ` +${artifactSummary.hiddenGroupsCount}` : ''}`}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -938,7 +740,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         {artifactSummary.hiddenGroupsCount > 0 ? ` +${artifactSummary.hiddenGroupsCount}` : ''}
                       </button>
                       <div
-                        className={`absolute left-0 right-0 bottom-full z-20 mb-2 rounded-lg border border-theme-card-hover bg-gray-900 p-3 shadow-xl transition-opacity duration-150 max-h-44 overflow-hidden flex flex-col ${
+                        className={`absolute left-0 right-0 bottom-full z-20 mb-2 rounded-md border border-border bg-popover p-3 shadow-lg transition-opacity duration-150 max-h-44 overflow-hidden flex flex-col ${
                           openArtifactsPopoverId === app.ID ||
                           (hoveredArtifactsPopoverId === app.ID && suppressHoverArtifactsPopoverId !== app.ID)
                             ? 'opacity-100 pointer-events-auto'
@@ -950,12 +752,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
                           setSuppressHoverArtifactsPopoverId(app.ID);
                         }}
                       >
-                        <p className="mb-2 text-xs font-semibold text-theme-primary">
+                        <p className="mb-2 text-xs font-semibold text-foreground">
                           Artifact details
                         </p>
                         <div className="overflow-y-auto pr-1 flex-1 min-h-0">
                           {artifactSummary.details.map((detail, index) => (
-                            <p key={`${app.ID}-artifact-${index}`} className="text-xs text-theme-primary/80 break-all mb-1 last:mb-0">
+                            <p key={`${app.ID}-artifact-${index}`} className="text-xs text-muted-foreground break-all mb-1 last:mb-0">
                               {detail}
                             </p>
                           ))}
@@ -963,9 +765,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       </div>
                     </div>
                   )}
-                  <div className="mt-2 p-3 rounded-lg h-20">
+                  <div className="mt-2 p-3 rounded-md bg-muted/50 h-20">
                     {app.Changelog && app.Changelog.length > 0 && app.Changelog[0].Changes ? (
-                      <div className="text-sm text-theme-primary/80 line-clamp-3 prose prose-sm prose-invert max-w-none">
+                      <div className="text-sm text-muted-foreground line-clamp-3 prose prose-sm dark:prose-invert max-w-none">
                         <ReactMarkdown
                           components={{
                             p: ({ children }) => <p className="m-0">{children}</p>,
@@ -974,7 +776,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                             li: ({ children }) => <li className="m-0">{children}</li>,
                             strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
                             em: ({ children }) => <em className="italic">{children}</em>,
-                            code: ({ children }) => <code className="bg-theme-input px-1 rounded text-xs">{children}</code>,
+                            code: ({ children }) => <code className="bg-muted px-1 rounded text-xs">{children}</code>,
                             h1: ({ children }) => <h1 className="text-base font-bold m-0">{children}</h1>,
                             h2: ({ children }) => <h2 className="text-sm font-bold m-0">{children}</h2>,
                             h3: ({ children }) => <h3 className="text-sm font-semibold m-0">{children}</h3>,
@@ -984,63 +786,69 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         </ReactMarkdown>
                       </div>
                     ) : (
-                      <p className="text-sm text-theme-primary/60 italic">
+                      <p className="text-sm text-muted-foreground italic">
                         Changelog not provided
                       </p>
                     )}
                   </div>
                   {app.Changelog && app.Changelog.length > 0 && app.Changelog[0].Changes && (
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => onChangelogClick(app.Version, app.Changelog)}
-                      className="mt-4 px-4 py-2 bg-theme-card text-theme-primary rounded-lg hover:bg-theme-card-hover transition-colors flex items-center gap-2"
+                      className="mt-4 -ml-2 text-muted-foreground hover:text-foreground"
                     >
                       View full changelog
-                    </button>
+                    </Button>
                   )}
-                </div>
-              </div>
+                </CardContent>
+              </Card>
               );
             })
           )}
         </div>
 
         {totalPages > 1 && (
-          <div className="flex justify-center gap-2 mt-8">
-            <button
+          <div className="flex justify-center items-center gap-2 mt-8">
+            <Button
+              variant="outline"
+              size="icon"
               onClick={() => handlePageChange(1)}
               disabled={currentPage === 1}
-              className="px-4 py-2 rounded-lg bg-theme-card text-theme-primary hover:bg-theme-card-hover disabled:opacity-50 disabled:cursor-not-allowed"
               title="First page"
             >
               <i className="fas fa-angle-double-left"></i>
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
               onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
-              className="px-4 py-2 rounded-lg bg-theme-card text-theme-primary hover:bg-theme-card-hover disabled:opacity-50 disabled:cursor-not-allowed"
               title="Previous page"
             >
               <i className="fas fa-angle-left"></i>
-            </button>
-            <span className="px-4 py-2 text-theme-primary">
+            </Button>
+            <span className="px-4 py-2 text-sm text-muted-foreground">
               Page {currentPage} of {totalPages}
             </span>
-            <button
+            <Button
+              variant="outline"
+              size="icon"
               onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
               disabled={currentPage === totalPages}
-              className="px-4 py-2 rounded-lg bg-theme-card text-theme-primary hover:bg-theme-card-hover disabled:opacity-50 disabled:cursor-not-allowed"
               title="Next page"
             >
               <i className="fas fa-angle-right"></i>
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
               onClick={() => handlePageChange(totalPages)}
               disabled={currentPage === totalPages}
-              className="px-4 py-2 rounded-lg bg-theme-card text-theme-primary hover:bg-theme-card-hover disabled:opacity-50 disabled:cursor-not-allowed"
               title="Last page"
             >
               <i className="fas fa-angle-double-right"></i>
-            </button>
+            </Button>
           </div>
         )}
 
@@ -1090,31 +898,31 @@ export const Dashboard: React.FC<DashboardProps> = ({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {isLoading ? (
         <div className="col-span-full flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-theme-primary"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-muted border-t-primary"></div>
         </div>
       ) : !filteredAppList || filteredAppList.length === 0 ? (
-        <div className="col-span-full text-center text-theme-primary text-xl">
+        <div className="col-span-full text-center text-muted-foreground py-12">
           {searchTerm ? 'No applications found matching your search.' : 'No applications have been created yet.'}
         </div>
       ) : (
         filteredAppList.map((app) => (
-          <div
+          <Card
             key={app.ID}
             onClick={() => onAppClick(app.AppName)}
-            className={"bg-theme-card backdrop-blur-lg rounded-lg p-6 text-theme-primary hover:bg-theme-card-hover transition-colors cursor-pointer sharedCard"}
-            style={{ ['--card-color' as any]: '#8B5CF6' }}
+            className="cursor-pointer hover:border-muted-foreground/30 transition-colors"
           >
-            <div className="flex items-center mb-4 min-w-0 w-full">
-              <div className="relative w-12 h-12 flex-shrink-0">
-                <div className="sharedCardIcon w-12 h-12">
+            <CardHeader className="p-4">
+            <div className="flex items-center min-w-0 w-full">
+              <div className="relative w-10 h-10 flex-shrink-0">
+                <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center overflow-hidden">
                   {app.Logo ? (
                     <img 
                       src={app.Logo} 
                       alt={`${app.AppName} logo`}
-                      className="w-full h-full rounded-lg object-contain bg-theme-card-hover transition-opacity duration-300"
+                      className="w-full h-full object-contain transition-opacity duration-300"
                       loading="lazy"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
@@ -1140,7 +948,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       strokeWidth="2" 
                       strokeLinecap="round" 
                       strokeLinejoin="round"
-                      className="text-theme-primary-hover w-full h-full"
+                      className="text-muted-foreground w-full h-full"
                     >
                       <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                       <path d="M12 8v8"></path>
@@ -1149,9 +957,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   )}
                 </div>
                 {app.Private && (
-                  <div className="absolute -bottom-1 -right-1 bg-red-500 rounded-full p-1 z-10">
+                  <div className="absolute -bottom-1 -right-1 bg-destructive rounded-full p-1 z-10">
                     <svg 
-                      className="w-3 h-3 text-theme-primary" 
+                      className="w-3 h-3 text-primary-foreground" 
                       fill="none" 
                       stroke="currentColor" 
                       viewBox="0 0 24 24"
@@ -1166,16 +974,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   </div>
                 )}
               </div>
-              <div className="ml-4 flex-1 min-w-0">
+              <div className="ml-3 flex-1 min-w-0">
                 <h3 
-                  className="text-xl font-semibold truncate max-w-[200px] overflow-hidden sharedCardTitle" 
+                  className="text-base font-semibold truncate max-w-[200px] overflow-hidden" 
                   title={app.AppName}
                 >
                   {app.AppName}
                 </h3>
                 {app.Tuf && (
                   <div className="mt-1 flex items-center gap-1">
-                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-300 border border-blue-400/30">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-primary/20 text-primary">
                       <svg 
                         className="w-3 h-3" 
                         fill="none" 
@@ -1194,30 +1002,37 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   </div>
                 )}
               </div>
-              <div className="flex gap-2 flex-shrink-0 ml-auto">
-                <button
+              <div className="flex gap-1 flex-shrink-0 ml-auto">
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
                   onClick={(e) => handleEditApp(e, app)}
-                  className="p-2 text-theme-primary hover:text-theme-primary-hover transition-colors duration-200"
+                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
                   title="Edit app"
                 >
-                  <i className="fas fa-edit"></i>
-                </button>
-                <button
+                  <i className="fas fa-edit text-sm"></i>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
                   onClick={(e) => handleDeleteApp(e, app)}
-                  className="p-2 text-theme-danger hover:text-theme-primary-hover transition-colors duration-200"
+                  className="h-8 w-8 text-destructive hover:text-destructive"
                   title="Delete app"
                 >
-                  <i className="fas fa-trash"></i>
-                </button>
+                  <i className="fas fa-trash text-sm"></i>
+                </Button>
               </div>
             </div>
-            <div className="relative sharedCardContent">
+            </CardHeader>
+            <CardContent className="p-4 pt-0">
               <div className="flex items-center gap-2">
-                <p className={`text-sm text-theme-primary/70 flex-1 ${!expandedApps[app.ID] && 'line-clamp-1'} sharedCardDescription`}>
+                <p className={`text-sm text-muted-foreground flex-1 ${!expandedApps[app.ID] && 'line-clamp-1'}`}>
                   {app.Description || 'No description available'}
                 </p>
                 {app.Description && app.Description.length > 50 && (
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
                     onClick={(e) => {
                       e.stopPropagation();
                       setExpandedApps(prev => ({
@@ -1225,15 +1040,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         [app.ID]: !prev[app.ID]
                       }));
                     }}
-                    className="w-6 h-6 flex-shrink-0 flex items-center justify-center rounded-full bg-theme-card hover:bg-theme-card-hover transition-colors"
+                    className="h-6 w-6 flex-shrink-0"
                     title={expandedApps[app.ID] ? 'Collapse' : 'Expand'}
                   >
-                    <i className={`fas ${expandedApps[app.ID] ? 'fa-chevron-up' : 'fa-chevron-down'} text-theme-primary text-xs`}></i>
-                  </button>
+                    <i className={`fas ${expandedApps[app.ID] ? 'fa-chevron-up' : 'fa-chevron-down'} text-muted-foreground text-xs`}></i>
+                  </Button>
                 )}
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         ))
       )}
 

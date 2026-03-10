@@ -96,23 +96,23 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ onClose, onSucce
       files={files}
     >
       <div className="mb-4">
-        <label className="block text-theme-primary mb-2 font-roboto font-semibold">App Name</label>
+        <label className="block text-foreground mb-2 font-roboto font-semibold">App Name</label>
         <input
           type="text"
           value={formData.app}
           onChange={(e) => setFormData(prev => ({ ...prev, app: e.target.value }))}
-          className="w-full px-4 py-2 rounded-lg font-roboto bg-theme-input text-theme-primary border border-theme transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 placeholder:text-theme-secondary shadow-sm"
+          className="w-full px-4 py-2 rounded-lg font-roboto bg-input text-foreground border border-border transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring placeholder:text-muted-foreground shadow-sm"
           required
           placeholder="Enter app name"
         />
       </div>
 
       <div className="mb-4">
-        <label className="block text-theme-primary mb-2 font-roboto font-semibold">Description</label>
+        <label className="block text-foreground mb-2 font-roboto font-semibold">Description</label>
         <textarea
           value={formData.description}
           onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-          className="w-full px-4 py-2 rounded-lg font-roboto bg-theme-input text-theme-primary border border-theme transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 placeholder:text-theme-secondary shadow-sm"
+          className="w-full px-4 py-2 rounded-lg font-roboto bg-input text-foreground border border-border transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring placeholder:text-muted-foreground shadow-sm"
           rows={4}
           placeholder="Enter app description"
         />
@@ -124,11 +124,11 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ onClose, onSucce
           id="private"
           checked={formData.private}
           onChange={(e) => setFormData(prev => ({ ...prev, private: e.target.checked }))}
-          className="mt-1 mr-3 accent-purple-500 w-5 h-5 border border-theme rounded transition-all duration-150 focus:ring-2 focus:ring-purple-400 focus:border-purple-400 bg-theme-input shadow-sm"
+          className="mt-1 mr-3 accent-primary w-5 h-5 border border-border rounded transition-all duration-150 focus:ring-2 focus:ring-ring focus:border-ring bg-input shadow-sm"
         />
-        <label htmlFor="private" className="text-theme-primary font-roboto cursor-pointer select-none">
+        <label htmlFor="private" className="text-foreground font-roboto cursor-pointer select-none">
           <div className="font-semibold">Private app</div>
-          <div className="text-sm text-purple-200">If selected, the app will be stored in a private bucket</div>
+          <div className="text-sm text-muted-foreground">If selected, the app will be stored in a private bucket</div>
         </label>
       </div>
 
@@ -138,11 +138,11 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ onClose, onSucce
           id="tuf"
           checked={formData.tuf}
           onChange={(e) => setFormData(prev => ({ ...prev, tuf: e.target.checked }))}
-          className="mt-1 mr-3 accent-purple-500 w-5 h-5 border border-theme rounded transition-all duration-150 focus:ring-2 focus:ring-purple-400 focus:border-purple-400 bg-theme-input shadow-sm"
+          className="mt-1 mr-3 accent-primary w-5 h-5 border border-border rounded transition-all duration-150 focus:ring-2 focus:ring-ring focus:border-ring bg-input shadow-sm"
         />
-        <label htmlFor="tuf" className="text-theme-primary font-roboto cursor-pointer select-none">
+        <label htmlFor="tuf" className="text-foreground font-roboto cursor-pointer select-none">
           <div className="font-semibold">Enable tuf</div>
-          <div className="text-sm text-purple-200">Enable TUF (The Update Framework) for this application</div>
+          <div className="text-sm text-muted-foreground">Enable TUF (The Update Framework) for this application</div>
         </label>
       </div>
     </AdvancedModal>

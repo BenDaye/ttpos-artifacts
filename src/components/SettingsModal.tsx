@@ -68,11 +68,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
     >
       <div 
         ref={modalRef}
-        className="bg-theme-gradient flex overflow-auto"
+        className="bg-background flex overflow-auto"
         style={modalStyle}
       >
         {/* Sidebar */}
-        <div className="w-48 bg-theme-gradient p-4">
+        <div className="w-48 bg-background p-4">
           <h2 className="text-lg font-bold text-theme-primary mb-4">Settings</h2>
           <nav>
             {menuItems.map((item) => (
@@ -101,7 +101,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
         </div>
 
         {/* Content */}
-        <div className="flex-1 p-6 overflow-auto bg-theme-gradient">
+        <div className="flex-1 p-6 overflow-auto bg-background">
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-xl font-bold text-theme-primary">
               {menuItems.find(item => item.id === currentPage)?.label}

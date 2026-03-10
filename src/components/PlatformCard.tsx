@@ -1,5 +1,8 @@
-import React from 'react';
-import { Platform } from '../hooks/use-query/usePlatformQuery';
+import React from "react";
+import { Card, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Platform } from "../hooks/use-query/usePlatformQuery";
+import { Trash2 } from "lucide-react";
 
 interface PlatformCardProps {
   platform: Platform;
@@ -7,56 +10,59 @@ interface PlatformCardProps {
   onDelete?: () => void;
 }
 
-export const PlatformCard: React.FC<PlatformCardProps> = ({ 
-  platform, 
+export const PlatformCard: React.FC<PlatformCardProps> = ({
+  platform,
   onClick,
   onDelete,
 }) => {
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (onDelete) {
-      onDelete();
-    }
+    onDelete?.();
   };
 
-  const defaultUpdater = platform.Updaters?.find(u => u.default);
+  const defaultUpdater = platform.Updaters?.find((u) => u.default);
   const updatersCount = platform.Updaters?.length || 0;
 
   return (
-    <div
-      className={"sharedCard sharedCard--compact bg-theme-card backdrop-blur-lg rounded-lg p-2 text-theme-primary hover:bg-theme-card-hover transition-colors cursor-pointer flex items-center"}
-      style={{ ['--card-color' as any]: '#8B5CF6' }}
+    <Card
       onClick={onClick}
+      className="cursor-pointer hover:border-muted-foreground/30 transition-colors"
     >
-      <div className="flex items-center min-w-0 w-full">
-        <div className="flex-1 min-w-0">
-          <h3
-            className="sharedCardTitle text-xl font-semibold truncate max-w-[200px] overflow-hidden"
-            title={platform.PlatformName}
-          >
-            {platform.PlatformName}
-          </h3>
-          {updatersCount > 0 && (
-            <div className="flex items-center space-x-2 mt-1">
-              <span className="text-xs text-theme-secondary">
-                {updatersCount} updater{updatersCount !== 1 ? 's' : ''}
-              </span>
-              {defaultUpdater && (
-                <span className="text-xs bg-purple-600 text-white px-2 py-1 rounded-full">
-                  Default: {defaultUpdater.type}
+      <CardHeader className="p-4">
+        <div className="flex items-center min-w-0 w-full">
+          <div className="flex-1 min-w-0">
+            <h3
+              className="text-base font-semibold truncate"
+              title={platform.PlatformName}
+            >
+              {platform.PlatformName}
+            </h3>
+            {updatersCount > 0 && (
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                <span className="text-xs text-muted-foreground">
+                  {updatersCount} updater{updatersCount !== 1 ? "s" : ""}
                 </span>
-              )}
-            </div>
+                {defaultUpdater && (
+                  <span className="text-xs px-2 py-0.5 rounded bg-primary/20 text-primary">
+                    Default: {defaultUpdater.type}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+          {onDelete && (
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={handleDeleteClick}
+              className="h-8 w-8 text-destructive hover:text-destructive shrink-0 ml-2"
+              title="Delete platform"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
           )}
         </div>
-        <button
-          onClick={handleDeleteClick}
-          className="p-2 text-theme-danger hover:text-theme-primary-hover transition-colors duration-200 ml-2"
-          title="Delete platform"
-        >
-          <i className="fas fa-trash"></i>
-        </button>
-      </div>
-    </div>
+      </CardHeader>
+    </Card>
   );
-}; 
+};

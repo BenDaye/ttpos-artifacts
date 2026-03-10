@@ -1,13 +1,14 @@
 "use client";
 import React from "react";
-import { Header } from "../components/Header";
-import { Sidebar } from "../components/Sidebar";
+import { AppLayout } from "../components/AppLayout";
 import { Dashboard } from "../components/Dashboard";
 import { UploadModal } from "../components/UploadModal";
 import { ChangelogModal } from "../components/ChangelogModal";
 import { CreateAppModal } from "../components/CreateAppModal";
 import { ChangelogEntry } from "../hooks/use-query/useAppsQuery";
 import { useParams, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 
 export const HomePage = () => {
   const { appName } = useParams();
@@ -20,28 +21,22 @@ export const HomePage = () => {
   const [selectedChangelog, setSelectedChangelog] = React.useState<ChangelogEntry[]>([]);
   const [refreshKey, setRefreshKey] = React.useState(0);
   const [searchTerm, setSearchTerm] = React.useState("");
-  const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
 
   React.useEffect(() => {
     setSelectedApp(appName || null);
   }, [appName]);
 
-  const toggleUploadModal = () => {
-    setShowUploadModal(!showUploadModal);
-  };
+  const toggleUploadModal = () => setShowUploadModal((v) => !v);
+  const toggleCreateAppModal = () => setShowCreateAppModal((v) => !v);
 
-  const toggleCreateAppModal = () => {
-    setShowCreateAppModal(!showCreateAppModal);
-  };
-
-  const handleAppClick = (appName: string) => {
-    setSelectedApp(appName);
-    navigate(`/applications/${appName}`);
+  const handleAppClick = (name: string) => {
+    setSelectedApp(name);
+    navigate(`/applications/${name}`);
   };
 
   const handleBackClick = () => {
     setSelectedApp(null);
-    navigate('/applications');
+    navigate("/applications");
   };
 
   const handleChangelogClick = (version: string, changelog: ChangelogEntry[]) => {
@@ -56,49 +51,35 @@ export const HomePage = () => {
     setSelectedChangelog([]);
   };
 
-  const handleCreateAppSuccess = () => {
-    setRefreshKey(prev => prev + 1);
-  };
-
-  const handleSearchChange = (term: string) => {
-    setSearchTerm(term);
-  };
+  const handleCreateAppSuccess = () => setRefreshKey((prev) => prev + 1);
 
   return (
-    <div className="min-h-screen bg-theme-gradient font-sans">
-      <div className="flex">
-        <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-        <main className="flex-1 p-8">
-          <Header
-            title="Applications"
-            onCreateClick={toggleUploadModal}
-            createButtonText="Upload the app"
-            additionalButton={
-              <button
-                onClick={toggleCreateAppModal}
-                className="header-additional-btn p-2.5 md:px-4 md:py-2 font-sans"
-                aria-label="Create app"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-                </svg>
-                <span className="hidden md:inline ml-2">Create app</span>
-              </button>
-            }
-            onSearchChange={handleSearchChange}
-            hideSearch={!!selectedApp}
-            onMenuClick={() => setIsSidebarOpen(true)}
-          />
-          <Dashboard 
-            selectedApp={selectedApp}
-            onAppClick={handleAppClick}
-            onChangelogClick={handleChangelogClick}
-            onBackClick={handleBackClick}
-            refreshKey={refreshKey}
-            searchTerm={searchTerm}
-          />
-        </main>
-      </div>
+    <AppLayout
+      title="Applications"
+      onCreateClick={toggleUploadModal}
+      createButtonText="Upload the app"
+      hideSearch={!!selectedApp}
+      onSearchChange={(term) => setSearchTerm(term)}
+      additionalButton={
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={toggleCreateAppModal}
+          aria-label="Create app"
+        >
+          <Plus className="h-4 w-4" />
+          <span className="hidden md:inline ml-2">Create app</span>
+        </Button>
+      }
+    >
+      <Dashboard
+        selectedApp={selectedApp}
+        onAppClick={handleAppClick}
+        onChangelogClick={handleChangelogClick}
+        onBackClick={handleBackClick}
+        refreshKey={refreshKey}
+        searchTerm={searchTerm}
+      />
       {showUploadModal && (
         <UploadModal onClose={toggleUploadModal} />
       )}
@@ -116,6 +97,6 @@ export const HomePage = () => {
           onClose={closeChangelogModal}
         />
       )}
-    </div>
+    </AppLayout>
   );
 };

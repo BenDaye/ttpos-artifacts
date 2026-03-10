@@ -117,8 +117,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     <>
       {/* Drawer only on mobile */}
       <Drawer />
-      {/* Sidebar only on desktop */}
-      <aside className="hidden md:block w-64 min-h-screen sidebar">
+      {/* Sidebar only on desktop - Linear-style compact */}
+      <aside className="hidden md:block min-h-screen sidebar flex-shrink-0">
         <div className="p-6 pt-3">
           <div className="mb-3 flex items-center justify-center w-full">
             <div 

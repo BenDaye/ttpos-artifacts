@@ -27,7 +27,7 @@ const isNightTime = (): boolean => {
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
     const savedMode = localStorage.getItem('themeMode') as ThemeMode;
-    return savedMode || 'auto';
+    return savedMode || 'dark'; // Linear-style: dark by default
   });
 
   const [theme, setTheme] = useState<Theme>(() => {

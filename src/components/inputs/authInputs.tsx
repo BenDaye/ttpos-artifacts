@@ -1,5 +1,6 @@
-import { FC } from 'react';
-import { ErrorMessage, Field } from 'formik';
+import { FC } from "react";
+import { ErrorMessage, Field } from "formik";
+import { Input } from "@/components/ui/input";
 
 type AuthInputsProps = {
   name: string;
@@ -13,17 +14,21 @@ export const AuthInputs: FC<AuthInputsProps> = ({
   placeholder,
 }) => {
   return (
-    <div className='w-full'>
-      <Field
-        name={name}
-        type={type}
-        placeholder={placeholder}
-        className='w-full px-4 py-3 bg-white bg-opacity-10 border border-white border-opacity-20 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-white placeholder-opacity-60 transition-all duration-200 backdrop-blur-sm'
-      />
+    <div className="w-full">
+      <Field name={name}>
+        {({ field }: { field: { name: string; value: string; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; onBlur: (e: React.FocusEvent<HTMLInputElement>) => void } }) => (
+          <Input
+            {...field}
+            type={type}
+            placeholder={placeholder}
+            className="w-full"
+          />
+        )}
+      </Field>
       <ErrorMessage
         name={name}
-        component='div'
-        className='dark:text-red-400 text-red-900 text-sm mt-1 font-medium'
+        component="div"
+        className="text-destructive text-sm mt-1 font-medium"
       />
     </div>
   );

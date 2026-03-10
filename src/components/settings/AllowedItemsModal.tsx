@@ -56,10 +56,10 @@ export const AllowedItemsModal: React.FC<AllowedItemsModalProps> = ({
       onClick={handleBackdropClick}
     >
       <div 
-        className="bg-theme-gradient rounded-lg w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden"
+        className="bg-card border border-border rounded-lg w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-4 border-b border-theme-modal flex justify-between items-center">
+        <div className="p-4 border-b border-border flex justify-between items-center">
           <h2 className="text-xl font-bold text-theme-primary">{title}</h2>
           <button
             onClick={onClose}
@@ -88,7 +88,7 @@ export const AllowedItemsModal: React.FC<AllowedItemsModalProps> = ({
           </div>
         </div>
         
-        <div className="p-4 border-t border-theme-modal flex justify-end">
+        <div className="p-4 border-t border-border flex justify-end">
           <button
             onClick={handleSelectAll}
             className="header-action-btn px-4 py-2 font-roboto mr-2"

@@ -58,7 +58,7 @@ export const StepperModal: React.FC<StepperModalProps> = ({
       onClick={handleBackdropClick}
     >
       <div
-        className="bg-theme-modal-gradient rounded-lg p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto relative my-auto"
+        className="bg-card border border-border rounded-lg p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto relative my-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

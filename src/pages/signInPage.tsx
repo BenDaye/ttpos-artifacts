@@ -7,7 +7,6 @@ import { AuthLogo } from '../components/auth-logo/authLogo.tsx';
 import { AuthButton } from '../components/buttons/authButton.tsx';
 import { AuthInputs } from '../components/inputs/authInputs.tsx';
 import { useAuth } from '../providers/authProvider.tsx';
-import '../styles/cards.css';
 
 interface FormValues {
   username: string;
@@ -52,14 +51,10 @@ export const SignInPage = () => {
     <AuthWrapper>
       <div className='flex md:flex-row flex-col-reverse w-full'>
         <div className='w-full md:w-1/2 flex items-center justify-center p-8'>
-          <div className='sharedCard sharedCard--auth w-full max-w-md'>
-            {/* <div className='sharedCardIcon'>
-              <i className='fas fa-sign-in-alt text-2xl text-white'></i>
-            </div> */}
-            <div className='sharedCardContent'>
-              <h2 className='sharedCardTitle text-center mb-8'>
-                Sign In
-              </h2>
+          <div className="bg-card border border-border rounded-lg p-8 w-full max-w-md shadow-lg">
+            <h2 className="text-2xl font-semibold text-center mb-8 text-foreground">
+              Sign In
+            </h2>
               <Formik
                 initialValues={initialValues}
                 validationSchema={validationSchema}
@@ -78,7 +73,7 @@ export const SignInPage = () => {
                       type='Password'
                       placeholder='password'
                     />
-                    <div className='w-full text-red-400 text-center text-sm'>
+                    <div className="w-full text-destructive text-center text-sm">
                       {respError && respError}
                     </div>
                     <div className='flex flex-col gap-4 mt-2'>
@@ -94,7 +89,6 @@ export const SignInPage = () => {
                   </Form>
                 )}
               </Formik>
-            </div>
           </div>
         </div>
         <AuthLogo />

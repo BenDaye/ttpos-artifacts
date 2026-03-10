@@ -95,7 +95,7 @@ export const DownloadArtifactsModal: React.FC<DownloadArtifactsModalProps> = ({
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center animate-fade-in modal-overlay-high"
       onClick={handleBackdropClick}
     >
-      <div className="bg-theme-modal-gradient p-8 rounded-lg w-96 max-h-[80vh] overflow-y-auto flex flex-col">
+      <div className="bg-card border border-border p-8 rounded-lg w-96 max-h-[80vh] overflow-y-auto flex flex-col">
         <h2 className="text-2xl font-bold mb-4 text-theme-primary font-roboto">
           Select Artifact to Download
         </h2>

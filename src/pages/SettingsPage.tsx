@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { Header } from '../components/Header';
-import { Sidebar } from '../components/Sidebar';
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { AppLayout } from "../components/AppLayout";
 import { UsersSettings } from '../components/settings/UsersSettings';
 import { TufSettings } from '../components/settings/TufSettings';
 import { TokenSettings } from '../components/settings/TokenSettings';
@@ -9,7 +8,6 @@ import { TokenSettings } from '../components/settings/TokenSettings';
 type SettingsPage = 'users' | 'tokens' | 'tuf';
 
 export const SettingsPage = () => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -50,51 +48,36 @@ export const SettingsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-theme-gradient font-sans">
-      <div className="flex flex-col lg:flex-row">
-        <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-        <main className="flex-1 p-2 sm:p-4 md:p-8">
-          <Header
-            title="Settings"
-            onMenuClick={() => setIsSidebarOpen(true)}
-            onCreateClick={() => {}}
-            createButtonText=""
-            hideSearch={true}
-          />
-          
-          <div className="mt-4 sm:mt-8">
-            <div className="bg-theme-card rounded-lg shadow-md p-4 sm:p-6">
-              {/* Navigation Tabs */}
-              <div className="mb-6 border-b border-theme-card-hover">
-                <nav className="flex space-x-4">
-                  {menuItems.map((item) => (
-                    <button
-                      key={item.id}
-                      onClick={() => handlePageChange(item.id)}
-                      className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
-                        currentPage === item.id
-                          ? 'bg-theme-button-primary bg-opacity-50 text-theme-primary border-b-2 border-blue-500'
-                          : 'text-theme-primary opacity-70 hover:opacity-100 hover:bg-theme-card-hover'
-                      }`}
-                    >
-                      <i className={`fas ${item.icon} mr-2`}></i>
-                      {item.label}
-                    </button>
-                  ))}
-                </nav>
-              </div>
-
-              {/* Content */}
-              <div className="mt-6">
-                {currentPage === 'users' && <UsersSettings />}
-                {currentPage === 'tokens' && <TokenSettings />}
-                {currentPage === 'tuf' && <TufSettings />}
-              </div>
-            </div>
+    <AppLayout title="Settings" onCreateClick={() => {}} createButtonText="" hideSearch>
+      <div className="mt-6">
+        <div className="bg-card border border-border rounded-lg p-4 sm:p-6">
+          <div className="mb-6 border-b border-border">
+            <nav className="flex gap-1">
+              {menuItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => handlePageChange(item.id)}
+                  className={`px-4 py-2 text-sm font-medium rounded-t-md transition-colors ${
+                    currentPage === item.id
+                      ? "bg-primary text-primary-foreground border-b-2 border-primary"
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                  }`}
+                >
+                  <i className={`fas ${item.icon} mr-2`}></i>
+                  {item.label}
+                </button>
+              ))}
+            </nav>
           </div>
-        </main>
+
+          <div className="mt-6">
+            {currentPage === "users" && <UsersSettings />}
+            {currentPage === "tokens" && <TokenSettings />}
+            {currentPage === "tuf" && <TufSettings />}
+          </div>
+        </div>
       </div>
-    </div>
+    </AppLayout>
   );
 };
 

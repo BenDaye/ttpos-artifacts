@@ -130,7 +130,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
   if (userLoading) {
     return (
       <div className="fixed inset-0 flex items-center justify-center modal-overlay-high">
-        <div className="bg-theme-modal-gradient rounded-lg p-8 w-[500px] max-h-[80vh] overflow-y-auto relative">
+        <div className="bg-card border border-border rounded-lg p-8 w-[500px] max-h-[80vh] overflow-y-auto relative">
           <div className="flex justify-center items-center h-40">
             <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-theme-primary"></div>
           </div>
@@ -144,7 +144,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[11000] overflow-y-auto min-h-screen p-4"
       onClick={handleBackdropClick}
     >
-      <div className="bg-theme-modal-gradient rounded-lg p-8 w-full max-w-[600px] max-h-[90vh] relative"
+      <div className="bg-card border border-border rounded-lg p-8 w-full max-w-[600px] max-h-[90vh] relative"
         onClick={e => e.stopPropagation()}
       >
         <button 
