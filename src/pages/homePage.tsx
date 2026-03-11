@@ -9,6 +9,8 @@ import { ChangelogEntry } from "../hooks/use-query/useAppsQuery";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import { useLayoutPreference } from "../hooks/useLayoutPreference";
+import { LayoutSwitcher } from "../components/layouts/LayoutSwitcher";
 
 export const HomePage = () => {
   const { appName } = useParams();
@@ -21,6 +23,7 @@ export const HomePage = () => {
   const [selectedChangelog, setSelectedChangelog] = React.useState<ChangelogEntry[]>([]);
   const [refreshKey, setRefreshKey] = React.useState(0);
   const [searchTerm, setSearchTerm] = React.useState("");
+  const [layout, setLayout] = useLayoutPreference();
 
   React.useEffect(() => {
     setSelectedApp(appName || null);
@@ -61,15 +64,18 @@ export const HomePage = () => {
       hideSearch={!!selectedApp}
       onSearchChange={(term) => setSearchTerm(term)}
       additionalButton={
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={toggleCreateAppModal}
-          aria-label="Create app"
-        >
-          <Plus className="h-4 w-4" />
-          <span className="hidden md:inline ml-2">Create app</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          {!selectedApp && <LayoutSwitcher value={layout} onChange={setLayout} />}
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={toggleCreateAppModal}
+            aria-label="Create app"
+          >
+            <Plus className="h-4 w-4" />
+            <span className="hidden md:inline ml-2">Create app</span>
+          </Button>
+        </div>
       }
     >
       <Dashboard
@@ -79,6 +85,7 @@ export const HomePage = () => {
         onBackClick={handleBackClick}
         refreshKey={refreshKey}
         searchTerm={searchTerm}
+        layout={layout}
       />
       {showUploadModal && (
         <UploadModal onClose={toggleUploadModal} />
