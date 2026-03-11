@@ -1,14 +1,24 @@
 import React from "react";
 import { AppBoardColumn } from "./AppBoardColumn";
 import type { AppLayoutViewProps } from "./types";
+import type { AppVersion } from "../../hooks/use-query/useAppsQuery";
 
-export const AppBoardView: React.FC<AppLayoutViewProps> = ({
+interface AppBoardViewProps extends AppLayoutViewProps {
+  onEditVersion: (version: AppVersion) => void;
+  onDeleteVersion: (version: AppVersion) => void;
+  onDownloadVersion: (version: AppVersion) => void;
+}
+
+export const AppBoardView: React.FC<AppBoardViewProps> = ({
   apps,
   isLoading,
   searchTerm,
   onAppClick,
   onEditApp,
   onDeleteApp,
+  onEditVersion,
+  onDeleteVersion,
+  onDownloadVersion,
 }) => {
   if (isLoading) {
     return (
@@ -38,6 +48,9 @@ export const AppBoardView: React.FC<AppLayoutViewProps> = ({
             onAppClick={onAppClick}
             onEditApp={onEditApp}
             onDeleteApp={onDeleteApp}
+            onEditVersion={onEditVersion}
+            onDeleteVersion={onDeleteVersion}
+            onDownloadVersion={onDownloadVersion}
           />
         ))}
       </div>

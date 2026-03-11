@@ -925,8 +925,47 @@ export const Dashboard: React.FC<DashboardProps> = ({
   return (
     <div>
       {layout === 'list' && <AppListView {...layoutViewProps} />}
-      {layout === 'board' && <AppBoardView {...layoutViewProps} />}
+      {layout === 'board' && (
+        <AppBoardView
+          {...layoutViewProps}
+          onEditVersion={handleEdit}
+          onDeleteVersion={handleDelete}
+          onDownloadVersion={handleDownload}
+        />
+      )}
       {layout === 'card' && <AppCardView {...layoutViewProps} />}
+
+      {showEditModal && selectedVersion && (
+        <EditVersionModal
+          version={selectedVersion}
+          onClose={() => {
+            setShowEditModal(false);
+            setSelectedVersion(null);
+          }}
+          onSave={handleEditSave}
+        />
+      )}
+
+      {showDeleteModal && selectedVersion && (
+        <DeleteConfirmationModal
+          version={`${selectedVersion.Version}`}
+          onClose={() => {
+            setShowDeleteModal(false);
+            setSelectedVersion(null);
+          }}
+          onConfirm={handleDeleteConfirm}
+        />
+      )}
+
+      {showDownloadModal && selectedVersion && (
+        <DownloadArtifactsModal
+          artifacts={selectedVersion.Artifacts}
+          onClose={() => {
+            setShowDownloadModal(false);
+            setSelectedVersion(null);
+          }}
+        />
+      )}
 
       {showEditAppModal && selectedAppData && (
         <EditAppModal

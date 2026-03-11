@@ -2,13 +2,17 @@ import React from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAppVersionsQuery } from "../../hooks/use-query/useAppVersionsQuery";
-import type { AppListItem } from "../../hooks/use-query/useAppsQuery";
+import { ActionIcons } from "../ActionIcons";
+import type { AppListItem, AppVersion } from "../../hooks/use-query/useAppsQuery";
 
 interface AppBoardColumnProps {
   app: AppListItem;
   onAppClick: (appName: string) => void;
   onEditApp: (e: React.MouseEvent, app: AppListItem) => void;
   onDeleteApp: (e: React.MouseEvent, app: AppListItem) => void;
+  onEditVersion: (version: AppVersion) => void;
+  onDeleteVersion: (version: AppVersion) => void;
+  onDownloadVersion: (version: AppVersion) => void;
 }
 
 export const AppBoardColumn: React.FC<AppBoardColumnProps> = ({
@@ -16,12 +20,15 @@ export const AppBoardColumn: React.FC<AppBoardColumnProps> = ({
   onAppClick,
   onEditApp,
   onDeleteApp,
+  onEditVersion,
+  onDeleteVersion,
+  onDownloadVersion,
 }) => {
   const { versions, total, isLoading, isError } = useAppVersionsQuery(app.AppName);
 
   return (
     <div className="flex flex-col min-w-[280px] max-w-[320px] w-[280px] bg-muted/30 border border-border rounded-lg flex-shrink-0">
-      {/* Column header */}
+      {/* Column header — app info + app actions */}
       <div
         className="p-3 border-b border-border cursor-pointer hover:bg-accent/50 transition-colors"
         onClick={() => onAppClick(app.AppName)}
@@ -110,7 +117,7 @@ export const AppBoardColumn: React.FC<AppBoardColumnProps> = ({
         </div>
       </div>
 
-      {/* Version cards */}
+      {/* Version cards — each card has version-level actions */}
       <div className="flex-1 overflow-y-auto p-2 space-y-2 max-h-[calc(100vh-280px)]">
         {isLoading ? (
           <div className="flex justify-center items-center py-8">
@@ -128,18 +135,35 @@ export const AppBoardColumn: React.FC<AppBoardColumnProps> = ({
           versions.map((version) => (
             <Card
               key={version.ID}
-              className="cursor-pointer hover:border-muted-foreground/30 transition-colors"
-              onClick={(e) => {
-                e.stopPropagation();
-                onAppClick(app.AppName);
-              }}
+              className="hover:border-muted-foreground/30 transition-colors"
             >
               <CardHeader className="p-2.5 pb-0">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">{version.Version}</span>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-secondary text-secondary-foreground">
-                    {version.Channel}
-                  </span>
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className="text-sm font-medium truncate">
+                      {version.Version}
+                    </span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-secondary text-secondary-foreground flex-shrink-0">
+                      {version.Channel}
+                    </span>
+                  </div>
+                  <div className="flex-shrink-0 scale-75 origin-right -mr-1">
+                    <ActionIcons
+                      onDownload={() => onDownloadVersion(version)}
+                      onEdit={() => onEditVersion(version)}
+                      onDelete={() => onDeleteVersion(version)}
+                      showDownload={
+                        version.Artifacts?.length === 1
+                          ? !!version.Artifacts[0].link
+                          : (version.Artifacts?.length ?? 0) > 0
+                      }
+                      artifactLink={
+                        version.Artifacts?.length === 1
+                          ? version.Artifacts[0].link
+                          : undefined
+                      }
+                    />
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="p-2.5 pt-1.5">
