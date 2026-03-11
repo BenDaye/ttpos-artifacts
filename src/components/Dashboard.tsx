@@ -937,7 +937,17 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
       {showEditModal && selectedVersion && (
         <EditVersionModal
-          version={selectedVersion}
+          appName={selectedVersion.AppName}
+          version={selectedVersion.Version}
+          channel={selectedVersion.Channel}
+          currentData={{
+            ID: selectedVersion.ID,
+            Published: selectedVersion.Published,
+            Critical: selectedVersion.Critical,
+            Intermediate: selectedVersion.Intermediate,
+            Changelog: selectedVersion.Changelog?.[0]?.Changes || '',
+            Artifacts: selectedVersion.Artifacts || []
+          }}
           onClose={() => {
             setShowEditModal(false);
             setSelectedVersion(null);
