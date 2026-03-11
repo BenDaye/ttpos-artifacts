@@ -27,14 +27,14 @@ export const AppBoardColumn: React.FC<AppBoardColumnProps> = ({
   const { versions, total, isLoading, isError } = useAppVersionsQuery(app.AppName);
 
   return (
-    <div className="flex flex-col min-w-[280px] max-w-[320px] w-[280px] bg-muted/30 border border-border rounded-lg flex-shrink-0">
+    <div className="flex flex-col w-[340px] min-w-[340px] bg-muted/30 border border-border rounded-lg flex-shrink-0">
       {/* Column header — app info + app actions */}
       <div
-        className="p-3 border-b border-border cursor-pointer hover:bg-accent/50 transition-colors"
+        className="px-4 py-3 border-b border-border cursor-pointer hover:bg-accent/50 transition-colors rounded-t-lg"
         onClick={() => onAppClick(app.AppName)}
       >
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-md bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-md bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
             {app.Logo ? (
               <img
                 src={app.Logo}
@@ -58,8 +58,8 @@ export const AppBoardColumn: React.FC<AppBoardColumnProps> = ({
             ) : (
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
+                width="18"
+                height="18"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -74,44 +74,44 @@ export const AppBoardColumn: React.FC<AppBoardColumnProps> = ({
               </svg>
             )}
           </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="text-sm font-semibold truncate" title={app.AppName}>
-              {app.AppName}
-            </h3>
-            <div className="flex items-center gap-1 mt-0.5">
+          <div className="flex-1 min-w-0 flex flex-col justify-center">
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-semibold truncate" title={app.AppName}>
+                {app.AppName}
+              </h3>
               {app.Tuf && (
-                <span className="inline-flex items-center gap-0.5 px-1.5 py-0 rounded text-[10px] font-medium bg-primary/20 text-primary">
+                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-primary/20 text-primary flex-shrink-0">
                   TUF
                 </span>
               )}
               {app.Private && (
-                <span className="inline-flex items-center px-1.5 py-0 rounded text-[10px] bg-destructive/10 text-destructive">
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-destructive/10 text-destructive flex-shrink-0">
                   Private
                 </span>
               )}
-              <span className="text-[10px] text-muted-foreground ml-auto">
-                {total} version{total !== 1 ? "s" : ""}
-              </span>
             </div>
+            <span className="text-[11px] text-muted-foreground mt-0.5">
+              {total} version{total !== 1 ? "s" : ""}
+            </span>
           </div>
-          <div className="flex gap-0.5 flex-shrink-0">
+          <div className="flex items-center gap-0.5 flex-shrink-0 self-center">
             <Button
               variant="ghost"
               size="icon-sm"
               onClick={(e) => onEditApp(e, app)}
-              className="h-6 w-6 text-muted-foreground hover:text-foreground"
+              className="h-7 w-7 text-muted-foreground hover:text-foreground"
               title="Edit app"
             >
-              <i className="fas fa-edit text-[10px]" />
+              <i className="fas fa-edit text-xs" />
             </Button>
             <Button
               variant="ghost"
               size="icon-sm"
               onClick={(e) => onDeleteApp(e, app)}
-              className="h-6 w-6 text-destructive hover:text-destructive"
+              className="h-7 w-7 text-destructive hover:text-destructive"
               title="Delete app"
             >
-              <i className="fas fa-trash text-[10px]" />
+              <i className="fas fa-trash text-xs" />
             </Button>
           </div>
         </div>
