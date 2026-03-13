@@ -47,10 +47,10 @@ on:
           - "wss://ttpos-test1.ttpos.com/ws"
           - "wss://api.ttpos.com/ws"
           - "wss://ttpos-pro.keli.vip/ws"
-      upload_testflight:
-        description: "是否上传到 TestFlight"
+      distribute_appstore:
+        description: "是否分发到 App Store (TestFlight)"
         required: false
-        default: true
+        default: false
         type: boolean
       faynosync:
         description: "是否上传到 FaynoSync"
@@ -68,26 +68,19 @@ jobs:
         include:
           - package: pos
             app_name: TTPOS
-            gcs_folder: Cashier
             faynosync_name: "TTPOS"
           - package: assistant
             app_name: TTPOS-Go
-            gcs_folder: Assistant
             faynosync_name: "TTPOS Go"
           - package: kds
             app_name: TTPOS-Kitchen
-            gcs_folder: Kitchen
             faynosync_name: "TTPOS Kitchen"
           - package: tablet
             app_name: TTPOS-Menu
-            gcs_folder: Menu
             faynosync_name: "TTPOS Menu"
           - package: shop
             app_name: TTPOS-Shop
-            gcs_folder: Shop
             faynosync_name: "TTPOS Shop"
-    env:
-      GCS_PATH: ${{ inputs.branch == 'release' && format('dc_apk/TTPOS/Prod/iOS/{0}/', matrix.gcs_folder) || format('dc_apk/TTPOS/Test/iOS/{0}/', matrix.gcs_folder) }}
     steps:
       - name: 检查是否需要构建此应用端
         id: check
@@ -110,7 +103,7 @@ jobs:
           echo "环境: ${{ inputs.env }}"
           echo "API URL: ${{ inputs.base_url }}"
           echo "WebSocket URL: ${{ inputs.base_ws_url }}"
-          echo "上传 TestFlight: ${{ inputs.upload_testflight }}"
+          echo "分发到 App Store: ${{ inputs.distribute_appstore }}"
           echo "========================================="
 
       - name: Checkout the code
@@ -403,7 +396,7 @@ jobs:
       # ========== 分发 ==========
 
       - name: 配置 App Store Connect API Key
-        if: steps.check.outputs.should_run == 'true' && inputs.upload_testflight == true
+        if: steps.check.outputs.should_run == 'true' && inputs.distribute_appstore == true
         shell: bash
         env:
           ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
@@ -422,7 +415,7 @@ jobs:
           echo "已配置 App Store Connect API Key: $ASC_API_KEY_ID"
 
       - name: 上传到 TestFlight
-        if: steps.check.outputs.should_run == 'true' && inputs.upload_testflight == true
+        if: steps.check.outputs.should_run == 'true' && inputs.distribute_appstore == true
         shell: bash
         env:
           ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
@@ -448,20 +441,6 @@ jobs:
           path: ${{ env.IPA_PATH }}
           retention-days: 7
           compression-level: 0
-
-      - name: Upload to Google Cloud Storage
-        if: steps.check.outputs.should_run == 'true' && inputs.upload_testflight == true
-        uses: "google-github-actions/auth@v2"
-        with:
-          credentials_json: "${{ secrets.GOOGLE_STORAGE_CREDENTIALS }}"
-
-      - name: 上传构建产物到 Google Cloud Storage
-        if: steps.check.outputs.should_run == 'true' && inputs.upload_testflight == true
-        uses: "google-github-actions/upload-cloud-storage@v2"
-        with:
-          path: ${{ env.IPA_PATH }}
-          destination: ${{ env.GCS_PATH }}
-          parent: false
 
       - name: 上传到 FaynoSync
         if: steps.check.outputs.should_run == 'true' && inputs.faynosync == true
@@ -504,5 +483,5 @@ jobs:
           echo "版本: ${{ env.VERSION }}"
           echo "分支: ${{ inputs.branch }}"
           echo "环境: ${{ inputs.env }}"
-          echo "TestFlight: ${{ inputs.upload_testflight }}"
+          echo "App Store: ${{ inputs.distribute_appstore }}"
           echo "========================================="
