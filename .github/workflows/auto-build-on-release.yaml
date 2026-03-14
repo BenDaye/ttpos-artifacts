@@ -51,6 +51,9 @@ on:
           - "off"
         default: "off"
 
+permissions:
+  actions: write
+
 jobs:
   trigger-builds:
     runs-on: ubuntu-latest
