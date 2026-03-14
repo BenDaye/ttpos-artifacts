@@ -55,4 +55,4 @@ jobs:
 
           Use 'gh pr diff $PR_NUMBER' to read the diff.
           Use 'gh pr view $PR_NUMBER' to read PR details.
-          Use 'gh pr comment $PR_NUMBER --body <your review>' to post your review." --model claude-opus-4-6
+          Use 'gh pr comment $PR_NUMBER --body <your review>' to post your review." --model opus-4.6

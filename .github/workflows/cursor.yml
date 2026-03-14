@@ -57,4 +57,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           AGENT_PROMPT: ${{ steps.prompt.outputs.result }}
         run: |
-          agent --yolo -p "$AGENT_PROMPT" --model claude-opus-4-6
+          agent --yolo -p "$AGENT_PROMPT" --model opus-4.6
