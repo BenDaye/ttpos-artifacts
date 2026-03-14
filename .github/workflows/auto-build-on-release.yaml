@@ -1,0 +1,117 @@
+name: Auto Build on Release Push
+
+on:
+  repository_dispatch:
+    types: [release-push]
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "构建分支"
+        required: true
+        type: string
+        default: "release"
+      env:
+        description: "选择构建环境"
+        required: true
+        type: choice
+        options:
+          - "prod"
+          - "test"
+          - "dev"
+        default: "prod"
+      package:
+        description: "选择要构建的应用端"
+        required: true
+        type: string
+        default: "all"
+      base_url:
+        description: "选择API基础URL"
+        required: true
+        type: choice
+        default: "https://api.ttpos.com/api/v1"
+        options:
+          - "https://api.ttpos.com/api/v1"
+          - "https://ttpos-test1.ttpos.com/api/v1"
+          - "https://ttpos-pro.keli.vip/api/v1"
+      base_ws_url:
+        description: "选择WebSocket基础URL"
+        required: true
+        type: choice
+        default: "wss://api.ttpos.com/ws"
+        options:
+          - "wss://api.ttpos.com/ws"
+          - "wss://ttpos-test1.ttpos.com/ws"
+          - "wss://ttpos-pro.keli.vip/ws"
+      scp:
+        description: "是否启用SCP传输"
+        required: true
+        type: choice
+        options:
+          - "on"
+          - "off"
+        default: "off"
+
+jobs:
+  trigger-builds:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      BRANCH: ${{ inputs.branch || github.event.client_payload.branch || 'release' }}
+      BUILD_ENV: ${{ inputs.env || github.event.client_payload.env || 'prod' }}
+      BASE_URL: ${{ inputs.base_url || github.event.client_payload.base_url || 'https://api.ttpos.com/api/v1' }}
+      BASE_WS_URL: ${{ inputs.base_ws_url || github.event.client_payload.base_ws_url || 'wss://api.ttpos.com/ws' }}
+      PACKAGE: ${{ inputs.package || github.event.client_payload.package || 'all' }}
+      SCP: ${{ inputs.scp || github.event.client_payload.scp || 'off' }}
+    steps:
+      - name: 触发 Android 构建
+        run: |
+          gh workflow run build-android.yaml \
+            --repo ${{ github.repository }} \
+            -f branch=${{ env.BRANCH }} \
+            -f env=${{ env.BUILD_ENV }} \
+            -f package=${{ env.PACKAGE }} \
+            -f base_url=${{ env.BASE_URL }} \
+            -f base_ws_url=${{ env.BASE_WS_URL }} \
+            -f scp=${{ env.SCP }}
+
+      - name: 触发 iOS 构建
+        run: |
+          gh workflow run build-ios.yaml \
+            --repo ${{ github.repository }} \
+            -f branch=${{ env.BRANCH }} \
+            -f env=${{ env.BUILD_ENV }} \
+            -f package=${{ env.PACKAGE }} \
+            -f base_url=${{ env.BASE_URL }} \
+            -f base_ws_url=${{ env.BASE_WS_URL }}
+
+      - name: 触发 Windows 构建
+        run: |
+          gh workflow run build-windows.yaml \
+            --repo ${{ github.repository }} \
+            -f branch=${{ env.BRANCH }} \
+            -f env=${{ env.BUILD_ENV }} \
+            -f package=${{ env.PACKAGE }} \
+            -f base_url=${{ env.BASE_URL }} \
+            -f base_ws_url=${{ env.BASE_WS_URL }} \
+            -f scp=${{ env.SCP }}
+
+      - name: 触发 macOS 构建
+        run: |
+          gh workflow run build-macos.yaml \
+            --repo ${{ github.repository }} \
+            -f branch=${{ env.BRANCH }} \
+            -f env=${{ env.BUILD_ENV }} \
+            -f package=${{ env.PACKAGE }} \
+            -f base_url=${{ env.BASE_URL }} \
+            -f base_ws_url=${{ env.BASE_WS_URL }} \
+            -f scp=${{ env.SCP }}
+
+      - name: 触发 Web 构建
+        run: |
+          gh workflow run build-web.yaml \
+            --repo ${{ github.repository }} \
+            -f branch=${{ env.BRANCH }} \
+            -f env=${{ env.BUILD_ENV }} \
+            -f package=${{ env.PACKAGE }} \
+            -f base_url=${{ env.BASE_URL }} \
+            -f base_ws_url=${{ env.BASE_WS_URL }}
