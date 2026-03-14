@@ -409,26 +409,37 @@ jobs:
           retention-days: 7
           compression-level: 0
 
-      - name: 上传到 FaynoSync
+      - name: 上传到 FaynoSync（版本元数据）
         if: steps.check.outputs.should_run == 'true' && inputs.faynosync == true
         continue-on-error: true
         env:
           FAYNOSYNC_URL: ${{ secrets.FAYNOSYNC_URL }}
           FAYNOSYNC_TOKEN: ${{ secrets.FAYNOSYNC_TOKEN }}
         run: |
-          if [ ! -f "$IPA_PATH" ]; then
-            echo "构建产物不存在，跳过 FaynoSync 上传"
-            exit 0
-          fi
           if [ -z "$FAYNOSYNC_URL" ] || [ -z "$FAYNOSYNC_TOKEN" ]; then
             echo "未配置 FAYNOSYNC_URL 或 FAYNOSYNC_TOKEN，跳过上传"
             exit 0
           fi
+
           CHANNEL="${{ inputs.env }}"
-          echo "上传到 FaynoSync: ${{ matrix.faynosync_name }} v${{ env.VERSION }} (${CHANNEL}/ios/arm64)"
+
+          # iOS 通过 App Store 分发，无需上传真实 IPA 到 FaynoSync。
+          # 生成占位文件注册版本元数据（changelog、critical 等），
+          # 待 App Store 审核通过后在 Dashboard 手动 publish。
+          PLACEHOLDER="$RUNNER_TEMP/${{ matrix.app_name }}-${VERSION}-ios.txt"
+          cat > "$PLACEHOLDER" <<EOF
+          platform: ios
+          app: ${{ matrix.faynosync_name }}
+          version: ${{ env.VERSION }}
+          channel: ${CHANNEL}
+          branch: ${{ inputs.branch }}
+          distribute: appstore
+          EOF
+
+          echo "上传版本元数据到 FaynoSync: ${{ matrix.faynosync_name }} v${{ env.VERSION }} (${CHANNEL}/ios/arm64)"
           curl -f -X POST "${FAYNOSYNC_URL}/upload" \
             -H "Authorization: Bearer ${FAYNOSYNC_TOKEN}" \
-            -F "file=@${IPA_PATH}" \
+            -F "file=@${PLACEHOLDER}" \
             -F "data={\"app_name\":\"${{ matrix.faynosync_name }}\",\"version\":\"${{ env.VERSION }}\",\"channel\":\"${CHANNEL}\",\"publish\":false,\"critical\":false,\"platform\":\"ios\",\"arch\":\"arm64\",\"changelog\":\"Build from ${{ inputs.branch }}\"}"
           echo "FaynoSync 上传完成"
 

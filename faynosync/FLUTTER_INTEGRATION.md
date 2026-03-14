@@ -161,12 +161,15 @@ GET https://update.ttpos.com/download?key=TTPOS/prod/android/arm64/TTPOS-Cashier
 
 | package (Melos) | FaynoSync `app_name` | 平台 | 架构 |
 |-----------------|---------------------|------|------|
-| `pos` | `TTPOS` | android, windows, macos | arm64, amd64 |
-| `assistant` | `TTPOS Go` | android, windows, macos | arm64, amd64 |
-| `kds` | `TTPOS Kitchen` | android, windows, macos | arm64, amd64 |
-| `tablet` | `TTPOS Menu` | android, windows, macos | arm64, amd64 |
-| `shop` | `TTPOS Shop` | android, windows, macos | arm64, amd64 |
+| `pos` | `TTPOS` | android, windows, macos, ios | arm64, amd64 |
+| `assistant` | `TTPOS Go` | android, windows, macos, ios | arm64, amd64 |
+| `kds` | `TTPOS Kitchen` | android, windows, macos, ios | arm64, amd64 |
+| `tablet` | `TTPOS Menu` | android, windows, macos, ios | arm64, amd64 |
+| `shop` | `TTPOS Shop` | android, windows, macos, ios | arm64, amd64 |
 | `qds` | `TTPOS Queue` | android | arm64 |
+
+> **iOS 说明**：iOS 通过 App Store 分发，FaynoSync 仅存储版本元数据（changelog、critical 标记等）。
+> CI 上传占位文件注册版本，待 App Store 审核通过后在 Dashboard 手动 publish。
 
 ### Channel 映射
 

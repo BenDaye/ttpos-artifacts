@@ -74,13 +74,14 @@ open http://localhost:9011
 
 ### 3. 创建 Platform
 
-对应三个目标平台，均使用 `manual` updater：
+对应四个目标平台，均使用 `manual` updater：
 
 | Platform | Architecture | 说明 |
 |----------|-------------|------|
 | `android` | `arm64` | APK 安装包 |
 | `windows` | `amd64` | Inno Setup EXE 安装包 |
 | `macos` | `amd64`, `arm64` | 签名公证 DMG |
+| `ios` | `arm64` | App Store 分发（FaynoSync 仅存版本元数据） |
 
 ### 4. 创建 App
 
@@ -88,11 +89,11 @@ open http://localhost:9011
 
 | App Name | 对应包名 | 平台 | 说明 |
 |----------|---------|------|------|
-| `TTPOS` | pos | Android, Windows, macOS | 收银端 |
-| `TTPOS Go` | assistant | Android, Windows, macOS | 助手端 |
-| `TTPOS Kitchen` | kds | Android, Windows, macOS | 厨显端 |
-| `TTPOS Menu` | tablet | Android, Windows, macOS | 点餐端 |
-| `TTPOS Shop` | shop | Android, Windows, macOS | 商城端 |
+| `TTPOS` | pos | Android, Windows, macOS, iOS | 收银端 |
+| `TTPOS Go` | assistant | Android, Windows, macOS, iOS | 助手端 |
+| `TTPOS Kitchen` | kds | Android, Windows, macOS, iOS | 厨显端 |
+| `TTPOS Menu` | tablet | Android, Windows, macOS, iOS | 点餐端 |
+| `TTPOS Shop` | shop | Android, Windows, macOS, iOS | 商城端 |
 | `TTPOS Queue` | qds | Android | 排队端 |
 | `TTPOS Kiosk` | kiosk | — | 自助终端（预留） |
 
@@ -148,6 +149,28 @@ curl "http://localhost:9000/checkVersion?app_name=TTPOS&version=1.2.0&channel=pr
 ```bash
 curl -L "http://localhost:9000/apps/latest?app_name=TTPOS&channel=prod&platform=android&arch=arm64&package=apk&owner=admin"
 ```
+
+## iOS 版本发布流程
+
+iOS 无法通过 FaynoSync 直接分发安装包，更新必须经过 App Store。FaynoSync 在 iOS 场景中的角色是**版本元数据中心**：
+
+```
+CI 构建 IPA
+  ├─→ TestFlight / App Store（实际分发）
+  └─→ FaynoSync（注册版本元数据，publish=false）
+
+App Store 审核通过后
+  └─→ 运维在 FaynoSync Dashboard 手动 publish
+      → 客户端 checkVersion 返回 update_available=true
+      → 客户端引导用户跳转 App Store 更新
+```
+
+**为什么不跳过 FaynoSync？** 因为 FaynoSync 提供了 App Store 没有的能力：
+- `critical` 标记：强制用户更新（App Store 原生不支持）
+- `changelog`：自定义中文 Markdown 格式更新日志
+- 发布时机控制：App Store 审核通过但尚未准备好推送时，可暂不 publish
+
+**上传方式**：CI 上传一个占位文件（非真实 IPA），仅为在 FaynoSync 中创建版本记录。
 
 ## 升级
 
