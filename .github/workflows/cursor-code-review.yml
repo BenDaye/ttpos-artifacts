@@ -38,7 +38,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          agent -p "REPO: $GH_REPO
+          agent --yolo -p "REPO: $GH_REPO
           PR NUMBER: $PR_NUMBER
 
           IMPORTANT: Do NOT create branches, commit, push, or modify any files.
