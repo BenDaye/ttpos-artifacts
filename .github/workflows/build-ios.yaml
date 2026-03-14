@@ -179,8 +179,10 @@ jobs:
           fi
 
           PROFILE_PATH="$RUNNER_TEMP/ios_${pkg}_profile.mobileprovision"
+          PLIST_PATH="$RUNNER_TEMP/ios_${pkg}_profile.plist"
           echo "$PROFILE_VALUE" | base64 --decode > "$PROFILE_PATH"
-          PROFILE_UUID=$(security cms -D -i "$PROFILE_PATH" | /usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin 2>/dev/null || true)
+          security cms -D -i "$PROFILE_PATH" > "$PLIST_PATH"
+          PROFILE_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" "$PLIST_PATH" 2>/dev/null || true)
           if [ -z "$PROFILE_UUID" ]; then
             echo "无法解析描述文件 UUID, 文件可能损坏"
             exit 1
