@@ -293,19 +293,23 @@ jobs:
 
       # ========== 构建 ==========
 
-      - name: 生成 ExportOptions.plist
+      - name: 检查 ExportOptions.plist
         if: steps.check.outputs.should_run == 'true'
         env:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           EXPORT_PLIST="apps/${{ matrix.package }}/ios/ExportOptions.plist"
-          /usr/libexec/PlistBuddy \
-            -c "Add :method string app-store-connect" \
-            -c "Add :teamID string $APPLE_TEAM_ID" \
-            -c "Add :signingStyle string automatic" \
-            -c "Add :uploadSymbols bool true" \
-            "$EXPORT_PLIST"
-          echo "--- ExportOptions.plist ---"
+          if [ -f "$EXPORT_PLIST" ]; then
+            echo "使用仓库中的 ExportOptions.plist"
+          else
+            echo "ExportOptions.plist 不存在, 动态生成..."
+            /usr/libexec/PlistBuddy \
+              -c "Add :method string app-store-connect" \
+              -c "Add :teamID string $APPLE_TEAM_ID" \
+              -c "Add :signingStyle string automatic" \
+              -c "Add :uploadSymbols bool true" \
+              "$EXPORT_PLIST"
+          fi
           cat "$EXPORT_PLIST"
 
       - name: 构建 iOS 应用
