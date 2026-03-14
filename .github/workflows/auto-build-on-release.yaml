@@ -50,6 +50,11 @@ on:
           - "on"
           - "off"
         default: "off"
+      faynosync:
+        description: "是否上传到 FaynoSync"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   actions: write
@@ -65,6 +70,7 @@ jobs:
       BASE_WS_URL: ${{ inputs.base_ws_url || github.event.client_payload.base_ws_url || 'wss://api.ttpos.com/ws' }}
       PACKAGE: ${{ inputs.package || github.event.client_payload.package || 'all' }}
       SCP: ${{ inputs.scp || github.event.client_payload.scp || 'off' }}
+      FAYNOSYNC: ${{ inputs.faynosync || github.event.client_payload.faynosync || 'false' }}
     steps:
       - name: 触发 Android 构建
         run: |
@@ -75,7 +81,8 @@ jobs:
             -f package=${{ env.PACKAGE }} \
             -f base_url=${{ env.BASE_URL }} \
             -f base_ws_url=${{ env.BASE_WS_URL }} \
-            -f scp=${{ env.SCP }}
+            -f scp=${{ env.SCP }} \
+            -f faynosync=${{ env.FAYNOSYNC }}
 
       - name: 触发 iOS 构建
         run: |
@@ -85,7 +92,8 @@ jobs:
             -f env=${{ env.BUILD_ENV }} \
             -f package=${{ env.PACKAGE }} \
             -f base_url=${{ env.BASE_URL }} \
-            -f base_ws_url=${{ env.BASE_WS_URL }}
+            -f base_ws_url=${{ env.BASE_WS_URL }} \
+            -f faynosync=${{ env.FAYNOSYNC }}
 
       - name: 触发 Windows 构建
         run: |
@@ -96,7 +104,8 @@ jobs:
             -f package=${{ env.PACKAGE }} \
             -f base_url=${{ env.BASE_URL }} \
             -f base_ws_url=${{ env.BASE_WS_URL }} \
-            -f scp=${{ env.SCP }}
+            -f scp=${{ env.SCP }} \
+            -f faynosync=${{ env.FAYNOSYNC }}
 
       - name: 触发 macOS 构建
         run: |
@@ -107,7 +116,8 @@ jobs:
             -f package=${{ env.PACKAGE }} \
             -f base_url=${{ env.BASE_URL }} \
             -f base_ws_url=${{ env.BASE_WS_URL }} \
-            -f scp=${{ env.SCP }}
+            -f scp=${{ env.SCP }} \
+            -f faynosync=${{ env.FAYNOSYNC }}
 
       - name: 触发 Web 构建
         run: |
