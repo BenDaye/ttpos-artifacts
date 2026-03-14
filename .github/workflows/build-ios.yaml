@@ -155,7 +155,7 @@ jobs:
           echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
           echo "IOS_KEYCHAIN_PASSWORD=$KEYCHAIN_PASSWORD" >> "$GITHUB_ENV"
 
-      - name: 安装 App Store 描述文件
+      - name: 安装描述文件
         if: steps.check.outputs.should_run == 'true'
         shell: bash
         env:
@@ -179,23 +179,14 @@ jobs:
           fi
 
           PROFILE_PATH="$RUNNER_TEMP/ios_${pkg}_profile.mobileprovision"
-          PLIST_PATH="$RUNNER_TEMP/ios_${pkg}_profile.plist"
           echo "$PROFILE_VALUE" | base64 --decode > "$PROFILE_PATH"
-          security cms -D -i "$PROFILE_PATH" > "$PLIST_PATH"
-
-          PROFILE_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" "$PLIST_PATH" 2>/dev/null || true)
+          PROFILE_UUID=$(security cms -D -i "$PROFILE_PATH" | /usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin 2>/dev/null || true)
           if [ -z "$PROFILE_UUID" ]; then
             echo "无法解析描述文件 UUID, 文件可能损坏"
             exit 1
           fi
-
-          PROFILE_NAME=$(/usr/libexec/PlistBuddy -c "Print Name" "$PLIST_PATH" 2>/dev/null || true)
-
           cp "$PROFILE_PATH" "$PROFILE_DIR/${PROFILE_UUID}.mobileprovision"
-          echo "已安装 ${pkg} 的 iOS 描述文件 (UUID: ${PROFILE_UUID}, Name: ${PROFILE_NAME})"
-
-          echo "IOS_PROFILE_UUID=$PROFILE_UUID" >> "$GITHUB_ENV"
-          echo "IOS_PROFILE_NAME=$PROFILE_NAME" >> "$GITHUB_ENV"
+          echo "已安装 ${pkg} 描述文件 (UUID: ${PROFILE_UUID})"
 
       - name: 设置默认钥匙串
         if: steps.check.outputs.should_run == 'true'
@@ -302,7 +293,22 @@ jobs:
 
       # ========== 构建 ==========
 
-      - name: 构建 iOS 应用 (build_ios.dart → xcarchive)
+      - name: 生成 ExportOptions.plist
+        if: steps.check.outputs.should_run == 'true'
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          EXPORT_PLIST="apps/${{ matrix.package }}/ios/ExportOptions.plist"
+          /usr/libexec/PlistBuddy \
+            -c "Add :method string app-store-connect" \
+            -c "Add :teamID string $APPLE_TEAM_ID" \
+            -c "Add :signingStyle string automatic" \
+            -c "Add :uploadSymbols bool true" \
+            "$EXPORT_PLIST"
+          echo "--- ExportOptions.plist ---"
+          cat "$EXPORT_PLIST"
+
+      - name: 构建 iOS 应用
         if: steps.check.outputs.should_run == 'true'
         shell: bash
         run: |
@@ -312,86 +318,41 @@ jobs:
           echo "构建 iOS 应用: ${{ matrix.package }}"
           dart run ./scripts/build_ios.dart --env=${{ inputs.env }} --package=${{ matrix.package }}
 
-      - name: 生成 ExportOptions.plist 并导出 IPA
+      - name: 定位或导出 IPA
         if: steps.check.outputs.should_run == 'true'
-        shell: bash
-        env:
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
-          set -euo pipefail
+          IPA_FILE=$(find "apps/${{ matrix.package }}/build/ios/ipa" -name "*.ipa" 2>/dev/null | head -n 1)
 
-          # 如果 build_ios.dart 已经产出了 IPA, 直接使用
-          EXISTING_IPA=$(find "apps/${{ matrix.package }}/build/ios/ipa" -name "*.ipa" 2>/dev/null | head -n 1)
-          if [ -n "$EXISTING_IPA" ]; then
-            echo "build_ios.dart 已产出 IPA: $EXISTING_IPA"
-            IPA_DIR="releases/${{ matrix.package }}/${{ env.VERSION }}"
-            mkdir -p "$IPA_DIR"
-            cp "$EXISTING_IPA" "$IPA_DIR/${{ env.VERSION_IPA }}"
-            echo "IPA_PATH=$IPA_DIR/${{ env.VERSION_IPA }}" >> "$GITHUB_ENV"
-            ls -lh "$IPA_DIR/${{ env.VERSION_IPA }}"
-            exit 0
+          if [ -n "$IPA_FILE" ]; then
+            echo "flutter build ipa 已直接生成 IPA"
+          else
+            echo "IPA 不存在, 从 xcarchive 导出..."
+            ARCHIVE_PATH="apps/${{ matrix.package }}/build/ios/archive/Runner.xcarchive"
+            if [ ! -d "$ARCHIVE_PATH" ]; then
+              echo "错误: 未找到 xcarchive: $ARCHIVE_PATH" >&2
+              exit 1
+            fi
+
+            security default-keychain -s "$KEYCHAIN_PATH"
+            security unlock-keychain -p "$IOS_KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+            EXPORT_DIR="$RUNNER_TEMP/ipa_output"
+            mkdir -p "$EXPORT_DIR"
+            xcodebuild -exportArchive \
+              -archivePath "$ARCHIVE_PATH" \
+              -exportOptionsPlist "apps/${{ matrix.package }}/ios/ExportOptions.plist" \
+              -exportPath "$EXPORT_DIR"
+
+            IPA_FILE=$(find "$EXPORT_DIR" -name "*.ipa" | head -n 1)
           fi
 
-          # 否则, 从 xcarchive 导出 IPA
-          echo "未找到现成 IPA, 从 xcarchive 导出..."
-
-          ARCHIVE_PATH="apps/${{ matrix.package }}/build/ios/archive/Runner.xcarchive"
-          if [ ! -d "$ARCHIVE_PATH" ]; then
-            ARCHIVE_PATH=$(find "apps/${{ matrix.package }}/build/ios" -name "*.xcarchive" -type d 2>/dev/null | head -n 1)
-          fi
-          if [ -z "$ARCHIVE_PATH" ] || [ ! -d "$ARCHIVE_PATH" ]; then
-            echo "错误: 未找到 .xcarchive" >&2
-            find "apps/${{ matrix.package }}/build" -maxdepth 4 -type d 2>/dev/null || true
+          if [ -z "$IPA_FILE" ]; then
+            echo "错误: 未能生成 IPA" >&2
             exit 1
           fi
-          echo "找到 xcarchive: $ARCHIVE_PATH"
-
-          BUNDLE_ID=$(/usr/libexec/PlistBuddy -c "Print :ApplicationProperties:CFBundleIdentifier" "$ARCHIVE_PATH/Info.plist" 2>/dev/null || true)
-          if [ -z "$BUNDLE_ID" ]; then
-            APP_INFO=$(find "$ARCHIVE_PATH/Products/Applications" -name "Info.plist" 2>/dev/null | head -n 1)
-            [ -n "$APP_INFO" ] && BUNDLE_ID=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$APP_INFO" 2>/dev/null || true)
-          fi
-          if [ -z "$BUNDLE_ID" ]; then
-            echo "错误: 无法确定 Bundle ID" >&2
-            exit 1
-          fi
-          echo "Bundle ID: $BUNDLE_ID"
-
-          EXPORT_PLIST="$RUNNER_TEMP/ExportOptions.plist"
-          /usr/libexec/PlistBuddy -c "Clear dict" "$EXPORT_PLIST" 2>/dev/null || plutil -create xml1 "$EXPORT_PLIST"
-          /usr/libexec/PlistBuddy -c "Add :method string app-store-connect" "$EXPORT_PLIST"
-          /usr/libexec/PlistBuddy -c "Add :teamID string ${APPLE_TEAM_ID}" "$EXPORT_PLIST"
-          /usr/libexec/PlistBuddy -c "Add :uploadSymbols bool true" "$EXPORT_PLIST"
-          /usr/libexec/PlistBuddy -c "Add :signingStyle string manual" "$EXPORT_PLIST"
-          /usr/libexec/PlistBuddy -c "Add :provisioningProfiles dict" "$EXPORT_PLIST"
-          /usr/libexec/PlistBuddy -c "Add :provisioningProfiles:${BUNDLE_ID} string ${IOS_PROFILE_NAME}" "$EXPORT_PLIST"
-          echo "生成的 ExportOptions.plist:"
-          cat "$EXPORT_PLIST"
-
-          security default-keychain -s "$KEYCHAIN_PATH"
-          security unlock-keychain -p "$IOS_KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-
-          EXPORT_DIR="$RUNNER_TEMP/ipa_export"
-          mkdir -p "$EXPORT_DIR"
-          xcodebuild -exportArchive \
-            -archivePath "$ARCHIVE_PATH" \
-            -exportOptionsPlist "$EXPORT_PLIST" \
-            -exportPath "$EXPORT_DIR" \
-            -allowProvisioningUpdates
-
-          IPA_SOURCE=$(find "$EXPORT_DIR" -maxdepth 1 -name "*.ipa" | head -n 1)
-          if [ -z "$IPA_SOURCE" ]; then
-            echo "错误: 导出 IPA 失败" >&2
-            ls -al "$EXPORT_DIR"
-            exit 1
-          fi
-
-          IPA_DIR="releases/${{ matrix.package }}/${{ env.VERSION }}"
-          mkdir -p "$IPA_DIR"
-          cp "$IPA_SOURCE" "$IPA_DIR/${{ env.VERSION_IPA }}"
-          echo "IPA_PATH=$IPA_DIR/${{ env.VERSION_IPA }}" >> "$GITHUB_ENV"
-          echo "IPA 导出成功: $IPA_DIR/${{ env.VERSION_IPA }}"
-          ls -lh "$IPA_DIR/${{ env.VERSION_IPA }}"
+          echo "IPA_PATH=$IPA_FILE" >> "$GITHUB_ENV"
+          echo "找到 IPA: $IPA_FILE"
+          ls -lh "$IPA_FILE"
 
       # ========== 分发 ==========
 

@@ -2,12 +2,16 @@
 
 本文档说明 `build-ios.yaml` 工作流所需的全部签名及分发相关 GitHub Secrets 的获取与配置方法。
 
+## 签名方式
+
+工作流采用 **Xcode 自动签名** (`signingStyle: automatic`)。构建前动态生成 `ExportOptions.plist`，由 Xcode 自动匹配已安装的描述文件完成签名。无需在 plist 中手动映射 Bundle ID 与描述文件名。
+
 ## 前提条件
 
 - 一个 [Apple Developer Program](https://developer.apple.com/programs/) 付费账号
 - 拥有 **Apple Distribution** 类型的证书（用于 App Store / TestFlight 分发）
-- 已在 Apple Developer 后台为每个 App 创建 **App Store** 类型的 Provisioning Profile
-- 已在 [App Store Connect](https://appstoreconnect.apple.com) 中创建对应的 App 记录
+- 各 App 的描述文件（Xcode 管理的或手动创建的 App Store 描述文件均可）
+- 如需自动上传 TestFlight：已在 [App Store Connect](https://appstoreconnect.apple.com) 中创建对应的 App 记录
 
 ## Secrets 总览
 
@@ -15,15 +19,18 @@
 |---|-------------|:----:|------|------|
 | 1 | `IOS_SIGNING_CERT_BASE64` | 是 | base64 | Apple Distribution 证书 (.p12) |
 | 2 | `IOS_SIGNING_CERT_PASSWORD` | 是 | 明文 | .p12 证书的导出密码 |
-| 3 | `IOS_KEYCHAIN_PASSWORD` | 否 | 明文 | CI 临时钥匙串密码（有默认值） |
-| 4 | `IOS_POS_PROFILE_BASE64` | 是 | base64 | TTPOS Cashier 描述文件 |
-| 5 | `IOS_ASSISTANT_PROFILE_BASE64` | 是 | base64 | TTPOS Go 描述文件 |
-| 6 | `IOS_KDS_PROFILE_BASE64` | 是 | base64 | TTPOS Kitchen 描述文件 |
-| 7 | `IOS_TABLET_PROFILE_BASE64` | 是 | base64 | TTPOS Menu 描述文件 |
-| 8 | `IOS_SHOP_PROFILE_BASE64` | 是 | base64 | TTPOS Shop 描述文件 |
-| 9 | `ASC_API_KEY_ID` | 是 | 明文 | App Store Connect API Key ID |
-| 10 | `ASC_ISSUER_ID` | 是 | 明文 | App Store Connect Issuer ID |
-| 11 | `ASC_API_KEY_BASE64` | 是 | base64 | API Key (.p8) 文件 |
+| 3 | `APPLE_TEAM_ID` | 是 | 明文 | Apple Developer Team ID（如 `N278MM4R33`） |
+| 4 | `IOS_KEYCHAIN_PASSWORD` | 否 | 明文 | CI 临时钥匙串密码（有默认值） |
+| 5 | `IOS_POS_PROFILE_BASE64` | 是 | base64 | TTPOS Cashier 描述文件 |
+| 6 | `IOS_ASSISTANT_PROFILE_BASE64` | 是 | base64 | TTPOS Go 描述文件 |
+| 7 | `IOS_KDS_PROFILE_BASE64` | 是 | base64 | TTPOS Kitchen 描述文件 |
+| 8 | `IOS_TABLET_PROFILE_BASE64` | 是 | base64 | TTPOS Menu 描述文件 |
+| 9 | `IOS_SHOP_PROFILE_BASE64` | 是 | base64 | TTPOS Shop 描述文件 |
+| 10 | `ASC_API_KEY_ID` | 分发时 | 明文 | App Store Connect API Key ID |
+| 11 | `ASC_ISSUER_ID` | 分发时 | 明文 | App Store Connect Issuer ID |
+| 12 | `ASC_API_KEY_BASE64` | 分发时 | base64 | API Key (.p8) 文件 |
+
+> **说明**：10-12 仅在开启 `distribute_appstore` 时需要。如果只构建 IPA 而不上传 TestFlight，可暂不配置。
 
 ---
 
@@ -79,11 +86,25 @@ rm /tmp/cert_b64.txt /tmp/cert_verify.p12
 
 ## 2. Provisioning Profiles（描述文件）
 
-每个 App 需要各自的 **App Store** 类型描述文件。
+每个 App 需要各自的描述文件。工作流使用自动签名，因此 **Xcode 管理的描述文件**（名称形如 `iOS Team Store Provisioning Profile: com.ttpos.xxx`）和 **手动创建的 App Store 描述文件**均可使用。
 
 > **注意**：iOS 描述文件扩展名为 `.mobileprovision`，与 macOS 的 `.provisionprofile` 不同。
 
-### 获取
+### 获取方式 A：从本地 Xcode 导出（推荐）
+
+如果你已在 Xcode 中成功构建过 iOS App（使用自动签名），Xcode 已自动下载描述文件：
+
+```bash
+# 列出本地所有描述文件，找到目标 App 的
+ls ~/Library/MobileDevice/Provisioning\ Profiles/
+# 查看描述文件详情（找到对应 Bundle ID 的）
+for f in ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision; do
+  echo "=== $f ==="
+  security cms -D -i "$f" | /usr/libexec/PlistBuddy -c "Print Name" -c "Print Entitlements:application-identifier" /dev/stdin 2>/dev/null
+done
+```
+
+### 获取方式 B：从 Developer 后台下载
 
 1. 登录 [Apple Developer - Profiles](https://developer.apple.com/account/resources/profiles/list)
 2. 找到对应 App 的 **App Store** 类型描述文件并下载
