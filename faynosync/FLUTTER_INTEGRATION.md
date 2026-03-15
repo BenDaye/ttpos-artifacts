@@ -169,7 +169,9 @@ GET https://update.ttpos.com/download?key=TTPOS/prod/android/arm64/TTPOS-Cashier
 | `qds` | `TTPOS Queue` | android | arm64 |
 
 > **iOS 说明**：iOS 通过 App Store 分发，FaynoSync 仅存储版本元数据（changelog、critical 标记等）。
-> CI 上传占位文件注册版本，待 App Store 审核通过后在 Dashboard 手动 publish。
+> CI 上传占位文件注册版本。由于 FaynoSync 的 `publish` 是 version 级别而非 platform 级别，
+> **运维无需等待 iOS App Store 审核即可 publish**——iOS 客户端需自行通过 iTunes Lookup API
+> 校验 App Store 上是否已有该版本，未上架时静默跳过。参见下方「iOS 更新流程」。
 
 ### Channel 映射
 
@@ -508,7 +510,107 @@ class MacOSInstaller implements Installer {
 }
 ```
 
-### 5.6 UpdaterService — 统一入口
+### 5.6 iOS 更新流程
+
+iOS 不能直接下载安装 IPA，需跳转 App Store。同时由于 FaynoSync 的 `publish`
+是 version 级别（非 platform 级别），版本发布后所有平台的 `checkVersion` 都会返回
+`update_available: true`，但 App Store 可能还在审核中。
+
+**因此 iOS 客户端需要一个二次校验**：收到 FaynoSync 的更新信号后，通过 iTunes Lookup API
+确认 App Store 上是否已有该版本，未上架时静默跳过。
+
+```dart
+// ios_update_checker.dart
+import 'dart:convert';
+import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+class IOSUpdateChecker {
+  /// 查询 App Store 上该 bundle ID 的最新版本和页面链接。
+  /// 返回 null 表示 App 尚未上架或查询失败。
+  static Future<({String version, String storeUrl})?> getAppStoreInfo() async {
+    if (!Platform.isIOS) return null;
+
+    final packageInfo = await PackageInfo.fromPlatform();
+    final uri = Uri.parse(
+      'https://itunes.apple.com/lookup?bundleId=${packageInfo.packageName}',
+    );
+
+    try {
+      final resp = await http.get(uri);
+      if (resp.statusCode != 200) return null;
+
+      final results = (jsonDecode(resp.body)['results'] as List);
+      if (results.isEmpty) return null;
+
+      return (
+        version: results[0]['version'] as String,
+        storeUrl: results[0]['trackViewUrl'] as String,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// 在 FaynoSync 返回 update_available 后调用：
+  /// 比对 FaynoSync 告知的新版本与 App Store 实际版本，
+  /// 仅当 App Store 已上架该版本时才返回 App Store URL。
+  static Future<String?> verifyAndGetStoreUrl(String faynosyncVersion) async {
+    final storeInfo = await getAppStoreInfo();
+    if (storeInfo == null) return null;
+
+    // App Store 版本 >= FaynoSync 版本 → 已上架，可以跳转
+    if (_compareVersions(storeInfo.version, faynosyncVersion) >= 0) {
+      return storeInfo.storeUrl;
+    }
+    return null; // App Store 还没有这个版本，静默跳过
+  }
+
+  /// 简易语义化版本比较：a > b → 正数, a == b → 0, a < b → 负数
+  static int _compareVersions(String a, String b) {
+    final partsA = a.split('.').map(int.parse).toList();
+    final partsB = b.split('.').map(int.parse).toList();
+    final len = partsA.length > partsB.length ? partsA.length : partsB.length;
+    for (var i = 0; i < len; i++) {
+      final va = i < partsA.length ? partsA[i] : 0;
+      final vb = i < partsB.length ? partsB[i] : 0;
+      if (va != vb) return va - vb;
+    }
+    return 0;
+  }
+}
+```
+
+Installer 工厂增加 iOS 分支（跳过下载，直接跳转 App Store）：
+
+```dart
+abstract class Installer {
+  Future<void> install(String filePath);
+
+  factory Installer() {
+    if (Platform.isAndroid) return AndroidInstaller();
+    if (Platform.isWindows) return WindowsInstaller();
+    if (Platform.isMacOS) return MacOSInstaller();
+    if (Platform.isIOS) return IOSInstaller();
+    throw UnsupportedError('Unsupported platform: ${Platform.operatingSystem}');
+  }
+}
+
+class IOSInstaller implements Installer {
+  final String appStoreUrl;
+  IOSInstaller({required this.appStoreUrl});
+
+  @override
+  Future<void> install(String filePath) async {
+    // filePath 在 iOS 上被忽略
+    await launchUrl(Uri.parse(appStoreUrl), mode: LaunchMode.externalApplication);
+  }
+}
+```
+
+### 5.7 UpdaterService — 统一入口
 
 ```dart
 class UpdaterService {

@@ -152,25 +152,40 @@ curl -L "http://localhost:9000/apps/latest?app_name=TTPOS&channel=prod&platform=
 
 ## iOS 版本发布流程
 
-iOS 无法通过 FaynoSync 直接分发安装包，更新必须经过 App Store。FaynoSync 在 iOS 场景中的角色是**版本元数据中心**：
+iOS 无法通过 FaynoSync 直接分发安装包，更新必须经过 App Store。FaynoSync 在 iOS 场景中的角色是**版本元数据中心**（changelog、critical 标记等）。
+
+### publish 时机
+
+FaynoSync 的 `publish` 是 **version 级别**而非 platform 级别。因此：
+
+> **不需要等 iOS App Store 审核通过再 publish。**
+> 其他平台（Android / Windows / macOS）构建就绪即可 publish。
+
+iOS 客户端收到 `update_available: true` 后，会自行通过 iTunes Lookup API 校验 App Store 上是否已有该版本。如果尚未上架，静默跳过；上架后自动引导用户跳转 App Store 更新。
+
+### 流程
 
 ```
 CI 构建 IPA
   ├─→ TestFlight / App Store（实际分发）
   └─→ FaynoSync（注册版本元数据，publish=false）
 
-App Store 审核通过后
-  └─→ 运维在 FaynoSync Dashboard 手动 publish
-      → 客户端 checkVersion 返回 update_available=true
-      → 客户端引导用户跳转 App Store 更新
+运维 publish 版本（无需等 iOS 审核）
+  ├─→ Android / Windows / macOS 客户端 → 立即提示更新
+  └─→ iOS 客户端 → checkVersion 有更新 → 查 iTunes Lookup API
+       ├─ App Store 已上架 → 显示更新弹窗 → 跳转 App Store
+       └─ App Store 未上架 → 静默跳过（下次检查时重试）
 ```
 
-**为什么不跳过 FaynoSync？** 因为 FaynoSync 提供了 App Store 没有的能力：
-- `critical` 标记：强制用户更新（App Store 原生不支持）
-- `changelog`：自定义中文 Markdown 格式更新日志
-- 发布时机控制：App Store 审核通过但尚未准备好推送时，可暂不 publish
+### 为什么不跳过 FaynoSync？
 
-**上传方式**：CI 上传一个占位文件（非真实 IPA），仅为在 FaynoSync 中创建版本记录。
+- `critical` 标记：强制用户更新（App Store 原生不支持）
+- `changelog`：自定义中文 Markdown 格式更新日志，所有平台一致
+- 统一的 `checkVersion` 接口，客户端代码路径最大化复用
+
+### 上传方式
+
+CI 上传一个占位文件（非真实 IPA），仅为在 FaynoSync 中创建版本记录。详见 [FLUTTER_INTEGRATION.md](./FLUTTER_INTEGRATION.md) 的「iOS 更新流程」章节。
 
 ## 升级
 
