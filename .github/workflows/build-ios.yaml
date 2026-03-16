@@ -188,7 +188,17 @@ jobs:
             exit 1
           fi
           cp "$PROFILE_PATH" "$PROFILE_DIR/${PROFILE_UUID}.mobileprovision"
-          echo "已安装 ${pkg} 描述文件 (UUID: ${PROFILE_UUID})"
+
+          PROFILE_NAME=$(/usr/libexec/PlistBuddy -c "Print Name" "$PLIST_PATH" 2>/dev/null || true)
+          BUNDLE_ID=$(/usr/libexec/PlistBuddy -c "Print Entitlements:application-identifier" "$PLIST_PATH" 2>/dev/null | sed 's/^[A-Z0-9]*\.//' || true)
+          if [ -z "$BUNDLE_ID" ]; then
+            BUNDLE_ID=$(/usr/libexec/PlistBuddy -c "Print :Entitlements:com.apple.application-identifier" "$PLIST_PATH" 2>/dev/null | sed 's/^[A-Z0-9]*\.//' || true)
+          fi
+
+          echo "IOS_PROFILE_UUID=$PROFILE_UUID" >> "$GITHUB_ENV"
+          echo "IOS_PROFILE_NAME=$PROFILE_NAME" >> "$GITHUB_ENV"
+          echo "IOS_BUNDLE_ID=$BUNDLE_ID" >> "$GITHUB_ENV"
+          echo "已安装 ${pkg} 描述文件 (UUID: ${PROFILE_UUID}, Name: ${PROFILE_NAME}, Bundle ID: ${BUNDLE_ID})"
 
       - name: 设置默认钥匙串
         if: steps.check.outputs.should_run == 'true'
@@ -308,17 +318,36 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           EXPORT_PLIST="apps/${{ matrix.package }}/ios/ExportOptions.plist"
-          if [ -f "$EXPORT_PLIST" ]; then
-            echo "使用仓库中的 ExportOptions.plist"
-          else
-            echo "ExportOptions.plist 不存在, 动态生成..."
-            /usr/libexec/PlistBuddy \
-              -c "Add :method string app-store-connect" \
-              -c "Add :teamID string $APPLE_TEAM_ID" \
-              -c "Add :signingStyle string automatic" \
-              -c "Add :uploadSymbols bool true" \
-              "$EXPORT_PLIST"
+
+          if [ -z "$IOS_BUNDLE_ID" ] || [ -z "$IOS_PROFILE_NAME" ]; then
+            echo "错误: 缺少描述文件信息 (BUNDLE_ID=$IOS_BUNDLE_ID, PROFILE_NAME=$IOS_PROFILE_NAME)"
+            echo "请确保已配置对应的 IOS_*_PROFILE_BASE64 Secret"
+            exit 1
           fi
+
+          echo "强制生成 ExportOptions.plist (Bundle: $IOS_BUNDLE_ID, Profile: $IOS_PROFILE_NAME)"
+          cat > "$EXPORT_PLIST" <<PLISTEOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store-connect</string>
+            <key>teamID</key>
+            <string>${APPLE_TEAM_ID}</string>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>uploadSymbols</key>
+            <true/>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>${IOS_BUNDLE_ID}</key>
+              <string>${IOS_PROFILE_NAME}</string>
+            </dict>
+          </dict>
+          </plist>
+          PLISTEOF
+          echo "--- ExportOptions.plist 内容 ---"
           cat "$EXPORT_PLIST"
 
       - name: 构建 iOS 应用
