@@ -22,8 +22,8 @@ export const useUploadQuery = () => {
   const uploadMutation = useMutation({
     mutationFn: async (data: UploadData) => {
       const formData = new FormData();
-      
-      data.files.forEach(file => {
+
+      data.files.forEach((file) => {
         formData.append('file', file);
       });
 
@@ -53,6 +53,7 @@ export const useUploadQuery = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['apps'] });
+      queryClient.invalidateQueries({ queryKey: ['app-versions-board'] });
     },
   });
 
@@ -60,5 +61,9 @@ export const useUploadQuery = () => {
     return await uploadMutation.mutateAsync(data);
   };
 
-  return { upload, isLoading: uploadMutation.isPending, error: uploadMutation.error };
-}; 
+  return {
+    upload,
+    isLoading: uploadMutation.isPending,
+    error: uploadMutation.error,
+  };
+};

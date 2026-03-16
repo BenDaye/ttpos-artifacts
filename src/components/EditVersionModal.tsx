@@ -58,13 +58,24 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
   const [updater, setUpdater] = React.useState<string>('');
   const [signature, setSignature] = React.useState<string>('');
   const [openDropdown, setOpenDropdown] = React.useState<string | null>(null);
-  const [showDeleteConfirmation, setShowDeleteConfirmation] = React.useState(false);
-  const [artifactToDelete, setArtifactToDelete] = React.useState<{ index: number; platform: string; arch: string } | null>(null);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] =
+    React.useState(false);
+  const [artifactToDelete, setArtifactToDelete] = React.useState<{
+    index: number;
+    platform: string;
+    arch: string;
+  } | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
   const [isSuccess, setIsSuccess] = React.useState(false);
-  const [deleteError, setDeleteError] = useState<{ error: string; details?: string } | null>(null);
+  const [deleteError, setDeleteError] = useState<{
+    error: string;
+    details?: string;
+  } | null>(null);
   const [deleteSuccess, setDeleteSuccess] = useState(false);
-  const [unsignError, setUnsignError] = useState<{ error: string; details?: string } | null>(null);
+  const [unsignError, setUnsignError] = useState<{
+    error: string;
+    details?: string;
+  } | null>(null);
   const [unsignSuccess, setUnsignSuccess] = useState(false);
   const [isUnsigning, setIsUnsigning] = useState(false);
   const pendingUnsignRef = React.useRef<Set<number>>(new Set());
@@ -75,7 +86,10 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
   const { deleteArtifact } = useAppsQuery();
   const queryClient = useQueryClient();
   const { toastSuccess, toastError } = useToast();
-  const [error, setError] = useState<{ error: string; details?: string } | null>(null);
+  const [error, setError] = useState<{
+    error: string;
+    details?: string;
+  } | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [isPublishingTuf, setIsPublishingTuf] = useState(false);
 
@@ -84,14 +98,16 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
     queryKey: ['appData', appName],
     queryFn: async () => {
       const response = await axiosInstance.get('/app/list');
-      const app = response.data.apps.find((a: AppListItem) => a.AppName === appName);
+      const app = response.data.apps.find(
+        (a: AppListItem) => a.AppName === appName
+      );
       return app || null;
     },
     enabled: !!appName,
   });
 
   // Get selected platform and its updaters
-  const selectedPlatform = platforms.find(p => p.PlatformName === platform);
+  const selectedPlatform = platforms.find((p) => p.PlatformName === platform);
   const availableUpdaters = selectedPlatform?.Updaters || [];
   const hasMultipleUpdaters = availableUpdaters.length > 1;
   const showUpdaterDropdown = hasMultipleUpdaters && platform;
@@ -146,51 +162,55 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
       // Get all apps queries from cache
       const queryCache = queryClient.getQueryCache();
       const appsQueries = queryCache.findAll({ queryKey: ['apps'] });
-      
+
       // Find the version with matching ID in any of the queries
       for (const query of appsQueries) {
         const data = query.state.data;
         if (!data) continue;
-        
+
         let version: any = null;
         if (Array.isArray(data)) {
           version = data.find((item: any) => item.ID === currentData.ID);
         } else if (data && typeof data === 'object' && 'items' in data) {
-          version = (data as any).items.find((item: any) => item.ID === currentData.ID);
+          version = (data as any).items.find(
+            (item: any) => item.ID === currentData.ID
+          );
         }
-        
+
         if (version && version.Artifacts) {
           // Only update if we have pending unsign operations to check
           if (pendingUnsignRef.current.size > 0) {
             // Check if server has confirmed the unsign for pending artifacts
-            const updatedArtifacts = version.Artifacts.map((artifact: Artifact, i: number) => {
-              // If this artifact is pending unsign, check if server confirms it
-              if (pendingUnsignRef.current.has(i)) {
-                // If server confirms TufSigned is false, remove from pending
-                if (artifact.TufSigned === false) {
-                  pendingUnsignRef.current.delete(i);
-                  return artifact;
+            const updatedArtifacts = version.Artifacts.map(
+              (artifact: Artifact, i: number) => {
+                // If this artifact is pending unsign, check if server confirms it
+                if (pendingUnsignRef.current.has(i)) {
+                  // If server confirms TufSigned is false, remove from pending
+                  if (artifact.TufSigned === false) {
+                    pendingUnsignRef.current.delete(i);
+                    return artifact;
+                  }
+                  // If server still shows TufSigned as true, keep our local change
+                  // Don't update this artifact from server yet
+                  const currentArtifact = formData.Artifacts[i];
+                  if (currentArtifact && currentArtifact.TufSigned === false) {
+                    return currentArtifact;
+                  }
                 }
-                // If server still shows TufSigned as true, keep our local change
-                // Don't update this artifact from server yet
-                const currentArtifact = formData.Artifacts[i];
-                if (currentArtifact && currentArtifact.TufSigned === false) {
-                  return currentArtifact;
-                }
+                return artifact;
               }
-              return artifact;
-            });
-            
+            );
+
             // Only update if we have changes or if all pending operations are confirmed
-            setFormData(prev => ({
+            setFormData((prev) => ({
               ...prev,
-              Artifacts: updatedArtifacts
+              Artifacts: updatedArtifacts,
             }));
           } else {
             // No pending operations, update normally
-            setFormData(prev => ({
+            setFormData((prev) => ({
               ...prev,
-              Artifacts: version.Artifacts
+              Artifacts: version.Artifacts,
             }));
           }
           break;
@@ -222,8 +242,14 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
         Files: selectedFiles,
         Platform: selectedFiles.length > 0 ? platform : undefined,
         Arch: selectedFiles.length > 0 ? arch : undefined,
-        updater: selectedFiles.length > 0 && updater && updater !== 'manual' ? updater : undefined,
-        signature: selectedFiles.length > 0 && updater === 'tauri' && signature ? signature : undefined,
+        updater:
+          selectedFiles.length > 0 && updater && updater !== 'manual'
+            ? updater
+            : undefined,
+        signature:
+          selectedFiles.length > 0 && updater === 'tauri' && signature
+            ? signature
+            : undefined,
         app_name: appName,
         version: version,
         channel: channel,
@@ -239,12 +265,12 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
       if (axiosError.response?.data) {
         setError({
           error: axiosError.response.data.error || 'Failed to update',
-          details: axiosError.response.data.details
+          details: axiosError.response.data.details,
         });
       } else {
         setError({
           error: 'Failed to update',
-          details: axiosError.message
+          details: axiosError.message,
         });
       }
     } finally {
@@ -257,7 +283,7 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
     e.stopPropagation();
     if (e.target.files) {
       const newFiles = Array.from(e.target.files);
-      setSelectedFiles(prev => [...prev, ...newFiles]);
+      setSelectedFiles((prev) => [...prev, ...newFiles]);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -265,7 +291,9 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
   };
 
   const removeFile = (indexToRemove: number) => {
-    setSelectedFiles(prev => prev.filter((_, index) => index !== indexToRemove));
+    setSelectedFiles((prev) =>
+      prev.filter((_, index) => index !== indexToRemove)
+    );
     if (indexToRemove === 0) {
       setPlatform('');
       setArch('');
@@ -282,7 +310,11 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const handleDeleteArtifact = async (index: number, platform: string, arch: string) => {
+  const handleDeleteArtifact = async (
+    index: number,
+    platform: string,
+    arch: string
+  ) => {
     setArtifactToDelete({ index, platform, arch });
     setShowDeleteConfirmation(true);
   };
@@ -291,11 +323,18 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
     if (artifactToDelete) {
       try {
         setDeleteError(null);
-        await deleteArtifact(currentData.ID, appName, version, artifactToDelete.index);
-        const updatedArtifacts = formData.Artifacts.filter((_, i) => i !== artifactToDelete.index);
-        setFormData(prev => ({
+        await deleteArtifact(
+          currentData.ID,
+          appName,
+          version,
+          artifactToDelete.index
+        );
+        const updatedArtifacts = formData.Artifacts.filter(
+          (_, i) => i !== artifactToDelete.index
+        );
+        setFormData((prev) => ({
           ...prev,
-          Artifacts: updatedArtifacts
+          Artifacts: updatedArtifacts,
         }));
         setDeleteSuccess(true);
         setTimeout(() => {
@@ -305,13 +344,14 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
         const axiosError = error as AxiosError<ErrorResponse>;
         if (axiosError.response?.data) {
           setDeleteError({
-            error: axiosError.response.data.error || 'Failed to delete artifact',
-            details: axiosError.response.data.details
+            error:
+              axiosError.response.data.error || 'Failed to delete artifact',
+            details: axiosError.response.data.details,
           });
         } else {
           setDeleteError({
             error: 'Failed to delete artifact',
-            details: axiosError.message
+            details: axiosError.message,
           });
         }
       }
@@ -321,19 +361,24 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
   };
 
   const hasValidArtifacts = React.useMemo(() => {
-    return formData.Artifacts && 
-           formData.Artifacts.length > 0 && 
-           formData.Artifacts.some(artifact => 
-             artifact.link
-           );
+    return (
+      formData.Artifacts &&
+      formData.Artifacts.length > 0 &&
+      formData.Artifacts.some((artifact) => artifact.link)
+    );
   }, [formData.Artifacts]);
 
   const handleDownload = (artifact: Artifact) => {
     // First try to fetch the link with authentication
-    axiosInstance.get(artifact.link)
-      .then(response => {
+    axiosInstance
+      .get(artifact.link)
+      .then((response) => {
         // Check if the response is JSON with a download_url
-        if (response.data && typeof response.data === 'object' && 'download_url' in response.data) {
+        if (
+          response.data &&
+          typeof response.data === 'object' &&
+          'download_url' in response.data
+        ) {
           // If it's a JSON with download_url, use that URL
           window.open(response.data.download_url, '_blank');
         } else {
@@ -359,13 +404,13 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
     try {
       const response = await axiosInstance.post('/tuf/v1/artifacts/publish', {
         app_id: appData.ID,
-        version: version
+        version: version,
       });
-      
+
       // Extract task_id from response
       const responseData = response.data?.data;
       const taskId = responseData?.task_id;
-      
+
       if (taskId) {
         // Save to localStorage history (similar to bootstrap)
         const savedHistory = localStorage.getItem('tuf-history');
@@ -378,7 +423,7 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
           taskId?: string;
           version?: string;
         }> = [];
-        
+
         if (savedHistory) {
           try {
             history = JSON.parse(savedHistory);
@@ -386,7 +431,7 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
             console.error('Failed to load TUF history:', e);
           }
         }
-        
+
         const newEntry = {
           id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
           timestamp: responseData.last_update || new Date().toISOString(),
@@ -396,30 +441,40 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
           taskId: taskId,
           version: version,
         };
-        
+
         const updatedHistory = [newEntry, ...history].slice(0, 20); // Keep last 20 entries
         localStorage.setItem('tuf-history', JSON.stringify(updatedHistory));
       }
-      
-      toastSuccess(`TUF artifacts publishing successfully started for version ${version}`);
-      
+
+      toastSuccess(
+        `TUF artifacts publishing successfully started for version ${version}`
+      );
+
       // Invalidate and refetch queries to get updated data from server
       // Add a delay to allow server to process the request and update artifacts
       setTimeout(async () => {
         await queryClient.invalidateQueries({ queryKey: ['apps'] });
         await queryClient.invalidateQueries({ queryKey: ['appData', appName] });
+        await queryClient.invalidateQueries({
+          queryKey: ['app-versions-board'],
+        });
         await queryClient.refetchQueries({ queryKey: ['apps'] });
         await queryClient.refetchQueries({ queryKey: ['appData', appName] });
+        await queryClient.refetchQueries({ queryKey: ['app-versions-board'] });
       }, 2000);
-      
+
       // Also refetch after a longer delay to catch status updates (when signing completes)
       setTimeout(async () => {
         await queryClient.refetchQueries({ queryKey: ['apps'] });
+        await queryClient.refetchQueries({ queryKey: ['app-versions-board'] });
       }, 5000);
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to publish TUF artifacts';
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'Failed to publish TUF artifacts';
       toastError(errorMessage);
-      
+
       // Save failed operation to history
       const savedHistory = localStorage.getItem('tuf-history');
       let history: Array<{
@@ -431,7 +486,7 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
         taskId?: string;
         version?: string;
       }> = [];
-      
+
       if (savedHistory) {
         try {
           history = JSON.parse(savedHistory);
@@ -439,7 +494,7 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
           console.error('Failed to load TUF history:', e);
         }
       }
-      
+
       const newEntry = {
         id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
         timestamp: new Date().toISOString(),
@@ -448,7 +503,7 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
         status: 'failed' as const,
         version: version,
       };
-      
+
       const updatedHistory = [newEntry, ...history].slice(0, 20); // Keep last 20 entries
       localStorage.setItem('tuf-history', JSON.stringify(updatedHistory));
     } finally {
@@ -460,19 +515,23 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
     try {
       setIsUnsigning(true);
       setUnsignError(null);
-      
+
       const requestData = {
         id: currentData.ID,
         app_name: appName,
         version: version,
-        artifacts_to_delete: [index.toString()]
+        artifacts_to_delete: [index.toString()],
       };
 
-      const response = await axiosInstance.post('/tuf/v1/artifacts/delete', JSON.stringify(requestData), {
-        headers: {
-          'Content-Type': 'text/plain',
-        },
-      });
+      const response = await axiosInstance.post(
+        '/tuf/v1/artifacts/delete',
+        JSON.stringify(requestData),
+        {
+          headers: {
+            'Content-Type': 'text/plain',
+          },
+        }
+      );
 
       // Save to localStorage history (similar to publish)
       const savedHistory = localStorage.getItem('tuf-history');
@@ -485,7 +544,7 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
         taskId?: string;
         version?: string;
       }> = [];
-      
+
       if (savedHistory) {
         try {
           history = JSON.parse(savedHistory);
@@ -493,10 +552,10 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
           console.error('Failed to load TUF history:', e);
         }
       }
-      
+
       const responseData = response.data?.data;
       const taskId = responseData?.task_id;
-      
+
       const newEntry = {
         id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
         timestamp: responseData?.last_update || new Date().toISOString(),
@@ -506,33 +565,38 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
         taskId: taskId,
         version: version,
       };
-      
+
       const updatedHistory = [newEntry, ...history].slice(0, 20); // Keep last 20 entries
       localStorage.setItem('tuf-history', JSON.stringify(updatedHistory));
 
       // Update the artifact's TufSigned status to false locally immediately
-      const updatedArtifacts = formData.Artifacts.map((artifact, i) => 
+      const updatedArtifacts = formData.Artifacts.map((artifact, i) =>
         i === index ? { ...artifact, TufSigned: false } : artifact
       );
-      
+
       // Mark this artifact as pending unsign confirmation
       pendingUnsignRef.current.add(index);
-      
-      setFormData(prev => ({
+
+      setFormData((prev) => ({
         ...prev,
-        Artifacts: updatedArtifacts
+        Artifacts: updatedArtifacts,
       }));
 
       // Invalidate and refetch queries to get updated data from server
       // Add a delay to allow server to process the request and update artifacts
       setTimeout(async () => {
         await queryClient.invalidateQueries({ queryKey: ['apps'] });
+        await queryClient.invalidateQueries({
+          queryKey: ['app-versions-board'],
+        });
         await queryClient.refetchQueries({ queryKey: ['apps'] });
+        await queryClient.refetchQueries({ queryKey: ['app-versions-board'] });
       }, 2000);
-      
+
       // Also refetch after a longer delay to catch status updates
       setTimeout(async () => {
         await queryClient.refetchQueries({ queryKey: ['apps'] });
+        await queryClient.refetchQueries({ queryKey: ['app-versions-board'] });
         // Clear pending after final refetch
         setTimeout(() => {
           pendingUnsignRef.current.delete(index);
@@ -545,7 +609,7 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
       }, 3000);
     } catch (error) {
       const axiosError = error as AxiosError<ErrorResponse>;
-      
+
       // Save failed operation to history
       const savedHistory = localStorage.getItem('tuf-history');
       let history: Array<{
@@ -557,7 +621,7 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
         taskId?: string;
         version?: string;
       }> = [];
-      
+
       if (savedHistory) {
         try {
           history = JSON.parse(savedHistory);
@@ -565,7 +629,7 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
           console.error('Failed to load TUF history:', e);
         }
       }
-      
+
       const newEntry = {
         id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
         timestamp: new Date().toISOString(),
@@ -574,19 +638,19 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
         status: 'failed' as const,
         version: version,
       };
-      
+
       const updatedHistory = [newEntry, ...history].slice(0, 20); // Keep last 20 entries
       localStorage.setItem('tuf-history', JSON.stringify(updatedHistory));
-      
+
       if (axiosError.response?.data) {
         setUnsignError({
           error: axiosError.response.data.error || 'Failed to unsign artifact',
-          details: axiosError.response.data.details
+          details: axiosError.response.data.details,
         });
       } else {
         setUnsignError({
           error: 'Failed to unsign artifact',
-          details: axiosError.message
+          details: axiosError.message,
         });
       }
     } finally {
@@ -601,21 +665,22 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
         onClose={onClose}
         isLoading={isLoading}
         isSuccess={isSuccess}
-        successMessage="Changes saved successfully!"
+        successMessage='Changes saved successfully!'
         error={error}
         setError={setError}
-        className="w-[800px] max-h-[90vh] overflow-y-auto"
-      >
-        <div className="mb-4">
-          <p className="text-foreground">App Name: {appName}</p>
-          <p className="text-foreground">Version: {version}</p>
-          <p className="text-foreground">Channel: {channel}</p>
+        className='w-[800px] max-h-[90vh] overflow-y-auto'>
+        <div className='mb-4'>
+          <p className='text-foreground'>App Name: {appName}</p>
+          <p className='text-foreground'>Version: {version}</p>
+          <p className='text-foreground'>Channel: {channel}</p>
         </div>
 
         {hasValidArtifacts ? (
-          <div className="mb-6">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-xl font-bold text-foreground font-roboto">Existing Artifacts</h3>
+          <div className='mb-6'>
+            <div className='flex justify-between items-center mb-3'>
+              <h3 className='text-xl font-bold text-foreground font-roboto'>
+                Existing Artifacts
+              </h3>
               {appData?.Tuf && (
                 <button
                   onClick={handleTufPublish}
@@ -625,35 +690,34 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
                       ? 'opacity-50 cursor-not-allowed'
                       : 'hover:opacity-80 active:scale-95 cursor-pointer'
                   } bg-green-500/20 text-green-300 border-green-400/30 hover:bg-green-500/30`}
-                  title={isPublishingTuf ? 'Publishing...' : 'Publish TUF artifacts'}
-                  type="button"
-                >
+                  title={
+                    isPublishingTuf ? 'Publishing...' : 'Publish TUF artifacts'
+                  }
+                  type='button'>
                   {isPublishingTuf ? (
-                    <svg 
-                      className="w-3 h-3 animate-spin" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                    >
-                      <path 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round" 
-                        strokeWidth="2" 
-                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    <svg
+                      className='w-3 h-3 animate-spin'
+                      fill='none'
+                      stroke='currentColor'
+                      viewBox='0 0 24 24'>
+                      <path
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth='2'
+                        d='M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15'
                       />
                     </svg>
                   ) : (
-                    <svg 
-                      className="w-3 h-3" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                    >
-                      <path 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round" 
-                        strokeWidth="2" 
-                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                    <svg
+                      className='w-3 h-3'
+                      fill='none'
+                      stroke='currentColor'
+                      viewBox='0 0 24 24'>
+                      <path
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth='2'
+                        d='M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z'
                       />
                     </svg>
                   )}
@@ -661,35 +725,38 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
                 </button>
               )}
             </div>
-            <div className="space-y-4">
+            <div className='space-y-4'>
               {formData.Artifacts.map((artifact, index) => (
                 <div
                   key={index}
-                  className="bg-card p-4 rounded-lg text-foreground hover:bg-accent transition-colors"
-                >
-                  <div className="flex justify-between items-center">
+                  className='bg-card p-4 rounded-lg text-foreground hover:bg-accent transition-colors'>
+                  <div className='flex justify-between items-center'>
                     <div>
-                      <p className="font-semibold">{artifact.platform}</p>
-                      <p className="text-sm text-muted-foreground">Architecture: {artifact.arch}</p>
-                      <p className="text-sm text-muted-foreground">Package: {artifact.package}</p>
+                      <p className='font-semibold'>{artifact.platform}</p>
+                      <p className='text-sm text-muted-foreground'>
+                        Architecture: {artifact.arch}
+                      </p>
+                      <p className='text-sm text-muted-foreground'>
+                        Package: {artifact.package}
+                      </p>
                       {artifact.TufTaskID && (
-                        <div className="mt-1 flex items-center gap-2">
-                          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${
-                            artifact.TufSigned 
-                              ? 'bg-green-500/20 text-green-300 border-green-400/30' 
-                              : 'bg-red-500/20 text-red-300 border-red-400/30'
-                          }`}>
-                            <svg 
-                              className="w-3 h-3" 
-                              fill="none" 
-                              stroke="currentColor" 
-                              viewBox="0 0 24 24"
-                            >
-                              <path 
-                                strokeLinecap="round" 
-                                strokeLinejoin="round" 
-                                strokeWidth="2" 
-                                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                        <div className='mt-1 flex items-center gap-2'>
+                          <span
+                            className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${
+                              artifact.TufSigned
+                                ? 'bg-green-500/20 text-green-300 border-green-400/30'
+                                : 'bg-red-500/20 text-red-300 border-red-400/30'
+                            }`}>
+                            <svg
+                              className='w-3 h-3'
+                              fill='none'
+                              stroke='currentColor'
+                              viewBox='0 0 24 24'>
+                              <path
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                                strokeWidth='2'
+                                d='M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z'
                               />
                             </svg>
                             TUF
@@ -698,34 +765,37 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
                             <button
                               onClick={() => handleUnsignArtifact(index)}
                               disabled={isUnsigning}
-                              className="text-orange-500 hover:text-orange-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                              type="button"
-                              title="Unsign artifact from TUF"
-                            >
+                              className='text-orange-500 hover:text-orange-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
+                              type='button'
+                              title='Unsign artifact from TUF'>
                               {isUnsigning ? (
-                                <i className="fas fa-spinner fa-spin"></i>
+                                <i className='fas fa-spinner fa-spin'></i>
                               ) : (
-                                <i className="fas fa-unlock"></i>
+                                <i className='fas fa-unlock'></i>
                               )}
                             </button>
                           )}
                         </div>
                       )}
                     </div>
-                    <div className="flex items-center">
-                      <button 
-                        onClick={() => handleDownload(artifact)} 
-                        className="text-green-500 hover:text-green-400"
-                        type="button"
-                      >
-                        <i className="fas fa-download"></i>
+                    <div className='flex items-center'>
+                      <button
+                        onClick={() => handleDownload(artifact)}
+                        className='text-green-500 hover:text-green-400'
+                        type='button'>
+                        <i className='fas fa-download'></i>
                       </button>
                       <button
-                        onClick={() => handleDeleteArtifact(index, artifact.platform, artifact.arch)}
-                        className="text-destructive hover:text-red-400 ml-4"
-                        type="button"
-                      >
-                        <i className="fas fa-times"></i>
+                        onClick={() =>
+                          handleDeleteArtifact(
+                            index,
+                            artifact.platform,
+                            artifact.arch
+                          )
+                        }
+                        className='text-destructive hover:text-red-400 ml-4'
+                        type='button'>
+                        <i className='fas fa-times'></i>
                       </button>
                     </div>
                   </div>
@@ -734,60 +804,88 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
             </div>
           </div>
         ) : (
-          <div className="mb-6 bg-yellow-500/20 p-4 rounded-lg">
-            <p className="text-yellow-200 font-roboto">
+          <div className='mb-6 bg-yellow-500/20 p-4 rounded-lg'>
+            <p className='text-yellow-200 font-roboto'>
               This version doesn't have artifacts yet, please upload them
             </p>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+        <form onSubmit={handleSubmit} className='space-y-6' noValidate>
           <div>
-            <label className="block text-foreground mb-2 font-roboto font-semibold">
+            <label className='block text-foreground mb-2 font-roboto font-semibold'>
               Add New Files
             </label>
-            <div className="relative">
+            <div className='relative'>
               <input
                 ref={fileInputRef}
-                type="file"
+                type='file'
                 multiple
                 onChange={handleFileChange}
-                className="hidden"
-                id="file-upload"
+                className='hidden'
+                id='file-upload'
               />
               <label
-                htmlFor="file-upload"
-                className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-lg cursor-pointer hover:bg-muted transition-colors duration-200 flex items-center justify-center font-roboto"
-              >
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                htmlFor='file-upload'
+                className='w-full px-4 py-2 bg-primary text-primary-foreground rounded-lg cursor-pointer hover:bg-muted transition-colors duration-200 flex items-center justify-center font-roboto'>
+                <svg
+                  className='w-5 h-5 mr-2'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'>
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth='2'
+                    d='M12 4v16m8-8H4'
+                  />
                 </svg>
                 Choose Files
               </label>
             </div>
             {selectedFiles.length > 0 && (
-              <div className="mt-4 space-y-2">
+              <div className='mt-4 space-y-2'>
                 {selectedFiles.map((file, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between bg-muted bg-opacity-50 p-3 rounded-lg"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <svg className="w-5 h-5 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    className='flex items-center justify-between bg-muted bg-opacity-50 p-3 rounded-lg'>
+                    <div className='flex items-center space-x-2'>
+                      <svg
+                        className='w-5 h-5 text-foreground'
+                        fill='none'
+                        stroke='currentColor'
+                        viewBox='0 0 24 24'>
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth='2'
+                          d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'
+                        />
                       </svg>
                       <div>
-                        <div className="text-foreground font-roboto">{file.name}</div>
-                        <div className="text-muted-foreground text-sm font-roboto">{formatFileSize(file.size)}</div>
+                        <div className='text-foreground font-roboto'>
+                          {file.name}
+                        </div>
+                        <div className='text-muted-foreground text-sm font-roboto'>
+                          {formatFileSize(file.size)}
+                        </div>
                       </div>
                     </div>
                     <button
-                      type="button"
+                      type='button'
                       onClick={() => removeFile(index)}
-                      className="text-foreground hover:text-red-300 transition-colors duration-200"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                      className='text-foreground hover:text-red-300 transition-colors duration-200'>
+                      <svg
+                        className='w-5 h-5'
+                        fill='none'
+                        stroke='currentColor'
+                        viewBox='0 0 24 24'>
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth='2'
+                          d='M6 18L18 6M6 6l12 12'
+                        />
                       </svg>
                     </button>
                   </div>
@@ -795,43 +893,44 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
               </div>
             )}
             {selectedFiles.length > 0 && (
-              <div className="grid grid-cols-2 gap-4 mt-4">
+              <div className='grid grid-cols-2 gap-4 mt-4'>
                 {platforms.length > 0 && (
                   <div>
-                    <label className="block text-foreground mb-2 font-roboto font-semibold">
+                    <label className='block text-foreground mb-2 font-roboto font-semibold'>
                       Platform
                     </label>
-                    <div className="relative dropdown-container">
+                    <div className='relative dropdown-container'>
                       <button
-                        type="button"
+                        type='button'
                         onClick={() => handleDropdownClick('platform')}
-                        className="w-full min-w-0 bg-card text-foreground rounded-lg p-2 pr-8 flex items-center justify-between hover:bg-accent transition-colors"
-                      >
-                        <span className="block min-w-0 flex-1 truncate text-left">{platform || 'Select platform'}</span>
-                        <svg 
-                          xmlns="http://www.w3.org/2000/svg" 
-                          width="16" 
-                          height="16" 
-                          viewBox="0 0 24 24" 
-                          fill="none" 
-                          stroke="currentColor" 
-                          strokeWidth="2" 
-                          strokeLinecap="round" 
-                          strokeLinejoin="round"
-                          className={`text-foreground transition-transform flex-shrink-0 ml-2 ${openDropdown === 'platform' ? 'rotate-180' : ''}`}
-                        >
-                          <polyline points="6 9 12 15 18 9"></polyline>
+                        className='w-full min-w-0 bg-card text-foreground rounded-lg p-2 pr-8 flex items-center justify-between hover:bg-accent transition-colors'>
+                        <span className='block min-w-0 flex-1 truncate text-left'>
+                          {platform || 'Select platform'}
+                        </span>
+                        <svg
+                          xmlns='http://www.w3.org/2000/svg'
+                          width='16'
+                          height='16'
+                          viewBox='0 0 24 24'
+                          fill='none'
+                          stroke='currentColor'
+                          strokeWidth='2'
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          className={`text-foreground transition-transform flex-shrink-0 ml-2 ${openDropdown === 'platform' ? 'rotate-180' : ''}`}>
+                          <polyline points='6 9 12 15 18 9'></polyline>
                         </svg>
                       </button>
                       {openDropdown === 'platform' && (
-                        <div className="absolute top-full left-0 right-0 mt-1 bg-card backdrop-blur-lg rounded-lg shadow-lg z-10 border border-border">
+                        <div className='absolute top-full left-0 right-0 mt-1 bg-card backdrop-blur-lg rounded-lg shadow-lg z-10 border border-border'>
                           {platforms.map((p) => (
                             <button
                               key={p.ID}
-                              type="button"
-                              onClick={() => handleOptionClick('platform', p.PlatformName)}
-                              className="w-full text-left truncate px-4 py-2 text-foreground hover:bg-accent transition-colors first:rounded-t-lg last:rounded-b-lg"
-                            >
+                              type='button'
+                              onClick={() =>
+                                handleOptionClick('platform', p.PlatformName)
+                              }
+                              className='w-full text-left truncate px-4 py-2 text-foreground hover:bg-accent transition-colors first:rounded-t-lg last:rounded-b-lg'>
                               {p.PlatformName}
                             </button>
                           ))}
@@ -842,40 +941,41 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
                 )}
                 {architectures.length > 0 && (
                   <div>
-                    <label className="block text-foreground mb-2 font-roboto font-semibold">
+                    <label className='block text-foreground mb-2 font-roboto font-semibold'>
                       Architecture
                     </label>
-                    <div className="relative dropdown-container">
+                    <div className='relative dropdown-container'>
                       <button
-                        type="button"
+                        type='button'
                         onClick={() => handleDropdownClick('arch')}
-                        className="w-full min-w-0 bg-card text-foreground rounded-lg p-2 pr-8 flex items-center justify-between hover:bg-accent transition-colors"
-                      >
-                        <span className="block min-w-0 flex-1 truncate text-left">{arch || 'Select architecture'}</span>
-                        <svg 
-                          xmlns="http://www.w3.org/2000/svg" 
-                          width="16" 
-                          height="16" 
-                          viewBox="0 0 24 24" 
-                          fill="none" 
-                          stroke="currentColor" 
-                          strokeWidth="2" 
-                          strokeLinecap="round" 
-                          strokeLinejoin="round"
-                          className={`text-foreground transition-transform flex-shrink-0 ml-2 ${openDropdown === 'arch' ? 'rotate-180' : ''}`}
-                        >
-                          <polyline points="6 9 12 15 18 9"></polyline>
+                        className='w-full min-w-0 bg-card text-foreground rounded-lg p-2 pr-8 flex items-center justify-between hover:bg-accent transition-colors'>
+                        <span className='block min-w-0 flex-1 truncate text-left'>
+                          {arch || 'Select architecture'}
+                        </span>
+                        <svg
+                          xmlns='http://www.w3.org/2000/svg'
+                          width='16'
+                          height='16'
+                          viewBox='0 0 24 24'
+                          fill='none'
+                          stroke='currentColor'
+                          strokeWidth='2'
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          className={`text-foreground transition-transform flex-shrink-0 ml-2 ${openDropdown === 'arch' ? 'rotate-180' : ''}`}>
+                          <polyline points='6 9 12 15 18 9'></polyline>
                         </svg>
                       </button>
                       {openDropdown === 'arch' && (
-                        <div className="absolute top-full left-0 right-0 mt-1 bg-card backdrop-blur-lg rounded-lg shadow-lg z-10 border border-border">
+                        <div className='absolute top-full left-0 right-0 mt-1 bg-card backdrop-blur-lg rounded-lg shadow-lg z-10 border border-border'>
                           {architectures.map((a) => (
                             <button
                               key={a.ID}
-                              type="button"
-                              onClick={() => handleOptionClick('arch', a.ArchID)}
-                              className="w-full text-left truncate px-4 py-2 text-foreground hover:bg-accent transition-colors first:rounded-t-lg last:rounded-b-lg"
-                            >
+                              type='button'
+                              onClick={() =>
+                                handleOptionClick('arch', a.ArchID)
+                              }
+                              className='w-full text-left truncate px-4 py-2 text-foreground hover:bg-accent transition-colors first:rounded-t-lg last:rounded-b-lg'>
                               {a.ArchID}
                             </button>
                           ))}
@@ -884,50 +984,52 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
                     </div>
                   </div>
                 )}
-                                 {showUpdaterDropdown && (
-                   <div>
-                     <label className="block text-foreground mb-2 font-roboto font-semibold">
-                       Updater
-                       <span className="text-sm text-muted-foreground ml-2">
-                         (This platform has multiple enabled updaters, select desired updater if necessary)
-                       </span>
-                     </label>
-                    <div className="relative dropdown-container">
+                {showUpdaterDropdown && (
+                  <div>
+                    <label className='block text-foreground mb-2 font-roboto font-semibold'>
+                      Updater
+                      <span className='text-sm text-muted-foreground ml-2'>
+                        (This platform has multiple enabled updaters, select
+                        desired updater if necessary)
+                      </span>
+                    </label>
+                    <div className='relative dropdown-container'>
                       <button
-                        type="button"
+                        type='button'
                         onClick={() => handleDropdownClick('updater')}
-                        className="w-full min-w-0 bg-card text-foreground rounded-lg p-2 pr-8 flex items-center justify-between hover:bg-accent transition-colors"
-                      >
-                                                 <span className="block min-w-0 flex-1 truncate text-left">{updater || 'manual (default)'}</span>
-                        <svg 
-                          xmlns="http://www.w3.org/2000/svg" 
-                          width="16" 
-                          height="16" 
-                          viewBox="0 0 24 24" 
-                          fill="none" 
-                          stroke="currentColor" 
-                          strokeWidth="2" 
-                          strokeLinecap="round" 
-                          strokeLinejoin="round"
-                          className={`text-foreground transition-transform flex-shrink-0 ml-2 ${openDropdown === 'updater' ? 'rotate-180' : ''}`}
-                        >
-                          <polyline points="6 9 12 15 18 9"></polyline>
+                        className='w-full min-w-0 bg-card text-foreground rounded-lg p-2 pr-8 flex items-center justify-between hover:bg-accent transition-colors'>
+                        <span className='block min-w-0 flex-1 truncate text-left'>
+                          {updater || 'manual (default)'}
+                        </span>
+                        <svg
+                          xmlns='http://www.w3.org/2000/svg'
+                          width='16'
+                          height='16'
+                          viewBox='0 0 24 24'
+                          fill='none'
+                          stroke='currentColor'
+                          strokeWidth='2'
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          className={`text-foreground transition-transform flex-shrink-0 ml-2 ${openDropdown === 'updater' ? 'rotate-180' : ''}`}>
+                          <polyline points='6 9 12 15 18 9'></polyline>
                         </svg>
                       </button>
-                                             {openDropdown === 'updater' && (
-                         <div className="absolute top-full left-0 right-0 mt-1 bg-card backdrop-blur-lg rounded-lg shadow-lg z-10 border border-border">
-                           {availableUpdaters.map((u) => (
-                             <button
-                               key={u.type}
-                               type="button"
-                               onClick={() => handleOptionClick('updater', u.type)}
-                               className="w-full text-left truncate px-4 py-2 text-foreground hover:bg-accent transition-colors first:rounded-t-lg last:rounded-b-lg"
-                             >
-                               {u.type}
-                             </button>
-                           ))}
-                         </div>
-                       )}
+                      {openDropdown === 'updater' && (
+                        <div className='absolute top-full left-0 right-0 mt-1 bg-card backdrop-blur-lg rounded-lg shadow-lg z-10 border border-border'>
+                          {availableUpdaters.map((u) => (
+                            <button
+                              key={u.type}
+                              type='button'
+                              onClick={() =>
+                                handleOptionClick('updater', u.type)
+                              }
+                              className='w-full text-left truncate px-4 py-2 text-foreground hover:bg-accent transition-colors first:rounded-t-lg last:rounded-b-lg'>
+                              {u.type}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -936,16 +1038,16 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
 
             {updater === 'tauri' && (
               <div>
-                <label className="block text-foreground mb-2 font-roboto font-semibold">
+                <label className='block text-foreground mb-2 font-roboto font-semibold'>
                   Signature
                 </label>
                 <input
-                  type="text"
-                  name="signature"
+                  type='text'
+                  name='signature'
                   value={signature}
                   onChange={(e) => setSignature(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg font-roboto bg-muted text-foreground border border-border transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring placeholder:text-muted-foreground shadow-sm"
-                  placeholder="Enter signature for Tauri updater"
+                  className='w-full px-4 py-2 rounded-lg font-roboto bg-muted text-foreground border border-border transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring placeholder:text-muted-foreground shadow-sm'
+                  placeholder='Enter signature for Tauri updater'
                   required
                 />
               </div>
@@ -953,78 +1055,85 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-foreground mb-2 font-roboto font-semibold">
+            <label className='block text-foreground mb-2 font-roboto font-semibold'>
               Changelog
             </label>
-            <div className="flex gap-2 mb-2">
+            <div className='flex gap-2 mb-2'>
               <button
-                type="button"
+                type='button'
                 onClick={() => setIsPreview(!isPreview)}
-                className="text-foreground text-sm hover:text-muted-foreground"
-              >
+                className='text-foreground text-sm hover:text-muted-foreground'>
                 {isPreview ? 'Edit' : 'Preview'}
               </button>
             </div>
             {isPreview ? (
-              <div className="bg-muted text-foreground p-4 rounded-lg prose prose-sm max-w-none dark:prose-invert">
+              <div className='bg-muted text-foreground p-4 rounded-lg prose prose-sm max-w-none dark:prose-invert'>
                 <ReactMarkdown>{formData.Changelog}</ReactMarkdown>
               </div>
             ) : (
               <textarea
                 value={formData.Changelog}
-                onChange={(e) => setFormData({ ...formData, Changelog: e.target.value })}
-                className="w-full px-4 py-2 rounded-lg font-roboto bg-muted text-foreground border border-border transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring placeholder:text-muted-foreground shadow-sm"
-                placeholder="Enter changelog in Markdown format..."
+                onChange={(e) =>
+                  setFormData({ ...formData, Changelog: e.target.value })
+                }
+                className='w-full px-4 py-2 rounded-lg font-roboto bg-muted text-foreground border border-border transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring placeholder:text-muted-foreground shadow-sm'
+                placeholder='Enter changelog in Markdown format...'
               />
             )}
           </div>
 
-          <div className="flex gap-4">
-            <label className="flex items-center text-foreground font-roboto">
+          <div className='flex gap-4'>
+            <label className='flex items-center text-foreground font-roboto'>
               <input
-                type="checkbox"
+                type='checkbox'
                 checked={formData.Published}
-                onChange={(e) => setFormData({ ...formData, Published: e.target.checked })}
-                className="mr-2"
+                onChange={(e) =>
+                  setFormData({ ...formData, Published: e.target.checked })
+                }
+                className='mr-2'
               />
               Published
             </label>
-            <label className="flex items-center text-foreground font-roboto">
+            <label className='flex items-center text-foreground font-roboto'>
               <input
-                type="checkbox"
+                type='checkbox'
                 checked={formData.Critical}
-                onChange={(e) => setFormData({ ...formData, Critical: e.target.checked })}
-                className="mr-2"
+                onChange={(e) =>
+                  setFormData({ ...formData, Critical: e.target.checked })
+                }
+                className='mr-2'
               />
               Critical
             </label>
-            <label className="flex items-center text-foreground font-roboto">
+            <label className='flex items-center text-foreground font-roboto'>
               <input
-                type="checkbox"
+                type='checkbox'
                 checked={formData.Intermediate}
-                onChange={(e) => setFormData({ ...formData, Intermediate: e.target.checked })}
-                className="mr-2"
+                onChange={(e) =>
+                  setFormData({ ...formData, Intermediate: e.target.checked })
+                }
+                className='mr-2'
               />
               Intermediate
             </label>
           </div>
 
-          <div className="flex justify-end gap-2 mt-6">
+          <div className='flex justify-end gap-2 mt-6'>
             <button
-              type="button"
+              type='button'
               onClick={onClose}
-              className="bg-secondary text-foreground px-4 py-2 rounded-lg font-roboto hover:bg-accent transition-all duration-150 border border-border shadow-sm"
-            >
+              className='bg-secondary text-foreground px-4 py-2 rounded-lg font-roboto hover:bg-accent transition-all duration-150 border border-border shadow-sm'>
               Cancel
             </button>
             <button
-              type="submit"
-              className="bg-primary text-primary-foreground px-4 py-2 rounded-lg font-roboto hover:bg-muted transition-colors duration-200"
-              disabled={Boolean(selectedFiles.length > 0 && 
-                ((platforms.length > 0 && !platform) || 
-                 (architectures.length > 0 && !arch) || 
-                 (showUpdaterDropdown && updater === '')))}
-            >
+              type='submit'
+              className='bg-primary text-primary-foreground px-4 py-2 rounded-lg font-roboto hover:bg-muted transition-colors duration-200'
+              disabled={Boolean(
+                selectedFiles.length > 0 &&
+                  ((platforms.length > 0 && !platform) ||
+                    (architectures.length > 0 && !arch) ||
+                    (showUpdaterDropdown && updater === ''))
+              )}>
               Save
             </button>
           </div>
@@ -1045,39 +1154,60 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
       )}
 
       {deleteSuccess && (
-        <div className="fixed top-4 right-4 bg-green-500 text-foreground px-6 py-3 rounded-lg shadow-lg flex items-center space-x-3 z-[12000] animate-fade-in">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+        <div className='fixed top-4 right-4 bg-green-500 text-foreground px-6 py-3 rounded-lg shadow-lg flex items-center space-x-3 z-[12000] animate-fade-in'>
+          <svg
+            className='w-5 h-5'
+            fill='none'
+            stroke='currentColor'
+            viewBox='0 0 24 24'>
+            <path
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              strokeWidth='2'
+              d='M5 13l4 4L19 7'
+            />
           </svg>
-          <span className="font-roboto">Artifact deleted successfully!</span>
+          <span className='font-roboto'>Artifact deleted successfully!</span>
         </div>
       )}
 
       {deleteError && (
-        <div className="fixed top-4 right-4 bg-red-500 text-foreground px-6 py-3 rounded-lg shadow-lg z-[12000] animate-fade-in">
-          <div className="flex items-center space-x-3">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <div className='fixed top-4 right-4 bg-red-500 text-foreground px-6 py-3 rounded-lg shadow-lg z-[12000] animate-fade-in'>
+          <div className='flex items-center space-x-3'>
+            <svg
+              className='w-5 h-5'
+              fill='none'
+              stroke='currentColor'
+              viewBox='0 0 24 24'>
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth='2'
+                d='M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
+              />
             </svg>
-            <span className="font-roboto">Error: {deleteError.error}</span>
+            <span className='font-roboto'>Error: {deleteError.error}</span>
             {deleteError.details && (
               <button
                 onClick={() => setShowDetails(!showDetails)}
-                className="ml-2 text-foreground"
-              >
+                className='ml-2 text-foreground'>
                 <svg
                   className={`w-4 h-4 transform transition-transform ${showDetails ? 'rotate-180' : ''}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'>
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth='2'
+                    d='M19 9l-7 7-7-7'
+                  />
                 </svg>
               </button>
             )}
           </div>
           {showDetails && deleteError.details && (
-            <div className="mt-2 text-sm bg-red-600 p-2 rounded">
+            <div className='mt-2 text-sm bg-red-600 p-2 rounded'>
               {deleteError.details}
             </div>
           )}
@@ -1085,39 +1215,60 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
       )}
 
       {unsignSuccess && (
-        <div className="fixed top-4 right-4 bg-green-500 text-foreground px-6 py-3 rounded-lg shadow-lg flex items-center space-x-3 z-[12000] animate-fade-in">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+        <div className='fixed top-4 right-4 bg-green-500 text-foreground px-6 py-3 rounded-lg shadow-lg flex items-center space-x-3 z-[12000] animate-fade-in'>
+          <svg
+            className='w-5 h-5'
+            fill='none'
+            stroke='currentColor'
+            viewBox='0 0 24 24'>
+            <path
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              strokeWidth='2'
+              d='M5 13l4 4L19 7'
+            />
           </svg>
-          <span className="font-roboto">Artifact unsigned successfully!</span>
+          <span className='font-roboto'>Artifact unsigned successfully!</span>
         </div>
       )}
 
       {unsignError && (
-        <div className="fixed top-4 right-4 bg-red-500 text-foreground px-6 py-3 rounded-lg shadow-lg z-[12000] animate-fade-in">
-          <div className="flex items-center space-x-3">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <div className='fixed top-4 right-4 bg-red-500 text-foreground px-6 py-3 rounded-lg shadow-lg z-[12000] animate-fade-in'>
+          <div className='flex items-center space-x-3'>
+            <svg
+              className='w-5 h-5'
+              fill='none'
+              stroke='currentColor'
+              viewBox='0 0 24 24'>
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth='2'
+                d='M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
+              />
             </svg>
-            <span className="font-roboto">Error: {unsignError.error}</span>
+            <span className='font-roboto'>Error: {unsignError.error}</span>
             {unsignError.details && (
               <button
                 onClick={() => setShowDetails(!showDetails)}
-                className="ml-2 text-foreground"
-              >
+                className='ml-2 text-foreground'>
                 <svg
                   className={`w-4 h-4 transform transition-transform ${showDetails ? 'rotate-180' : ''}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'>
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth='2'
+                    d='M19 9l-7 7-7-7'
+                  />
                 </svg>
               </button>
             )}
           </div>
           {showDetails && unsignError.details && (
-            <div className="mt-2 text-sm bg-red-600 p-2 rounded">
+            <div className='mt-2 text-sm bg-red-600 p-2 rounded'>
               {unsignError.details}
             </div>
           )}
@@ -1125,4 +1276,4 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
       )}
     </>
   );
-}; 
+};
