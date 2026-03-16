@@ -25,7 +25,7 @@ No build/test/lint commands exist locally — all execution happens in GitHub Ac
 All four workflows follow the same structure:
 1. **Matrix strategy** to build multiple app packages in parallel (`fail-fast: false`)
 2. Checkout `innet8/ttpos-flutter` at a user-specified branch
-3. Flutter 3.27.3 + Melos bootstrap (`melos bs`) + env setup
+3. Flutter 3.41.2 + Melos bootstrap (`melos bs`) + env setup
 4. Generate `.env.{production|test|development}.local` files with API/WS URLs
 5. Inject Sentry DSN (release branch only)
 6. Build via Dart scripts (`scripts/build_android.dart`, `scripts/build_win_innosetup.dart`, `scripts/build_mac.dart`, `scripts/build_web.dart`)

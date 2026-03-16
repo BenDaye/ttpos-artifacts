@@ -203,9 +203,14 @@ jobs:
         if: steps.check.outputs.should_run == 'true'
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.27.3"
+          flutter-version: "3.41.2"
           channel: stable
           cache: true
+
+      - name: 配置 MELOS_SDK_PATH
+        if: steps.check.outputs.should_run == 'true'
+        shell: bash
+        run: echo "MELOS_SDK_PATH=$(dirname "$(dirname "$(which flutter)")")" >> "$GITHUB_ENV"
 
       - name: Precache Flutter iOS artifacts
         if: steps.check.outputs.should_run == 'true'

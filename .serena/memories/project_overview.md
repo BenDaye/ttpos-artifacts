@@ -5,7 +5,7 @@ CI/CD build workflows for the TTPOS Flutter POS system. This repo contains **onl
 
 ## Tech Stack
 - **GitHub Actions** (YAML workflow definitions)
-- **Flutter 3.27.3** + **Melos** (bootstrapped at build time)
+- **Flutter 3.41.2** + **Melos** (bootstrapped at build time)
 - **Dart** build scripts (in the Flutter repo)
 - **Google Cloud Storage** for artifact hosting
 - **Docker** for web builds (pushed to `hub.hitosea.com` registry)
