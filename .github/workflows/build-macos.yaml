@@ -28,6 +28,7 @@ on:
           - kds
           - tablet
           - shop
+          - kiosk
         default: "all"
       base_url:
         description: "选择API基础URL"
@@ -67,7 +68,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        package: [pos, assistant, kds, tablet, shop]
+        package: [pos, assistant, kds, tablet, shop, kiosk]
         include:
           - package: pos
             app_name: TTPOS
@@ -94,6 +95,11 @@ jobs:
             vol_name: "TTPOS Shop"
             gcs_folder: Shop
             faynosync_name: "TTPOS Shop"
+          - package: kiosk
+            app_name: TTPOS-Kiosk
+            vol_name: "TTPOS Kiosk"
+            gcs_folder: Kiosk
+            faynosync_name: "TTPOS Kiosk"
     env:
       GCS_PATH: ${{ inputs.branch == 'release' && format('dc_apk/TTPOS/Prod/MacOS/{0}/', matrix.gcs_folder) || format('dc_apk/TTPOS/Test/MacOS/{0}/', matrix.gcs_folder) }}
       SCP_S_PATH: ${{ inputs.branch == 'release' && format('/hitosea/ttpos-apk/Prod/{0}/', matrix.package) || format('/hitosea/ttpos-apk/Test/{0}/', matrix.package) }}
@@ -201,6 +207,7 @@ jobs:
           MAC_KDS_PROFILE_BASE64: ${{ secrets.MAC_KDS_PROFILE_BASE64 }}
           MAC_TABLET_PROFILE_BASE64: ${{ secrets.MAC_TABLET_PROFILE_BASE64 }}
           MAC_SHOP_PROFILE_BASE64: ${{ secrets.MAC_SHOP_PROFILE_BASE64 }}
+          MAC_KIOSK_PROFILE_BASE64: ${{ secrets.MAC_KIOSK_PROFILE_BASE64 }}
         run: |
           set -e
           PROFILE_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"

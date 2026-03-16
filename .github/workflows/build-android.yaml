@@ -29,6 +29,7 @@ on:
           - assistant
           - tablet
           - qds
+          - kiosk
         default: "all"
       base_url:
         description: "选择API基础URL"
@@ -68,7 +69,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        package: [pos, kds, shop, assistant, tablet, qds]
+        package: [pos, kds, shop, assistant, tablet, qds, kiosk]
         include:
           - package: pos
             apk_name: TTPOS-Cashier
@@ -94,6 +95,10 @@ jobs:
             apk_name: TTPOS-Queue
             gcs_folder: Qds
             faynosync_name: "TTPOS Queue"
+          - package: kiosk
+            apk_name: TTPOS-Kiosk
+            gcs_folder: Kiosk
+            faynosync_name: "TTPOS Kiosk"
     env:
       APK_OUTPUT_PATH: releases
       GCS_PATH: ${{ inputs.branch == 'release' && format('dc_apk/TTPOS/Prod/{0}/', matrix.gcs_folder) || format('dc_apk/TTPOS/Test/{0}/', matrix.gcs_folder) }}

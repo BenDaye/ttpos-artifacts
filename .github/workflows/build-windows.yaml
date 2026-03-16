@@ -28,6 +28,7 @@ on:
           - assistant
           - tablet
           - shop
+          - kiosk
         default: "all"
       base_url:
         description: "选择API基础URL"
@@ -67,7 +68,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        package: [pos, kds, assistant, tablet, shop]
+        package: [pos, kds, assistant, tablet, shop, kiosk]
         include:
           - package: pos
             exe_prefix: "TTPOS"
@@ -89,6 +90,10 @@ jobs:
             exe_prefix: "TTPOS-Shop"
             gcs_folder: "Shop"
             faynosync_name: "TTPOS Shop"
+          - package: kiosk
+            exe_prefix: "TTPOS-Kiosk"
+            gcs_folder: "Kiosk"
+            faynosync_name: "TTPOS Kiosk"
     env:
       output_path: releases
       GCS_PATH: ${{ inputs.branch == 'release' && format('dc_apk/TTPOS/Prod/Windows/{0}/', matrix.gcs_folder) || format('dc_apk/TTPOS/Test/Windows/{0}/', matrix.gcs_folder) }}
