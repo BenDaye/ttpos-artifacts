@@ -140,7 +140,9 @@ jobs:
       - name: 配置 MELOS_SDK_PATH
         if: steps.check.outputs.should_run == 'true'
         shell: bash
-        run: echo "MELOS_SDK_PATH=$(dirname "$(dirname "$(command -v flutter)")")" >> "$GITHUB_ENV"
+        run: |
+          SDK_PATH=$(dirname "$(dirname "$(command -v flutter)")")
+          echo "MELOS_SDK_PATH=$(cygpath -w "$SDK_PATH")" >> "$GITHUB_ENV"
 
       - name: Install Melos
         if: steps.check.outputs.should_run == 'true'
