@@ -235,7 +235,9 @@ jobs:
       - name: Install CocoaPods dependencies
         if: steps.check.outputs.should_run == 'true'
         working-directory: apps/${{ matrix.package }}/ios
-        run: pod install --repo-update
+        run: |
+          sed -i '' '1,3{/^source /s/^/# /}' Podfile
+          pod install --repo-update
         env:
           CP_HOME_DIR: ${{ runner.temp }}/cocoapods
 
