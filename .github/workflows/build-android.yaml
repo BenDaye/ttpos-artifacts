@@ -138,7 +138,12 @@ jobs:
         with:
           channel: stable
           cache: true
-          flutter-version: "3.27.3"
+          flutter-version: "3.41.2"
+
+      - name: 配置 MELOS_SDK_PATH
+        if: steps.check.outputs.should_run == 'true'
+        shell: bash
+        run: echo "MELOS_SDK_PATH=$(dirname "$(dirname "$(which flutter)")")" >> "$GITHUB_ENV"
 
       - name: Install Melos
         if: steps.check.outputs.should_run == 'true'
@@ -151,7 +156,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
-          java-version: "18"
+          java-version: "21"
           cache: "gradle"
 
       - name: Melos Init
