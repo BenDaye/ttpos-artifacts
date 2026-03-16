@@ -283,7 +283,7 @@ jobs:
         if: steps.check.outputs.should_run == 'true'
         working-directory: apps/${{ matrix.package }}/macos
         run: |
-          sed -i '' '1,3{/^source /s/^/# /}' Podfile
+          sed -i '' '1,3s/^source /# source /' Podfile
           pod install --repo-update
         env:
           CP_HOME_DIR: ${{ runner.temp }}/cocoapods
