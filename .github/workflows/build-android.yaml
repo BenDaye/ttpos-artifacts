@@ -156,7 +156,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
-          java-version: "18"
+          java-version: "21"
           cache: "gradle"
 
       - name: Melos Init
