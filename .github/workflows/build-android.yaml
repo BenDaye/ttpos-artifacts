@@ -402,7 +402,7 @@ jobs:
             --data-urlencode "platform=${CMS_PLATFORM}" \
             --data-urlencode "arch=${CMS_ARCH}" \
             --data-urlencode "package=${CMS_PKG_FMT}" \
-            --data-urlencode "owner=admin")
+            --data-urlencode "owner=ttpos")
 
           if [ -z "$DOWNLOAD_URL" ]; then
             echo "::warning::无法从 FaynoSync 获取下载链接，跳过 CMS 更新"
@@ -411,61 +411,56 @@ jobs:
 
           echo "获取到下载链接: ${DOWNLOAD_URL}"
 
-          LOCALES="zh en zh-Hant th tr ja"
           POPULATE="populate[items][populate][downloadButton]=*&populate[items][populate][downloadButtons]=*&populate[items][populate][thumbnail]=*&populate[items][populate][platforms]=*"
 
-          for LOCALE in $LOCALES; do
-            echo "--- 更新 locale: ${LOCALE} ---"
+          CMS_DATA=$(curl -s \
+            "${STRAPI_URL}/api/tt-pos-download?locale=en&${POPULATE}" \
+            -H "Authorization: Bearer ${STRAPI_TOKEN}")
 
-            CMS_DATA=$(curl -s \
-              "${STRAPI_URL}/api/tt-pos-download?locale=${LOCALE}&${POPULATE}" \
-              -H "Authorization: Bearer ${STRAPI_TOKEN}")
+          if ! echo "$CMS_DATA" | jq -e '.data.attributes.items' > /dev/null 2>&1; then
+            echo "::warning::无法获取 CMS 数据，跳过"
+            exit 0
+          fi
 
-            if ! echo "$CMS_DATA" | jq -e '.data.attributes.items' > /dev/null 2>&1; then
-              echo "::warning::locale ${LOCALE} 无数据，跳过"
-              continue
-            fi
+          HAS_MATCH=$(echo "$CMS_DATA" | jq --arg title "$CMS_TITLE" \
+            '[.data.attributes.items[] | select(.title == $title)] | length')
 
-            HAS_MATCH=$(echo "$CMS_DATA" | jq --arg title "$CMS_TITLE" \
-              '[.data.attributes.items[] | select(.title == $title)] | length')
+          if [ "$HAS_MATCH" = "0" ]; then
+            echo "::warning::CMS 中未找到 ${CMS_TITLE}，跳过"
+            exit 0
+          fi
 
-            if [ "$HAS_MATCH" = "0" ]; then
-              echo "locale ${LOCALE} 中未找到 ${CMS_TITLE}，跳过"
-              continue
-            fi
+          UPDATED=$(echo "$CMS_DATA" | jq \
+            --arg url "$DOWNLOAD_URL" \
+            --arg ver "V${CMS_VERSION}" \
+            --arg date "$(date +%Y-%m-%d)" \
+            --arg label "$CMS_PLATFORM_LABEL" \
+            --arg title "$CMS_TITLE" \
+            '
+            .data.attributes.items | map(
+              .thumbnail = (if .thumbnail and .thumbnail.data then .thumbnail.data.id else null end) |
+              if .title == $title then
+                .version = $ver |
+                .releasedAt = $date |
+                (.downloadButtons |= map(
+                  if .label == $label then .href = $url else . end
+                )) |
+                if $label == "Android" then .downloadButton.href = $url else . end
+              else . end
+            ) | { data: { items: . } }
+            ')
 
-            UPDATED=$(echo "$CMS_DATA" | jq \
-              --arg url "$DOWNLOAD_URL" \
-              --arg ver "V${CMS_VERSION}" \
-              --arg date "$(date +%Y-%m-%d)" \
-              --arg label "$CMS_PLATFORM_LABEL" \
-              --arg title "$CMS_TITLE" \
-              '
-              .data.attributes.items | map(
-                .thumbnail = (if .thumbnail and .thumbnail.data then .thumbnail.data.id else null end) |
-                if .title == $title then
-                  .version = $ver |
-                  .releasedAt = $date |
-                  (.downloadButtons |= map(
-                    if .label == $label then .href = $url else . end
-                  )) |
-                  if $label == "Android" then .downloadButton.href = $url else . end
-                else . end
-              ) | { data: { items: . } }
-              ')
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X PUT "${STRAPI_URL}/api/tt-pos-download?locale=en" \
+            -H "Authorization: Bearer ${STRAPI_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "$UPDATED")
 
-            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-              -X PUT "${STRAPI_URL}/api/tt-pos-download?locale=${LOCALE}" \
-              -H "Authorization: Bearer ${STRAPI_TOKEN}" \
-              -H "Content-Type: application/json" \
-              -d "$UPDATED")
-
-            if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
-              echo "locale ${LOCALE} 更新成功 (HTTP ${HTTP_STATUS})"
-            else
-              echo "::warning::locale ${LOCALE} 更新失败 (HTTP ${HTTP_STATUS})"
-            fi
-          done
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+            echo "CMS 更新成功 (HTTP ${HTTP_STATUS})"
+          else
+            echo "::warning::CMS 更新失败 (HTTP ${HTTP_STATUS})"
+          fi
 
       - name: 构建完成总结
         if: always() && steps.check.outputs.should_run == 'true'
