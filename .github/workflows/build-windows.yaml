@@ -74,10 +74,14 @@ on:
           - "on"
           - "off"
       faynosync:
-        description: "是否上传到 FaynoSync"
+        description: "FaynoSync 上传模式 (on=检查版本已存在则跳过, force=强制覆盖)"
         required: false
-        default: false
-        type: boolean
+        default: "off"
+        type: choice
+        options:
+          - "off"
+          - "on"
+          - "force"
       update_cms:
         description: "是否更新 CMS 下载页"
         required: false
@@ -277,6 +281,54 @@ jobs:
           echo "MELOS_PACKAGE_NAME=$env:MELOS_PACKAGE_NAME" >> $env:GITHUB_ENV
           echo "MELOS_PACKAGE_VERSION=$env:MELOS_PACKAGE_VERSION" >> $env:GITHUB_ENV
 
+      - name: 检查 FaynoSync 版本是否已存在
+        if: steps.check.outputs.should_run == 'true' && inputs.faynosync == 'on'
+        shell: bash
+        env:
+          FAYNOSYNC_URL: ${{ secrets.FAYNOSYNC_URL }}
+        run: |
+          if [ -z "$FAYNOSYNC_URL" ]; then
+            echo "::warning::未配置 FAYNOSYNC_URL，跳过 FaynoSync 版本检查"
+            exit 0
+          fi
+
+          APP_NAME="${{ matrix.faynosync_name }}"
+          CHANNEL="${{ inputs.env }}"
+          CHECK_VERSION="${{ env.MELOS_PACKAGE_VERSION }}"
+          PLATFORM="windows"
+          ARCH="amd64"
+
+          echo "检查 FaynoSync: ${APP_NAME} v${CHECK_VERSION} (${CHANNEL}/${PLATFORM}/${ARCH})"
+
+          RESP=$(curl -s --max-time 10 -G "${FAYNOSYNC_URL}/checkVersion" \
+            --data-urlencode "app_name=${APP_NAME}" \
+            --data-urlencode "version=${CHECK_VERSION}" \
+            --data-urlencode "channel=${CHANNEL}" \
+            --data-urlencode "platform=${PLATFORM}" \
+            --data-urlencode "arch=${ARCH}" \
+            --data-urlencode "owner=ttpos")
+
+          UPDATE=$(echo "$RESP" | jq -r '.update_available // "null"')
+
+          if [ "$UPDATE" = "false" ]; then
+            VERIFY=$(curl -s --max-time 10 -G "${FAYNOSYNC_URL}/checkVersion" \
+              --data-urlencode "app_name=${APP_NAME}" \
+              --data-urlencode "version=0.0.0" \
+              --data-urlencode "channel=${CHANNEL}" \
+              --data-urlencode "platform=${PLATFORM}" \
+              --data-urlencode "arch=${ARCH}" \
+              --data-urlencode "owner=ttpos")
+
+            VERIFY_UPDATE=$(echo "$VERIFY" | jq -r '.update_available // "null"')
+
+            if [ "$VERIFY_UPDATE" = "true" ]; then
+              echo "::error::FaynoSync 已存在 ${APP_NAME} v${CHECK_VERSION} (${CHANNEL}/${PLATFORM}/${ARCH})，跳过构建。如需强制覆盖，请选择 faynosync=force"
+              exit 1
+            fi
+          fi
+
+          echo "FaynoSync 检查通过，继续构建"
+
       - name: 构建 Windows 安装包
         if: steps.check.outputs.should_run == 'true'
         run: |
@@ -334,7 +386,7 @@ jobs:
 
       - name: 上传到 FaynoSync
         id: faynosync
-        if: steps.check.outputs.should_run == 'true' && inputs.faynosync == true
+        if: steps.check.outputs.should_run == 'true' && inputs.faynosync != 'off'
         continue-on-error: true
         shell: bash
         env:

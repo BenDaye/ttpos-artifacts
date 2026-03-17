@@ -68,10 +68,14 @@ on:
           - "off"
         default: "off"
       faynosync:
-        description: "是否上传到 FaynoSync"
+        description: "FaynoSync 上传模式 (on=检查版本已存在则跳过, force=强制覆盖)"
         required: false
-        type: boolean
-        default: false
+        default: "off"
+        type: choice
+        options:
+          - "off"
+          - "on"
+          - "force"
       update_cms:
         description: "是否更新 CMS 下载页"
         required: false
@@ -95,7 +99,7 @@ jobs:
       UPDATER_OWNER: ${{ inputs.updater_owner || github.event.client_payload.updater_owner || '' }}
       UPDATER_CHANNEL: ${{ inputs.updater_channel || github.event.client_payload.updater_channel || '' }}
       SCP: ${{ inputs.scp || github.event.client_payload.scp || 'off' }}
-      FAYNOSYNC: ${{ inputs.faynosync || github.event.client_payload.faynosync || 'false' }}
+      FAYNOSYNC: ${{ inputs.faynosync || github.event.client_payload.faynosync || 'off' }}
       UPDATE_CMS: ${{ inputs.update_cms || github.event.client_payload.update_cms || 'false' }}
     steps:
       - name: 触发 Android 构建
