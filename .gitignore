@@ -29,3 +29,5 @@ dist-ssr
 
 changelog.txt
 generate-changelog.sh
+
+deploy
