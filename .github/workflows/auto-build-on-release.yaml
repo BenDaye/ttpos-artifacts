@@ -72,6 +72,11 @@ on:
         required: false
         type: boolean
         default: false
+      update_cms:
+        description: "是否更新 CMS 下载页"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   actions: write
@@ -91,6 +96,7 @@ jobs:
       UPDATER_CHANNEL: ${{ inputs.updater_channel || github.event.client_payload.updater_channel || '' }}
       SCP: ${{ inputs.scp || github.event.client_payload.scp || 'off' }}
       FAYNOSYNC: ${{ inputs.faynosync || github.event.client_payload.faynosync || 'false' }}
+      UPDATE_CMS: ${{ inputs.update_cms || github.event.client_payload.update_cms || 'false' }}
     steps:
       - name: 触发 Android 构建
         run: |
@@ -106,7 +112,8 @@ jobs:
             -f updater_owner=${{ env.UPDATER_OWNER }} \
             -f updater_channel=${{ env.UPDATER_CHANNEL }} \
             -f scp=${{ env.SCP }} \
-            -f faynosync=${{ env.FAYNOSYNC }}
+            -f faynosync=${{ env.FAYNOSYNC }} \
+            -f update_cms=${{ env.UPDATE_CMS }}
 
       - name: 触发 iOS 构建
         run: |
@@ -137,7 +144,8 @@ jobs:
             -f updater_owner=${{ env.UPDATER_OWNER }} \
             -f updater_channel=${{ env.UPDATER_CHANNEL }} \
             -f scp=${{ env.SCP }} \
-            -f faynosync=${{ env.FAYNOSYNC }}
+            -f faynosync=${{ env.FAYNOSYNC }} \
+            -f update_cms=${{ env.UPDATE_CMS }}
 
       - name: 触发 macOS 构建
         run: |
@@ -153,7 +161,8 @@ jobs:
             -f updater_owner=${{ env.UPDATER_OWNER }} \
             -f updater_channel=${{ env.UPDATER_CHANNEL }} \
             -f scp=${{ env.SCP }} \
-            -f faynosync=${{ env.FAYNOSYNC }}
+            -f faynosync=${{ env.FAYNOSYNC }} \
+            -f update_cms=${{ env.UPDATE_CMS }}
 
       - name: 触发 Web 构建
         run: |

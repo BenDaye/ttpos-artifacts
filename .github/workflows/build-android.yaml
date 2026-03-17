@@ -79,6 +79,11 @@ on:
         required: false
         default: false
         type: boolean
+      update_cms:
+        description: "是否更新 CMS 下载页"
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   build:
@@ -90,37 +95,43 @@ jobs:
         include:
           - package: pos
             apk_name: TTPOS-Cashier
-            gcs_folder: Cashier
+            scp_folder: Cashier
             faynosync_name: "TTPOS"
+            cms_title: "Cashier"
           - package: assistant
             apk_name: TTPOS-Assistant
-            gcs_folder: Assistant
+            scp_folder: Assistant
             faynosync_name: "TTPOS Go"
+            cms_title: "Assistant"
           - package: kds
             apk_name: TTPOS-Kitchen
-            gcs_folder: Kitchen
+            scp_folder: Kitchen
             faynosync_name: "TTPOS Kitchen"
+            cms_title: "KDS Kitchen"
           - package: tablet
             apk_name: TTPOS-Menu
-            gcs_folder: Menu
+            scp_folder: Menu
             faynosync_name: "TTPOS Menu"
+            cms_title: "Tablet Menu"
           - package: shop
             apk_name: TTPOS-Shop
-            gcs_folder: Shop
+            scp_folder: Shop
             faynosync_name: "TTPOS Shop"
+            cms_title: "Shop"
           - package: qds
             apk_name: TTPOS-Queue
-            gcs_folder: Qds
+            scp_folder: Qds
             faynosync_name: "TTPOS Queue"
+            cms_title: ""
           - package: kiosk
             apk_name: TTPOS-Kiosk
-            gcs_folder: Kiosk
+            scp_folder: Kiosk
             faynosync_name: "TTPOS Kiosk"
+            cms_title: ""
     env:
       APK_OUTPUT_PATH: releases
-      GCS_PATH: ${{ inputs.branch == 'release' && format('dc_apk/TTPOS/Prod/{0}/', matrix.gcs_folder) || format('dc_apk/TTPOS/Test/{0}/', matrix.gcs_folder) }}
       SCP_S_PATH: ${{ inputs.branch == 'release' && format('/hitosea/ttpos-apk/Prod/{0}/', matrix.package) || format('/hitosea/ttpos-apk/Test/{0}/', matrix.package) }}
-      SCP_D_PATH: ${{ inputs.branch == 'release' && format('/root/web/web/restant/out/downloads/{0}/', matrix.gcs_folder) || format('/root/web/web/restant/out/downloads/Test/{0}/', matrix.gcs_folder) }}
+      SCP_D_PATH: ${{ inputs.branch == 'release' && format('/root/web/web/restant/out/downloads/{0}/', matrix.scp_folder) || format('/root/web/web/restant/out/downloads/Test/{0}/', matrix.scp_folder) }}
     steps:
       - name: 检查是否需要构建此应用端
         id: check
@@ -328,21 +339,8 @@ jobs:
             ssh -o StrictHostKeyChecking=no ${{ secrets.SCP_D_USER }}@${{ secrets.SCP_D_HOST }} "cd ${{ env.SCP_D_PATH }} && ln -sf ${{ env.VERSION_APK }} ${{ env.LATEST_NAME }}"
             echo "Created symlink: ${{ env.LATEST_NAME }} -> ${{ env.VERSION_APK }}"
 
-      - name: Upload to Google Cloud Storage
-        if: steps.check.outputs.should_run == 'true' && inputs.scp == 'on'
-        uses: "google-github-actions/auth@v2"
-        with:
-          credentials_json: "${{ secrets.GOOGLE_STORAGE_CREDENTIALS }}"
-
-      - name: 上传构建产物到 Google Cloud Storage
-        if: steps.check.outputs.should_run == 'true' && inputs.scp == 'on'
-        uses: "google-github-actions/upload-cloud-storage@v2"
-        with:
-          path: ${{ env.APK_OUTPUT_PATH }}/${{ matrix.package }}/${{ env.VERSION }}
-          destination: ${{ env.GCS_PATH }}
-          parent: false
-
       - name: 上传到 FaynoSync
+        id: faynosync
         if: steps.check.outputs.should_run == 'true' && inputs.faynosync == true
         continue-on-error: true
         env:
@@ -367,7 +365,109 @@ jobs:
             -H "Authorization: Bearer ${FAYNOSYNC_TOKEN}" \
             -F "file=@${FILE_PATH}" \
             -F "data={\"app_name\":\"${{ matrix.faynosync_name }}\",\"version\":\"${{ env.VERSION }}\",\"channel\":\"${CHANNEL}\",\"publish\":false,\"critical\":false,\"platform\":\"android\",\"arch\":\"arm64\",\"changelog\":\"Build from ${{ inputs.branch }}\"}"
+          echo "uploaded=true" >> $GITHUB_OUTPUT
           echo "FaynoSync 上传完成"
+
+      - name: 更新 CMS 下载页
+        if: >-
+          steps.check.outputs.should_run == 'true'
+          && inputs.update_cms == true
+          && steps.faynosync.outputs.uploaded == 'true'
+          && matrix.cms_title != ''
+        continue-on-error: true
+        env:
+          STRAPI_URL: https://cms.hitosea.com
+          STRAPI_TOKEN: ${{ secrets.STRAPI_TOKEN }}
+          FAYNOSYNC_URL: ${{ secrets.FAYNOSYNC_URL }}
+          FAYNOSYNC_TOKEN: ${{ secrets.FAYNOSYNC_TOKEN }}
+          CMS_PLATFORM: android
+          CMS_ARCH: arm64
+          CMS_PKG_FMT: apk
+          CMS_PLATFORM_LABEL: Android
+          CMS_TITLE: ${{ matrix.cms_title }}
+          CMS_VERSION: ${{ env.VERSION }}
+        run: |
+          if [ -z "$STRAPI_TOKEN" ]; then
+            echo "::warning::未配置 STRAPI_TOKEN，跳过 CMS 更新"
+            exit 0
+          fi
+
+          CHANNEL="${{ inputs.env }}"
+
+          # 从 FaynoSync 获取下载链接（使用 --data-urlencode 处理含空格的 app_name）
+          DOWNLOAD_URL=$(curl -s -o /dev/null -w "%{redirect_url}" -G \
+            "${FAYNOSYNC_URL}/apps/latest" \
+            --data-urlencode "app_name=${{ matrix.faynosync_name }}" \
+            --data-urlencode "channel=${CHANNEL}" \
+            --data-urlencode "platform=${CMS_PLATFORM}" \
+            --data-urlencode "arch=${CMS_ARCH}" \
+            --data-urlencode "package=${CMS_PKG_FMT}" \
+            --data-urlencode "owner=ttpos")
+
+          if [ -z "$DOWNLOAD_URL" ]; then
+            echo "::warning::无法从 FaynoSync 获取下载链接，跳过 CMS 更新"
+            exit 0
+          fi
+
+          echo "获取到下载链接: ${DOWNLOAD_URL}"
+
+          POPULATE="populate[items][populate][downloadButton]=*&populate[items][populate][downloadButtons]=*&populate[items][populate][thumbnail]=*&populate[items][populate][platforms]=*"
+
+          CMS_DATA=$(curl -s \
+            "${STRAPI_URL}/api/tt-pos-download?locale=en&${POPULATE}" \
+            -H "Authorization: Bearer ${STRAPI_TOKEN}")
+
+          if ! echo "$CMS_DATA" | jq -e '.data.attributes.items' > /dev/null 2>&1; then
+            echo "::warning::无法获取 CMS 数据，跳过"
+            exit 0
+          fi
+
+          HAS_MATCH=$(echo "$CMS_DATA" | jq --arg title "$CMS_TITLE" \
+            '[.data.attributes.items[] | select(.title == $title)] | length')
+
+          if [ "$HAS_MATCH" = "0" ]; then
+            echo "::warning::CMS 中未找到 ${CMS_TITLE}，跳过"
+            exit 0
+          fi
+
+          UPDATED=$(echo "$CMS_DATA" | jq \
+            --arg url "$DOWNLOAD_URL" \
+            --arg ver "V${CMS_VERSION}" \
+            --arg date "$(date +%Y-%m-%d)" \
+            --arg label "$CMS_PLATFORM_LABEL" \
+            --arg title "$CMS_TITLE" \
+            '
+            .data.attributes |
+            del(.createdAt, .updatedAt, .publishedAt, .locale) |
+            .localizations = [.localizations.data[]?.id] |
+            .items |= map(
+              .thumbnail = (if .thumbnail and .thumbnail.data then .thumbnail.data.id else null end) |
+              .platforms = [.platforms[]? | {label}] |
+              .downloadButton = (if .downloadButton then {label: .downloadButton.label, href: .downloadButton.href, target: .downloadButton.target} else null end) |
+              .downloadButtons = [.downloadButtons[]? | {label, href, target}] |
+              if .title == $title then
+                .version = $ver |
+                .releasedAt = $date |
+                (.downloadButtons |= map(
+                  if .label == $label then .href = $url else . end
+                )) |
+                if $label == "Android" then .downloadButton.href = $url else . end
+              else . end
+            ) |
+            { data: . }
+            ')
+
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X PUT "${STRAPI_URL}/api/tt-pos-download?locale=en" \
+            -H "Authorization: Bearer ${STRAPI_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "$UPDATED")
+
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+            echo "CMS 更新成功 (HTTP ${HTTP_STATUS})"
+          else
+            echo "::warning::CMS 更新失败 (HTTP ${HTTP_STATUS})"
+          fi
 
       - name: 构建完成总结
         if: always() && steps.check.outputs.should_run == 'true'
