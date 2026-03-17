@@ -42,6 +42,23 @@ on:
           - "wss://api.ttpos.com/ws"
           - "wss://ttpos-test1.ttpos.com/ws"
           - "wss://ttpos-pro.keli.vip/ws"
+      updater_url:
+        description: "自定义更新服务URL (覆盖 UPDATER_URL)"
+        required: false
+        type: string
+      updater_owner:
+        description: "自定义更新服务Owner (覆盖 UPDATER_OWNER)"
+        required: false
+        type: string
+      updater_channel:
+        description: "自定义更新频道 (覆盖 UPDATER_CHANNEL)"
+        required: false
+        type: choice
+        options:
+          - ""
+          - "prod"
+          - "test"
+          - "dev"
       scp:
         description: "是否启用SCP传输"
         required: true
@@ -69,6 +86,9 @@ jobs:
       BASE_URL: ${{ inputs.base_url || github.event.client_payload.base_url || 'https://api.ttpos.com/api/v1' }}
       BASE_WS_URL: ${{ inputs.base_ws_url || github.event.client_payload.base_ws_url || 'wss://api.ttpos.com/ws' }}
       PACKAGE: ${{ inputs.package || github.event.client_payload.package || 'all' }}
+      UPDATER_URL: ${{ inputs.updater_url || github.event.client_payload.updater_url || '' }}
+      UPDATER_OWNER: ${{ inputs.updater_owner || github.event.client_payload.updater_owner || '' }}
+      UPDATER_CHANNEL: ${{ inputs.updater_channel || github.event.client_payload.updater_channel || '' }}
       SCP: ${{ inputs.scp || github.event.client_payload.scp || 'off' }}
       FAYNOSYNC: ${{ inputs.faynosync || github.event.client_payload.faynosync || 'false' }}
     steps:
@@ -82,6 +102,9 @@ jobs:
             -f package=${{ env.PACKAGE }} \
             -f base_url=${{ env.BASE_URL }} \
             -f base_ws_url=${{ env.BASE_WS_URL }} \
+            -f updater_url=${{ env.UPDATER_URL }} \
+            -f updater_owner=${{ env.UPDATER_OWNER }} \
+            -f updater_channel=${{ env.UPDATER_CHANNEL }} \
             -f scp=${{ env.SCP }} \
             -f faynosync=${{ env.FAYNOSYNC }}
 
@@ -95,6 +118,9 @@ jobs:
             -f package=${{ env.PACKAGE }} \
             -f base_url=${{ env.BASE_URL }} \
             -f base_ws_url=${{ env.BASE_WS_URL }} \
+            -f updater_url=${{ env.UPDATER_URL }} \
+            -f updater_owner=${{ env.UPDATER_OWNER }} \
+            -f updater_channel=${{ env.UPDATER_CHANNEL }} \
             -f faynosync=${{ env.FAYNOSYNC }}
 
       - name: 触发 Windows 构建
@@ -107,6 +133,9 @@ jobs:
             -f package=${{ env.PACKAGE }} \
             -f base_url=${{ env.BASE_URL }} \
             -f base_ws_url=${{ env.BASE_WS_URL }} \
+            -f updater_url=${{ env.UPDATER_URL }} \
+            -f updater_owner=${{ env.UPDATER_OWNER }} \
+            -f updater_channel=${{ env.UPDATER_CHANNEL }} \
             -f scp=${{ env.SCP }} \
             -f faynosync=${{ env.FAYNOSYNC }}
 
@@ -120,6 +149,9 @@ jobs:
             -f package=${{ env.PACKAGE }} \
             -f base_url=${{ env.BASE_URL }} \
             -f base_ws_url=${{ env.BASE_WS_URL }} \
+            -f updater_url=${{ env.UPDATER_URL }} \
+            -f updater_owner=${{ env.UPDATER_OWNER }} \
+            -f updater_channel=${{ env.UPDATER_CHANNEL }} \
             -f scp=${{ env.SCP }} \
             -f faynosync=${{ env.FAYNOSYNC }}
 
@@ -132,4 +164,7 @@ jobs:
             -f env=${{ env.BUILD_ENV }} \
             -f package=${{ env.PACKAGE }} \
             -f base_url=${{ env.BASE_URL }} \
-            -f base_ws_url=${{ env.BASE_WS_URL }}
+            -f base_ws_url=${{ env.BASE_WS_URL }} \
+            -f updater_url=${{ env.UPDATER_URL }} \
+            -f updater_owner=${{ env.UPDATER_OWNER }} \
+            -f updater_channel=${{ env.UPDATER_CHANNEL }}

@@ -45,6 +45,23 @@ on:
           - "wss://ttpos-test1.ttpos.com/ws"
           - "wss://api.ttpos.com/ws"
           - "wss://ttpos-pro.keli.vip/ws"
+      updater_url:
+        description: "自定义更新服务URL (覆盖 UPDATER_URL)"
+        required: false
+        type: string
+      updater_owner:
+        description: "自定义更新服务Owner (覆盖 UPDATER_OWNER)"
+        required: false
+        type: string
+      updater_channel:
+        description: "自定义更新频道 (覆盖 UPDATER_CHANNEL)"
+        required: false
+        type: choice
+        options:
+          - ""
+          - "prod"
+          - "test"
+          - "dev"
 
 jobs:
   build:
@@ -137,6 +154,9 @@ jobs:
         env:
           API_URL: ${{ inputs.base_url }}
           WS_URL: ${{ inputs.base_ws_url }}
+          UPDATER_URL: ${{ inputs.updater_url }}
+          UPDATER_OWNER: ${{ inputs.updater_owner }}
+          UPDATER_CHANNEL: ${{ inputs.updater_channel }}
         run: |
           # 根据 env 输入选择对应的环境文件（与 scripts/utils.dart getEnv() 保持一致）
           case "${{ inputs.env }}" in
@@ -158,6 +178,19 @@ jobs:
 
           sed -i "s|^API_BASE_URL=.*|API_BASE_URL=${API_URL}|" "$ENV_PATH"
           sed -i "s|^WS_BASE_URL=.*|WS_BASE_URL=${WS_URL}|" "$ENV_PATH"
+
+          if [ -n "$UPDATER_URL" ]; then
+            sed -i "s|^UPDATER_URL=.*|UPDATER_URL=${UPDATER_URL}|" "$ENV_PATH"
+            grep -q "^UPDATER_URL=" "$ENV_PATH" || echo "UPDATER_URL=${UPDATER_URL}" >> "$ENV_PATH"
+          fi
+          if [ -n "$UPDATER_OWNER" ]; then
+            sed -i "s|^UPDATER_OWNER=.*|UPDATER_OWNER=${UPDATER_OWNER}|" "$ENV_PATH"
+            grep -q "^UPDATER_OWNER=" "$ENV_PATH" || echo "UPDATER_OWNER=${UPDATER_OWNER}" >> "$ENV_PATH"
+          fi
+          if [ -n "$UPDATER_CHANNEL" ]; then
+            sed -i "s|^UPDATER_CHANNEL=.*|UPDATER_CHANNEL=${UPDATER_CHANNEL}|" "$ENV_PATH"
+            grep -q "^UPDATER_CHANNEL=" "$ENV_PATH" || echo "UPDATER_CHANNEL=${UPDATER_CHANNEL}" >> "$ENV_PATH"
+          fi
 
           # 保存 ENV_SUFFIX 供后续步骤使用
           echo "ENV_SUFFIX=$ENV_SUFFIX" >> $GITHUB_ENV
