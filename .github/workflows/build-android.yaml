@@ -437,7 +437,9 @@ jobs:
             --arg label "$CMS_PLATFORM_LABEL" \
             --arg title "$CMS_TITLE" \
             '
-            .data.attributes.items | map(
+            .data.attributes |
+            del(.createdAt, .updatedAt, .publishedAt, .locale, .localizations) |
+            .items |= map(
               .thumbnail = (if .thumbnail and .thumbnail.data then .thumbnail.data.id else null end) |
               if .title == $title then
                 .version = $ver |
@@ -447,7 +449,8 @@ jobs:
                 )) |
                 if $label == "Android" then .downloadButton.href = $url else . end
               else . end
-            ) | { data: { items: . } }
+            ) |
+            { data: . }
             ')
 
           HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
