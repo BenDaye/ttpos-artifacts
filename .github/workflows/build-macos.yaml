@@ -281,7 +281,6 @@ jobs:
           PUB_HOSTED_URL: https://pub.flutter-io.cn
           FLUTTER_STORAGE_BASE_URL: https://storage.flutter-io.cn
         run: |
-          melos run init
           melos bs
           melos run env:setup -- --env=${{ inputs.env }} --file=${{ inputs.env }}
           brew install automake libtool
