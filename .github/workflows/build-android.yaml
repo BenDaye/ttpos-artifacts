@@ -438,9 +438,13 @@ jobs:
             --arg title "$CMS_TITLE" \
             '
             .data.attributes |
-            del(.createdAt, .updatedAt, .publishedAt, .locale, .localizations) |
+            del(.createdAt, .updatedAt, .publishedAt, .locale) |
+            .localizations = [.localizations.data[]?.id] |
             .items |= map(
               .thumbnail = (if .thumbnail and .thumbnail.data then .thumbnail.data.id else null end) |
+              .platforms = [.platforms[]? | {label}] |
+              .downloadButton = (if .downloadButton then {label: .downloadButton.label, href: .downloadButton.href, target: .downloadButton.target} else null end) |
+              .downloadButtons = [.downloadButtons[]? | {label, href, target}] |
               if .title == $title then
                 .version = $ver |
                 .releasedAt = $date |
