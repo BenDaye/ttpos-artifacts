@@ -215,6 +215,7 @@ jobs:
           SENTRYDSN_TABLET: ${{ secrets.SENTRYDSN_TABLET }}
           SENTRYDSN_SHOP: ${{ secrets.SENTRYDSN_SHOP }}
           SENTRYDSN_QDS: ${{ secrets.SENTRYDSN_QDS }}
+          SENTRYDSN_KIOSK: ${{ secrets.SENTRYDSN_KIOSK }}
         run: |
           ENV_PATH="apps/${{ matrix.package }}/.env.${{ env.ENV_SUFFIX }}.local"
           case "${{ matrix.package }}" in
@@ -224,6 +225,7 @@ jobs:
             kds)       DSN="$SENTRYDSN_KDS" ;;
             shop)      DSN="$SENTRYDSN_SHOP" ;;
             qds)       DSN="$SENTRYDSN_QDS" ;;
+            kiosk)     DSN="$SENTRYDSN_KIOSK" ;;
           esac
           sed -i "s|^SENTRY_DSN=.*|SENTRY_DSN=${DSN}|" "$ENV_PATH"
 

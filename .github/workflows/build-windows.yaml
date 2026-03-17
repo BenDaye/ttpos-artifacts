@@ -217,6 +217,7 @@ jobs:
             "tablet" { "${{ secrets.SENTRYDSN_TABLET }}" }
             "kds" { "${{ secrets.SENTRYDSN_KDS }}" }
             "shop" { "${{ secrets.SENTRYDSN_SHOP }}" }
+            "kiosk" { "${{ secrets.SENTRYDSN_KIOSK }}" }
             default { "" }
           }
           if ($dsn -ne "") {
