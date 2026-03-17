@@ -90,37 +90,36 @@ jobs:
         include:
           - package: pos
             apk_name: TTPOS-Cashier
-            gcs_folder: Cashier
+            scp_folder: Cashier
             faynosync_name: "TTPOS"
           - package: assistant
             apk_name: TTPOS-Assistant
-            gcs_folder: Assistant
+            scp_folder: Assistant
             faynosync_name: "TTPOS Go"
           - package: kds
             apk_name: TTPOS-Kitchen
-            gcs_folder: Kitchen
+            scp_folder: Kitchen
             faynosync_name: "TTPOS Kitchen"
           - package: tablet
             apk_name: TTPOS-Menu
-            gcs_folder: Menu
+            scp_folder: Menu
             faynosync_name: "TTPOS Menu"
           - package: shop
             apk_name: TTPOS-Shop
-            gcs_folder: Shop
+            scp_folder: Shop
             faynosync_name: "TTPOS Shop"
           - package: qds
             apk_name: TTPOS-Queue
-            gcs_folder: Qds
+            scp_folder: Qds
             faynosync_name: "TTPOS Queue"
           - package: kiosk
             apk_name: TTPOS-Kiosk
-            gcs_folder: Kiosk
+            scp_folder: Kiosk
             faynosync_name: "TTPOS Kiosk"
     env:
       APK_OUTPUT_PATH: releases
-      GCS_PATH: ${{ inputs.branch == 'release' && format('dc_apk/TTPOS/Prod/{0}/', matrix.gcs_folder) || format('dc_apk/TTPOS/Test/{0}/', matrix.gcs_folder) }}
       SCP_S_PATH: ${{ inputs.branch == 'release' && format('/hitosea/ttpos-apk/Prod/{0}/', matrix.package) || format('/hitosea/ttpos-apk/Test/{0}/', matrix.package) }}
-      SCP_D_PATH: ${{ inputs.branch == 'release' && format('/root/web/web/restant/out/downloads/{0}/', matrix.gcs_folder) || format('/root/web/web/restant/out/downloads/Test/{0}/', matrix.gcs_folder) }}
+      SCP_D_PATH: ${{ inputs.branch == 'release' && format('/root/web/web/restant/out/downloads/{0}/', matrix.scp_folder) || format('/root/web/web/restant/out/downloads/Test/{0}/', matrix.scp_folder) }}
     steps:
       - name: 检查是否需要构建此应用端
         id: check
@@ -327,20 +326,6 @@ jobs:
             # 在最终服务器创建软链
             ssh -o StrictHostKeyChecking=no ${{ secrets.SCP_D_USER }}@${{ secrets.SCP_D_HOST }} "cd ${{ env.SCP_D_PATH }} && ln -sf ${{ env.VERSION_APK }} ${{ env.LATEST_NAME }}"
             echo "Created symlink: ${{ env.LATEST_NAME }} -> ${{ env.VERSION_APK }}"
-
-      - name: Upload to Google Cloud Storage
-        if: steps.check.outputs.should_run == 'true' && inputs.scp == 'on'
-        uses: "google-github-actions/auth@v2"
-        with:
-          credentials_json: "${{ secrets.GOOGLE_STORAGE_CREDENTIALS }}"
-
-      - name: 上传构建产物到 Google Cloud Storage
-        if: steps.check.outputs.should_run == 'true' && inputs.scp == 'on'
-        uses: "google-github-actions/upload-cloud-storage@v2"
-        with:
-          path: ${{ env.APK_OUTPUT_PATH }}/${{ matrix.package }}/${{ env.VERSION }}
-          destination: ${{ env.GCS_PATH }}
-          parent: false
 
       - name: 上传到 FaynoSync
         if: steps.check.outputs.should_run == 'true' && inputs.faynosync == true
