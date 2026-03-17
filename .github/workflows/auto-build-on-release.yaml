@@ -76,6 +76,7 @@ jobs:
         run: |
           gh workflow run build-android.yaml \
             --repo ${{ github.repository }} \
+            --ref ${{ github.ref }} \
             -f branch=${{ env.BRANCH }} \
             -f env=${{ env.BUILD_ENV }} \
             -f package=${{ env.PACKAGE }} \
@@ -88,6 +89,7 @@ jobs:
         run: |
           gh workflow run build-ios.yaml \
             --repo ${{ github.repository }} \
+            --ref ${{ github.ref }} \
             -f branch=${{ env.BRANCH }} \
             -f env=${{ env.BUILD_ENV }} \
             -f package=${{ env.PACKAGE }} \
@@ -99,6 +101,7 @@ jobs:
         run: |
           gh workflow run build-windows.yaml \
             --repo ${{ github.repository }} \
+            --ref ${{ github.ref }} \
             -f branch=${{ env.BRANCH }} \
             -f env=${{ env.BUILD_ENV }} \
             -f package=${{ env.PACKAGE }} \
@@ -111,6 +114,7 @@ jobs:
         run: |
           gh workflow run build-macos.yaml \
             --repo ${{ github.repository }} \
+            --ref ${{ github.ref }} \
             -f branch=${{ env.BRANCH }} \
             -f env=${{ env.BUILD_ENV }} \
             -f package=${{ env.PACKAGE }} \
@@ -123,6 +127,7 @@ jobs:
         run: |
           gh workflow run build-web.yaml \
             --repo ${{ github.repository }} \
+            --ref ${{ github.ref }} \
             -f branch=${{ env.BRANCH }} \
             -f env=${{ env.BUILD_ENV }} \
             -f package=${{ env.PACKAGE }} \
