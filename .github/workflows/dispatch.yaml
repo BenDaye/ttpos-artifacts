@@ -1,0 +1,26 @@
+name: Repository Dispatch
+
+on:
+  repository_dispatch:
+    types: [test-build, release-push]
+
+permissions:
+  actions: write
+
+jobs:
+  build:
+    uses: ./.github/workflows/auto-build.yaml
+    with:
+      branch: ${{ github.event.client_payload.branch || (github.event.action == 'test-build' && 'new-test') || 'release' }}
+      env: ${{ github.event.client_payload.env || (github.event.action == 'test-build' && 'test') || 'prod' }}
+      package: ${{ github.event.client_payload.package || 'all' }}
+      platform: ${{ github.event.client_payload.platform || 'all' }}
+      base_url: ${{ github.event.client_payload.base_url || (github.event.action == 'test-build' && 'https://ttpos-test1.ttpos.com/api/v1') || 'https://api.ttpos.com/api/v1' }}
+      base_ws_url: ${{ github.event.client_payload.base_ws_url || (github.event.action == 'test-build' && 'wss://ttpos-test1.ttpos.com/ws') || 'wss://api.ttpos.com/ws' }}
+      updater_url: ${{ github.event.client_payload.updater_url || '' }}
+      updater_owner: ${{ github.event.client_payload.updater_owner || '' }}
+      updater_channel: ${{ github.event.client_payload.updater_channel || '' }}
+      scp: ${{ github.event.client_payload.scp || 'off' }}
+      faynosync: ${{ github.event.client_payload.faynosync || (github.event.action == 'test-build' && 'force') || 'off' }}
+      update_cms: ${{ github.event.client_payload.update_cms || false }}
+    secrets: inherit

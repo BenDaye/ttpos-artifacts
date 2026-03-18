@@ -1,0 +1,279 @@
+name: Auto Build
+
+on:
+  workflow_call:
+    inputs:
+      branch:
+        description: "构建分支"
+        required: true
+        type: string
+      env:
+        description: "构建环境"
+        required: true
+        type: string
+      package:
+        description: "要构建的应用端"
+        required: false
+        type: string
+        default: "all"
+      platform:
+        description: "构建平台"
+        required: false
+        type: string
+        default: "all"
+      base_url:
+        description: "API基础URL"
+        required: true
+        type: string
+      base_ws_url:
+        description: "WebSocket基础URL"
+        required: true
+        type: string
+      updater_url:
+        required: false
+        type: string
+        default: ""
+      updater_owner:
+        required: false
+        type: string
+        default: ""
+      updater_channel:
+        required: false
+        type: string
+        default: ""
+      scp:
+        required: false
+        type: string
+        default: "off"
+      faynosync:
+        required: false
+        type: string
+        default: "force"
+      update_cms:
+        required: false
+        type: boolean
+        default: false
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "构建分支"
+        required: true
+        type: string
+        default: "new-test"
+      env:
+        description: "选择构建环境"
+        required: true
+        type: choice
+        options:
+          - "test"
+          - "prod"
+          - "dev"
+        default: "test"
+      package:
+        description: "选择要构建的应用端"
+        required: true
+        type: choice
+        options:
+          - all
+          - pos
+          - shop
+          - kds
+          - qds
+          - assistant
+          - tablet
+          - kiosk
+          - mobile
+          - menu
+          - member
+        default: "all"
+      platform:
+        description: "选择构建平台"
+        required: true
+        type: choice
+        options:
+          - all
+          - android
+          - windows
+          - web
+          - macos
+          - ios
+        default: "all"
+      base_url:
+        description: "选择API基础URL"
+        required: true
+        type: choice
+        default: "https://ttpos-test1.ttpos.com/api/v1"
+        options:
+          - "https://ttpos-test1.ttpos.com/api/v1"
+          - "https://api.ttpos.com/api/v1"
+          - "https://ttpos-pro.keli.vip/api/v1"
+      base_ws_url:
+        description: "选择WebSocket基础URL"
+        required: true
+        type: choice
+        default: "wss://ttpos-test1.ttpos.com/ws"
+        options:
+          - "wss://ttpos-test1.ttpos.com/ws"
+          - "wss://api.ttpos.com/ws"
+          - "wss://ttpos-pro.keli.vip/ws"
+      updater_url:
+        description: "自定义更新服务URL (覆盖 UPDATER_URL)"
+        required: false
+        type: string
+      updater_owner:
+        description: "自定义更新服务Owner (覆盖 UPDATER_OWNER)"
+        required: false
+        type: string
+      updater_channel:
+        description: "自定义更新频道 (覆盖 UPDATER_CHANNEL)"
+        required: false
+        type: choice
+        options:
+          - ""
+          - "prod"
+          - "test"
+          - "dev"
+      scp:
+        description: "是否启用SCP传输"
+        required: true
+        type: choice
+        options:
+          - "on"
+          - "off"
+        default: "off"
+      faynosync:
+        description: "FaynoSync 上传模式 (on=检查版本已存在则跳过, force=强制覆盖)"
+        required: false
+        default: "force"
+        type: choice
+        options:
+          - "off"
+          - "on"
+          - "force"
+      update_cms:
+        description: "是否更新 CMS 下载页"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  actions: write
+
+concurrency:
+  group: auto-build-${{ inputs.branch }}
+  cancel-in-progress: true
+
+jobs:
+  trigger-builds:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: 显示构建参数
+        run: |
+          echo "========================================="
+          echo "构建参数"
+          echo "========================================="
+          echo "分支: ${{ inputs.branch }}"
+          echo "环境: ${{ inputs.env }}"
+          echo "应用端: ${{ inputs.package }}"
+          echo "平台: ${{ inputs.platform }}"
+          echo "API URL: ${{ inputs.base_url }}"
+          echo "WS URL: ${{ inputs.base_ws_url }}"
+          echo "SCP: ${{ inputs.scp }}"
+          echo "FaynoSync: ${{ inputs.faynosync }}"
+          echo "更新CMS: ${{ inputs.update_cms }}"
+          echo "========================================="
+
+      - name: 触发 Android 构建
+        if: inputs.platform == 'all' || inputs.platform == 'android'
+        run: |
+          gh workflow run build-android.yaml \
+            --repo ${{ github.repository }} \
+            --ref ${{ github.ref }} \
+            -f branch=${{ inputs.branch }} \
+            -f env=${{ inputs.env }} \
+            -f package=${{ inputs.package }} \
+            -f base_url=${{ inputs.base_url }} \
+            -f base_ws_url=${{ inputs.base_ws_url }} \
+            -f updater_url=${{ inputs.updater_url }} \
+            -f updater_owner=${{ inputs.updater_owner }} \
+            -f updater_channel=${{ inputs.updater_channel }} \
+            -f scp=${{ inputs.scp }} \
+            -f faynosync=${{ inputs.faynosync }} \
+            -f update_cms=${{ inputs.update_cms }}
+
+      - name: 触发 iOS 构建
+        if: inputs.platform == 'all' || inputs.platform == 'ios'
+        run: |
+          gh workflow run build-ios.yaml \
+            --repo ${{ github.repository }} \
+            --ref ${{ github.ref }} \
+            -f branch=${{ inputs.branch }} \
+            -f env=${{ inputs.env }} \
+            -f package=${{ inputs.package }} \
+            -f base_url=${{ inputs.base_url }} \
+            -f base_ws_url=${{ inputs.base_ws_url }} \
+            -f updater_url=${{ inputs.updater_url }} \
+            -f updater_owner=${{ inputs.updater_owner }} \
+            -f updater_channel=${{ inputs.updater_channel }} \
+            -f faynosync=${{ inputs.faynosync }}
+
+      - name: 触发 Windows 构建
+        if: inputs.platform == 'all' || inputs.platform == 'windows'
+        run: |
+          gh workflow run build-windows.yaml \
+            --repo ${{ github.repository }} \
+            --ref ${{ github.ref }} \
+            -f branch=${{ inputs.branch }} \
+            -f env=${{ inputs.env }} \
+            -f package=${{ inputs.package }} \
+            -f base_url=${{ inputs.base_url }} \
+            -f base_ws_url=${{ inputs.base_ws_url }} \
+            -f updater_url=${{ inputs.updater_url }} \
+            -f updater_owner=${{ inputs.updater_owner }} \
+            -f updater_channel=${{ inputs.updater_channel }} \
+            -f scp=${{ inputs.scp }} \
+            -f faynosync=${{ inputs.faynosync }} \
+            -f update_cms=${{ inputs.update_cms }}
+
+      - name: 触发 macOS 构建
+        if: inputs.platform == 'all' || inputs.platform == 'macos'
+        run: |
+          gh workflow run build-macos.yaml \
+            --repo ${{ github.repository }} \
+            --ref ${{ github.ref }} \
+            -f branch=${{ inputs.branch }} \
+            -f env=${{ inputs.env }} \
+            -f package=${{ inputs.package }} \
+            -f base_url=${{ inputs.base_url }} \
+            -f base_ws_url=${{ inputs.base_ws_url }} \
+            -f updater_url=${{ inputs.updater_url }} \
+            -f updater_owner=${{ inputs.updater_owner }} \
+            -f updater_channel=${{ inputs.updater_channel }} \
+            -f scp=${{ inputs.scp }} \
+            -f faynosync=${{ inputs.faynosync }} \
+            -f update_cms=${{ inputs.update_cms }}
+
+      - name: 触发 Web 构建
+        if: inputs.platform == 'all' || inputs.platform == 'web'
+        run: |
+          gh workflow run build-web.yaml \
+            --repo ${{ github.repository }} \
+            --ref ${{ github.ref }} \
+            -f branch=${{ inputs.branch }} \
+            -f env=${{ inputs.env }} \
+            -f package=${{ inputs.package }} \
+            -f base_url=${{ inputs.base_url }} \
+            -f base_ws_url=${{ inputs.base_ws_url }} \
+            -f updater_url=${{ inputs.updater_url }} \
+            -f updater_owner=${{ inputs.updater_owner }} \
+            -f updater_channel=${{ inputs.updater_channel }}
+
+      - name: 构建触发完成
+        run: |
+          echo "========================================="
+          echo "所有构建已触发"
+          echo "========================================="
+          echo "请到 Actions 页面查看各平台构建进度"
+          echo "========================================="
