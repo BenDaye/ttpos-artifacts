@@ -412,10 +412,16 @@ jobs:
           CHANNEL="${{ inputs.env }}"
 
           echo "上传到 FaynoSync: ${{ matrix.faynosync_name }} v${{ env.VERSION }} (${CHANNEL}/android/arm64)"
-          curl -f -X POST "${FAYNOSYNC_URL}/upload" \
+          HTTP_CODE=$(curl -s -o /tmp/faynosync_resp.json -w "%{http_code}" -X POST "${FAYNOSYNC_URL}/upload" \
             -H "Authorization: Bearer ${FAYNOSYNC_TOKEN}" \
             -F "file=@${FILE_PATH}" \
-            -F "data={\"app_name\":\"${{ matrix.faynosync_name }}\",\"version\":\"${{ env.VERSION }}\",\"channel\":\"${CHANNEL}\",\"publish\":false,\"critical\":false,\"platform\":\"android\",\"arch\":\"arm64\",\"changelog\":\"Build from ${{ inputs.branch }}\"}"
+            -F "data={\"app_name\":\"${{ matrix.faynosync_name }}\",\"version\":\"${{ env.VERSION }}\",\"channel\":\"${CHANNEL}\",\"publish\":false,\"critical\":false,\"platform\":\"android\",\"arch\":\"arm64\",\"changelog\":\"Build from ${{ inputs.branch }}\"}")
+          RESP=$(cat /tmp/faynosync_resp.json 2>/dev/null)
+          echo "HTTP ${HTTP_CODE}: ${RESP}"
+          if [ "$HTTP_CODE" -ge 400 ]; then
+            echo "::error::FaynoSync 上传失败 (HTTP ${HTTP_CODE}): ${RESP}"
+            exit 1
+          fi
           echo "uploaded=true" >> $GITHUB_OUTPUT
           echo "FaynoSync 上传完成"
 
