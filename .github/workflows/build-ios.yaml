@@ -28,6 +28,7 @@ on:
           - kds
           - tablet
           - shop
+          - kiosk
         default: "all"
       base_url:
         description: "选择API基础URL"
@@ -47,16 +48,37 @@ on:
           - "wss://ttpos-test1.ttpos.com/ws"
           - "wss://api.ttpos.com/ws"
           - "wss://ttpos-pro.keli.vip/ws"
+      updater_url:
+        description: "自定义更新服务URL (覆盖 UPDATER_URL)"
+        required: false
+        type: string
+      updater_owner:
+        description: "自定义更新服务Owner (覆盖 UPDATER_OWNER)"
+        required: false
+        type: string
+      updater_channel:
+        description: "自定义更新频道 (覆盖 UPDATER_CHANNEL)"
+        required: false
+        type: choice
+        options:
+          - ""
+          - "prod"
+          - "test"
+          - "dev"
       distribute_appstore:
         description: "是否分发到 App Store (TestFlight)"
         required: false
         default: false
         type: boolean
       faynosync:
-        description: "是否上传到 FaynoSync"
+        description: "FaynoSync 上传模式 (on=检查版本已存在则跳过, force=强制覆盖)"
         required: false
-        default: false
-        type: boolean
+        default: "off"
+        type: choice
+        options:
+          - "off"
+          - "on"
+          - "force"
 
 jobs:
   build:
@@ -64,7 +86,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        package: [pos, assistant, kds, tablet, shop]
+        package: [pos, assistant, kds, tablet, shop, kiosk]
         include:
           - package: pos
             app_name: TTPOS
@@ -81,6 +103,9 @@ jobs:
           - package: shop
             app_name: TTPOS-Shop
             faynosync_name: "TTPOS Shop"
+          - package: kiosk
+            app_name: TTPOS-Kiosk
+            faynosync_name: "TTPOS Kiosk"
     steps:
       - name: 检查是否需要构建此应用端
         id: check
@@ -164,6 +189,7 @@ jobs:
           IOS_KDS_PROFILE_BASE64: ${{ secrets.IOS_KDS_PROFILE_BASE64 }}
           IOS_TABLET_PROFILE_BASE64: ${{ secrets.IOS_TABLET_PROFILE_BASE64 }}
           IOS_SHOP_PROFILE_BASE64: ${{ secrets.IOS_SHOP_PROFILE_BASE64 }}
+          IOS_KIOSK_PROFILE_BASE64: ${{ secrets.IOS_KIOSK_PROFILE_BASE64 }}
         run: |
           set -e
           PROFILE_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
@@ -188,7 +214,17 @@ jobs:
             exit 1
           fi
           cp "$PROFILE_PATH" "$PROFILE_DIR/${PROFILE_UUID}.mobileprovision"
-          echo "已安装 ${pkg} 描述文件 (UUID: ${PROFILE_UUID})"
+
+          PROFILE_NAME=$(/usr/libexec/PlistBuddy -c "Print Name" "$PLIST_PATH" 2>/dev/null || true)
+          BUNDLE_ID=$(/usr/libexec/PlistBuddy -c "Print Entitlements:application-identifier" "$PLIST_PATH" 2>/dev/null | sed 's/^[A-Z0-9]*\.//' || true)
+          if [ -z "$BUNDLE_ID" ]; then
+            BUNDLE_ID=$(/usr/libexec/PlistBuddy -c "Print :Entitlements:com.apple.application-identifier" "$PLIST_PATH" 2>/dev/null | sed 's/^[A-Z0-9]*\.//' || true)
+          fi
+
+          echo "IOS_PROFILE_UUID=$PROFILE_UUID" >> "$GITHUB_ENV"
+          echo "IOS_PROFILE_NAME=$PROFILE_NAME" >> "$GITHUB_ENV"
+          echo "IOS_BUNDLE_ID=$BUNDLE_ID" >> "$GITHUB_ENV"
+          echo "已安装 ${pkg} 描述文件 (UUID: ${PROFILE_UUID}, Name: ${PROFILE_NAME}, Bundle ID: ${BUNDLE_ID})"
 
       - name: 设置默认钥匙串
         if: steps.check.outputs.should_run == 'true'
@@ -203,9 +239,14 @@ jobs:
         if: steps.check.outputs.should_run == 'true'
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.27.3"
+          flutter-version: "3.41.2"
           channel: stable
           cache: true
+
+      - name: 配置 MELOS_SDK_PATH
+        if: steps.check.outputs.should_run == 'true'
+        shell: bash
+        run: echo "MELOS_SDK_PATH=$(dirname "$(dirname "$(which flutter)")")" >> "$GITHUB_ENV"
 
       - name: Precache Flutter iOS artifacts
         if: steps.check.outputs.should_run == 'true'
@@ -223,14 +264,15 @@ jobs:
           PUB_HOSTED_URL: https://pub.flutter-io.cn
           FLUTTER_STORAGE_BASE_URL: https://storage.flutter-io.cn
         run: |
-          melos run init
           melos bs
           melos run env:setup -- --env=${{ inputs.env }} --file=${{ inputs.env }}
 
       - name: Install CocoaPods dependencies
         if: steps.check.outputs.should_run == 'true'
         working-directory: apps/${{ matrix.package }}/ios
-        run: pod install --repo-update
+        run: |
+          sed -i '' '1,3s/^source /# source /' Podfile
+          pod install --repo-update
         env:
           CP_HOME_DIR: ${{ runner.temp }}/cocoapods
 
@@ -241,6 +283,9 @@ jobs:
         env:
           API_URL: ${{ inputs.base_url }}
           WS_URL: ${{ inputs.base_ws_url }}
+          UPDATER_URL: ${{ inputs.updater_url }}
+          UPDATER_OWNER: ${{ inputs.updater_owner }}
+          UPDATER_CHANNEL: ${{ inputs.updater_channel }}
         run: |
           case "${{ inputs.env }}" in
             dev)  ENV_SUFFIX="development" ;;
@@ -262,6 +307,19 @@ jobs:
           sed -i '' "s|^API_BASE_URL=.*|API_BASE_URL=${API_URL}|" "$ENV_PATH"
           sed -i '' "s|^WS_BASE_URL=.*|WS_BASE_URL=${WS_URL}|" "$ENV_PATH"
 
+          if [ -n "$UPDATER_URL" ]; then
+            sed -i '' "s|^UPDATER_URL=.*|UPDATER_URL=${UPDATER_URL}|" "$ENV_PATH"
+            grep -q "^UPDATER_URL=" "$ENV_PATH" || echo "UPDATER_URL=${UPDATER_URL}" >> "$ENV_PATH"
+          fi
+          if [ -n "$UPDATER_OWNER" ]; then
+            sed -i '' "s|^UPDATER_OWNER=.*|UPDATER_OWNER=${UPDATER_OWNER}|" "$ENV_PATH"
+            grep -q "^UPDATER_OWNER=" "$ENV_PATH" || echo "UPDATER_OWNER=${UPDATER_OWNER}" >> "$ENV_PATH"
+          fi
+          if [ -n "$UPDATER_CHANNEL" ]; then
+            sed -i '' "s|^UPDATER_CHANNEL=.*|UPDATER_CHANNEL=${UPDATER_CHANNEL}|" "$ENV_PATH"
+            grep -q "^UPDATER_CHANNEL=" "$ENV_PATH" || echo "UPDATER_CHANNEL=${UPDATER_CHANNEL}" >> "$ENV_PATH"
+          fi
+
           echo "ENV_SUFFIX=$ENV_SUFFIX" >> $GITHUB_ENV
 
           echo "--- 环境变量文件内容 ($ENV_PATH) ---"
@@ -275,6 +333,7 @@ jobs:
           SENTRYDSN_ASSISTANT: ${{ secrets.SENTRYDSN_ASSISTANT }}
           SENTRYDSN_TABLET: ${{ secrets.SENTRYDSN_TABLET }}
           SENTRYDSN_SHOP: ${{ secrets.SENTRYDSN_SHOP }}
+          SENTRYDSN_KIOSK: ${{ secrets.SENTRYDSN_KIOSK }}
         run: |
           ENV_PATH="apps/${{ matrix.package }}/.env.${{ env.ENV_SUFFIX }}.local"
           case "${{ matrix.package }}" in
@@ -283,6 +342,7 @@ jobs:
             tablet)    DSN="$SENTRYDSN_TABLET" ;;
             kds)       DSN="$SENTRYDSN_KDS" ;;
             shop)      DSN="$SENTRYDSN_SHOP" ;;
+            kiosk)     DSN="$SENTRYDSN_KIOSK" ;;
           esac
           sed -i '' "s|^SENTRY_DSN=.*|SENTRY_DSN=${DSN}|" "$ENV_PATH"
 
@@ -293,6 +353,53 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "VERSION_IPA=${{ matrix.app_name }}-${VERSION}.ipa" >> $GITHUB_ENV
 
+      - name: 检查 FaynoSync 版本是否已存在
+        if: steps.check.outputs.should_run == 'true' && inputs.faynosync == 'on'
+        env:
+          FAYNOSYNC_URL: ${{ secrets.FAYNOSYNC_URL }}
+        run: |
+          if [ -z "$FAYNOSYNC_URL" ]; then
+            echo "::warning::未配置 FAYNOSYNC_URL，跳过 FaynoSync 版本检查"
+            exit 0
+          fi
+
+          APP_NAME="${{ matrix.faynosync_name }}"
+          CHANNEL="${{ inputs.env }}"
+          CHECK_VERSION="${{ env.VERSION }}"
+          PLATFORM="ios"
+          ARCH="arm64"
+
+          echo "检查 FaynoSync: ${APP_NAME} v${CHECK_VERSION} (${CHANNEL}/${PLATFORM}/${ARCH})"
+
+          RESP=$(curl -s --max-time 10 -G "${FAYNOSYNC_URL}/checkVersion" \
+            --data-urlencode "app_name=${APP_NAME}" \
+            --data-urlencode "version=${CHECK_VERSION}" \
+            --data-urlencode "channel=${CHANNEL}" \
+            --data-urlencode "platform=${PLATFORM}" \
+            --data-urlencode "arch=${ARCH}" \
+            --data-urlencode "owner=ttpos")
+
+          UPDATE=$(echo "$RESP" | jq -r '.update_available // "null"')
+
+          if [ "$UPDATE" = "false" ]; then
+            VERIFY=$(curl -s --max-time 10 -G "${FAYNOSYNC_URL}/checkVersion" \
+              --data-urlencode "app_name=${APP_NAME}" \
+              --data-urlencode "version=0.0.0" \
+              --data-urlencode "channel=${CHANNEL}" \
+              --data-urlencode "platform=${PLATFORM}" \
+              --data-urlencode "arch=${ARCH}" \
+              --data-urlencode "owner=ttpos")
+
+            VERIFY_UPDATE=$(echo "$VERIFY" | jq -r '.update_available // "null"')
+
+            if [ "$VERIFY_UPDATE" = "true" ]; then
+              echo "::error::FaynoSync 已存在 ${APP_NAME} v${CHECK_VERSION} (${CHANNEL}/${PLATFORM}/${ARCH})，跳过构建。如需强制覆盖，请选择 faynosync=force"
+              exit 1
+            fi
+          fi
+
+          echo "FaynoSync 检查通过，继续构建"
+
       # ========== 构建 ==========
 
       - name: 检查 ExportOptions.plist
@@ -301,17 +408,36 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           EXPORT_PLIST="apps/${{ matrix.package }}/ios/ExportOptions.plist"
-          if [ -f "$EXPORT_PLIST" ]; then
-            echo "使用仓库中的 ExportOptions.plist"
-          else
-            echo "ExportOptions.plist 不存在, 动态生成..."
-            /usr/libexec/PlistBuddy \
-              -c "Add :method string app-store-connect" \
-              -c "Add :teamID string $APPLE_TEAM_ID" \
-              -c "Add :signingStyle string automatic" \
-              -c "Add :uploadSymbols bool true" \
-              "$EXPORT_PLIST"
+
+          if [ -z "$IOS_BUNDLE_ID" ] || [ -z "$IOS_PROFILE_NAME" ]; then
+            echo "错误: 缺少描述文件信息 (BUNDLE_ID=$IOS_BUNDLE_ID, PROFILE_NAME=$IOS_PROFILE_NAME)"
+            echo "请确保已配置对应的 IOS_*_PROFILE_BASE64 Secret"
+            exit 1
           fi
+
+          echo "强制生成 ExportOptions.plist (Bundle: $IOS_BUNDLE_ID, Profile: $IOS_PROFILE_NAME)"
+          cat > "$EXPORT_PLIST" <<PLISTEOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store-connect</string>
+            <key>teamID</key>
+            <string>${APPLE_TEAM_ID}</string>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>uploadSymbols</key>
+            <true/>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>${IOS_BUNDLE_ID}</key>
+              <string>${IOS_PROFILE_NAME}</string>
+            </dict>
+          </dict>
+          </plist>
+          PLISTEOF
+          echo "--- ExportOptions.plist 内容 ---"
           cat "$EXPORT_PLIST"
 
       - name: 构建 iOS 应用
@@ -410,7 +536,7 @@ jobs:
           compression-level: 0
 
       - name: 上传到 FaynoSync（版本元数据）
-        if: steps.check.outputs.should_run == 'true' && inputs.faynosync == true
+        if: steps.check.outputs.should_run == 'true' && inputs.faynosync != 'off'
         continue-on-error: true
         env:
           FAYNOSYNC_URL: ${{ secrets.FAYNOSYNC_URL }}

@@ -28,6 +28,7 @@ on:
           - kds
           - tablet
           - shop
+          - kiosk
         default: "all"
       base_url:
         description: "选择API基础URL"
@@ -47,6 +48,23 @@ on:
           - "wss://ttpos-test1.ttpos.com/ws"
           - "wss://api.ttpos.com/ws"
           - "wss://ttpos-pro.keli.vip/ws"
+      updater_url:
+        description: "自定义更新服务URL (覆盖 UPDATER_URL)"
+        required: false
+        type: string
+      updater_owner:
+        description: "自定义更新服务Owner (覆盖 UPDATER_OWNER)"
+        required: false
+        type: string
+      updater_channel:
+        description: "自定义更新频道 (覆盖 UPDATER_CHANNEL)"
+        required: false
+        type: choice
+        options:
+          - ""
+          - "prod"
+          - "test"
+          - "dev"
       scp:
         description: "是否启用SCP传输"
         required: true
@@ -56,7 +74,16 @@ on:
           - "on"
           - "off"
       faynosync:
-        description: "是否上传到 FaynoSync"
+        description: "FaynoSync 上传模式 (on=检查版本已存在则跳过, force=强制覆盖)"
+        required: false
+        default: "off"
+        type: choice
+        options:
+          - "off"
+          - "on"
+          - "force"
+      update_cms:
+        description: "是否更新 CMS 下载页"
         required: false
         default: false
         type: boolean
@@ -67,37 +94,47 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        package: [pos, assistant, kds, tablet, shop]
+        package: [pos, assistant, kds, tablet, shop, kiosk]
         include:
           - package: pos
             app_name: TTPOS
             vol_name: "TTPOS"
-            gcs_folder: Cashier
+            scp_folder: Cashier
             faynosync_name: "TTPOS"
+            cms_title: "Cashier"
           - package: assistant
             app_name: TTPOS-Go
             vol_name: "TTPOS Go"
-            gcs_folder: Assistant
+            scp_folder: Assistant
             faynosync_name: "TTPOS Go"
+            cms_title: "Assistant"
           - package: kds
             app_name: TTPOS-Kitchen
             vol_name: "TTPOS Kitchen"
-            gcs_folder: Kitchen
+            scp_folder: Kitchen
             faynosync_name: "TTPOS Kitchen"
+            cms_title: "KDS Kitchen"
           - package: tablet
             app_name: TTPOS-Menu
             vol_name: "TTPOS Menu"
-            gcs_folder: Menu
+            scp_folder: Menu
             faynosync_name: "TTPOS Menu"
+            cms_title: "Tablet Menu"
           - package: shop
             app_name: TTPOS-Shop
             vol_name: "TTPOS Shop"
-            gcs_folder: Shop
+            scp_folder: Shop
             faynosync_name: "TTPOS Shop"
+            cms_title: "Shop"
+          - package: kiosk
+            app_name: TTPOS-Kiosk
+            vol_name: "TTPOS Kiosk"
+            scp_folder: Kiosk
+            faynosync_name: "TTPOS Kiosk"
+            cms_title: ""
     env:
-      GCS_PATH: ${{ inputs.branch == 'release' && format('dc_apk/TTPOS/Prod/MacOS/{0}/', matrix.gcs_folder) || format('dc_apk/TTPOS/Test/MacOS/{0}/', matrix.gcs_folder) }}
       SCP_S_PATH: ${{ inputs.branch == 'release' && format('/hitosea/ttpos-apk/Prod/{0}/', matrix.package) || format('/hitosea/ttpos-apk/Test/{0}/', matrix.package) }}
-      SCP_D_PATH: ${{ inputs.branch == 'release' && format('/root/web/web/restant/out/downloads/MacOS/{0}/', matrix.gcs_folder) || format('/root/web/web/restant/out/downloads/MacOS/Test/{0}/', matrix.gcs_folder) }}
+      SCP_D_PATH: ${{ inputs.branch == 'release' && format('/root/web/web/restant/out/downloads/MacOS/{0}/', matrix.scp_folder) || format('/root/web/web/restant/out/downloads/MacOS/Test/{0}/', matrix.scp_folder) }}
     steps:
       - name: 检查是否需要构建此应用端
         id: check
@@ -201,6 +238,7 @@ jobs:
           MAC_KDS_PROFILE_BASE64: ${{ secrets.MAC_KDS_PROFILE_BASE64 }}
           MAC_TABLET_PROFILE_BASE64: ${{ secrets.MAC_TABLET_PROFILE_BASE64 }}
           MAC_SHOP_PROFILE_BASE64: ${{ secrets.MAC_SHOP_PROFILE_BASE64 }}
+          MAC_KIOSK_PROFILE_BASE64: ${{ secrets.MAC_KIOSK_PROFILE_BASE64 }}
         run: |
           set -e
           PROFILE_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
@@ -245,9 +283,14 @@ jobs:
         if: steps.check.outputs.should_run == 'true'
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.27.3"
+          flutter-version: "3.41.2"
           channel: stable
           cache: true
+
+      - name: 配置 MELOS_SDK_PATH
+        if: steps.check.outputs.should_run == 'true'
+        shell: bash
+        run: echo "MELOS_SDK_PATH=$(dirname "$(dirname "$(which flutter)")")" >> "$GITHUB_ENV"
 
       - name: Enable macOS desktop
         if: steps.check.outputs.should_run == 'true'
@@ -269,10 +312,18 @@ jobs:
           PUB_HOSTED_URL: https://pub.flutter-io.cn
           FLUTTER_STORAGE_BASE_URL: https://storage.flutter-io.cn
         run: |
-          melos run init
           melos bs
           melos run env:setup -- --env=${{ inputs.env }} --file=${{ inputs.env }}
           brew install automake libtool
+
+      - name: Install CocoaPods dependencies
+        if: steps.check.outputs.should_run == 'true'
+        working-directory: apps/${{ matrix.package }}/macos
+        run: |
+          sed -i '' '1,3s/^source /# source /' Podfile
+          pod install --repo-update
+        env:
+          CP_HOME_DIR: ${{ runner.temp }}/cocoapods
 
       # ========== 环境变量配置 ==========
 
@@ -281,6 +332,9 @@ jobs:
         env:
           API_URL: ${{ inputs.base_url }}
           WS_URL: ${{ inputs.base_ws_url }}
+          UPDATER_URL: ${{ inputs.updater_url }}
+          UPDATER_OWNER: ${{ inputs.updater_owner }}
+          UPDATER_CHANNEL: ${{ inputs.updater_channel }}
         run: |
           case "${{ inputs.env }}" in
             dev)  ENV_SUFFIX="development" ;;
@@ -302,6 +356,19 @@ jobs:
           sed -i '' "s|^API_BASE_URL=.*|API_BASE_URL=${API_URL}|" "$ENV_PATH"
           sed -i '' "s|^WS_BASE_URL=.*|WS_BASE_URL=${WS_URL}|" "$ENV_PATH"
 
+          if [ -n "$UPDATER_URL" ]; then
+            sed -i '' "s|^UPDATER_URL=.*|UPDATER_URL=${UPDATER_URL}|" "$ENV_PATH"
+            grep -q "^UPDATER_URL=" "$ENV_PATH" || echo "UPDATER_URL=${UPDATER_URL}" >> "$ENV_PATH"
+          fi
+          if [ -n "$UPDATER_OWNER" ]; then
+            sed -i '' "s|^UPDATER_OWNER=.*|UPDATER_OWNER=${UPDATER_OWNER}|" "$ENV_PATH"
+            grep -q "^UPDATER_OWNER=" "$ENV_PATH" || echo "UPDATER_OWNER=${UPDATER_OWNER}" >> "$ENV_PATH"
+          fi
+          if [ -n "$UPDATER_CHANNEL" ]; then
+            sed -i '' "s|^UPDATER_CHANNEL=.*|UPDATER_CHANNEL=${UPDATER_CHANNEL}|" "$ENV_PATH"
+            grep -q "^UPDATER_CHANNEL=" "$ENV_PATH" || echo "UPDATER_CHANNEL=${UPDATER_CHANNEL}" >> "$ENV_PATH"
+          fi
+
           echo "ENV_SUFFIX=$ENV_SUFFIX" >> $GITHUB_ENV
 
           echo "--- 环境变量文件内容 ($ENV_PATH) ---"
@@ -315,6 +382,7 @@ jobs:
           SENTRYDSN_ASSISTANT: ${{ secrets.SENTRYDSN_ASSISTANT }}
           SENTRYDSN_TABLET: ${{ secrets.SENTRYDSN_TABLET }}
           SENTRYDSN_SHOP: ${{ secrets.SENTRYDSN_SHOP }}
+          SENTRYDSN_KIOSK: ${{ secrets.SENTRYDSN_KIOSK }}
         run: |
           ENV_PATH="apps/${{ matrix.package }}/.env.${{ env.ENV_SUFFIX }}.local"
           case "${{ matrix.package }}" in
@@ -323,6 +391,7 @@ jobs:
             tablet)    DSN="$SENTRYDSN_TABLET" ;;
             kds)       DSN="$SENTRYDSN_KDS" ;;
             shop)      DSN="$SENTRYDSN_SHOP" ;;
+            kiosk)     DSN="$SENTRYDSN_KIOSK" ;;
           esac
           sed -i '' "s|^SENTRY_DSN=.*|SENTRY_DSN=${DSN}|" "$ENV_PATH"
 
@@ -333,6 +402,58 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "VERSION_DMG=${{ matrix.app_name }}-${VERSION}.dmg" >> $GITHUB_ENV
           echo "LATEST_NAME=${{ matrix.app_name }}-latest.dmg" >> $GITHUB_ENV
+
+      - name: 检查 FaynoSync 版本是否已存在
+        if: steps.check.outputs.should_run == 'true' && inputs.faynosync == 'on'
+        env:
+          FAYNOSYNC_URL: ${{ secrets.FAYNOSYNC_URL }}
+        run: |
+          if [ -z "$FAYNOSYNC_URL" ]; then
+            echo "::warning::未配置 FAYNOSYNC_URL，跳过 FaynoSync 版本检查"
+            exit 0
+          fi
+
+          APP_NAME="${{ matrix.faynosync_name }}"
+          CHANNEL="${{ inputs.env }}"
+          CHECK_VERSION="${{ env.VERSION }}"
+          PLATFORM="macos"
+          ARCH=$(uname -m)
+          if [ "$ARCH" = "x86_64" ]; then
+            ARCH="amd64"
+          else
+            ARCH="arm64"
+          fi
+
+          echo "检查 FaynoSync: ${APP_NAME} v${CHECK_VERSION} (${CHANNEL}/${PLATFORM}/${ARCH})"
+
+          RESP=$(curl -s --max-time 10 -G "${FAYNOSYNC_URL}/checkVersion" \
+            --data-urlencode "app_name=${APP_NAME}" \
+            --data-urlencode "version=${CHECK_VERSION}" \
+            --data-urlencode "channel=${CHANNEL}" \
+            --data-urlencode "platform=${PLATFORM}" \
+            --data-urlencode "arch=${ARCH}" \
+            --data-urlencode "owner=ttpos")
+
+          UPDATE=$(echo "$RESP" | jq -r '.update_available // "null"')
+
+          if [ "$UPDATE" = "false" ]; then
+            VERIFY=$(curl -s --max-time 10 -G "${FAYNOSYNC_URL}/checkVersion" \
+              --data-urlencode "app_name=${APP_NAME}" \
+              --data-urlencode "version=0.0.0" \
+              --data-urlencode "channel=${CHANNEL}" \
+              --data-urlencode "platform=${PLATFORM}" \
+              --data-urlencode "arch=${ARCH}" \
+              --data-urlencode "owner=ttpos")
+
+            VERIFY_UPDATE=$(echo "$VERIFY" | jq -r '.update_available // "null"')
+
+            if [ "$VERIFY_UPDATE" = "true" ]; then
+              echo "::error::FaynoSync 已存在 ${APP_NAME} v${CHECK_VERSION} (${CHANNEL}/${PLATFORM}/${ARCH})，跳过构建。如需强制覆盖，请选择 faynosync=force"
+              exit 1
+            fi
+          fi
+
+          echo "FaynoSync 检查通过，继续构建"
 
       # ========== macOS 签名身份 ==========
 
@@ -737,22 +858,9 @@ jobs:
             ssh -o StrictHostKeyChecking=no ${{ secrets.SCP_D_USER }}@${{ secrets.SCP_D_HOST }} "cd ${{ env.SCP_D_PATH }} && ln -sf ${{ env.VERSION_DMG }} ${{ env.LATEST_NAME }}"
             echo "Created symlink: ${{ env.LATEST_NAME }} -> ${{ env.VERSION_DMG }}"
 
-      - name: Upload to Google Cloud Storage
-        if: steps.check.outputs.should_run == 'true' && inputs.scp == 'on'
-        uses: "google-github-actions/auth@v2"
-        with:
-          credentials_json: "${{ secrets.GOOGLE_STORAGE_CREDENTIALS }}"
-
-      - name: 上传构建产物到 Google Cloud Storage
-        if: steps.check.outputs.should_run == 'true' && inputs.scp == 'on'
-        uses: "google-github-actions/upload-cloud-storage@v2"
-        with:
-          path: ${{ env.DMG_PATH }}
-          destination: ${{ env.GCS_PATH }}
-          parent: false
-
       - name: 上传到 FaynoSync
-        if: steps.check.outputs.should_run == 'true' && inputs.faynosync == true
+        id: faynosync
+        if: steps.check.outputs.should_run == 'true' && inputs.faynosync != 'off'
         continue-on-error: true
         env:
           FAYNOSYNC_URL: ${{ secrets.FAYNOSYNC_URL }}
@@ -781,7 +889,114 @@ jobs:
             -H "Authorization: Bearer ${FAYNOSYNC_TOKEN}" \
             -F "file=@${DMG_PATH}" \
             -F "data={\"app_name\":\"${{ matrix.faynosync_name }}\",\"version\":\"${{ env.VERSION }}\",\"channel\":\"${CHANNEL}\",\"publish\":false,\"critical\":false,\"platform\":\"macos\",\"arch\":\"${FS_ARCH}\",\"changelog\":\"Build from ${{ inputs.branch }}\"}"
+          echo "uploaded=true" >> $GITHUB_OUTPUT
           echo "FaynoSync 上传完成"
+
+      - name: 更新 CMS 下载页
+        if: >-
+          steps.check.outputs.should_run == 'true'
+          && inputs.update_cms == true
+          && steps.faynosync.outputs.uploaded == 'true'
+          && matrix.cms_title != ''
+        continue-on-error: true
+        env:
+          STRAPI_URL: https://cms.hitosea.com
+          STRAPI_TOKEN: ${{ secrets.STRAPI_TOKEN }}
+          FAYNOSYNC_URL: ${{ secrets.FAYNOSYNC_URL }}
+          FAYNOSYNC_TOKEN: ${{ secrets.FAYNOSYNC_TOKEN }}
+          CMS_PKG_FMT: dmg
+          CMS_PLATFORM_LABEL: MacOS
+          CMS_TITLE: ${{ matrix.cms_title }}
+          CMS_VERSION: ${{ env.VERSION }}
+        run: |
+          if [ -z "$STRAPI_TOKEN" ]; then
+            echo "::warning::未配置 STRAPI_TOKEN，跳过 CMS 更新"
+            exit 0
+          fi
+
+          CHANNEL="${{ inputs.env }}"
+
+          # 使用与 FaynoSync 上传相同的架构检测
+          ARCH=$(uname -m)
+          if [ "$ARCH" = "x86_64" ]; then
+            CMS_ARCH="amd64"
+          else
+            CMS_ARCH="arm64"
+          fi
+
+          # 从 FaynoSync 获取下载链接（使用 --data-urlencode 处理含空格的 app_name）
+          DOWNLOAD_URL=$(curl -s -o /dev/null -w "%{redirect_url}" -G \
+            "${FAYNOSYNC_URL}/apps/latest" \
+            --data-urlencode "app_name=${{ matrix.faynosync_name }}" \
+            --data-urlencode "channel=${CHANNEL}" \
+            --data-urlencode "platform=macos" \
+            --data-urlencode "arch=${CMS_ARCH}" \
+            --data-urlencode "package=${CMS_PKG_FMT}" \
+            --data-urlencode "owner=ttpos")
+
+          if [ -z "$DOWNLOAD_URL" ]; then
+            echo "::warning::无法从 FaynoSync 获取下载链接，跳过 CMS 更新"
+            exit 0
+          fi
+
+          echo "获取到下载链接: ${DOWNLOAD_URL}"
+
+          POPULATE="populate[items][populate][downloadButton]=*&populate[items][populate][downloadButtons]=*&populate[items][populate][thumbnail]=*&populate[items][populate][platforms]=*"
+
+          CMS_DATA=$(curl -s \
+            "${STRAPI_URL}/api/tt-pos-download?locale=en&${POPULATE}" \
+            -H "Authorization: Bearer ${STRAPI_TOKEN}")
+
+          if ! echo "$CMS_DATA" | jq -e '.data.attributes.items' > /dev/null 2>&1; then
+            echo "::warning::无法获取 CMS 数据，跳过"
+            exit 0
+          fi
+
+          HAS_MATCH=$(echo "$CMS_DATA" | jq --arg title "$CMS_TITLE" \
+            '[.data.attributes.items[] | select(.title == $title)] | length')
+
+          if [ "$HAS_MATCH" = "0" ]; then
+            echo "::warning::CMS 中未找到 ${CMS_TITLE}，跳过"
+            exit 0
+          fi
+
+          UPDATED=$(echo "$CMS_DATA" | jq \
+            --arg url "$DOWNLOAD_URL" \
+            --arg ver "V${CMS_VERSION}" \
+            --arg date "$(date +%Y-%m-%d)" \
+            --arg label "$CMS_PLATFORM_LABEL" \
+            --arg title "$CMS_TITLE" \
+            '
+            .data.attributes |
+            del(.createdAt, .updatedAt, .publishedAt, .locale) |
+            .localizations = [.localizations.data[]?.id] |
+            .items |= map(
+              .thumbnail = (if .thumbnail and .thumbnail.data then .thumbnail.data.id else null end) |
+              .platforms = [.platforms[]? | {label}] |
+              .downloadButton = (if .downloadButton then {label: .downloadButton.label, href: .downloadButton.href, target: .downloadButton.target} else null end) |
+              .downloadButtons = [.downloadButtons[]? | {label, href, target}] |
+              if .title == $title then
+                .version = $ver |
+                .releasedAt = $date |
+                (.downloadButtons |= map(
+                  if .label == $label then .href = $url else . end
+                ))
+              else . end
+            ) |
+            { data: . }
+            ')
+
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X PUT "${STRAPI_URL}/api/tt-pos-download?locale=en" \
+            -H "Authorization: Bearer ${STRAPI_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "$UPDATED")
+
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+            echo "CMS 更新成功 (HTTP ${HTTP_STATUS})"
+          else
+            echo "::warning::CMS 更新失败 (HTTP ${HTTP_STATUS})"
+          fi
 
       - name: 构建完成总结
         if: always() && steps.check.outputs.should_run == 'true'
