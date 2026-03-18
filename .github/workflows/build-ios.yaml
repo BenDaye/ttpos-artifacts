@@ -353,11 +353,11 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "VERSION_IPA=${{ matrix.app_name }}-${VERSION}.ipa" >> $GITHUB_ENV
 
-          if [ "${{ inputs.env }}" = "prod" ]; then
-            echo "FS_VERSION=$VERSION" >> $GITHUB_ENV
-          else
-            echo "FS_VERSION=${VERSION}-${{ inputs.env }}" >> $GITHUB_ENV
-          fi
+          case "${{ inputs.env }}" in
+            prod) echo "FS_VERSION=${VERSION}" >> $GITHUB_ENV ;;
+            dev)  echo "FS_VERSION=${VERSION}.800" >> $GITHUB_ENV ;;
+            *)    echo "FS_VERSION=${VERSION}.900" >> $GITHUB_ENV ;;
+          esac
 
       - name: 检查 FaynoSync 版本是否已存在
         if: steps.check.outputs.should_run == 'true' && inputs.faynosync == 'on'
