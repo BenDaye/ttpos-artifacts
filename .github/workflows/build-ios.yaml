@@ -568,8 +568,26 @@ jobs:
           distribute: appstore
           EOF
 
+          FS_ENDPOINT="/upload"
+          if [ "${{ inputs.faynosync }}" = "force" ]; then
+            CHECK_RESP=$(curl -s --max-time 10 -G "${FAYNOSYNC_URL}/checkVersion" \
+              --data-urlencode "app_name=${{ matrix.faynosync_name }}" \
+              --data-urlencode "version=${{ env.FS_VERSION }}" \
+              --data-urlencode "channel=${CHANNEL}" \
+              --data-urlencode "platform=ios" \
+              --data-urlencode "arch=arm64" \
+              --data-urlencode "owner=ttpos")
+            CHECK_UPDATE=$(echo "$CHECK_RESP" | jq -r '.update_available // "null"')
+            if [ "$CHECK_UPDATE" = "false" ]; then
+              FS_ENDPOINT="/apps/update"
+              echo "版本已存在，使用 update 覆盖"
+            else
+              echo "版本不存在，使用 upload 新建"
+            fi
+          fi
+
           echo "上传版本元数据到 FaynoSync: ${{ matrix.faynosync_name }} v${{ env.FS_VERSION }} (${CHANNEL}/ios/arm64)"
-          HTTP_CODE=$(curl -s -o /tmp/faynosync_resp.json -w "%{http_code}" -X POST "${FAYNOSYNC_URL}/upload" \
+          HTTP_CODE=$(curl -s -o /tmp/faynosync_resp.json -w "%{http_code}" -X POST "${FAYNOSYNC_URL}${FS_ENDPOINT}" \
             -H "Authorization: Bearer ${FAYNOSYNC_TOKEN}" \
             -F "file=@${PLACEHOLDER}" \
             -F "data={\"app_name\":\"${{ matrix.faynosync_name }}\",\"version\":\"${{ env.FS_VERSION }}\",\"channel\":\"${CHANNEL}\",\"publish\":false,\"critical\":false,\"platform\":\"ios\",\"arch\":\"arm64\",\"changelog\":\"Build from ${{ inputs.branch }}\"}")
