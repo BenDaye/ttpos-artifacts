@@ -76,7 +76,7 @@ on:
       faynosync:
         description: "FaynoSync 上传模式 (on=检查版本已存在则跳过, force=强制覆盖)"
         required: false
-        default: "off"
+        default: "force"
         type: choice
         options:
           - "off"
