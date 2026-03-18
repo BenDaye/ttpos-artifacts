@@ -281,6 +281,12 @@ jobs:
           echo "MELOS_PACKAGE_NAME=$env:MELOS_PACKAGE_NAME" >> $env:GITHUB_ENV
           echo "MELOS_PACKAGE_VERSION=$env:MELOS_PACKAGE_VERSION" >> $env:GITHUB_ENV
 
+          if ("${{ inputs.env }}" -eq "prod") {
+            echo "FS_VERSION=$version" >> $env:GITHUB_ENV
+          } else {
+            echo "FS_VERSION=$version-${{ inputs.env }}" >> $env:GITHUB_ENV
+          }
+
       - name: 检查 FaynoSync 版本是否已存在
         if: steps.check.outputs.should_run == 'true' && inputs.faynosync == 'on'
         shell: bash
@@ -294,7 +300,7 @@ jobs:
 
           APP_NAME="${{ matrix.faynosync_name }}"
           CHANNEL="${{ inputs.env }}"
-          CHECK_VERSION="${{ env.MELOS_PACKAGE_VERSION }}"
+          CHECK_VERSION="${{ env.FS_VERSION }}"
           PLATFORM="windows"
           ARCH="amd64"
 
@@ -406,11 +412,11 @@ jobs:
 
           CHANNEL="${{ inputs.env }}"
 
-          echo "上传到 FaynoSync: ${{ matrix.faynosync_name }} v${{ env.MELOS_PACKAGE_VERSION }} (${CHANNEL}/windows/amd64)"
+          echo "上传到 FaynoSync: ${{ matrix.faynosync_name }} v${{ env.FS_VERSION }} (${CHANNEL}/windows/amd64)"
           HTTP_CODE=$(curl -s -o /tmp/faynosync_resp.json -w "%{http_code}" -X POST "${FAYNOSYNC_URL}/upload" \
             -H "Authorization: Bearer ${FAYNOSYNC_TOKEN}" \
             -F "file=@${FILE_PATH}" \
-            -F "data={\"app_name\":\"${{ matrix.faynosync_name }}\",\"version\":\"${{ env.MELOS_PACKAGE_VERSION }}\",\"channel\":\"${CHANNEL}\",\"publish\":false,\"critical\":false,\"platform\":\"windows\",\"arch\":\"amd64\",\"changelog\":\"Build from ${{ inputs.branch }}\"}")
+            -F "data={\"app_name\":\"${{ matrix.faynosync_name }}\",\"version\":\"${{ env.FS_VERSION }}\",\"channel\":\"${CHANNEL}\",\"publish\":false,\"critical\":false,\"platform\":\"windows\",\"arch\":\"amd64\",\"changelog\":\"Build from ${{ inputs.branch }}\"}")
           RESP=$(cat /tmp/faynosync_resp.json 2>/dev/null)
           echo "HTTP ${HTTP_CODE}: ${RESP}"
           if [ "$HTTP_CODE" -ge 400 ]; then

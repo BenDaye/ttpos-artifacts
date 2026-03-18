@@ -285,6 +285,12 @@ jobs:
           echo "VERSION_APK=${{ matrix.apk_name }}-V${version}.apk" >> $GITHUB_ENV
           echo "LATEST_NAME=${{ matrix.apk_name }}-latest.apk" >> $GITHUB_ENV
 
+          if [ "${{ inputs.env }}" = "prod" ]; then
+            echo "FS_VERSION=$version" >> $GITHUB_ENV
+          else
+            echo "FS_VERSION=${version}-${{ inputs.env }}" >> $GITHUB_ENV
+          fi
+
       - name: 检查 FaynoSync 版本是否已存在
         if: steps.check.outputs.should_run == 'true' && inputs.faynosync == 'on'
         env:
@@ -297,7 +303,7 @@ jobs:
 
           APP_NAME="${{ matrix.faynosync_name }}"
           CHANNEL="${{ inputs.env }}"
-          CHECK_VERSION="${{ env.VERSION }}"
+          CHECK_VERSION="${{ env.FS_VERSION }}"
           PLATFORM="android"
           ARCH="arm64"
 
@@ -411,11 +417,11 @@ jobs:
 
           CHANNEL="${{ inputs.env }}"
 
-          echo "上传到 FaynoSync: ${{ matrix.faynosync_name }} v${{ env.VERSION }} (${CHANNEL}/android/arm64)"
+          echo "上传到 FaynoSync: ${{ matrix.faynosync_name }} v${{ env.FS_VERSION }} (${CHANNEL}/android/arm64)"
           HTTP_CODE=$(curl -s -o /tmp/faynosync_resp.json -w "%{http_code}" -X POST "${FAYNOSYNC_URL}/upload" \
             -H "Authorization: Bearer ${FAYNOSYNC_TOKEN}" \
             -F "file=@${FILE_PATH}" \
-            -F "data={\"app_name\":\"${{ matrix.faynosync_name }}\",\"version\":\"${{ env.VERSION }}\",\"channel\":\"${CHANNEL}\",\"publish\":false,\"critical\":false,\"platform\":\"android\",\"arch\":\"arm64\",\"changelog\":\"Build from ${{ inputs.branch }}\"}")
+            -F "data={\"app_name\":\"${{ matrix.faynosync_name }}\",\"version\":\"${{ env.FS_VERSION }}\",\"channel\":\"${CHANNEL}\",\"publish\":false,\"critical\":false,\"platform\":\"android\",\"arch\":\"arm64\",\"changelog\":\"Build from ${{ inputs.branch }}\"}")
           RESP=$(cat /tmp/faynosync_resp.json 2>/dev/null)
           echo "HTTP ${HTTP_CODE}: ${RESP}"
           if [ "$HTTP_CODE" -ge 400 ]; then

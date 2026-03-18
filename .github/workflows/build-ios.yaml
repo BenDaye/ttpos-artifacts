@@ -353,6 +353,12 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "VERSION_IPA=${{ matrix.app_name }}-${VERSION}.ipa" >> $GITHUB_ENV
 
+          if [ "${{ inputs.env }}" = "prod" ]; then
+            echo "FS_VERSION=$VERSION" >> $GITHUB_ENV
+          else
+            echo "FS_VERSION=${VERSION}-${{ inputs.env }}" >> $GITHUB_ENV
+          fi
+
       - name: 检查 FaynoSync 版本是否已存在
         if: steps.check.outputs.should_run == 'true' && inputs.faynosync == 'on'
         env:
@@ -365,7 +371,7 @@ jobs:
 
           APP_NAME="${{ matrix.faynosync_name }}"
           CHANNEL="${{ inputs.env }}"
-          CHECK_VERSION="${{ env.VERSION }}"
+          CHECK_VERSION="${{ env.FS_VERSION }}"
           PLATFORM="ios"
           ARCH="arm64"
 
@@ -552,21 +558,21 @@ jobs:
           # iOS 通过 App Store 分发，无需上传真实 IPA 到 FaynoSync。
           # 生成占位文件注册版本元数据（changelog、critical 等），
           # 待 App Store 审核通过后在 Dashboard 手动 publish。
-          PLACEHOLDER="$RUNNER_TEMP/${{ matrix.app_name }}-${VERSION}-ios.txt"
+          PLACEHOLDER="$RUNNER_TEMP/${{ matrix.app_name }}-${{ env.FS_VERSION }}-ios.txt"
           cat > "$PLACEHOLDER" <<EOF
           platform: ios
           app: ${{ matrix.faynosync_name }}
-          version: ${{ env.VERSION }}
+          version: ${{ env.FS_VERSION }}
           channel: ${CHANNEL}
           branch: ${{ inputs.branch }}
           distribute: appstore
           EOF
 
-          echo "上传版本元数据到 FaynoSync: ${{ matrix.faynosync_name }} v${{ env.VERSION }} (${CHANNEL}/ios/arm64)"
+          echo "上传版本元数据到 FaynoSync: ${{ matrix.faynosync_name }} v${{ env.FS_VERSION }} (${CHANNEL}/ios/arm64)"
           HTTP_CODE=$(curl -s -o /tmp/faynosync_resp.json -w "%{http_code}" -X POST "${FAYNOSYNC_URL}/upload" \
             -H "Authorization: Bearer ${FAYNOSYNC_TOKEN}" \
             -F "file=@${PLACEHOLDER}" \
-            -F "data={\"app_name\":\"${{ matrix.faynosync_name }}\",\"version\":\"${{ env.VERSION }}\",\"channel\":\"${CHANNEL}\",\"publish\":false,\"critical\":false,\"platform\":\"ios\",\"arch\":\"arm64\",\"changelog\":\"Build from ${{ inputs.branch }}\"}")
+            -F "data={\"app_name\":\"${{ matrix.faynosync_name }}\",\"version\":\"${{ env.FS_VERSION }}\",\"channel\":\"${CHANNEL}\",\"publish\":false,\"critical\":false,\"platform\":\"ios\",\"arch\":\"arm64\",\"changelog\":\"Build from ${{ inputs.branch }}\"}")
           RESP=$(cat /tmp/faynosync_resp.json 2>/dev/null)
           echo "HTTP ${HTTP_CODE}: ${RESP}"
           if [ "$HTTP_CODE" -ge 400 ]; then

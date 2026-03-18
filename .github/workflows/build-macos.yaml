@@ -403,6 +403,12 @@ jobs:
           echo "VERSION_DMG=${{ matrix.app_name }}-${VERSION}.dmg" >> $GITHUB_ENV
           echo "LATEST_NAME=${{ matrix.app_name }}-latest.dmg" >> $GITHUB_ENV
 
+          if [ "${{ inputs.env }}" = "prod" ]; then
+            echo "FS_VERSION=$VERSION" >> $GITHUB_ENV
+          else
+            echo "FS_VERSION=${VERSION}-${{ inputs.env }}" >> $GITHUB_ENV
+          fi
+
       - name: 检查 FaynoSync 版本是否已存在
         if: steps.check.outputs.should_run == 'true' && inputs.faynosync == 'on'
         env:
@@ -415,7 +421,7 @@ jobs:
 
           APP_NAME="${{ matrix.faynosync_name }}"
           CHANNEL="${{ inputs.env }}"
-          CHECK_VERSION="${{ env.VERSION }}"
+          CHECK_VERSION="${{ env.FS_VERSION }}"
           PLATFORM="macos"
           ARCH=$(uname -m)
           if [ "$ARCH" = "x86_64" ]; then
@@ -884,11 +890,11 @@ jobs:
             FS_ARCH="arm64"
           fi
 
-          echo "上传到 FaynoSync: ${{ matrix.faynosync_name }} v${{ env.VERSION }} (${CHANNEL}/macos/${FS_ARCH})"
+          echo "上传到 FaynoSync: ${{ matrix.faynosync_name }} v${{ env.FS_VERSION }} (${CHANNEL}/macos/${FS_ARCH})"
           HTTP_CODE=$(curl -s -o /tmp/faynosync_resp.json -w "%{http_code}" -X POST "${FAYNOSYNC_URL}/upload" \
             -H "Authorization: Bearer ${FAYNOSYNC_TOKEN}" \
             -F "file=@${DMG_PATH}" \
-            -F "data={\"app_name\":\"${{ matrix.faynosync_name }}\",\"version\":\"${{ env.VERSION }}\",\"channel\":\"${CHANNEL}\",\"publish\":false,\"critical\":false,\"platform\":\"macos\",\"arch\":\"${FS_ARCH}\",\"changelog\":\"Build from ${{ inputs.branch }}\"}")
+            -F "data={\"app_name\":\"${{ matrix.faynosync_name }}\",\"version\":\"${{ env.FS_VERSION }}\",\"channel\":\"${CHANNEL}\",\"publish\":false,\"critical\":false,\"platform\":\"macos\",\"arch\":\"${FS_ARCH}\",\"changelog\":\"Build from ${{ inputs.branch }}\"}")
           RESP=$(cat /tmp/faynosync_resp.json 2>/dev/null)
           echo "HTTP ${HTTP_CODE}: ${RESP}"
           if [ "$HTTP_CODE" -ge 400 ]; then
