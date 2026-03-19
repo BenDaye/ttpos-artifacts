@@ -265,7 +265,7 @@ jobs:
             set -e
             cd /ttpos-flutter
             IMAGE_TAG="${{ steps.tag.outputs.IMAGE_TAG }}"
-            COMPOSE="docker compose -p ttpos-flutter -f docker-compose.production.yml"
+            COMPOSE="docker compose -p ttpos-flutter -f new-docker-compose.yml"
 
             echo "========================================="
             echo "开始更新服务器"
