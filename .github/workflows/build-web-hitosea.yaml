@@ -69,8 +69,8 @@ jobs:
           - package: member
             image_name: ttpos-web-member
     env:
-      REGISTRY: hub.hitosea.com
-      IMAGE_NAME: ttpos-web
+      HITOSEA_REGISTRY: hub.hitosea.com
+      HITOSEA_IMAGE_NAME: ttpos-web
     steps:
       - name: 检查是否需要构建此应用端
         id: check
@@ -102,7 +102,7 @@ jobs:
           echo "环境: ${{ inputs.env }}"
           echo "API URL: ${{ inputs.base_url }}"
           echo "WebSocket URL: ${{ inputs.base_ws_url }}"
-          echo "镜像仓库: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.image_name }}"
+          echo "镜像仓库: ${{ env.HITOSEA_REGISTRY }}/${{ env.HITOSEA_IMAGE_NAME }}/${{ matrix.image_name }}"
           echo "镜像标签前缀: ${{ env.IMAGE_TAG }}"
           echo "========================================="
 
@@ -209,9 +209,9 @@ jobs:
         if: steps.check.outputs.should_run == 'true'
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          registry: ${{ env.HITOSEA_REGISTRY }}
+          username: ${{ secrets.HITOSEA_DOCKER_USERNAME }}
+          password: ${{ secrets.HITOSEA_DOCKER_PASSWORD }}
 
       - name: 构建并推送 Docker 镜像
         if: steps.check.outputs.should_run == 'true'
@@ -221,8 +221,8 @@ jobs:
           file: Dockerfile.${{ matrix.package }}
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.image_name }}:${{ env.IMAGE_TAG }}${{ steps.git_info.outputs.COMMIT_ID }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.image_name }}:${{ env.IMAGE_TAG }}latest
+            ${{ env.HITOSEA_REGISTRY }}/${{ env.HITOSEA_IMAGE_NAME }}/${{ matrix.image_name }}:${{ env.IMAGE_TAG }}${{ steps.git_info.outputs.COMMIT_ID }}
+            ${{ env.HITOSEA_REGISTRY }}/${{ env.HITOSEA_IMAGE_NAME }}/${{ matrix.image_name }}:${{ env.IMAGE_TAG }}latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64
@@ -237,8 +237,8 @@ jobs:
           echo "分支: ${{ inputs.branch }}"
           echo "环境: ${{ inputs.env }}"
           echo "镜像标签:"
-          echo "  ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.image_name }}:${{ env.IMAGE_TAG }}${{ steps.git_info.outputs.COMMIT_ID }}"
-          echo "  ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.image_name }}:${{ env.IMAGE_TAG }}latest"
+          echo "  ${{ env.HITOSEA_REGISTRY }}/${{ env.HITOSEA_IMAGE_NAME }}/${{ matrix.image_name }}:${{ env.IMAGE_TAG }}${{ steps.git_info.outputs.COMMIT_ID }}"
+          echo "  ${{ env.HITOSEA_REGISTRY }}/${{ env.HITOSEA_IMAGE_NAME }}/${{ matrix.image_name }}:${{ env.IMAGE_TAG }}latest"
           echo "========================================="
 
   deploy-test-server:
@@ -258,9 +258,9 @@ jobs:
       - name: 更新测试服务器（提取自 ./cmd update）
         uses: appleboy/ssh-action@v1
         with:
-          host: ${{ secrets.SSH_MOBILE_MENU_TEST_HOST }}
-          username: ${{ secrets.SSH_USER_MOBILE_MENU_TEST_HOST }}
-          key: ${{ secrets.SSH_PRIVATEKEY_MOBILE_MENU_TEST_HOST }}
+          host: ${{ secrets.HITOSEA_SSH_HOST }}
+          username: ${{ secrets.HITOSEA_SSH_USER }}
+          key: ${{ secrets.HITOSEA_SSH_PRIVATEKEY }}
           script: |
             set -e
             cd /ttpos-flutter
