@@ -260,7 +260,7 @@ jobs:
         with:
           host: ${{ secrets.HITOSEA_SSH_HOST }}
           username: ${{ secrets.HITOSEA_SSH_USER }}
-          key: ${{ secrets.HITOSEA_SSH_PRIVATEKEY }}
+          key: ${{ secrets.HITOSEA_SSH_PRIVATE_KEY }}
           script: |
             set -e
             cd /ttpos-flutter
