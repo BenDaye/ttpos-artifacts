@@ -255,8 +255,21 @@ jobs:
             -f faynosync=${{ inputs.faynosync }} \
             -f update_cms=${{ inputs.update_cms }}
 
+      - name: 触发 Web 构建 (Hitosea)
+        if: (inputs.platform == 'all' || inputs.platform == 'web') && inputs.branch == 'new-test' && inputs.env == 'test'
+        run: |
+          gh workflow run build-web-hitosea.yaml \
+            --repo ${{ github.repository }} \
+            --ref ${{ github.ref }} \
+            -f branch=${{ inputs.branch }} \
+            -f env=${{ inputs.env }} \
+            -f package=${{ inputs.package }} \
+            -f base_url=${{ inputs.base_url }} \
+            -f base_ws_url=${{ inputs.base_ws_url }} \
+            -f deploy_test=true
+
       - name: 触发 Web 构建
-        if: inputs.platform == 'all' || inputs.platform == 'web'
+        if: (inputs.platform == 'all' || inputs.platform == 'web') && !(inputs.branch == 'new-test' && inputs.env == 'test')
         run: |
           gh workflow run build-web.yaml \
             --repo ${{ github.repository }} \
