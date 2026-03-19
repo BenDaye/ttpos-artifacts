@@ -199,7 +199,7 @@ jobs:
       - name: Build Web
         if: steps.check.outputs.should_run == 'true'
         run: |
-          dart run ./scripts/build_web.dart --package=${{ matrix.package }}
+          dart run ./scripts/build_web.dart --env=${{ inputs.env }} --package=${{ matrix.package }}
 
       - name: Set up Docker Buildx
         if: steps.check.outputs.should_run == 'true'
