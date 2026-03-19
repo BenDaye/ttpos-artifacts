@@ -260,7 +260,7 @@ jobs:
         with:
           host: ${{ secrets.SSH_MOBILE_MENU_TEST_HOST }}
           username: ${{ secrets.SSH_USER_MOBILE_MENU_TEST_HOST }}
-          key: ${{ secrets.SSH_RIVATEKEY_MOBILE_MENU_TEST_HOST }}
+          key: ${{ secrets.SSH_PRIVATEKEY_MOBILE_MENU_TEST_HOST }}
           script: |
             set -e
             cd /ttpos-flutter
