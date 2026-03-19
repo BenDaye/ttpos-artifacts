@@ -1,0 +1,288 @@
+name: Build Web (Hitosea)
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "构建分支 (e.g. release, new-test, feature/xxx)"
+        required: true
+        type: string
+        default: "new-test"
+      env:
+        description: "选择构建环境"
+        required: true
+        type: choice
+        options:
+          - "prod"
+          - "test"
+          - "dev"
+        default: "test"
+      package:
+        description: "选择要构建的应用端"
+        required: true
+        type: choice
+        options:
+          - all
+          - menu
+          - mobile
+          - member
+        default: "all"
+      base_url:
+        description: "选择API基础URL"
+        required: true
+        type: choice
+        default: "https://ttpos-test1.ttpos.com/api/v1"
+        options:
+          - "https://ttpos-test1.ttpos.com/api/v1"
+          - "https://api.ttpos.com/api/v1"
+          - "https://ttpos-pro.keli.vip/api/v1"
+      base_ws_url:
+        description: "选择WebSocket基础URL"
+        required: true
+        type: choice
+        default: "wss://ttpos-test1.ttpos.com/ws"
+        options:
+          - "wss://ttpos-test1.ttpos.com/ws"
+          - "wss://api.ttpos.com/ws"
+          - "wss://ttpos-pro.keli.vip/ws"
+      deploy_test:
+        description: "是否部署到测试服务器"
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [menu, mobile, member]
+        include:
+          - package: menu
+            image_name: ttpos-web-menu
+          - package: mobile
+            image_name: ttpos-web-mobile
+          - package: member
+            image_name: ttpos-web-member
+    env:
+      REGISTRY: hub.hitosea.com
+      IMAGE_NAME: ttpos-web
+    steps:
+      - name: 检查是否需要构建此应用端
+        id: check
+        run: |
+          if [ "${{ inputs.package }}" = "all" ] || [ "${{ inputs.package }}" = "${{ matrix.package }}" ]; then
+            echo "should_run=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_run=false" >> $GITHUB_OUTPUT
+            echo "跳过 ${{ matrix.package }} (选择的应用端: ${{ inputs.package }})"
+          fi
+
+      - name: 设置 IMAGE_TAG
+        if: steps.check.outputs.should_run == 'true'
+        run: |
+          if [ "${{ inputs.branch }}" = "release" ]; then
+            echo "IMAGE_TAG=" >> $GITHUB_ENV
+          else
+            echo "IMAGE_TAG=test-" >> $GITHUB_ENV
+          fi
+
+      - name: 显示构建信息
+        if: steps.check.outputs.should_run == 'true'
+        run: |
+          echo "========================================="
+          echo "构建信息"
+          echo "========================================="
+          echo "应用端: ${{ matrix.package }}"
+          echo "分支: ${{ inputs.branch }}"
+          echo "环境: ${{ inputs.env }}"
+          echo "API URL: ${{ inputs.base_url }}"
+          echo "WebSocket URL: ${{ inputs.base_ws_url }}"
+          echo "镜像仓库: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.image_name }}"
+          echo "镜像标签前缀: ${{ env.IMAGE_TAG }}"
+          echo "========================================="
+
+      - name: Checkout the code
+        if: steps.check.outputs.should_run == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: innet8/ttpos-flutter
+          token: ${{ secrets.PRIVATE_REPO_PAT }}
+          ref: ${{ inputs.branch }}
+
+      - name: 获取 Commit ID
+        if: steps.check.outputs.should_run == 'true'
+        id: git_info
+        run: |
+          echo "COMMIT_ID=$(git log -1 --pretty=format:%h -- .)" >> $GITHUB_OUTPUT
+
+      - name: Set up Flutter
+        if: steps.check.outputs.should_run == 'true'
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+          flutter-version: "3.41.2"
+
+      - name: 配置 MELOS_SDK_PATH
+        if: steps.check.outputs.should_run == 'true'
+        shell: bash
+        run: echo "MELOS_SDK_PATH=$(dirname "$(dirname "$(which flutter)")")" >> "$GITHUB_ENV"
+
+      - name: Install Melos
+        if: steps.check.outputs.should_run == 'true'
+        run: |
+          flutter --version
+          dart pub global activate melos
+
+      - name: Melos Init
+        if: steps.check.outputs.should_run == 'true'
+        env:
+          PUB_HOSTED_URL: https://pub.flutter-io.cn
+          FLUTTER_STORAGE_BASE_URL: https://storage.flutter-io.cn
+        run: |
+          melos bs
+          melos run env:setup -- --env=${{ inputs.env }} --file=${{ inputs.env }}
+
+      - name: 生成环境变量文件
+        if: steps.check.outputs.should_run == 'true'
+        env:
+          API_URL: ${{ inputs.base_url }}
+          WS_URL: ${{ inputs.base_ws_url }}
+        run: |
+          # 根据 env 输入选择对应的环境文件（与 scripts/utils.dart getEnv() 保持一致）
+          case "${{ inputs.env }}" in
+            dev)  ENV_SUFFIX="development" ;;
+            test) ENV_SUFFIX="test" ;;
+            *)    ENV_SUFFIX="production" ;;
+          esac
+
+          ENV_PATH="apps/${{ matrix.package }}/.env.${ENV_SUFFIX}.local"
+          ENV_TEMPLATE="apps/${{ matrix.package }}/.env.${ENV_SUFFIX}"
+
+          if [ ! -f "$ENV_PATH" ]; then
+            if [ -f "$ENV_TEMPLATE" ]; then
+              cp "$ENV_TEMPLATE" "$ENV_PATH"
+            else
+              touch "$ENV_PATH"
+            fi
+          fi
+
+          sed -i "s|^API_BASE_URL=.*|API_BASE_URL=${API_URL}|" "$ENV_PATH"
+          sed -i "s|^WS_BASE_URL=.*|WS_BASE_URL=${WS_URL}|" "$ENV_PATH"
+
+          # 保存 ENV_SUFFIX 供后续步骤使用
+          echo "ENV_SUFFIX=$ENV_SUFFIX" >> $GITHUB_ENV
+
+          echo "--- 环境变量文件内容 ($ENV_PATH) ---"
+          cat "$ENV_PATH"
+
+      - name: 设置 SENTRY_DSN（仅 release 分支）
+        if: steps.check.outputs.should_run == 'true' && inputs.branch == 'release'
+        env:
+          SENTRYDSN_MENU: ${{ secrets.SENTRYDSN_MENU }}
+          SENTRYDSN_MOBILE: ${{ secrets.SENTRYDSN_MOBILE }}
+          SENTRYDSN_MEMBER: ${{ secrets.SENTRYDSN_MEMBER }}
+        run: |
+          ENV_PATH="apps/${{ matrix.package }}/.env.${{ env.ENV_SUFFIX }}.local"
+          case "${{ matrix.package }}" in
+            menu)   DSN="$SENTRYDSN_MENU" ;;
+            mobile) DSN="$SENTRYDSN_MOBILE" ;;
+            member) DSN="$SENTRYDSN_MEMBER" ;;
+          esac
+          sed -i "s|^SENTRY_DSN=.*|SENTRY_DSN=${DSN}|" "$ENV_PATH"
+
+      - name: Build Web
+        if: steps.check.outputs.should_run == 'true'
+        run: |
+          dart run ./scripts/build_web.dart --package=${{ matrix.package }}
+
+      - name: Set up Docker Buildx
+        if: steps.check.outputs.should_run == 'true'
+        uses: docker/setup-buildx-action@v3
+
+      - name: 登录 Docker Registry (hub.hitosea.com)
+        if: steps.check.outputs.should_run == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: 构建并推送 Docker 镜像
+        if: steps.check.outputs.should_run == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: ./
+          file: Dockerfile.${{ matrix.package }}
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.image_name }}:${{ env.IMAGE_TAG }}${{ steps.git_info.outputs.COMMIT_ID }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.image_name }}:${{ env.IMAGE_TAG }}latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
+      - name: 构建完成总结
+        if: always() && steps.check.outputs.should_run == 'true'
+        run: |
+          echo "========================================="
+          echo "构建任务完成"
+          echo "========================================="
+          echo "应用端: ${{ matrix.package }}"
+          echo "分支: ${{ inputs.branch }}"
+          echo "环境: ${{ inputs.env }}"
+          echo "镜像标签:"
+          echo "  ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.image_name }}:${{ env.IMAGE_TAG }}${{ steps.git_info.outputs.COMMIT_ID }}"
+          echo "  ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.image_name }}:${{ env.IMAGE_TAG }}latest"
+          echo "========================================="
+
+  deploy-test-server:
+    runs-on: ubuntu-latest
+    needs: build
+    if: needs.build.result == 'success' && inputs.deploy_test
+    steps:
+      - name: 确定镜像标签
+        id: tag
+        run: |
+          if [ "${{ inputs.branch }}" = "release" ]; then
+            echo "IMAGE_TAG=latest" >> $GITHUB_OUTPUT
+          else
+            echo "IMAGE_TAG=test-latest" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 更新测试服务器（提取自 ./cmd update）
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_MOBILE_MENU_TEST_HOST }}
+          username: ${{ secrets.SSH_USER_MOBILE_MENU_TEST_HOST }}
+          key: ${{ secrets.SSH_RIVATEKEY_MOBILE_MENU_TEST_HOST }}
+          script: |
+            set -e
+            cd /ttpos-flutter
+            IMAGE_TAG="${{ steps.tag.outputs.IMAGE_TAG }}"
+            COMPOSE="docker compose -p ttpos-flutter -f docker-compose.production.yml"
+
+            echo "========================================="
+            echo "开始更新服务器"
+            echo "镜像标签: ${IMAGE_TAG}"
+            echo "========================================="
+
+            # 停止服务
+            $COMPOSE down
+
+            # 清除旧镜像缓存，确保拉取最新版本
+            docker rmi -f hub.hitosea.com/ttpos-web/ttpos-web-menu:${IMAGE_TAG} || true
+            docker rmi -f hub.hitosea.com/ttpos-web/ttpos-web-mobile:${IMAGE_TAG} || true
+            docker rmi -f hub.hitosea.com/ttpos-web/ttpos-web-member:${IMAGE_TAG} || true
+
+            # 拉取最新镜像并启动
+            $COMPOSE up -d --pull always
+
+            echo "========================================="
+            echo "更新完成"
+            echo "========================================="
