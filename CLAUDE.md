@@ -4,79 +4,179 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-CI/CD build workflows for the TTPOS Flutter POS system. This repo contains **only GitHub Actions workflows** — no application source code. The actual Flutter code lives in the private repo `innet8/ttpos-flutter`, which workflows check out at build time via `PRIVATE_REPO_PAT`.
+This repository (`ttpos-artifacts`) serves two purposes:
+
+1. **FaynoSync Dashboard** — A React 18 SPA for managing app versions, artifacts, channels, platforms, and user permissions. It is the admin frontend for the [FaynoSync](https://github.com/ku9nov/faynoSync) update distribution API.
+2. **TTPOS Build Workflows** — GitHub Actions CI/CD pipelines that build the TTPOS Flutter POS applications (Android/Windows/macOS/iOS/Web) from the private repo `innet8/ttpos-flutter`.
+
+## Build & Dev Commands
+
+```bash
+yarn install          # Install dependencies (Yarn 4, immutable lockfile)
+yarn dev              # Vite dev server on port 3000
+yarn build            # tsc -b && vite build (production build)
+yarn lint             # ESLint check
+yarn preview          # Preview production build locally
+yarn commitlint       # Validate commit message format
+```
 
 ## Repository Structure
 
 ```
-.github/workflows/
-  build-android.yaml   # APK builds (ubuntu-latest)
-  build-windows.yaml   # Inno Setup installer (windows-latest)
-  build-macos.yaml     # DMG with code signing + notarization (macos-latest)
-  build-web.yaml       # Docker images (ubuntu-22.04)
+src/                        # Dashboard React app source
+├── main.tsx                # Entry point (QueryClient + AuthProvider + ThemeProvider + Router)
+├── route/                  # React Router config (lazy-loaded pages, auth guards)
+├── providers/              # AuthProvider (JWT/localStorage), ThemeProvider (light/dark/auto)
+├── config/                 # env.ts (VITE_* vars), axios.ts (interceptors, 401 redirect)
+├── pages/                  # 8 pages: Home, SignIn, SignUp, Channels, Platforms, Architectures, Statistics, Settings
+├── components/             # 70+ components
+│   ├── ui/                 # shadcn/ui primitives (Button, Card, Dialog, Input, Select, ToggleGroup)
+│   ├── layouts/            # Dashboard view modes: CardView, ListView, BoardView, LayoutSwitcher
+│   ├── common/             # BaseModal, StepperModal, CRUD modals
+│   ├── settings/           # UsersSettings, TokenSettings, TufSettings + TUF sub-components
+│   └── ...                 # Feature modals (Upload, Create/Edit/Delete App/Version/Channel/Platform/Arch)
+├── hooks/                  # useToast, useSearch, useLayoutPreference, useMediaQuery
+│   └── use-query/          # 10 React Query hooks (apps, versions, channels, platforms, architectures, upload, telemetry, users)
+├── styles/                 # CSS: linear-theme.css (HSL variables, light/dark), animations, cards, sidebar
+├── lib/utils.ts            # cn() helper (clsx + tailwind-merge)
+└── utils/clipboard.ts      # Copy-to-clipboard
+faynosync/                  # Docker Compose stack config for self-hosting FaynoSync
+│   ├── docker-compose.yml  # 6 services: api (Go), dashboard, mongo, redis, minio, minio-init
+│   ├── .env.example        # S3, MongoDB, Redis, security keys template
+│   ├── README.md           # Deployment guide (Chinese)
+│   └── FLUTTER_INTEGRATION.md  # Flutter updater package design doc
+.github/workflows/          # 10 GitHub Actions workflows
+│   ├── build-dashboard.yaml    # Dashboard Docker image → ghcr.io (on push to main/release)
+│   ├── commitlint.yaml         # Conventional Commits validation on PRs
+│   ├── auto-build.yaml         # Multi-platform build orchestrator
+│   ├── dispatch.yaml           # Repository dispatch handler (test-build / release-push)
+│   ├── build-android.yaml      # APK builds (ubuntu-latest)
+│   ├── build-ios.yaml          # IPA builds (macos-latest)
+│   ├── build-windows.yaml      # Inno Setup EXE (windows-latest)
+│   ├── build-macos.yaml        # Signed/notarized DMG (~880 lines, most complex)
+│   ├── build-web.yaml          # Docker images → ghcr.io
+│   └── build-web-hitosea.yaml  # Docker images → hub.hitosea.com
+docs/                       # macOS/iOS signing configuration guides
 ```
 
-No build/test/lint commands exist locally — all execution happens in GitHub Actions runners.
+## Tech Stack
 
-## Architecture
+| Layer | Technology |
+|-------|-----------|
+| Framework | React 18 + TypeScript (strict) |
+| Build | Vite 6 |
+| Routing | React Router v6 (lazy-loaded pages, PrivateRoute/PublicRoute guards) |
+| State | React Context (auth, theme) + TanStack React Query v5 (server state) |
+| Forms | Formik + Yup |
+| HTTP | Axios (Bearer token interceptor, 401 → redirect to /signin) |
+| Styling | Tailwind CSS 3 + CSS variables (HSL) + shadcn/ui (Radix-UI) |
+| Icons | Lucide React |
+| Charts | Recharts |
+| Dark mode | CSS class strategy (`darkMode: 'class'`), auto mode (time-of-day + prefers-color-scheme) |
+| Package manager | Yarn 4.5.1 (Corepack) |
+| Linting | ESLint + Prettier |
+| Commit lint | commitlint (Conventional Commits) |
 
-### Shared Build Pipeline Pattern
+## Architecture Patterns
 
-All four workflows follow the same structure:
-1. **Matrix strategy** to build multiple app packages in parallel (`fail-fast: false`)
-2. Checkout `innet8/ttpos-flutter` at a user-specified branch
-3. Flutter 3.41.2 + Melos bootstrap (`melos bs`) + env setup
-4. Generate `.env.{production|test|development}.local` files with API/WS URLs
-5. Inject Sentry DSN (release branch only)
-6. Build via Dart scripts (`scripts/build_android.dart`, `scripts/build_win_innosetup.dart`, `scripts/build_mac.dart`, `scripts/build_web.dart`)
-7. Upload artifacts → GitHub Artifacts + Google Cloud Storage
-8. Optional SCP relay to download servers
+### Authentication Flow
+- JWT stored in `localStorage` (key: `token`)
+- `AuthProvider` context exposes `login()`, `signUp()`, `logout()`
+- Axios request interceptor attaches `Authorization: Bearer` header
+- Axios response interceptor clears token on 401 and redirects to `/signin`
+- `PrivateRoute` guard redirects unauthenticated users; `PublicRoute` redirects authenticated users away from auth pages
 
-### App Packages Built
+### Data Fetching (React Query)
+- All API calls go through custom hooks in `src/hooks/use-query/`
+- Pattern: `useQuery` for reads, `useMutation` with `onSuccess` → `queryClient.invalidateQueries()`
+- Hierarchical query keys: `['apps', appName, page, filters]`
+- Infinite queries for paginated version lists (board view load-more)
 
-| Workflow | Packages | Output |
+### Styling System
+- Theme variables defined in `src/styles/linear-theme.css` (Linear.app-inspired grayscale palette)
+- Light/dark modes via CSS variables in HSL color space
+- `tailwind.config.js` maps semantic tokens (`background`, `foreground`, `primary`, etc.) to CSS vars
+- Component styles: Tailwind utilities + shadcn/ui primitives + CSS Modules (auth pages) + custom CSS files
+
+### Dashboard View Modes
+- Three interchangeable layouts: **Card** (grid), **List** (table), **Board** (kanban by channel)
+- Persisted to localStorage via `useLayoutPreference` hook
+- Toggled via `LayoutSwitcher` component
+
+### Modal System
+- `BaseModal` shared structure → specialized Create/Edit/Delete modals
+- `StepperModal` for multi-step wizards (TUF configuration)
+- All modals use Radix Dialog primitive
+
+## Docker Deployment
+
+- **Multi-stage build**: Node 20 (build) → Nginx Alpine (serve)
+- **Runtime env injection**: `VITE_API_URL` compiled as placeholder `__VITE_API_URL_PLACEHOLDER__`, replaced at container startup via `docker-entrypoint.sh` sed
+- **Nginx**: Port 3000, SPA fallback (`try_files`), immutable asset caching (1 year), uncached `index.html`
+- **Image**: `ghcr.io/<owner>/ttpos-artifacts/faynosync-dashboard`
+
+## FaynoSync Infrastructure (faynosync/)
+
+Docker Compose stack for self-hosting the update distribution backend:
+- **api** (`ku9nov/faynosync:v1.5.4`) — Go-based update API on port 9000
+- **dashboard** — This React app, served from ghcr.io
+- **db** (MongoDB 7) — Version/app metadata storage
+- **cache** (Redis 7) — Performance caching
+- **s3** (MinIO) — Artifact binary storage (APK/EXE/DMG)
+
+Client-facing endpoints: `GET /checkVersion` (no auth), `POST /upload` (CI token required).
+
+## TTPOS Build Workflows
+
+All Flutter build workflows share a common pattern:
+1. Matrix strategy (`fail-fast: false`) to build multiple app packages in parallel
+2. Checkout `innet8/ttpos-flutter` at user-specified branch
+3. Flutter 3.41.2 + Melos bootstrap
+4. Generate environment files (`.env.{production|test|development}.local`)
+5. Build via Dart scripts → Upload to GitHub Artifacts + GCS/SCP/FaynoSync
+
+### App Packages
+
+| Platform | Packages | Output |
 |----------|----------|--------|
-| Android | pos, kds, shop, assistant, tablet, qds | APK |
-| Windows | pos, kds, assistant, tablet, shop | Inno Setup EXE |
-| macOS | pos, assistant, kds, tablet, shop | Signed/notarized DMG |
+| Android | pos, kds, shop, assistant, tablet, qds, kiosk | APK |
+| iOS | pos, kds, shop, assistant, tablet, kiosk | IPA |
+| Windows | pos, kds, assistant, tablet, shop, kiosk | Inno Setup EXE |
+| macOS | pos, assistant, kds, tablet, shop, kiosk | Signed/notarized DMG |
 | Web | menu, mobile, member | Docker images |
 
 ### Environment System
 
-Workflows accept `env` input (`prod`/`test`/`dev`) mapped to file suffixes:
 - `dev` → `.env.development.local`
 - `test` → `.env.test.local`
 - `prod` → `.env.production.local`
 
 ### Distribution Paths
 
-Artifacts route to two destinations based on branch:
-- **release branch** → `Prod/` paths (GCS: `dc_apk/TTPOS/Prod/...`, SCP: `/hitosea/ttpos-*/Prod/...`)
-- **other branches** → `Test/` paths
-
-### macOS-Specific Complexity
-
-`build-macos.yaml` is the most complex workflow (~880 lines) with:
-- Keychain creation + certificate import (`MAC_SIGNING_CERT_BASE64`)
-- Per-app provisioning profiles (`MAC_*_PROFILE_BASE64`)
-- Deep code signing (dylibs, frameworks, XPC services, Sparkle)
-- Apple notarization via `notarytool` + stapling
-- YAML anchor (`&mac_steps` / `*mac_steps`) to share steps between `build-single` and `build-all` jobs
+- **release branch** → `Prod/` paths (GCS, SCP, no `test-` Docker prefix)
+- **other branches** → `Test/` paths (with `test-` Docker prefix)
 
 ## Key Conventions
 
-- All workflow UIs use Chinese (中文) for step names and descriptions
-- Chinese pub mirrors used: `PUB_HOSTED_URL=https://pub.flutter-io.cn`
-- SCP uses a two-hop relay pattern: runner → relay server (`SCP_S_*`) → target server (`SCP_D_*`)
-- Latest symlinks created on target servers (e.g., `TTPOS-Cashier-latest.apk`)
-- Artifact retention is 1 day for Android/Windows builds
-- Web builds push Docker images to `hub.hitosea.com` registry with `test-` prefix for non-release branches
+- Workflow UIs use Chinese (中文) for step names and descriptions
+- Commit messages MUST follow Conventional Commits format
+- Path alias: `@/` → `src/` (configured in tsconfig + vite)
+- Dev proxy: set `VITE_DEV_PROXY_TARGET` for CORS-free local API access (leave `VITE_API_URL` empty)
+- Chinese pub mirrors: `PUB_HOSTED_URL=https://pub.flutter-io.cn`
+- SCP uses a two-hop relay pattern: runner → relay → target
 
-## Editing Workflows
+## Editing Guidelines
 
-When modifying these workflows:
+When modifying the Dashboard:
+- Follow existing patterns: React Query hooks for data, Radix/shadcn for UI
+- Use `cn()` utility for conditional Tailwind classes
+- Respect the HSL CSS variable theme system (don't hardcode colors)
+- Keep TypeScript strict mode compliance (`noUnusedLocals`, `noUnusedParameters`)
+- Prettier: 2-space indent, single quotes, semicolons, trailing commas (ES5)
+
+When modifying workflows:
 - Maintain `fail-fast: false` on all matrix strategies
-- Keep the `should_run` check pattern that allows building "all" or a single package
-- Preserve the env suffix mapping logic (`dev→development`, `test→test`, `prod→production`)
-- macOS: never break the YAML anchor relationship between `build-single` and `build-all`
-- Test URL options and SCP paths must stay in sync across related fields
+- Keep the `should_run` check pattern for "all" vs single package builds
+- Preserve env suffix mapping (`dev→development`, `test→test`, `prod→production`)
+- macOS: never break the YAML anchor relationship (`&mac_steps` / `*mac_steps`)
+- Keep SCP paths and URL options in sync
