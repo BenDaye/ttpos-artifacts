@@ -136,6 +136,7 @@ jobs:
       APK_OUTPUT_PATH: releases
       SCP_S_PATH: ${{ inputs.branch == 'release' && format('/hitosea/ttpos-apk/Prod/{0}/', matrix.package) || format('/hitosea/ttpos-apk/Test/{0}/', matrix.package) }}
       SCP_D_PATH: ${{ inputs.branch == 'release' && format('/root/web/web/restant/out/downloads/{0}/', matrix.scp_folder) || format('/root/web/web/restant/out/downloads/Test/{0}/', matrix.scp_folder) }}
+      FAYNOSYNC_PUBLISH: ${{ inputs.branch == 'new-test' && inputs.env == 'test' }}
     steps:
       - name: 检查是否需要构建此应用端
         id: check
@@ -439,7 +440,7 @@ jobs:
           HTTP_CODE=$(curl -s -o /tmp/faynosync_resp.json -w "%{http_code}" -X POST "${FAYNOSYNC_URL}${FS_ENDPOINT}" \
             -H "Authorization: Bearer ${FAYNOSYNC_TOKEN}" \
             -F "file=@${FILE_PATH}" \
-            -F "data={\"app_name\":\"${{ matrix.faynosync_name }}\",\"version\":\"${{ env.FS_VERSION }}\",\"channel\":\"${CHANNEL}\",\"publish\":false,\"critical\":false,\"platform\":\"android\",\"arch\":\"arm64\",\"changelog\":\"Build from ${{ inputs.branch }}\"}")
+            -F "data={\"app_name\":\"${{ matrix.faynosync_name }}\",\"version\":\"${{ env.FS_VERSION }}\",\"channel\":\"${CHANNEL}\",\"publish\":${{ env.FAYNOSYNC_PUBLISH }},\"critical\":false,\"platform\":\"windows\",\"arch\":\"amd64\",\"changelog\":\"Build from ${{ inputs.branch }}\"}")
           RESP=$(cat /tmp/faynosync_resp.json 2>/dev/null)
           echo "HTTP ${HTTP_CODE}: ${RESP}"
           if [ "$HTTP_CODE" -ge 400 ]; then

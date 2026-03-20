@@ -83,6 +83,8 @@ on:
 jobs:
   build:
     runs-on: macos-latest
+    env:
+      FAYNOSYNC_PUBLISH: ${{ inputs.branch == 'new-test' && inputs.env == 'test' }}
     strategy:
       fail-fast: false
       matrix:
@@ -557,7 +559,7 @@ jobs:
 
           # iOS 通过 App Store 分发，无需上传真实 IPA 到 FaynoSync。
           # 生成占位文件注册版本元数据（changelog、critical 等），
-          # 待 App Store 审核通过后在 Dashboard 手动 publish。
+          # new-test + test 上传时自动 publish；其余环境通常在 Dashboard 手动 publish。
           PLACEHOLDER="$RUNNER_TEMP/${{ matrix.app_name }}-${{ env.FS_VERSION }}-ios.txt"
           cat > "$PLACEHOLDER" <<EOF
           platform: ios
@@ -590,7 +592,7 @@ jobs:
           HTTP_CODE=$(curl -s -o /tmp/faynosync_resp.json -w "%{http_code}" -X POST "${FAYNOSYNC_URL}${FS_ENDPOINT}" \
             -H "Authorization: Bearer ${FAYNOSYNC_TOKEN}" \
             -F "file=@${PLACEHOLDER}" \
-            -F "data={\"app_name\":\"${{ matrix.faynosync_name }}\",\"version\":\"${{ env.FS_VERSION }}\",\"channel\":\"${CHANNEL}\",\"publish\":false,\"critical\":false,\"platform\":\"ios\",\"arch\":\"arm64\",\"changelog\":\"Build from ${{ inputs.branch }}\"}")
+            -F "data={\"app_name\":\"${{ matrix.faynosync_name }}\",\"version\":\"${{ env.FS_VERSION }}\",\"channel\":\"${CHANNEL}\",\"publish\":${{ env.FAYNOSYNC_PUBLISH }},\"critical\":false,\"platform\":\"ios\",\"arch\":\"arm64\",\"changelog\":\"Build from ${{ inputs.branch }}\"}")
           RESP=$(cat /tmp/faynosync_resp.json 2>/dev/null)
           echo "HTTP ${HTTP_CODE}: ${RESP}"
           if [ "$HTTP_CODE" -ge 400 ]; then
