@@ -151,19 +151,27 @@ export const useAppsQuery = (
         },
       });
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['apps'] });
-      queryClient.invalidateQueries({ queryKey: ['app-versions-board'] });
+      queryClient.invalidateQueries({
+        queryKey: ['app-versions-board', variables.data.app_name],
+      });
     },
   });
 
   const deleteAppMutation = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async ({ id }: { id: string; appName?: string }) => {
       await axiosInstance.delete(`/apps/delete?id=${id}`);
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['apps'] });
-      queryClient.invalidateQueries({ queryKey: ['app-versions-board'] });
+      if (variables.appName) {
+        queryClient.invalidateQueries({
+          queryKey: ['app-versions-board', variables.appName],
+        });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['app-versions-board'] });
+      }
     },
   });
 
@@ -194,12 +202,11 @@ export const useAppsQuery = (
         },
       });
     },
-    onSuccess: async () => {
-      // Invalidate and refetch to ensure we have the latest data
-      await queryClient.invalidateQueries({ queryKey: ['apps'] });
-      await queryClient.invalidateQueries({ queryKey: ['app-versions-board'] });
-      await queryClient.refetchQueries({ queryKey: ['apps'] });
-      await queryClient.refetchQueries({ queryKey: ['app-versions-board'] });
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['apps'] });
+      queryClient.invalidateQueries({
+        queryKey: ['app-versions-board', variables.appName],
+      });
     },
   });
 
@@ -223,8 +230,8 @@ export const useAppsQuery = (
     await updateAppMutation.mutateAsync({ id, data });
   };
 
-  const deleteApp = async (id: string) => {
-    await deleteAppMutation.mutateAsync(id);
+  const deleteApp = async (id: string, appName?: string) => {
+    await deleteAppMutation.mutateAsync({ id, appName });
   };
 
   const deleteArtifact = async (

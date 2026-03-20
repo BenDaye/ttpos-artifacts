@@ -87,12 +87,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const { architectures } = useArchitectureQuery();
   const { channels } = useChannelQuery();
 
-  const { apps, updateApp, deleteApp, isLoading } = useAppsQuery(
-    selectedApp || undefined,
-    currentPage,
-    refreshKey,
-    filters
-  );
+  const { apps, updateApp, deleteApp, deleteArtifact, isLoading } =
+    useAppsQuery(selectedApp || undefined, currentPage, refreshKey, filters);
   const [selectedVersion, setSelectedVersion] =
     React.useState<AppVersion | null>(null);
   const [showEditModal, setShowEditModal] = React.useState(false);
@@ -225,21 +221,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
       await updateApp(selectedVersion.ID, data);
       setShowEditModal(false);
       setSelectedVersion(null);
-      queryClient.invalidateQueries({ queryKey: ['apps'] });
-      queryClient.invalidateQueries({ queryKey: ['app-versions-board'] });
-      // Force a refetch to ensure we have the latest data
-      await queryClient.refetchQueries({ queryKey: ['apps'] });
-      await queryClient.refetchQueries({ queryKey: ['app-versions-board'] });
     }
   };
 
   const handleDeleteConfirm = async () => {
     if (selectedVersion) {
-      await deleteApp(selectedVersion.ID);
+      await deleteApp(selectedVersion.ID, selectedVersion.AppName);
       setShowDeleteModal(false);
       setSelectedVersion(null);
-      queryClient.invalidateQueries({ queryKey: ['apps'] });
-      queryClient.invalidateQueries({ queryKey: ['app-versions-board'] });
     }
   };
 
@@ -1010,6 +999,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               Changelog: selectedVersion.Changelog[0]?.Changes || '',
               Artifacts: selectedVersion.Artifacts,
             }}
+            deleteArtifact={deleteArtifact}
             onClose={() => {
               setShowEditModal(false);
               setSelectedVersion(null);
@@ -1079,6 +1069,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             Changelog: selectedVersion.Changelog?.[0]?.Changes || '',
             Artifacts: selectedVersion.Artifacts || [],
           }}
+          deleteArtifact={deleteArtifact}
           onClose={() => {
             setShowEditModal(false);
             setSelectedVersion(null);

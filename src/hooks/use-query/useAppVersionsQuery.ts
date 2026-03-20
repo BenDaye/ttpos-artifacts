@@ -1,31 +1,55 @@
-import { useQuery } from "@tanstack/react-query";
-import axiosInstance from "../../config/axios";
-import type { AppVersion, PaginatedResponse } from "./useAppsQuery";
+import { useInfiniteQuery } from '@tanstack/react-query';
+import axiosInstance from '../../config/axios';
+import type { AppVersion, PaginatedResponse } from './useAppsQuery';
 
 export const useAppVersionsQuery = (
   appName: string,
   enabled: boolean = true,
-  limit: number = 5
+  pageSize: number = 5
 ) => {
-  const { data, isLoading, isError } = useQuery<PaginatedResponse<AppVersion>>({
-    queryKey: ["app-versions-board", appName, limit],
-    queryFn: async () => {
+  const {
+    data,
+    isLoading,
+    isError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ['app-versions-board', appName, pageSize],
+    queryFn: async ({ pageParam }) => {
       const params = new URLSearchParams({
         app_name: appName,
-        limit: limit.toString(),
-        page: "1",
+        limit: pageSize.toString(),
+        page: String(pageParam),
       });
       const response = await axiosInstance.get(`/search?${params.toString()}`);
-      return response.data;
+      return response.data as PaginatedResponse<AppVersion>;
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) => {
+      const loaded = allPages.reduce(
+        (sum, p) => sum + (p.items?.length ?? 0),
+        0
+      );
+      if (loaded < lastPage.total) {
+        return allPages.length + 1;
+      }
+      return undefined;
     },
     enabled,
     staleTime: 30_000,
   });
 
+  const versions = data?.pages.flatMap((p) => p.items ?? []) ?? [];
+  const total = data?.pages[0]?.total ?? 0;
+
   return {
-    versions: data?.items ?? [],
-    total: data?.total ?? 0,
+    versions,
+    total,
     isLoading,
     isError,
+    fetchNextPage,
+    hasNextPage: !!hasNextPage,
+    isFetchingNextPage,
   };
 };
