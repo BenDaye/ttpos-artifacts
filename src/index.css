@@ -14,6 +14,17 @@
   [role="button"]:not(:disabled) {
     cursor: pointer;
   }
+
+  /* WebKit autofill: keep readable text and field surface in light/dark */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-text-fill-color: hsl(var(--foreground));
+    -webkit-box-shadow: inset 0 0 0 1000px hsl(var(--background));
+    box-shadow: inset 0 0 0 1000px hsl(var(--background));
+    transition: background-color 99999s ease-out;
+  }
 }
 
 body {

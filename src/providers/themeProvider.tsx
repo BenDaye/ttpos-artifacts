@@ -24,10 +24,12 @@ const isNightTime = (): boolean => {
   return currentHour >= 20 || currentHour < 6; // Consider night time from 8 PM to 6 AM
 };
 
-export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
     const savedMode = localStorage.getItem('themeMode') as ThemeMode;
-    return savedMode || 'dark'; // Linear-style: dark by default
+    return savedMode || 'light';
   });
 
   const [theme, setTheme] = useState<Theme>(() => {
@@ -35,7 +37,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (isNightTime()) {
         return 'dark';
       }
-      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      if (
+        window.matchMedia &&
+        window.matchMedia('(prefers-color-scheme: dark)').matches
+      ) {
         return 'dark';
       }
       return 'light';
@@ -45,7 +50,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   useEffect(() => {
     localStorage.setItem('themeMode', themeMode);
-    
+
     if (themeMode === 'auto') {
       const shouldBeDark = isNightTime();
       setTheme(shouldBeDark ? 'dark' : 'light');
@@ -81,4 +86,4 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       {children}
     </ThemeContext.Provider>
   );
-}; 
+};

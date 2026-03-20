@@ -1,28 +1,35 @@
-"use client";
-import React from "react";
-import { AppLayout } from "../components/AppLayout";
-import { Dashboard } from "../components/Dashboard";
-import { UploadModal } from "../components/UploadModal";
-import { ChangelogModal } from "../components/ChangelogModal";
-import { CreateAppModal } from "../components/CreateAppModal";
-import { ChangelogEntry } from "../hooks/use-query/useAppsQuery";
-import { useParams, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { useLayoutPreference } from "../hooks/useLayoutPreference";
-import { LayoutSwitcher } from "../components/layouts/LayoutSwitcher";
+'use client';
+import React from 'react';
+import { AppLayout } from '../components/AppLayout';
+import { Dashboard } from '../components/Dashboard';
+import { UploadModal } from '../components/UploadModal';
+import { ChangelogModal } from '../components/ChangelogModal';
+import { CreateAppModal } from '../components/CreateAppModal';
+import { ChangelogEntry } from '../hooks/use-query/useAppsQuery';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
+import { useLayoutPreference } from '../hooks/useLayoutPreference';
+import { LayoutSwitcher } from '../components/layouts/LayoutSwitcher';
+import { ThemeSwitcher } from '../components/ThemeSwitcher';
 
 export const HomePage = () => {
   const { appName } = useParams();
   const navigate = useNavigate();
   const [showUploadModal, setShowUploadModal] = React.useState(false);
   const [showCreateAppModal, setShowCreateAppModal] = React.useState(false);
-  const [selectedApp, setSelectedApp] = React.useState<string | null>(appName || null);
+  const [selectedApp, setSelectedApp] = React.useState<string | null>(
+    appName || null
+  );
   const [showChangelogModal, setShowChangelogModal] = React.useState(false);
-  const [selectedVersion, setSelectedVersion] = React.useState<string | null>(null);
-  const [selectedChangelog, setSelectedChangelog] = React.useState<ChangelogEntry[]>([]);
+  const [selectedVersion, setSelectedVersion] = React.useState<string | null>(
+    null
+  );
+  const [selectedChangelog, setSelectedChangelog] = React.useState<
+    ChangelogEntry[]
+  >([]);
   const [refreshKey, setRefreshKey] = React.useState(0);
-  const [searchTerm, setSearchTerm] = React.useState("");
+  const [searchTerm, setSearchTerm] = React.useState('');
   const [layout, setLayout] = useLayoutPreference();
 
   React.useEffect(() => {
@@ -39,10 +46,13 @@ export const HomePage = () => {
 
   const handleBackClick = () => {
     setSelectedApp(null);
-    navigate("/applications");
+    navigate('/applications');
   };
 
-  const handleChangelogClick = (version: string, changelog: ChangelogEntry[]) => {
+  const handleChangelogClick = (
+    version: string,
+    changelog: ChangelogEntry[]
+  ) => {
     setSelectedVersion(version);
     setSelectedChangelog(changelog);
     setShowChangelogModal(true);
@@ -58,26 +68,27 @@ export const HomePage = () => {
 
   return (
     <AppLayout
-      title="Applications"
+      title='Applications'
       onCreateClick={toggleUploadModal}
-      createButtonText="Upload the app"
+      createButtonText='Upload the app'
       hideSearch={!!selectedApp}
       onSearchChange={(term) => setSearchTerm(term)}
+      suppressHeaderThemeSwitcher
       additionalButton={
-        <div className="flex items-center gap-2">
-          {!selectedApp && <LayoutSwitcher value={layout} onChange={setLayout} />}
+        <div className='flex items-center gap-2'>
+          {!selectedApp && (
+            <LayoutSwitcher value={layout} onChange={setLayout} />
+          )}
+          <ThemeSwitcher />
           <Button
-            variant="secondary"
-            size="sm"
+            variant='secondary'
             onClick={toggleCreateAppModal}
-            aria-label="Create app"
-          >
-            <Plus className="h-4 w-4" />
-            <span className="hidden md:inline ml-2">Create app</span>
+            aria-label='Create app'>
+            <Plus className='h-4 w-4' />
+            <span className='hidden md:inline ml-2'>Create app</span>
           </Button>
         </div>
-      }
-    >
+      }>
       <Dashboard
         selectedApp={selectedApp}
         onAppClick={handleAppClick}
@@ -87,12 +98,10 @@ export const HomePage = () => {
         searchTerm={searchTerm}
         layout={layout}
       />
-      {showUploadModal && (
-        <UploadModal onClose={toggleUploadModal} />
-      )}
+      {showUploadModal && <UploadModal onClose={toggleUploadModal} />}
       {showCreateAppModal && (
-        <CreateAppModal 
-          onClose={toggleCreateAppModal} 
+        <CreateAppModal
+          onClose={toggleCreateAppModal}
           onSuccess={handleCreateAppSuccess}
         />
       )}
