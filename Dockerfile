@@ -3,9 +3,12 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Corepack honors package.json "packageManager" (e.g. yarn@4.5.1)
+RUN corepack enable
+
 # Install dependencies first (cache layer)
-COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile
+COPY package.json yarn.lock .yarnrc.yml ./
+RUN yarn install --immutable
 
 # Copy source and build
 COPY . .
