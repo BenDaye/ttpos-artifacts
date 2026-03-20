@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { usePlatformQuery } from '../hooks/use-query/usePlatformQuery';
 import { useArchitectureQuery } from '../hooks/use-query/useArchitectureQuery';
-import { Artifact, useAppsQuery } from '../hooks/use-query/useAppsQuery';
+import { Artifact } from '../hooks/use-query/useAppsQuery';
 import { DeleteArtifactConfirmationModal } from './DeleteArtifactConfirmationModal';
 import { AxiosError } from 'axios';
 import axiosInstance from '../config/axios';
@@ -37,6 +37,12 @@ interface EditVersionModalProps {
     channel: string;
     updater?: string;
   }) => void;
+  deleteArtifact: (
+    id: string,
+    appName: string,
+    version: string,
+    artifactIndex: number
+  ) => Promise<void>;
 }
 interface ErrorResponse {
   error: string;
@@ -49,6 +55,7 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
   currentData,
   onClose,
   onSave,
+  deleteArtifact,
 }) => {
   const [formData, setFormData] = React.useState(currentData);
   const [selectedFiles, setSelectedFiles] = React.useState<File[]>([]);
@@ -83,7 +90,6 @@ export const EditVersionModal: React.FC<EditVersionModalProps> = ({
 
   const { platforms } = usePlatformQuery();
   const { architectures } = useArchitectureQuery();
-  const { deleteArtifact } = useAppsQuery();
   const queryClient = useQueryClient();
   const { toastSuccess, toastError } = useToast();
   const [error, setError] = useState<{

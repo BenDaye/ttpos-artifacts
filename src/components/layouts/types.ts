@@ -1,11 +1,11 @@
-import React from "react";
-import type { AppListItem } from "../../hooks/use-query/useAppsQuery";
+import React from 'react';
+import type { AppListItem } from '../../hooks/use-query/useAppsQuery';
 
-export type LayoutMode = "card" | "list" | "board";
+export type LayoutMode = 'card' | 'list' | 'board';
 
-export const LAYOUT_STORAGE_KEY = "dashboard-layout-preference";
+export const LAYOUT_STORAGE_KEY = 'dashboard-layout-preference';
 
-export const DEFAULT_LAYOUT: LayoutMode = "card";
+export const DEFAULT_LAYOUT: LayoutMode = 'card';
 
 export interface AppLayoutViewProps {
   apps: AppListItem[];

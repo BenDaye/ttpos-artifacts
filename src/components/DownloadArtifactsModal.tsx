@@ -19,7 +19,7 @@ export const DownloadArtifactsModal: React.FC<DownloadArtifactsModalProps> = ({
   useEffect(() => {
     return () => {
       const tempElements = document.querySelectorAll('.temp-clipboard-element');
-      tempElements.forEach(el => el.remove());
+      tempElements.forEach((el) => el.remove());
     };
   }, []);
 
@@ -31,10 +31,15 @@ export const DownloadArtifactsModal: React.FC<DownloadArtifactsModalProps> = ({
 
   const handleDownload = (artifact: Artifact) => {
     // First try to fetch the link with authentication
-    axiosInstance.get(artifact.link)
-      .then(response => {
+    axiosInstance
+      .get(artifact.link)
+      .then((response) => {
         // Check if the response is JSON with a download_url
-        if (response.data && typeof response.data === 'object' && 'download_url' in response.data) {
+        if (
+          response.data &&
+          typeof response.data === 'object' &&
+          'download_url' in response.data
+        ) {
           // If it's a JSON with download_url, use that URL
           window.open(response.data.download_url, '_blank');
         } else {
@@ -56,19 +61,24 @@ export const DownloadArtifactsModal: React.FC<DownloadArtifactsModalProps> = ({
     try {
       // First try to fetch the signed URL
       const response = await axiosInstance.get(link);
-      
+
       // Check if the response is JSON with a download_url
-      const urlToCopy = response.data && typeof response.data === 'object' && 'download_url' in response.data
-        ? response.data.download_url
-        : link;
-      
+      const urlToCopy =
+        response.data &&
+        typeof response.data === 'object' &&
+        'download_url' in response.data
+          ? response.data.download_url
+          : link;
+
       const success = await copyToClipboard(urlToCopy);
-      
+
       if (success) {
         setCopiedIndex(index);
         setTimeout(() => setCopiedIndex(null), 2000);
       } else {
-        setCopyError('Failed to copy link. Please try selecting and copying manually.');
+        setCopyError(
+          'Failed to copy link. Please try selecting and copying manually.'
+        );
         setTimeout(() => setCopyError(null), 3000);
       }
     } catch (err) {
@@ -79,62 +89,68 @@ export const DownloadArtifactsModal: React.FC<DownloadArtifactsModalProps> = ({
           setCopiedIndex(index);
           setTimeout(() => setCopiedIndex(null), 2000);
         } else {
-          setCopyError('Failed to copy link. Please try selecting and copying manually.');
+          setCopyError(
+            'Failed to copy link. Please try selecting and copying manually.'
+          );
           setTimeout(() => setCopyError(null), 3000);
         }
       } catch (clipboardErr) {
         console.error('Failed to copy link:', clipboardErr);
-        setCopyError('Failed to copy link. Please try selecting and copying manually.');
+        setCopyError(
+          'Failed to copy link. Please try selecting and copying manually.'
+        );
         setTimeout(() => setCopyError(null), 3000);
       }
     }
   };
 
   return (
-    <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center animate-fade-in modal-overlay-high"
-      onClick={handleBackdropClick}
-    >
-      <div className="bg-card border border-border p-8 rounded-lg w-96 max-h-[80vh] overflow-y-auto flex flex-col">
-        <h2 className="text-2xl font-bold mb-4 text-foreground font-roboto">
+    <div
+      className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center animate-fade-in modal-overlay-high'
+      onClick={handleBackdropClick}>
+      <div className='bg-card border border-border p-8 rounded-lg w-full max-w-3xl mx-4 max-h-[80vh] overflow-y-auto flex flex-col'>
+        <h2 className='text-2xl font-bold mb-4 text-foreground font-roboto'>
           Select Artifact to Download
         </h2>
         {copyError && (
-          <div className="mb-4 p-2 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm">
+          <div className='mb-4 p-2 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm'>
             {copyError}
           </div>
         )}
-        <div className="space-y-4 overflow-y-auto flex-1 pr-2">
+        <div className='space-y-4 overflow-y-auto flex-1 pr-2'>
           {artifacts.map((artifact, index) => (
             <div
               key={index}
-              className="bg-card p-4 rounded-lg text-foreground hover:bg-accent transition-colors cursor-pointer"
-              onClick={() => handleDownload(artifact)}
-            >
-              <div className="flex flex-col">
-                <div className="flex justify-between items-start mb-2">
+              className='bg-card p-4 rounded-lg text-foreground hover:bg-accent transition-colors cursor-pointer'
+              onClick={() => handleDownload(artifact)}>
+              <div className='flex flex-col'>
+                <div className='flex justify-between items-start mb-2'>
                   <div>
-                    <p className="font-semibold">{artifact.platform}</p>
-                    <p className="text-sm text-muted-foreground">Architecture: {artifact.arch}</p>
-                    <p className="text-sm text-muted-foreground">Package: {artifact.package}</p>
+                    <p className='font-semibold'>{artifact.platform}</p>
+                    <p className='text-sm text-muted-foreground'>
+                      Architecture: {artifact.arch}
+                    </p>
+                    <p className='text-sm text-muted-foreground'>
+                      Package: {artifact.package}
+                    </p>
                     {artifact.TufTaskID && (
-                      <div className="mt-1 flex items-center gap-1">
-                        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${
-                          artifact.TufSigned 
-                            ? 'bg-green-500/20 text-green-300 border-green-400/30' 
-                            : 'bg-red-500/20 text-red-300 border-red-400/30'
-                        }`}>
-                          <svg 
-                            className="w-3 h-3" 
-                            fill="none" 
-                            stroke="currentColor" 
-                            viewBox="0 0 24 24"
-                          >
-                            <path 
-                              strokeLinecap="round" 
-                              strokeLinejoin="round" 
-                              strokeWidth="2" 
-                              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                      <div className='mt-1 flex items-center gap-1'>
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${
+                            artifact.TufSigned
+                              ? 'bg-green-500/20 text-green-300 border-green-400/30'
+                              : 'bg-red-500/20 text-red-300 border-red-400/30'
+                          }`}>
+                          <svg
+                            className='w-3 h-3'
+                            fill='none'
+                            stroke='currentColor'
+                            viewBox='0 0 24 24'>
+                            <path
+                              strokeLinecap='round'
+                              strokeLinejoin='round'
+                              strokeWidth='2'
+                              d='M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z'
                             />
                           </svg>
                           TUF
@@ -142,18 +158,21 @@ export const DownloadArtifactsModal: React.FC<DownloadArtifactsModalProps> = ({
                       </div>
                     )}
                   </div>
-                  <i className="fas fa-download text-green-500 ml-4 flex-shrink-0"></i>
+                  <i className='fas fa-download text-green-500 ml-4 flex-shrink-0'></i>
                 </div>
-                <div className="mt-3">
-                  <p className="text-sm text-muted-foreground mb-1">Share link:</p>
-                  <div className="flex items-center gap-2">
-                    <div className="min-w-0 flex-1">
-                      <div className="overflow-x-auto pb-1" style={{
-                        maxWidth: 'calc(24rem - 64px)',
-                        scrollbarWidth: 'thin',
-                        scrollbarColor: 'rgb(107 114 128) transparent'
-                      }}>
-                        <p className="text-base text-gray-200 whitespace-nowrap pr-2 font-mono">
+                <div className='mt-3'>
+                  <p className='text-sm text-muted-foreground mb-1'>
+                    Share link:
+                  </p>
+                  <div className='flex items-center gap-2'>
+                    <div className='min-w-0 flex-1'>
+                      <div
+                        className='overflow-x-auto pb-1 max-w-full'
+                        style={{
+                          scrollbarWidth: 'thin',
+                          scrollbarColor: 'rgb(107 114 128) transparent',
+                        }}>
+                        <p className='text-base text-foreground whitespace-nowrap pr-2 font-mono'>
                           {artifact.link}
                         </p>
                       </div>
@@ -163,10 +182,10 @@ export const DownloadArtifactsModal: React.FC<DownloadArtifactsModalProps> = ({
                         e.stopPropagation();
                         handleCopyLink(artifact.link, index);
                       }}
-                      className="p-1 hover:bg-accent rounded transition-colors flex-shrink-0"
-                      title="Copy link"
-                    >
-                      <i className={`fas ${copiedIndex === index ? 'fa-check text-green-500' : 'fa-copy text-muted-foreground'}`}></i>
+                      className='p-1 hover:bg-accent rounded transition-colors flex-shrink-0'
+                      title='Copy link'>
+                      <i
+                        className={`fas ${copiedIndex === index ? 'fa-check text-green-500' : 'fa-copy text-muted-foreground'}`}></i>
                     </button>
                   </div>
                 </div>
@@ -174,15 +193,14 @@ export const DownloadArtifactsModal: React.FC<DownloadArtifactsModalProps> = ({
             </div>
           ))}
         </div>
-        <div className="mt-6 flex justify-end">
+        <div className='mt-6 flex justify-end'>
           <button
             onClick={onClose}
-            className="bg-secondary text-foreground px-4 py-2 rounded-lg font-roboto hover:bg-accent transition-all duration-150 border border-border shadow-sm"
-          >
+            className='bg-secondary text-foreground px-4 py-2 rounded-lg font-roboto hover:bg-accent transition-all duration-150 border border-border shadow-sm'>
             Close
           </button>
         </div>
       </div>
     </div>
   );
-}; 
+};
