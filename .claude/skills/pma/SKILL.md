@@ -220,6 +220,41 @@ When creating issues for workspace dispatch, the description MUST be a self-cont
 
 **Effective descriptions are specific.** Bad: "实现筛选功能". Good: "在 Dashboard.tsx 中添加 Channel/Platform/Architecture 三个 Select 筛选框，使用 shadcn/ui Select 组件，筛选状态通过 useState 管理，筛选逻辑调用 useFilteredApps hook".
 
+> **Critical**: Implementer-mode sub-issues MUST contain `## 验证命令`. This is the signal that triggers Implementer mode in the dispatched agent. Without it, the agent enters Autonomous Orchestrator mode and decomposes further instead of implementing.
+
+## Orchestrator Issue Description Template
+
+When the Orchestrator creates a **parent issue** for workspace dispatch (complex task requiring decomposition), use this template. The dispatched agent enters **Autonomous Orchestrator** mode and decomposes + dispatches sub-workspaces.
+
+```markdown
+## 执行模式: 自主编排
+
+**你不是实现者。你是编排者。不要直接修改任何代码文件。**
+
+你的任务是将下面的需求分解为子任务，为每个子任务创建 sub-issue，然后 dispatch 子 workspace 去实现。
+
+### 编排步骤（严格按顺序执行）
+
+1. 调用 `get_context()` 获取 `workspace_repos`（repo_id, branch）
+2. 调用 `list_organizations()` → `list_projects(org_id)` 获取 `project_id`
+3. 阅读涉及的源文件，理解现有代码模式
+4. 将需求分解为子任务
+5. 为每个子任务调用 `create_issue()`，设置 `parent_issue_id`，description 必须包含 `## 验证命令`
+6. 为每个子任务调用 `start_workspace(issue_id, executor: "CLAUDE_CODE", repositories: [{repo_id, branch}])`
+7. 调用 `get_execution()` 监控子 workspace 执行状态
+8. 子 workspace 全部完成后，调用 `update_issue(issue_id, status: "Done")` 完成父 issue
+
+### 需求描述
+
+[需求内容]
+
+### 重要提醒
+
+- **不要直接修改代码文件**
+- **不要创建 docs/task/ 或 docs/plan/ 文件**
+- 你唯一的输出是：创建子 issue + dispatch 子 workspace + 监控完成
+```
+
 ## Task and Plan Files
 
 Use these canonical references instead of redefining formats in-place:
