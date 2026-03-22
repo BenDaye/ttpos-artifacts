@@ -208,14 +208,34 @@ All Flutter build workflows share a common pattern:
 
 Use `/pma` for task management. Tasks and plans live in `docs/task/` and `docs/plan/` (git-tracked, portable across environments).
 
-### PMA Three-Phase Workflow
+### PMA Two-Role Architecture
+
+Agents auto-detect their role via `get_context()`:
+
+- **Orchestrator** (`issue_id` is null): user's workspace. Runs full three-phase workflow (investigate → proposal → implement). Decomposes tasks into sub-issues, dispatches workspaces, monitors completion.
+- **Implementer** (`issue_id` is non-null): dispatched workspace. Reads issue description as implementation spec, implements directly, commits, marks issue Done. Does NOT decompose further or dispatch sub-workspaces.
+
+### PMA Three-Phase Workflow (Orchestrator Only)
 
 All feature/bug/refactor work follows a strict gate-based flow:
 1. **Investigation** — trace code, search context, create/claim task in `docs/task/`
-2. **Proposal** — output current state + proposal + risks + scope, wait for user approval
-3. **Implement** — only after explicit `proceed`; dispatch via Kanban workspace if available, otherwise implement locally
+2. **Proposal & Decomposition** — current state + proposal + sub-task breakdown + risks + scope, wait for approval
+3. **Implement** — only after explicit `proceed`; create sub-issues → dispatch workspaces → monitor → verify → complete
 
 **Do not skip phases.** Do not implement before approval.
+
+### Implementer Protocol (Dispatched Agents Only)
+
+When `get_context()` returns a non-null `issue_id`, you are a dispatched implementer. Follow these steps exactly:
+
+1. Call `get_issue(issue_id)` → read the `description` field as your implementation spec
+2. Read ONLY the files mentioned in the description; implement the specified changes
+3. Run verification commands listed in the description (e.g. `yarn build`, `yarn lint`)
+4. Stage specific files: `git add <file1> <file2>` (never `git add -A`)
+5. Commit using **conventional commits** format: `feat: <中文描述>` (or `fix:`, `refactor:`, etc.)
+6. **Call `update_issue(issue_id, status: "Done")` via Vibe Kanban MCP** — this is mandatory
+
+Dispatched agents must NOT: create sub-issues, dispatch workspaces, create `docs/task/` or `docs/plan/` files, wait for user approval, or run the PMA three-phase workflow.
 
 ### Vibe Kanban MCP Integration (Pluggable)
 
@@ -223,10 +243,15 @@ Vibe Kanban MCP is an optional but preferred integration for issue tracking and 
 
 **Issue-First workflow** (when MCP is available):
 ```
-list_organizations() → list_projects(org_id) → create_issue(project_id, title, desc, priority)
-  → start_workspace(issue_id, executor, repositories) → [auto: issue moves to "In Progress"]
-    → get_execution() / create_session(executor: "CLAUDE_CODE") + run_session_prompt()
-      → update_issue(status: "Done") → update_workspace(archived: true)
+Orchestrator:
+  list_organizations() → list_projects(org_id)
+    → create_issue(parent) → create_issue(sub-issue, parent_issue_id)
+      → start_workspace(sub_issue_id, executor, repos) → [auto: "In Progress"]
+        → monitor via get_execution()
+          → verify → update_issue(parent, status: "Done") → archive workspaces
+
+Implementer (in dispatched workspace):
+  get_context() → get_issue(issue_id) → implement → commit → update_issue(status: "Done")
 ```
 
 Core rules:
@@ -244,5 +269,6 @@ Critical constraints (verified by E2E testing):
 - Sub-issues are status-independent: completing all children does NOT auto-complete the parent
 - Use `update_workspace(archived: true)` instead of `delete_workspace()` — delete fails with 409 if sessions exist
 - `remove_issue_tag()` and `unassign_issue()` take junction IDs, not entity IDs
+- Issue description must be a complete implementation spec (see Issue Description Template in PMA skill)
 
 Full tool mapping, status/priority mapping, constraint details, and dispatch protocol are defined in the PMA skill (`/pma`).

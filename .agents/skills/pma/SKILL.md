@@ -32,7 +32,18 @@ On every session start, attempt to detect Vibe Kanban MCP availability:
 
 After bootstrap, a session-scoped flag `kanban_available` (true/false) determines whether Kanban sync steps execute or are silently skipped throughout the workflow.
 
+## Agent Role Detection
+
+After Kanban Bootstrap, determine the agent's role based on `get_context()`:
+
+- **`issue_id` is non-null** → **Implementer Mode**: this workspace was dispatched to implement a specific issue. Skip directly to the [Implementer Protocol](#implementer-protocol-dispatched-agents).
+- **`issue_id` is null** → **Orchestrator Mode**: this is the user's workspace. Follow the full [Three-Phase Workflow](#three-phase-workflow) below.
+
+**This detection is critical.** Dispatched agents must NOT re-enter the three-phase workflow or attempt further task decomposition. They receive a complete implementation spec in the issue description and should implement it directly.
+
 ## Three-Phase Workflow
+
+> **Applies only to Orchestrator Mode** (`issue_id` is null).
 
 ### Phase 1: Investigation
 
@@ -45,11 +56,12 @@ After bootstrap, a session-scoped flag `kanban_available` (true/false) determine
 Non-trivial task rule:
 - If the change touches `>=3` files or crosses modules, create `docs/plan/PLAN-NNN.md` and write findings to the context section.
 
-### Phase 2: Proposal
+### Phase 2: Proposal & Decomposition
 
 Output these items (in Chinese), then stop for approval:
 - Current state
 - Proposal
+- **Sub-task breakdown** (if task involves ≥2 independent changes)
 - Risks
 - Scope
 - Alternatives (if multiple approaches exist)
@@ -58,6 +70,8 @@ For non-trivial tasks:
 - Complete remaining sections in `PLAN-NNN.md`.
 - Append one line to `docs/plan/index.md` with `[ ]`.
 - Wait for user annotations and address all of them before implementation.
+
+**Decomposition rule**: if the task can be split into independently-implementable sub-tasks (e.g. separate files, separate features, separate layers), list them explicitly in the proposal. Each sub-task should be dispatchable to a separate workspace.
 
 ### Phase 3: Implement -> Verify -> Record
 
@@ -68,23 +82,38 @@ Only after explicit approval (`proceed`):
 2. **Choose execution mode** based on `kanban_available`:
 
    **Mode A — Kanban Dispatch** (when `kanban_available` is true):
-   a. If the task has no `issue_id` yet, create one: `create_issue(title, description, priority, project_id)`.
+
+   a. Create the **parent issue** (if not exists): `create_issue(title, description, priority, project_id)`.
       - **`project_id` is required** — use the cached value from bootstrap.
-      - Ensure the issue has a non-empty `title` and `description` (required for workspace dispatch).
-   b. Obtain `repo_id` and `branch` from `get_context().workspace_repos`.
-   c. Call `start_workspace(name: "<task-id>-impl", executor: "CLAUDE_CODE", repositories: [{repo_id, branch}], issue_id)`.
-      - Issue title+description automatically becomes the agent prompt.
-      - Issue status automatically moves to `In Progress` on workspace creation — do **not** call `update_issue(status: "In Progress")` redundantly.
-   d. Record `workspace_id` in the task detail file under a `## 执行` section.
-   e. Use `get_execution(execution_id)` to track progress; report status to user.
-   f. To provide additional instructions: `create_session(workspace_id, executor: "CLAUDE_CODE")` then `run_session_prompt(session_id, prompt)`.
-      - **Always specify `executor: "CLAUDE_CODE"` explicitly** — the default is unreliable.
-   g. Once the dispatched workspace completes:
-      - Verify the implementation (review diff, compile, test).
+
+   b. **For each sub-task** in the approved proposal:
+      1. Create a **sub-issue**: `create_issue(title, description, priority, project_id, parent_issue_id)`.
+         - The `description` MUST follow the [Issue Description Template](#issue-description-template) — this is the agent's ONLY prompt.
+         - Include: goal, files to modify, patterns to follow, acceptance criteria, and verification commands.
+      2. Obtain `repo_id` and `branch` from `get_context().workspace_repos`.
+      3. Dispatch: `start_workspace(name: "<parent-id>/<sub-task-id>", executor: "CLAUDE_CODE", repositories: [{repo_id, branch}], issue_id: sub_issue_id)`.
+         - Sub-issue status automatically moves to `In Progress`.
+      4. Record `workspace_id` in the task detail file under a `## 执行` section.
+
+   c. **Monitor** all dispatched workspaces:
+      - Use `get_execution(execution_id)` to poll status periodically.
+      - Report progress to user.
+      - To provide additional instructions: `create_session(workspace_id, executor: "CLAUDE_CODE")` → `run_session_prompt(session_id, prompt)`.
+        **Always specify `executor: "CLAUDE_CODE"` explicitly** — the default is unreliable.
+
+   d. **After all sub-workspaces complete**:
+      - Review each workspace's diff for correctness.
+      - Resolve any cross-workspace conflicts (merge branches if needed).
+      - Run full verification (build, lint, test).
       - Set task file `status` to `completed`, index marker to `[x]`.
-      - Call `update_issue(issue_id, status: "Done")`.
-      - If the issue has a parent issue, check if all sibling sub-issues are also done; if so, manually complete the parent too.
-      - Call `update_workspace(workspace_id, archived: true)` — **never use `delete_workspace()`** on workspaces with active/completed sessions.
+      - For each sub-issue: verify status is "Done" (the implementer should have done this).
+      - Complete the **parent issue**: `update_issue(parent_issue_id, status: "Done")`.
+      - Archive all workspaces: `update_workspace(workspace_id, archived: true)`.
+
+   **If the task is a single leaf task** (no decomposition needed):
+   - Create the issue with a complete description following the template.
+   - Dispatch a single workspace with `issue_id`.
+   - Monitor → verify → complete as above.
 
    **Mode B — Local Implementation** (when `kanban_available` is false):
    a. Implement step by step in the current session according to the approved proposal.
@@ -93,6 +122,89 @@ Only after explicit approval (`proceed`):
 
 3. If a plan exists, set plan index marker to `[x]` and detail `status` to `completed`.
 4. Update changelog as needed.
+
+## Implementer Protocol (Dispatched Agents)
+
+> **Applies only to Implementer Mode** (`issue_id` is non-null).
+> Dispatched agents **MUST NOT** create further sub-issues or dispatch further workspaces.
+
+When a workspace is created from an issue via `start_workspace`, the agent in that workspace follows this protocol:
+
+### Step 1: Understand the Task
+
+1. Call `get_context()` → extract `issue_id`.
+2. Call `get_issue(issue_id)` → read the issue `description` as the implementation spec.
+3. The description contains: goal, files to modify, patterns, acceptance criteria, and verification commands.
+
+### Step 2: Investigate (Quick, Targeted)
+
+1. Read ONLY the files mentioned in the issue description.
+2. Understand existing patterns in those files.
+3. Do NOT create task files (`docs/task/`) or plan files (`docs/plan/`) — the orchestrator manages those.
+
+### Step 3: Implement
+
+1. Make the code changes as specified.
+2. Follow existing code style and patterns.
+3. Make only the changes described — no unrequested refactors.
+
+### Step 4: Verify
+
+Run the verification commands listed in the issue description. At minimum:
+1. `yarn build` (or equivalent) — must pass.
+2. `yarn lint` (or equivalent) — must pass.
+3. Any specific test commands mentioned.
+
+### Step 5: Commit & Complete
+
+1. Stage changed files: `git add <specific files>` (never `git add -A`).
+2. Commit with **conventional commits** format: `feat: <中文描述>` (or `fix:`, `refactor:`, etc.).
+   - Example: `feat: 添加应用列表页多维筛选功能`
+   - Do NOT use free-form messages. The type prefix is mandatory.
+3. **Call `update_issue(issue_id, status: "Done")` via Vibe Kanban MCP** — this step is mandatory and must not be skipped.
+4. Do NOT archive the workspace — the orchestrator handles that.
+
+### What Implementers Must NOT Do
+
+- Do NOT create sub-issues or dispatch sub-workspaces.
+- Do NOT create `docs/task/` or `docs/plan/` files.
+- Do NOT wait for user approval — the orchestrator already approved.
+- Do NOT run the full three-phase PMA workflow.
+- Do NOT push to remote — the orchestrator handles integration.
+
+## Issue Description Template
+
+When creating issues for workspace dispatch, the description MUST be a self-contained implementation spec. The dispatched agent receives ONLY this description as its prompt.
+
+```markdown
+## 目标
+[一句话描述要实现什么]
+
+## 背景
+[相关的代码上下文，现有模式，API 信息]
+
+## 实现要求
+- [具体要求 1]
+- [具体要求 2]
+- [具体要求 3]
+
+## 涉及文件
+- `path/to/file1.ts` — [要做什么修改]
+- `path/to/file2.ts` — [要做什么修改]
+
+## 参考模式
+[指向现有代码中可参考的模式，如 "参考 src/hooks/use-query/useAppsQuery.ts 中 useAppsQuery 的写法"]
+
+## 验收标准
+- [ ] [标准 1]
+- [ ] [标准 2]
+
+## 验证命令
+- `yarn build` — 编译通过
+- `yarn lint` — 无 lint 错误
+```
+
+**Effective descriptions are specific.** Bad: "实现筛选功能". Good: "在 Dashboard.tsx 中添加 Channel/Platform/Architecture 三个 Select 筛选框，使用 shadcn/ui Select 组件，筛选状态通过 useState 管理，筛选逻辑调用 useFilteredApps hook".
 
 ## Task and Plan Files
 
