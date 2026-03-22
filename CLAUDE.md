@@ -2,6 +2,28 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Agent Rules
+
+- All output (docs, code comments, commit messages, PR descriptions) MUST be in Chinese by default.
+- Communicate with the user in Chinese.
+- Do not mention AI assistants, agents, or collaborator model names in any remote-visible content.
+
+## Git
+
+- Commit messages, PR titles, PR descriptions, and all remote-visible Git metadata MUST be in Chinese.
+- Conventional commits format: <type>: <Chinese description> (type in English: feat, fix, refactor, docs, test, chore, perf, ci).
+- Do not mention AI assistants or model names (Codex, Claude, ChatGPT, OpenAI, Anthropic, etc.) in any remote-visible content.
+
+## Documentation Rules
+
+- Do not create unnecessary doc files (e.g. summary.md, report.md). Temporary files go to ./tmp/.
+- Frontend/backend API docs live in code as source of truth. When adding/modifying APIs, update both sides together.
+- Human-authored project docs (requirements, design, etc.) are maintained by the user. AI may add implementation status annotations only with confirmation.
+
+## Project Preferences
+
+- If a project uses the PMA skill for management, strictly follow the PMA workflow (investigate -> proposal -> implement). Do not skip phases or bypass the file-based task tracking process.
+
 ## Project Overview
 
 This repository (`ttpos-artifacts`) serves two purposes:
@@ -61,21 +83,21 @@ docs/                       # macOS/iOS signing configuration guides
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Framework | React 18 + TypeScript (strict) |
-| Build | Vite 6 |
-| Routing | React Router v6 (lazy-loaded pages, PrivateRoute/PublicRoute guards) |
-| State | React Context (auth, theme) + TanStack React Query v5 (server state) |
-| Forms | Formik + Yup |
-| HTTP | Axios (Bearer token interceptor, 401 → redirect to /signin) |
-| Styling | Tailwind CSS 3 + CSS variables (HSL) + shadcn/ui (Radix-UI) |
-| Icons | Lucide React |
-| Charts | Recharts |
-| Dark mode | CSS class strategy (`darkMode: 'class'`), auto mode (time-of-day + prefers-color-scheme) |
-| Package manager | Yarn 4.5.1 (Corepack) |
-| Linting | ESLint + Prettier |
-| Commit lint | commitlint (Conventional Commits) |
+| Layer           | Technology                                                                               |
+| --------------- | ---------------------------------------------------------------------------------------- |
+| Framework       | React 18 + TypeScript (strict)                                                           |
+| Build           | Vite 6                                                                                   |
+| Routing         | React Router v6 (lazy-loaded pages, PrivateRoute/PublicRoute guards)                     |
+| State           | React Context (auth, theme) + TanStack React Query v5 (server state)                     |
+| Forms           | Formik + Yup                                                                             |
+| HTTP            | Axios (Bearer token interceptor, 401 → redirect to /signin)                              |
+| Styling         | Tailwind CSS 3 + CSS variables (HSL) + shadcn/ui (Radix-UI)                              |
+| Icons           | Lucide React                                                                             |
+| Charts          | Recharts                                                                                 |
+| Dark mode       | CSS class strategy (`darkMode: 'class'`), auto mode (time-of-day + prefers-color-scheme) |
+| Package manager | Yarn 4.5.1 (Corepack)                                                                    |
+| Linting         | ESLint + Prettier                                                                        |
+| Commit lint     | commitlint (Conventional Commits)                                                        |
 
 ## Architecture Patterns
 
@@ -137,13 +159,13 @@ All Flutter build workflows share a common pattern:
 
 ### App Packages
 
-| Platform | Packages | Output |
-|----------|----------|--------|
-| Android | pos, kds, shop, assistant, tablet, qds, kiosk | APK |
-| iOS | pos, kds, shop, assistant, tablet, kiosk | IPA |
-| Windows | pos, kds, assistant, tablet, shop, kiosk | Inno Setup EXE |
-| macOS | pos, assistant, kds, tablet, shop, kiosk | Signed/notarized DMG |
-| Web | menu, mobile, member | Docker images |
+| Platform | Packages                                      | Output               |
+| -------- | --------------------------------------------- | -------------------- |
+| Android  | pos, kds, shop, assistant, tablet, qds, kiosk | APK                  |
+| iOS      | pos, kds, shop, assistant, tablet, kiosk      | IPA                  |
+| Windows  | pos, kds, assistant, tablet, shop, kiosk      | Inno Setup EXE       |
+| macOS    | pos, assistant, kds, tablet, shop, kiosk      | Signed/notarized DMG |
+| Web      | menu, mobile, member                          | Docker images        |
 
 ### Environment System
 
@@ -156,27 +178,63 @@ All Flutter build workflows share a common pattern:
 - **release branch** → `Prod/` paths (GCS, SCP, no `test-` Docker prefix)
 - **other branches** → `Test/` paths (with `test-` Docker prefix)
 
-## Key Conventions
+## Editing Guidelines
 
-- Workflow UIs use Chinese (中文) for step names and descriptions
-- Commit messages MUST follow Conventional Commits format
+### General Conventions
+
 - Path alias: `@/` → `src/` (configured in tsconfig + vite)
 - Dev proxy: set `VITE_DEV_PROXY_TARGET` for CORS-free local API access (leave `VITE_API_URL` empty)
+- Workflow UIs use Chinese (中文) for step names and descriptions
 - Chinese pub mirrors: `PUB_HOSTED_URL=https://pub.flutter-io.cn`
 - SCP uses a two-hop relay pattern: runner → relay → target
 
-## Editing Guidelines
+### Dashboard
 
-When modifying the Dashboard:
 - Follow existing patterns: React Query hooks for data, Radix/shadcn for UI
 - Use `cn()` utility for conditional Tailwind classes
 - Respect the HSL CSS variable theme system (don't hardcode colors)
 - Keep TypeScript strict mode compliance (`noUnusedLocals`, `noUnusedParameters`)
 - Prettier: 2-space indent, single quotes, semicolons, trailing commas (ES5)
 
-When modifying workflows:
+### Workflows
+
 - Maintain `fail-fast: false` on all matrix strategies
 - Keep the `should_run` check pattern for "all" vs single package builds
 - Preserve env suffix mapping (`dev→development`, `test→test`, `prod→production`)
 - macOS: never break the YAML anchor relationship (`&mac_steps` / `*mac_steps`)
 - Keep SCP paths and URL options in sync
+
+## Project Development
+
+Use `/pma` for task management. Tasks and plans live in `docs/task/` and `docs/plan/` (git-tracked, portable across environments).
+
+### Vibe Kanban MCP Integration
+
+When Vibe Kanban MCP tools are available in the current session, treat them as the external `TaskCreate`/`TaskUpdate` sync target defined by PMA's sync rules. Files remain the primary source of truth.
+
+#### Concept Mapping
+
+| PMA (files)                 | Vibe Kanban MCP                       | Notes               |
+| --------------------------- | ------------------------------------- | -------------------- |
+| `docs/task/PREFIX-NNN.md`   | `create_issue` / `get_issue`          | Task detail ↔ Issue |
+| Task `status: pending`      | Issue status "Backlog" or "Todo"      |                     |
+| Task `status: in_progress`  | Issue status "In Progress"            |                     |
+| Task `status: completed`    | Issue status "Done"                   |                     |
+| Task `status: closed`       | `delete_issue` or status "Cancelled"  |                     |
+| Task `priority` P0/P1/P2/P3 | Issue priority urgent/high/medium/low |                     |
+| `docs/plan/PLAN-NNN.md`     | Issue description (append plan link)  | Plan stays in git   |
+| Task `owner`                | `assign_issue`                        |                     |
+
+#### Sync Direction
+
+- **Inbound** (Kanban → files): On session start, if Vibe Kanban MCP is available, call `list_issues` to discover new issues not yet in `docs/task/index.md`. Create corresponding task files and index entries.
+- **Outbound** (files → Kanban): After claiming (`[-]`) or completing (`[x]`) a task in `docs/task/`, call `update_issue` to sync status back to Kanban. This is best-effort — if MCP is unavailable, skip silently.
+- **No MCP? No problem**: The full workflow runs on `docs/` files alone. Vibe Kanban sync is additive, never required.
+
+#### Workspace Dispatch
+
+When a task needs an isolated environment or parallel agent execution:
+- Use `start_workspace` to create a branch + session for the task
+- Use `run_session_prompt` to dispatch work to a sub-agent
+- Link the workspace to the issue via `link_workspace_issue`
+- The dispatched agent should follow the same PMA flow using the repo's `docs/` files
