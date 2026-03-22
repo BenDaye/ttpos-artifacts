@@ -36,6 +36,8 @@ import type { LayoutMode } from './layouts/types';
 import { AppCardView } from './layouts/AppCardView';
 import { AppListView } from './layouts/AppListView';
 import { AppBoardView } from './layouts/AppBoardView';
+import { AppListFilters } from './AppListFilters';
+import { useFilteredApps } from '../hooks/use-query/useFilteredApps';
 
 interface DashboardProps {
   selectedApp: string | null;
@@ -97,6 +99,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [expandedApps, setExpandedApps] = React.useState<
     Record<string, boolean>
   >({});
+  const [appListFilters, setAppListFilters] = React.useState({
+    channel: '',
+    platform: '',
+    arch: '',
+  });
   const [showEditAppModal, setShowEditAppModal] = React.useState(false);
   const [showDeleteAppModal, setShowDeleteAppModal] = React.useState(false);
   const [selectedAppData, setSelectedAppData] =
@@ -135,6 +142,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const appVersions = paginatedVersions.items || [];
 
   const filteredAppList = useSearch(appList, searchTerm) as AppListItem[];
+
+  const { filteredApps, isFiltering } = useFilteredApps(
+    filteredAppList,
+    appListFilters
+  );
 
   const { data: appData } = useQuery({
     queryKey: ['appData', selectedApp],
@@ -1033,8 +1045,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
   }
 
   const layoutViewProps = {
-    apps: filteredAppList,
-    isLoading,
+    apps: filteredApps,
+    isLoading: isLoading || isFiltering,
     searchTerm,
     onAppClick,
     onEditApp: handleEditApp,
@@ -1045,6 +1057,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   return (
     <div>
+      <AppListFilters
+        filters={appListFilters}
+        onFiltersChange={setAppListFilters}
+        channels={channels}
+        platforms={platforms}
+        architectures={architectures}
+        isFiltering={isFiltering}
+      />
       {layout === 'list' && <AppListView {...layoutViewProps} />}
       {layout === 'board' && (
         <AppBoardView
