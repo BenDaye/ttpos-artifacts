@@ -266,7 +266,9 @@ When dispatched for a complex task, you are an autonomous orchestrator. Your job
 4. **Dispatch sub-workspaces** for each sub-issue via `start_workspace(issue_id: sub_issue_id, ...)`
 5. **Monitor** sub-workspace execution via `get_execution()`
 6. **Verify** results after sub-workspaces complete
-7. **Complete** the parent issue: `update_issue(issue_id, status: "Done")`
+7. **Archive** all sub-workspaces: `update_workspace(workspace_id, archived: true)`
+8. **Complete** the parent issue: `update_issue(issue_id, status: "Done")`
+9. **Archive self**: `update_workspace(own_workspace_id, archived: true)` — get `own_workspace_id` from `get_context().workspace_id`
 
 Key rules:
 - Use `/pma` skill for the full workflow

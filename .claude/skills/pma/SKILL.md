@@ -235,14 +235,16 @@ When the Orchestrator creates a **parent issue** for workspace dispatch (complex
 
 ### 编排步骤（严格按顺序执行）
 
-1. 调用 `get_context()` 获取 `workspace_repos`（repo_id, branch）
+1. 调用 `get_context()` 获取 `workspace_repos`（repo_id, branch）和 `workspace_id`（自身 workspace ID）
 2. 调用 `list_organizations()` → `list_projects(org_id)` 获取 `project_id`
 3. 阅读涉及的源文件，理解现有代码模式
 4. 将需求分解为子任务
 5. 为每个子任务调用 `create_issue()`，设置 `parent_issue_id`，description 必须包含 `## 验证命令`
 6. 为每个子任务调用 `start_workspace(issue_id, executor: "CLAUDE_CODE", repositories: [{repo_id, branch}])`
 7. 调用 `get_execution()` 监控子 workspace 执行状态
-8. 子 workspace 全部完成后，调用 `update_issue(issue_id, status: "Done")` 完成父 issue
+8. 子 workspace 全部完成后，归档所有子 workspace: `update_workspace(workspace_id, archived: true)`
+9. 调用 `update_issue(issue_id, status: "Done")` 完成父 issue
+10. 归档自身 workspace: `update_workspace(自身 workspace_id, archived: true)`
 
 ### 需求描述
 
@@ -252,7 +254,7 @@ When the Orchestrator creates a **parent issue** for workspace dispatch (complex
 
 - **不要直接修改代码文件**
 - **不要创建 docs/task/ 或 docs/plan/ 文件**
-- 你唯一的输出是：创建子 issue + dispatch 子 workspace + 监控完成
+- 你唯一的输出是：创建子 issue + dispatch 子 workspace + 监控完成 + 归档所有 workspace（包括自身）
 ```
 
 ## Task and Plan Files
