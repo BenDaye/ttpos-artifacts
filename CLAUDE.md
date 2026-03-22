@@ -265,7 +265,11 @@ When dispatched for a complex task, you are an autonomous orchestrator. Your job
 3. **Create sub-issues** under the parent issue (with `parent_issue_id`), each with a detailed description following the Issue Description Template (MUST include `## 验证命令`)
 4. **Dispatch sub-workspaces** for each sub-issue via `start_workspace(issue_id: sub_issue_id, ...)`
 5. **Monitor** sub-workspace execution via `get_execution()`
-6. **Verify** results after sub-workspaces complete
+6. **Merge code**: after all sub-workspaces complete, merge each sub-workspace branch into YOUR branch:
+   - `git fetch origin && git merge <sub-workspace-branch>` for each sub-workspace
+   - Resolve any merge conflicts
+   - Run verification: `yarn build && yarn lint` (or project-specific commands)
+   - Commit the merge result
 7. **Archive** all sub-workspaces: `update_workspace(workspace_id, archived: true)`
 8. **Complete** the parent issue: `update_issue(issue_id, status: "Done")`
 9. **Archive self**: `update_workspace(own_workspace_id, archived: true)` — get `own_workspace_id` from `get_context().workspace_id`
@@ -277,6 +281,7 @@ Key rules:
 - Obtain `repo_id` and `branch` from `get_context().workspace_repos`
 - Each sub-issue description MUST include `## 验证命令` so sub-workspace agents enter Implementer mode
 - Always specify `executor: "CLAUDE_CODE"` when calling `start_workspace` or `create_session`
+- **Decomposition must minimize file overlap**: if two sub-tasks need the same file, either make them sequential (task B based on task A's branch) or merge one sub-task's output into the other's base before dispatching
 
 ### Vibe Kanban MCP Integration (Pluggable)
 

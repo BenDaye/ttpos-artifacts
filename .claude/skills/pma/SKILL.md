@@ -223,13 +223,18 @@ When the Orchestrator creates a **parent issue** for workspace dispatch (complex
 1. 调用 `get_context()` 获取 `workspace_repos`（repo_id, branch）和 `workspace_id`（自身 workspace ID）
 2. 调用 `list_organizations()` → `list_projects(org_id)` 获取 `project_id`
 3. 阅读涉及的源文件，理解现有代码模式
-4. 将需求分解为子任务
+4. 将需求分解为子任务（注意：尽量避免子任务之间修改同一文件，如有依赖则顺序 dispatch）
 5. 为每个子任务调用 `create_issue()`，设置 `parent_issue_id`，description 必须包含 `## 验证命令`
 6. 为每个子任务调用 `start_workspace(issue_id, executor: "CLAUDE_CODE", repositories: [{repo_id, branch}])`
 7. 调用 `get_execution()` 监控子 workspace 执行状态
-8. 子 workspace 全部完成后，归档所有子 workspace: `update_workspace(workspace_id, archived: true)`
-9. 调用 `update_issue(issue_id, status: "Done")` 完成父 issue
-10. 归档自身 workspace: `update_workspace(自身 workspace_id, archived: true)`
+8. **合并代码**：子 workspace 全部完成后，将各子分支合并到自身分支：
+   - `git fetch origin && git merge <子分支名>` 逐个合并
+   - 解决冲突（如有）
+   - 运行验证命令（yarn build / yarn lint 等）
+   - 提交合并结果
+9. 归档所有子 workspace: `update_workspace(workspace_id, archived: true)`
+10. 调用 `update_issue(issue_id, status: "Done")` 完成父 issue
+11. 归档自身 workspace: `update_workspace(自身 workspace_id, archived: true)`
 
 ### 需求描述
 
