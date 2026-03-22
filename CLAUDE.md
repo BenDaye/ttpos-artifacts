@@ -208,27 +208,42 @@ All Flutter build workflows share a common pattern:
 
 Use `/pma` for task management. Tasks and plans live in `docs/task/` and `docs/plan/` (git-tracked, portable across environments).
 
-### PMA Three-Mode Architecture
+### MANDATORY: Agent Role Detection on Session Start
 
-Agents auto-detect their mode via `get_context()` + issue description format:
+**Every agent MUST execute this decision tree at session start, BEFORE doing any work:**
 
-- **Interactive Orchestrator** (`issue_id` is null): user's workspace. Full three-phase workflow with user approval gates.
-- **Autonomous Orchestrator** (`issue_id` non-null + high-level description): dispatched for a complex task. Full three-phase workflow but **auto-proceeds** without user approval. Decomposes into sub-issues, dispatches sub-workspaces, monitors completion.
-- **Implementer** (`issue_id` non-null + description contains `## 验证命令`): dispatched for a leaf task with detailed spec. Implements directly, commits, marks issue Done.
+```
+1. Call get_context() via Vibe Kanban MCP
+2. If get_context() fails → file-only mode, skip MCP
+3. Extract issue_id from response
 
-### PMA Three-Phase Workflow (Orchestrator Modes)
+4. If issue_id is NULL:
+   → You are an INTERACTIVE ORCHESTRATOR (user's workspace)
+   → Use /pma skill, follow full three-phase workflow with user approval gates
+   → STOP here, do not proceed to step 5
 
-All feature/bug/refactor work follows a strict gate-based flow:
-1. **Investigation** — trace code, search context, create/claim task in `docs/task/`
-2. **Proposal & Decomposition** — current state + proposal + sub-task breakdown + risks + scope
-3. **Implement** — create sub-issues → dispatch workspaces → monitor → verify → complete
+5. If issue_id is NON-NULL:
+   → Call get_issue(issue_id) → read the description field
+   → Check: does the description contain "## 验证命令"?
 
-**Interactive mode**: wait for user approval between Phase 2 and 3.
-**Autonomous mode**: auto-proceed (parent already approved the direction).
+6. If description CONTAINS "## 验证命令":
+   → You are an IMPLEMENTER (leaf task with detailed spec)
+   → Follow the Implementer Protocol below
+   → STOP here, do not proceed to step 7
 
-### Implementer Protocol (Dispatched Agents Only)
+7. If description DOES NOT CONTAIN "## 验证命令":
+   → You are an AUTONOMOUS ORCHESTRATOR (complex task, needs decomposition)
+   → Use /pma skill, follow full three-phase workflow
+   → AUTO-PROCEED through all phases (no user approval gates)
+   → Your job is to DECOMPOSE the task, CREATE sub-issues, and DISPATCH sub-workspaces
+   → Do NOT implement code directly yourself
+```
 
-When `get_context()` returns a non-null `issue_id`, you are a dispatched implementer. Follow these steps exactly:
+### Implementer Protocol (Leaf Tasks Only)
+
+> Only when the decision tree above leads to step 6 (description contains `## 验证命令`).
+
+When `get_context()` returns a non-null `issue_id` AND the issue description contains `## 验证命令`, you are a dispatched implementer. Follow these steps exactly:
 
 1. Call `get_issue(issue_id)` → read the `description` field as your implementation spec
 2. Read ONLY the files mentioned in the description; implement the specified changes
@@ -238,6 +253,28 @@ When `get_context()` returns a non-null `issue_id`, you are a dispatched impleme
 6. **Call `update_issue(issue_id, status: "Done")` via Vibe Kanban MCP** — this is mandatory
 
 Dispatched agents must NOT: create sub-issues, dispatch workspaces, create `docs/task/` or `docs/plan/` files, wait for user approval, or run the PMA three-phase workflow.
+
+### Autonomous Orchestrator Protocol (Complex Tasks)
+
+> Only when the decision tree above leads to step 7 (description does NOT contain `## 验证命令`).
+
+When dispatched for a complex task, you are an autonomous orchestrator. Your job is NOT to implement code yourself, but to:
+
+1. **Investigate** the codebase to understand the task scope
+2. **Decompose** the task into independently-implementable sub-tasks
+3. **Create sub-issues** under the parent issue (with `parent_issue_id`), each with a detailed description following the Issue Description Template (MUST include `## 验证命令`)
+4. **Dispatch sub-workspaces** for each sub-issue via `start_workspace(issue_id: sub_issue_id, ...)`
+5. **Monitor** sub-workspace execution via `get_execution()`
+6. **Verify** results after sub-workspaces complete
+7. **Complete** the parent issue: `update_issue(issue_id, status: "Done")`
+
+Key rules:
+- Use `/pma` skill for the full workflow
+- Auto-proceed through all phases (no user approval gates needed)
+- `project_id` must be discovered via `list_organizations()` → `list_projects()` if `get_context()` returns null
+- Obtain `repo_id` and `branch` from `get_context().workspace_repos`
+- Each sub-issue description MUST include `## 验证命令` so sub-workspace agents enter Implementer mode
+- Always specify `executor: "CLAUDE_CODE"` when calling `start_workspace` or `create_session`
 
 ### Vibe Kanban MCP Integration (Pluggable)
 
