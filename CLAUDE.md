@@ -208,13 +208,41 @@ All Flutter build workflows share a common pattern:
 
 Use `/pma` for task management. Tasks and plans live in `docs/task/` and `docs/plan/` (git-tracked, portable across environments).
 
-### Vibe Kanban MCP Integration
+### PMA Three-Phase Workflow
 
-Vibe Kanban MCP is the mandatory sync target for PMA task management. Complete tool mapping, status/priority mapping, sync protocol, and workspace dispatch rules are defined in the PMA skill's **Vibe Kanban MCP Sync** section (`/pma`).
+All feature/bug/refactor work follows a strict gate-based flow:
+1. **Investigation** — trace code, search context, create/claim task in `docs/task/`
+2. **Proposal** — output current state + proposal + risks + scope, wait for user approval
+3. **Implement** — only after explicit `proceed`; dispatch via Kanban workspace if available, otherwise implement locally
+
+**Do not skip phases.** Do not implement before approval.
+
+### Vibe Kanban MCP Integration (Pluggable)
+
+Vibe Kanban MCP is an optional but preferred integration for issue tracking and workspace dispatch. It is **auto-detected** at session start via `get_context()`.
+
+**Issue-First workflow** (when MCP is available):
+```
+list_organizations() → list_projects(org_id) → create_issue(project_id, title, desc, priority)
+  → start_workspace(issue_id, executor, repositories) → [auto: issue moves to "In Progress"]
+    → get_execution() / create_session(executor: "CLAUDE_CODE") + run_session_prompt()
+      → update_issue(status: "Done") → update_workspace(archived: true)
+```
 
 Core rules:
-- Files (`docs/task/`, `docs/plan/`) are always the primary data source
-- Every task status change MUST sync to Kanban via `update_issue()`
-- Session start MUST execute inbound sync (`get_context()` → `list_issues()` → compare local files)
-- New tasks MUST be created on both sides (`create_issue()` + local file)
-- Subtasks can be dispatched to isolated workspaces via `start_workspace()` + `run_session_prompt()`
+- Files (`docs/task/`, `docs/plan/`) are **always** the primary data source — Kanban is the sync target
+- Issue is the entry point: create Issue first, then create Workspace from Issue (not the reverse)
+- Creating a workspace linked to an issue **automatically** moves the issue to `In Progress`
+- `link_workspace_issue()` also triggers the same auto `In Progress` transition
+- `project_id` must be passed explicitly to `create_issue()` and `list_issues()`
+- If `get_context()` returns `project_id: null`, discover it via `list_organizations()` → `list_projects()`
+- When MCP is unavailable, continue with file-only workflow — no errors, no warnings
+
+Critical constraints (verified by E2E testing):
+- `start_workspace` requires either `issue_id` or `prompt` — omitting both returns HTTP 400
+- `create_session` must specify `executor: "CLAUDE_CODE"` explicitly — the default is unreliable
+- Sub-issues are status-independent: completing all children does NOT auto-complete the parent
+- Use `update_workspace(archived: true)` instead of `delete_workspace()` — delete fails with 409 if sessions exist
+- `remove_issue_tag()` and `unassign_issue()` take junction IDs, not entity IDs
+
+Full tool mapping, status/priority mapping, constraint details, and dispatch protocol are defined in the PMA skill (`/pma`).

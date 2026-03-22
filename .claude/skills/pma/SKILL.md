@@ -1,6 +1,6 @@
 ---
 name: pma
-description: Project development lifecycle management with a strict three-phase workflow (investigate -> proposal -> implement), file-based plan tracking in docs/plan/, task tracking in docs/task/, and claim-before-work multi-agent coordination. Use when handling feature development, bug fixes, refactors, planning, progress tracking, or multi-agent execution in an existing codebase.
+description: Project development lifecycle management with a strict three-phase workflow (investigate -> proposal -> implement), file-based plan tracking in docs/plan/, task tracking in docs/task/, and claim-before-work multi-agent coordination. Optionally integrates with Vibe Kanban MCP for issue-driven dispatch and status sync. Use when handling feature development, bug fixes, refactors, planning, progress tracking, or multi-agent execution in an existing codebase.
 ---
 
 # PMA - Project Management Assistant
@@ -16,6 +16,22 @@ Run delivery work with clear gates, minimal diffs, and explicit task/plan tracki
 5. Never use plan mode (`EnterPlanMode`, `mode: "plan"`). Manage plans in `docs/plan/` files only.
 6. Do not implement before explicit confirmation (`proceed`).
 
+## Kanban Bootstrap (Session Start)
+
+On every session start, attempt to detect Vibe Kanban MCP availability:
+
+1. Call `get_context()`.
+   - **Success** → MCP is available. Cache `workspace_id`, `project_id`, `issue_id` from the response.
+   - **Failure / tool not found** → MCP is unavailable. Continue with file-only mode.
+2. If MCP is available but `project_id` is null:
+   - Call `list_organizations()` → `list_projects(organization_id)` to discover the project.
+   - Cache the discovered `project_id` for the rest of the session.
+3. If MCP is available:
+   - Call `list_issues(project_id)` to fetch all remote issues.
+   - Compare against `docs/task/index.md`; create local task files for new remote issues.
+
+After bootstrap, a session-scoped flag `kanban_available` (true/false) determines whether Kanban sync steps execute or are silently skipped throughout the workflow.
+
 ## Three-Phase Workflow
 
 ### Phase 1: Investigation
@@ -23,9 +39,8 @@ Run delivery work with clear gates, minimal diffs, and explicit task/plan tracki
 1. Trace upstream/downstream call chains, symbol references, and types.
 2. Search related code, config, tests, migrations, and docs.
 3. Read the tail of `docs/changelog.md` for recent context.
-4. Inbound sync: call `get_context()` then `list_issues()` to discover Kanban issues not yet in `docs/task/index.md`; create local task files for new ones.
-5. Find or create the matching task in `docs/task/index.md` and claim it (`[-]`).
-   - If creating a new task, also call `create_issue(title, description, priority)` to sync to Kanban.
+4. Find or create the matching task in `docs/task/index.md` and claim it (`[-]`).
+   - If creating a new task: create detail file first → append index line → **if `kanban_available`**: call `create_issue(title, description, priority, project_id)` and record `issue_id` in the detail file.
 
 Non-trivial task rule:
 - If the change touches `>=3` files or crosses modules, create `docs/plan/PLAN-NNN.md` and write findings to the context section.
@@ -46,15 +61,38 @@ For non-trivial tasks:
 
 ### Phase 3: Implement -> Verify -> Record
 
-Only after approval:
+Only after explicit approval (`proceed`):
 
 1. If a plan exists, set plan index marker to `[-]` and detail `status` to `implementing`.
-2. Implement step by step according to the approved proposal.
-3. Run focused self-verification (compile, test, deploy verification, etc.).
-4. Set task index marker to `[x]` and task detail `status` to `completed`.
-5. Call `update_issue(issue_id, status: "Done")` to sync completion to Kanban.
-6. If a plan exists, set plan index marker to `[x]` and plan detail `status` to `completed`.
-7. Update changelog as needed.
+
+2. **Choose execution mode** based on `kanban_available`:
+
+   **Mode A — Kanban Dispatch** (when `kanban_available` is true):
+   a. If the task has no `issue_id` yet, create one: `create_issue(title, description, priority, project_id)`.
+      - **`project_id` is required** — use the cached value from bootstrap.
+      - Ensure the issue has a non-empty `title` and `description` (required for workspace dispatch).
+   b. Obtain `repo_id` and `branch` from `get_context().workspace_repos`.
+   c. Call `start_workspace(name: "<task-id>-impl", executor: "CLAUDE_CODE", repositories: [{repo_id, branch}], issue_id)`.
+      - Issue title+description automatically becomes the agent prompt.
+      - Issue status automatically moves to `In Progress` on workspace creation — do **not** call `update_issue(status: "In Progress")` redundantly.
+   d. Record `workspace_id` in the task detail file under a `## 执行` section.
+   e. Use `get_execution(execution_id)` to track progress; report status to user.
+   f. To provide additional instructions: `create_session(workspace_id, executor: "CLAUDE_CODE")` then `run_session_prompt(session_id, prompt)`.
+      - **Always specify `executor: "CLAUDE_CODE"` explicitly** — the default is unreliable.
+   g. Once the dispatched workspace completes:
+      - Verify the implementation (review diff, compile, test).
+      - Set task file `status` to `completed`, index marker to `[x]`.
+      - Call `update_issue(issue_id, status: "Done")`.
+      - If the issue has a parent issue, check if all sibling sub-issues are also done; if so, manually complete the parent too.
+      - Call `update_workspace(workspace_id, archived: true)` — **never use `delete_workspace()`** on workspaces with active/completed sessions.
+
+   **Mode B — Local Implementation** (when `kanban_available` is false):
+   a. Implement step by step in the current session according to the approved proposal.
+   b. Run focused self-verification (compile, test, etc.).
+   c. Set task file `status` to `completed`, index marker to `[x]`.
+
+3. If a plan exists, set plan index marker to `[x]` and detail `status` to `completed`.
+4. Update changelog as needed.
 
 ## Task and Plan Files
 
@@ -75,48 +113,114 @@ Required structure:
 Before writing any implementation code:
 
 1. Read `docs/task/index.md`; for `[-]` items, read detail `owner`.
-2. If another agent owns the in-progress task, skip it (verify via `list_issue_assignees(issue_id)` if Kanban issue exists).
+2. If another agent owns the in-progress task, skip it.
+   - **If `kanban_available`**: verify via `list_issue_assignees(issue_id)`.
 3. Claim atomically:
    - Update task index `[ ] -> [-]`
    - Update task detail `status -> in_progress`, set `owner`
-   - Call `update_issue(issue_id, status: "In Progress")`
-   - Call `assign_issue(issue_id, user_id)`
+   - **If `kanban_available`**: call `update_issue(issue_id, status: "In Progress")` + `assign_issue(issue_id, user_id)`
 4. Start implementation only after the claim is fully written.
 
 On completion:
-- Set task index `[-] -> [x]`
-- Set task detail `status -> completed`
-- Call `update_issue(issue_id, status: "Done")`
+- Set task index `[-] -> [x]`, detail `status -> completed`
+- **If `kanban_available`**: call `update_issue(issue_id, status: "Done")`
 
 On close/won't do:
-- Set task index to `[~]`
-- Set task detail `status -> closed` and record reason
-- Call `update_issue(issue_id, status: "Cancelled")`
+- Set task index to `[~]`, detail `status -> closed` with reason
+- **If `kanban_available`**: call `update_issue(issue_id, status: "Cancelled")`
 
-## Vibe Kanban MCP Sync
+## Vibe Kanban MCP Integration (Pluggable)
 
-Files (`docs/task/`, `docs/plan/`) are always the primary data source.
-Vibe Kanban MCP is the mandatory sync target — every status change MUST be synced to Kanban.
-Task status updates are immediate, never deferred.
+Vibe Kanban MCP is an **optional but preferred** integration. When available, it provides:
+- Issue-driven workspace dispatch (Issue → Workspace → Session)
+- Automatic status transitions (`start_workspace` or `link_workspace_issue` → issue moves to `In Progress`)
+- Multi-agent orchestration via workspace dispatch
+- Issue metadata: tags, relationships (`blocking`/`related`/`has_duplicate`), assignees, sub-issues
 
-### Tool Mapping
+Files (`docs/task/`, `docs/plan/`) are **always** the primary data source regardless of MCP availability.
 
-| PMA Action | Vibe Kanban MCP Tool | Key Parameters |
-|------------|---------------------|----------------|
-| Get context | `get_context()` | Returns project_id, workspace_id, issue_id |
-| List tasks | `list_issues(project_id)` | Filters: `status`, `priority`, `search`, `tag_name`, `assignee_user_id` |
-| Read task | `get_issue(issue_id)` | — |
-| Create task | `create_issue(title, description, priority)` | priority: `urgent`/`high`/`medium`/`low` |
-| Claim task | `update_issue(issue_id, status: "In Progress")` | + `assign_issue(issue_id, user_id)` |
-| Complete task | `update_issue(issue_id, status: "Done")` | — |
-| Close task | `update_issue(issue_id, status: "Cancelled")` | — |
-| Create subtask | `create_issue(title, parent_issue_id)` | Links child to parent issue |
-| Tag issue | `add_issue_tag(issue_id, tag_id)` | Tags: bug, feature, enhancement, documentation |
-| Link dependency | `create_issue_relationship(issue_id, related_issue_id, type)` | Types: `blocking`, `related`, `has_duplicate` |
-| Check assignee | `list_issue_assignees(issue_id)` | Verify ownership before claiming |
-| Dispatch workspace | `start_workspace(name, executor, repositories, issue_id)` | + `run_session_prompt(session_id, prompt)` |
-| Track execution | `get_execution(execution_id)` | Poll sub-agent progress |
-| Archive workspace | `update_workspace(workspace_id, archived: true)` | After task completion |
+### Issue-First Workflow (Recommended)
+
+The correct Vibe Kanban usage flow is Issue-Driven:
+```
+Organization → Project → Issue → Workspace → Session
+```
+
+- **Issue** is the fundamental work unit — its title+description becomes the agent prompt.
+- **Workspace** is created **from** an Issue, not independently.
+- Creating a workspace linked to an issue **automatically** moves the issue to `In Progress`.
+- One issue can have **multiple workspaces** (parallel agent execution).
+- Workspaces without issues are only for quick ad-hoc queries, not formal tasks.
+
+### Tool Reference
+
+| PMA Action | Vibe Kanban MCP Tool | Notes |
+|------------|---------------------|-------|
+| Discover project | `list_organizations()` → `list_projects(org_id)` | Run once per session |
+| Sync issues | `list_issues(project_id)` | **`project_id` required**; filterable by status, priority, search, assignee, tag_name, tag_id, parent_issue_id, simple_id |
+| Read issue | `get_issue(issue_id)` | Returns full detail including sub_issues, relationships, tags, assignees |
+| Create issue | `create_issue(title, description, priority, project_id)` | **Always pass `project_id`** |
+| Create subtask | `create_issue(title, parent_issue_id, project_id)` | Links child to parent; **`project_id` still required** |
+| Update issue | `update_issue(issue_id, ...)` | Can update title, description, status, priority, parent_issue_id |
+| Claim issue | `update_issue(issue_id, status: "In Progress")` | + `assign_issue(issue_id, user_id)` |
+| Complete issue | `update_issue(issue_id, status: "Done")` | Parent must be completed **manually** (see constraints) |
+| Close issue | `update_issue(issue_id, status: "Cancelled")` | — |
+| Dispatch workspace | `start_workspace(name, executor, repositories, issue_id)` | **Must pass `issue_id` or `prompt`** (see constraints) |
+| Link workspace to issue | `link_workspace_issue(workspace_id, issue_id)` | Also triggers auto status → `In Progress` |
+| Add session | `create_session(workspace_id)` → `run_session_prompt(session_id, prompt)` | **Always pass `executor: "CLAUDE_CODE"`** to `create_session` |
+| Track progress | `get_execution(execution_id)` | Poll status |
+| Archive workspace | `update_workspace(workspace_id, archived: true)` | **Use archive, not delete** (see constraints) |
+| Tags | `list_tags(project_id)`, `add_issue_tag(issue_id, tag_id)`, `remove_issue_tag(issue_tag_id)` | `list_issue_tags(issue_id)` to inspect |
+| Relationships | `create_issue_relationship(issue_id, related_issue_id, relationship_type)` | Types: `blocking`, `related`, `has_duplicate` |
+| Delete relationship | `delete_issue_relationship(relationship_id)` | Get relationship_id from `get_issue()` |
+| Assignees | `assign_issue(issue_id, user_id)`, `unassign_issue(issue_assignee_id)` | `list_issue_assignees(issue_id)` to get `issue_assignee_id` |
+| Members | `list_org_members(organization_id)` | To discover `user_id` for assignment |
+
+### Known Constraints
+
+These constraints are verified through E2E testing. Violating them causes errors or unexpected behavior:
+
+1. **`project_id` is always required explicitly**
+   - `create_issue()` and `list_issues()` require `project_id` as a parameter.
+   - `get_context()` may return `project_id: null` if the workspace was not created from a project context.
+   - **Fallback**: always run `list_organizations()` → `list_projects(org_id)` to discover and cache `project_id`.
+
+2. **`start_workspace` requires `prompt` OR `issue_id`**
+   - Calling `start_workspace` without both `prompt` and `issue_id` returns HTTP 400: *"Provide prompt, or issue_id that has a non-empty title/description."*
+   - **Preferred**: always pass `issue_id` (Issue-First pattern). The issue's title+description becomes the agent prompt.
+
+3. **`create_session` executor defaults are unreliable**
+   - If `executor` is omitted, the system may default to a different executor (e.g. CODEX instead of CLAUDE_CODE).
+   - **Always specify `executor: "CLAUDE_CODE"` explicitly** when creating sessions.
+
+4. **Auto status transitions (multiple triggers)**
+   - `start_workspace(issue_id)` automatically moves the linked issue to `In Progress`.
+   - `link_workspace_issue(workspace_id, issue_id)` **also** triggers the same auto-transition.
+   - Do **not** manually call `update_issue(status: "In Progress")` after these operations — it is redundant.
+
+5. **Sub-issues are status-independent from parent**
+   - Completing all child issues does **NOT** auto-complete the parent issue.
+   - The parent issue status must be updated **manually** via `update_issue(issue_id, status: "Done")`.
+   - Similarly, completing a parent does not cascade to children.
+
+6. **Workspace deletion vs archiving**
+   - `delete_workspace()` fails with HTTP 409 Conflict if a session execution is still running.
+   - **Always use `update_workspace(workspace_id, archived: true)` instead of `delete_workspace()`** for completed workspaces.
+   - Only use `delete_workspace()` for cleanup of test/temporary workspaces with no active sessions.
+
+7. **`get_context()` field nullability**
+   - `project_id`, `issue_id`, `workspace_id` may all be null depending on how the workspace was created.
+   - A null `project_id` does not mean MCP is unavailable — it means the project must be discovered via the fallback path.
+   - Only treat MCP as unavailable if `get_context()` itself fails or the tool is not found.
+
+8. **Issue relationship types are fixed**
+   - Only three relationship types are supported: `blocking`, `related`, `has_duplicate`.
+   - `get_issue()` returns relationships in the response; use `relationship_id` from there to delete.
+
+9. **Tag and assignee operations use junction IDs**
+   - `remove_issue_tag()` takes `issue_tag_id` (not `tag_id`). Get it from `list_issue_tags(issue_id)`.
+   - `unassign_issue()` takes `issue_assignee_id` (not `user_id`). Get it from `list_issue_assignees(issue_id)`.
+   - These are junction table IDs, not the entity IDs themselves.
 
 ### Priority Mapping
 
@@ -135,37 +239,6 @@ Task status updates are immediate, never deferred.
 | `in_progress`  | `[-]`       | "In Progress"          |
 | `completed`    | `[x]`       | "Done"                 |
 | `closed`       | `[~]`       | "Cancelled"            |
-
-### Sync Protocol
-
-**Inbound (Kanban → files)** — execute on session start:
-1. Call `get_context()` to obtain project_id
-2. Call `list_issues(project_id)` to fetch all issues
-3. Compare against `docs/task/index.md`; create local task files and index entries for new issues
-
-**Outbound (files → Kanban)** — sync immediately on every status change:
-- New task → `create_issue(title, description, priority)`
-- Claim task → `update_issue(status: "In Progress")` + `assign_issue()`
-- Complete task → `update_issue(status: "Done")`
-- Close task → `update_issue(status: "Cancelled")`
-
-**MCP unavailable**: continue file-only workflow; state sync skip in progress update.
-
-### Workspace Dispatch
-
-When a task needs an isolated environment or parallel agent execution:
-1. `start_workspace(name, executor: "CLAUDE_CODE", repositories: [{repo_id, branch}], issue_id)` — create workspace
-2. `link_workspace_issue(workspace_id, issue_id)` — link to issue (if not linked via start_workspace)
-3. `run_session_prompt(session_id, prompt)` — dispatch implementation instructions
-4. `get_execution(execution_id)` — track execution progress
-5. `update_workspace(workspace_id, archived: true)` — archive after completion
-
-### Session Checklist
-
-1. Session start: read `docs/task/index.md`, active task details, `docs/plan/index.md`; execute inbound sync.
-2. New task: create detail file first, append index line, then call `create_issue()`.
-3. Before work: complete Claim-Before-Work (including MCP sync).
-4. Session end: verify all statuses are written to files and synced to Kanban; update index header date.
 
 ## Documentation System
 
