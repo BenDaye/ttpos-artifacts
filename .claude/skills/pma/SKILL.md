@@ -97,37 +97,22 @@ For non-trivial tasks (Interactive Orchestrator only):
 
    **Mode A — Kanban Dispatch** (when `kanban_available` is true):
 
-   a. Create the **parent issue** (if not exists): `create_issue(title, description, priority, project_id)`.
-      - **`project_id` is required** — use the cached value from bootstrap.
+   Obtain `repo_id` and `branch` from `get_context().workspace_repos`, `project_id` from bootstrap cache.
 
-   b. **For each sub-task** in the approved proposal:
-      1. Create a **sub-issue**: `create_issue(title, description, priority, project_id, parent_issue_id)`.
-         - The `description` MUST follow the [Issue Description Template](#issue-description-template) — this is the agent's ONLY prompt.
-         - Include: goal, files to modify, patterns to follow, acceptance criteria, and verification commands.
-      2. Obtain `repo_id` and `branch` from `get_context().workspace_repos`.
-      3. Dispatch: `start_workspace(name: "<parent-id>/<sub-task-id>", executor: "CLAUDE_CODE", repositories: [{repo_id, branch}], issue_id: sub_issue_id)`.
-         - Sub-issue status automatically moves to `In Progress`.
-      4. Record `workspace_id` in the task detail file under a `## 执行` section.
+   **A1. Composite task** (Phase 2 identified ≥2 sub-tasks):
 
-   c. **Monitor** all dispatched workspaces:
-      - Use `get_execution(execution_id)` to poll status periodically.
-      - Report progress to user.
-      - To provide additional instructions: `create_session(workspace_id, executor: "CLAUDE_CODE")` → `run_session_prompt(session_id, prompt)`.
-        **Always specify `executor: "CLAUDE_CODE"` explicitly** — the default is unreliable.
+   a. Create a **parent issue** using the [Orchestrator Issue Description Template](#orchestrator-issue-description-template):
+      - `description` uses the `## 执行模式: 自主编排` template.
+      - Fill in `### 需求描述` with the requirement details and investigation context from Phase 1-2.
+      - Do NOT write detailed sub-task descriptions — the dispatched autonomous orchestrator will do that.
+   b. Dispatch: `start_workspace(name, executor: "CLAUDE_CODE", repositories: [{repo_id, branch}], issue_id)`.
+   c. Report the dispatched workspace to the user. The autonomous orchestrator will handle decomposition, sub-issue creation, sub-workspace dispatch, monitoring, and completion automatically.
 
-   d. **After all sub-workspaces complete**:
-      - Review each workspace's diff for correctness.
-      - Resolve any cross-workspace conflicts (merge branches if needed).
-      - Run full verification (build, lint, test).
-      - Set task file `status` to `completed`, index marker to `[x]`.
-      - For each sub-issue: verify status is "Done" (the implementer should have done this).
-      - Complete the **parent issue**: `update_issue(parent_issue_id, status: "Done")`.
-      - Archive all workspaces: `update_workspace(workspace_id, archived: true)`.
+   **A2. Leaf task** (single-scope change, no decomposition):
 
-   **If the task is a single leaf task** (no decomposition needed):
-   - Create the issue with a complete description following the template.
-   - Dispatch a single workspace with `issue_id`.
-   - Monitor → verify → complete as above.
+   a. Create an issue using the [Issue Description Template](#issue-description-template) (MUST include `## 验证命令`).
+   b. Dispatch: `start_workspace(name, executor: "CLAUDE_CODE", repositories: [{repo_id, branch}], issue_id)`.
+   c. Monitor via `get_execution()`, report progress to user.
 
    **Mode B — Local Implementation** (when `kanban_available` is false):
    a. Implement step by step in the current session according to the approved proposal.
