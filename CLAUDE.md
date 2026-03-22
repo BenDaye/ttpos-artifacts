@@ -208,21 +208,23 @@ All Flutter build workflows share a common pattern:
 
 Use `/pma` for task management. Tasks and plans live in `docs/task/` and `docs/plan/` (git-tracked, portable across environments).
 
-### PMA Two-Role Architecture
+### PMA Three-Mode Architecture
 
-Agents auto-detect their role via `get_context()`:
+Agents auto-detect their mode via `get_context()` + issue description format:
 
-- **Orchestrator** (`issue_id` is null): user's workspace. Runs full three-phase workflow (investigate → proposal → implement). Decomposes tasks into sub-issues, dispatches workspaces, monitors completion.
-- **Implementer** (`issue_id` is non-null): dispatched workspace. Reads issue description as implementation spec, implements directly, commits, marks issue Done. Does NOT decompose further or dispatch sub-workspaces.
+- **Interactive Orchestrator** (`issue_id` is null): user's workspace. Full three-phase workflow with user approval gates.
+- **Autonomous Orchestrator** (`issue_id` non-null + high-level description): dispatched for a complex task. Full three-phase workflow but **auto-proceeds** without user approval. Decomposes into sub-issues, dispatches sub-workspaces, monitors completion.
+- **Implementer** (`issue_id` non-null + description contains `## 验证命令`): dispatched for a leaf task with detailed spec. Implements directly, commits, marks issue Done.
 
-### PMA Three-Phase Workflow (Orchestrator Only)
+### PMA Three-Phase Workflow (Orchestrator Modes)
 
 All feature/bug/refactor work follows a strict gate-based flow:
 1. **Investigation** — trace code, search context, create/claim task in `docs/task/`
-2. **Proposal & Decomposition** — current state + proposal + sub-task breakdown + risks + scope, wait for approval
-3. **Implement** — only after explicit `proceed`; create sub-issues → dispatch workspaces → monitor → verify → complete
+2. **Proposal & Decomposition** — current state + proposal + sub-task breakdown + risks + scope
+3. **Implement** — create sub-issues → dispatch workspaces → monitor → verify → complete
 
-**Do not skip phases.** Do not implement before approval.
+**Interactive mode**: wait for user approval between Phase 2 and 3.
+**Autonomous mode**: auto-proceed (parent already approved the direction).
 
 ### Implementer Protocol (Dispatched Agents Only)
 

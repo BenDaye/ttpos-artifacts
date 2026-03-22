@@ -34,16 +34,25 @@ After bootstrap, a session-scoped flag `kanban_available` (true/false) determine
 
 ## Agent Role Detection
 
-After Kanban Bootstrap, determine the agent's role based on `get_context()`:
+After Kanban Bootstrap, determine the agent's role:
 
-- **`issue_id` is non-null** → **Implementer Mode**: this workspace was dispatched to implement a specific issue. Skip directly to the [Implementer Protocol](#implementer-protocol-dispatched-agents).
-- **`issue_id` is null** → **Orchestrator Mode**: this is the user's workspace. Follow the full [Three-Phase Workflow](#three-phase-workflow) below.
+1. Call `get_context()` → check `issue_id`.
+2. If `issue_id` is **null** → **Interactive Orchestrator**: user's workspace. Follow the [Three-Phase Workflow](#three-phase-workflow) with user approval gates.
+3. If `issue_id` is **non-null** → call `get_issue(issue_id)` → examine the `description`:
+   - If the description contains **`## 验证命令`** (i.e. follows the [Issue Description Template](#issue-description-template)) → **Implementer Mode**: this is a leaf task with a detailed spec. Skip to [Implementer Protocol](#implementer-protocol-dispatched-agents).
+   - Otherwise → **Autonomous Orchestrator**: this is a complex/parent task. Follow the [Three-Phase Workflow](#three-phase-workflow) but **auto-proceed** (no user approval gates — the parent orchestrator or user already approved the high-level direction).
 
-**This detection is critical.** Dispatched agents must NOT re-enter the three-phase workflow or attempt further task decomposition. They receive a complete implementation spec in the issue description and should implement it directly.
+### Mode Summary
+
+| Mode | Condition | Behavior |
+|------|-----------|----------|
+| Interactive Orchestrator | `issue_id` null | Full PMA + wait for user approval |
+| Autonomous Orchestrator | `issue_id` non-null + high-level description | Full PMA + **auto-proceed** (no approval gates) |
+| Implementer | `issue_id` non-null + description has `## 验证命令` | Skip PMA, implement directly |
 
 ## Three-Phase Workflow
 
-> **Applies only to Orchestrator Mode** (`issue_id` is null).
+> **Applies to Interactive Orchestrator and Autonomous Orchestrator modes.**
 
 ### Phase 1: Investigation
 
@@ -58,7 +67,7 @@ Non-trivial task rule:
 
 ### Phase 2: Proposal & Decomposition
 
-Output these items (in Chinese), then stop for approval:
+Produce these items (in Chinese):
 - Current state
 - Proposal
 - **Sub-task breakdown** (if task involves ≥2 independent changes)
@@ -66,16 +75,21 @@ Output these items (in Chinese), then stop for approval:
 - Scope
 - Alternatives (if multiple approaches exist)
 
-For non-trivial tasks:
+**Decomposition rule**: if the task can be split into independently-implementable sub-tasks (e.g. separate files, separate features, separate layers), list them explicitly. Each sub-task should be dispatchable to a separate workspace.
+
+**Approval gate**:
+- **Interactive Orchestrator**: output the proposal, then **stop and wait** for user approval (`proceed`).
+- **Autonomous Orchestrator**: log the proposal to the conversation, then **auto-proceed** to Phase 3 immediately. Do NOT wait for user input — the parent orchestrator or user already approved the high-level direction.
+
+For non-trivial tasks (Interactive Orchestrator only):
 - Complete remaining sections in `PLAN-NNN.md`.
 - Append one line to `docs/plan/index.md` with `[ ]`.
 - Wait for user annotations and address all of them before implementation.
 
-**Decomposition rule**: if the task can be split into independently-implementable sub-tasks (e.g. separate files, separate features, separate layers), list them explicitly in the proposal. Each sub-task should be dispatchable to a separate workspace.
-
 ### Phase 3: Implement -> Verify -> Record
 
-Only after explicit approval (`proceed`):
+> **Interactive Orchestrator**: only after explicit user approval (`proceed`).
+> **Autonomous Orchestrator**: proceeds automatically after Phase 2 proposal (no approval gate).
 
 1. If a plan exists, set plan index marker to `[-]` and detail `status` to `implementing`.
 
