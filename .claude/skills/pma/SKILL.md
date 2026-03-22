@@ -23,7 +23,9 @@ Run delivery work with clear gates, minimal diffs, and explicit task/plan tracki
 1. Trace upstream/downstream call chains, symbol references, and types.
 2. Search related code, config, tests, migrations, and docs.
 3. Read the tail of `docs/changelog.md` for recent context.
-4. Find or create the matching task in `docs/task/index.md` and claim it (`[-]`).
+4. Inbound sync: call `get_context()` then `list_issues()` to discover Kanban issues not yet in `docs/task/index.md`; create local task files for new ones.
+5. Find or create the matching task in `docs/task/index.md` and claim it (`[-]`).
+   - If creating a new task, also call `create_issue(title, description, priority)` to sync to Kanban.
 
 Non-trivial task rule:
 - If the change touches `>=3` files or crosses modules, create `docs/plan/PLAN-NNN.md` and write findings to the context section.
@@ -50,8 +52,9 @@ Only after approval:
 2. Implement step by step according to the approved proposal.
 3. Run focused self-verification (compile, test, deploy verification, etc.).
 4. Set task index marker to `[x]` and task detail `status` to `completed`.
-5. If a plan exists, set plan index marker to `[x]` and plan detail `status` to `completed`.
-6. Update changelog as needed.
+5. Call `update_issue(issue_id, status: "Done")` to sync completion to Kanban.
+6. If a plan exists, set plan index marker to `[x]` and plan detail `status` to `completed`.
+7. Update changelog as needed.
 
 ## Task and Plan Files
 
@@ -72,36 +75,97 @@ Required structure:
 Before writing any implementation code:
 
 1. Read `docs/task/index.md`; for `[-]` items, read detail `owner`.
-2. If another agent owns the in-progress task, skip it.
+2. If another agent owns the in-progress task, skip it (verify via `list_issue_assignees(issue_id)` if Kanban issue exists).
 3. Claim atomically:
    - Update task index `[ ] -> [-]`
    - Update task detail `status -> in_progress`, set `owner`
-   - Call `TaskUpdate(status: "in_progress", owner: "<agent>")` if task tools are available
+   - Call `update_issue(issue_id, status: "In Progress")`
+   - Call `assign_issue(issue_id, user_id)`
 4. Start implementation only after the claim is fully written.
 
 On completion:
 - Set task index `[-] -> [x]`
 - Set task detail `status -> completed`
-- Call `TaskUpdate(status: "completed")` if task tools are available
+- Call `update_issue(issue_id, status: "Done")`
 
 On close/won't do:
 - Set task index to `[~]`
 - Set task detail `status -> closed` and record reason
-- Call `TaskUpdate(status: "deleted")` if task tools are available
+- Call `update_issue(issue_id, status: "Cancelled")`
 
-## Sync Rules
+## Vibe Kanban MCP Sync
 
+Files (`docs/task/`, `docs/plan/`) are always the primary data source.
+Vibe Kanban MCP is the mandatory sync target — every status change MUST be synced to Kanban.
 Task status updates are immediate, never deferred.
 
-- Primary source is files in `docs/task/` and `docs/plan/`.
-- If `TaskCreate`/`TaskUpdate` tools are available, keep tool state in sync with file state.
-- If task tools are unavailable, continue with file-only sync and state this in the progress update.
+### Tool Mapping
 
-Session checklist:
-1. Session start: read `docs/task/index.md`, active task details, and `docs/plan/index.md`.
-2. New task: create detail file first, then append index line.
-3. Before work: complete Claim-Before-Work.
-4. Session end: verify statuses are written and update index header date.
+| PMA Action | Vibe Kanban MCP Tool | Key Parameters |
+|------------|---------------------|----------------|
+| Get context | `get_context()` | Returns project_id, workspace_id, issue_id |
+| List tasks | `list_issues(project_id)` | Filters: `status`, `priority`, `search`, `tag_name`, `assignee_user_id` |
+| Read task | `get_issue(issue_id)` | — |
+| Create task | `create_issue(title, description, priority)` | priority: `urgent`/`high`/`medium`/`low` |
+| Claim task | `update_issue(issue_id, status: "In Progress")` | + `assign_issue(issue_id, user_id)` |
+| Complete task | `update_issue(issue_id, status: "Done")` | — |
+| Close task | `update_issue(issue_id, status: "Cancelled")` | — |
+| Create subtask | `create_issue(title, parent_issue_id)` | Links child to parent issue |
+| Tag issue | `add_issue_tag(issue_id, tag_id)` | Tags: bug, feature, enhancement, documentation |
+| Link dependency | `create_issue_relationship(issue_id, related_issue_id, type)` | Types: `blocking`, `related`, `has_duplicate` |
+| Check assignee | `list_issue_assignees(issue_id)` | Verify ownership before claiming |
+| Dispatch workspace | `start_workspace(name, executor, repositories, issue_id)` | + `run_session_prompt(session_id, prompt)` |
+| Track execution | `get_execution(execution_id)` | Poll sub-agent progress |
+| Archive workspace | `update_workspace(workspace_id, archived: true)` | After task completion |
+
+### Priority Mapping
+
+| PMA | Vibe Kanban |
+|-----|-------------|
+| P0  | `urgent`    |
+| P1  | `high`      |
+| P2  | `medium`    |
+| P3  | `low`       |
+
+### Status Mapping
+
+| PMA File Status | Index Marker | Vibe Kanban Issue Status |
+|----------------|-------------|------------------------|
+| `pending`      | `[ ]`       | "Backlog" or "Todo"    |
+| `in_progress`  | `[-]`       | "In Progress"          |
+| `completed`    | `[x]`       | "Done"                 |
+| `closed`       | `[~]`       | "Cancelled"            |
+
+### Sync Protocol
+
+**Inbound (Kanban → files)** — execute on session start:
+1. Call `get_context()` to obtain project_id
+2. Call `list_issues(project_id)` to fetch all issues
+3. Compare against `docs/task/index.md`; create local task files and index entries for new issues
+
+**Outbound (files → Kanban)** — sync immediately on every status change:
+- New task → `create_issue(title, description, priority)`
+- Claim task → `update_issue(status: "In Progress")` + `assign_issue()`
+- Complete task → `update_issue(status: "Done")`
+- Close task → `update_issue(status: "Cancelled")`
+
+**MCP unavailable**: continue file-only workflow; state sync skip in progress update.
+
+### Workspace Dispatch
+
+When a task needs an isolated environment or parallel agent execution:
+1. `start_workspace(name, executor: "CLAUDE_CODE", repositories: [{repo_id, branch}], issue_id)` — create workspace
+2. `link_workspace_issue(workspace_id, issue_id)` — link to issue (if not linked via start_workspace)
+3. `run_session_prompt(session_id, prompt)` — dispatch implementation instructions
+4. `get_execution(execution_id)` — track execution progress
+5. `update_workspace(workspace_id, archived: true)` — archive after completion
+
+### Session Checklist
+
+1. Session start: read `docs/task/index.md`, active task details, `docs/plan/index.md`; execute inbound sync.
+2. New task: create detail file first, append index line, then call `create_issue()`.
+3. Before work: complete Claim-Before-Work (including MCP sync).
+4. Session end: verify all statuses are written to files and synced to Kanban; update index header date.
 
 ## Documentation System
 

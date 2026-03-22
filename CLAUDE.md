@@ -210,31 +210,11 @@ Use `/pma` for task management. Tasks and plans live in `docs/task/` and `docs/p
 
 ### Vibe Kanban MCP Integration
 
-When Vibe Kanban MCP tools are available in the current session, treat them as the external `TaskCreate`/`TaskUpdate` sync target defined by PMA's sync rules. Files remain the primary source of truth.
+Vibe Kanban MCP is the mandatory sync target for PMA task management. Complete tool mapping, status/priority mapping, sync protocol, and workspace dispatch rules are defined in the PMA skill's **Vibe Kanban MCP Sync** section (`/pma`).
 
-#### Concept Mapping
-
-| PMA (files)                 | Vibe Kanban MCP                       | Notes               |
-| --------------------------- | ------------------------------------- | -------------------- |
-| `docs/task/PREFIX-NNN.md`   | `create_issue` / `get_issue`          | Task detail ↔ Issue |
-| Task `status: pending`      | Issue status "Backlog" or "Todo"      |                     |
-| Task `status: in_progress`  | Issue status "In Progress"            |                     |
-| Task `status: completed`    | Issue status "Done"                   |                     |
-| Task `status: closed`       | `delete_issue` or status "Cancelled"  |                     |
-| Task `priority` P0/P1/P2/P3 | Issue priority urgent/high/medium/low |                     |
-| `docs/plan/PLAN-NNN.md`     | Issue description (append plan link)  | Plan stays in git   |
-| Task `owner`                | `assign_issue`                        |                     |
-
-#### Sync Direction
-
-- **Inbound** (Kanban → files): On session start, if Vibe Kanban MCP is available, call `list_issues` to discover new issues not yet in `docs/task/index.md`. Create corresponding task files and index entries.
-- **Outbound** (files → Kanban): After claiming (`[-]`) or completing (`[x]`) a task in `docs/task/`, call `update_issue` to sync status back to Kanban. This is best-effort — if MCP is unavailable, skip silently.
-- **No MCP? No problem**: The full workflow runs on `docs/` files alone. Vibe Kanban sync is additive, never required.
-
-#### Workspace Dispatch
-
-When a task needs an isolated environment or parallel agent execution:
-- Use `start_workspace` to create a branch + session for the task
-- Use `run_session_prompt` to dispatch work to a sub-agent
-- Link the workspace to the issue via `link_workspace_issue`
-- The dispatched agent should follow the same PMA flow using the repo's `docs/` files
+Core rules:
+- Files (`docs/task/`, `docs/plan/`) are always the primary data source
+- Every task status change MUST sync to Kanban via `update_issue()`
+- Session start MUST execute inbound sync (`get_context()` → `list_issues()` → compare local files)
+- New tasks MUST be created on both sides (`create_issue()` + local file)
+- Subtasks can be dispatched to isolated workspaces via `start_workspace()` + `run_session_prompt()`
