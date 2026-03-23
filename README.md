@@ -1,6 +1,6 @@
 # TTPOS Artifacts
 
-This repository contains **TTPOS build workflows** (GitHub Actions) and the **FaynoSync Dashboard** frontend.
+Monorepo containing the **FaynoSync Server** (Go backend, forked), **FaynoSync Dashboard** (React SPA), and **TTPOS build workflows** (GitHub Actions).
 
 ---
 
@@ -17,6 +17,7 @@ Build workflows for TTPOS Flutter applications.
 | `build-macos.yaml`     | macOS (DMG)          | `macos-latest`   | `workflow_dispatch`                       |
 | `build-web.yaml`       | Web (Docker)         | `ubuntu-22.04`   | `workflow_dispatch`                       |
 | `build-dashboard.yaml` | Dashboard (Docker)   | `ubuntu-latest`  | `workflow_dispatch`, push to main/release |
+| `build-server.yaml`    | Server (Docker)      | `ubuntu-latest`  | `workflow_dispatch`, push to main/release |
 
 ### Required Secrets
 
@@ -88,17 +89,19 @@ I did my best, but if you see anything that can be improved — **any suggestion
 
 ### Description 📄
 
-This frontend is designed to work with the [FaynoSync API](https://github.com/ku9nov/faynoSync), providing seamless service updates.
+This frontend works with the FaynoSync API (included in `server/`), providing seamless service updates.
 
 ### Installing Dependencies 📦
 
 ```bash
+cd dashboard
 yarn install
 ```
 
 ### Running in Development Mode 🛠️
 
 ```bash
+cd dashboard
 yarn dev
 ```
 
@@ -107,12 +110,13 @@ This will launch a local server, usually on port 3000. Open it in your browser a
 ### Running in Production Mode 🚀
 
 ```bash
+cd dashboard
 yarn build
 ```
 
 ### Environment File Setup ⚙️
 
-Create a `.env` file in the root directory and add:
+Create a `.env` file in `dashboard/` and add:
 
 ```
 VITE_API_URL=http://localhost:9000
@@ -122,6 +126,7 @@ VITE_PORT=3000
 Or copy the example:
 
 ```bash
+cd dashboard
 cp .env.example .env
 ```
 

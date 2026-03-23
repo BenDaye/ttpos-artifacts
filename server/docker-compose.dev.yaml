@@ -1,0 +1,106 @@
+# 本地开发环境：MongoDB + Redis + MinIO + FaynoSync Server
+# 用法：docker compose -f docker-compose.dev.yaml up -d
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: faynosync-dev-api
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_healthy
+      s3:
+        condition: service_healthy
+    networks:
+      - faynosync-dev
+
+  db:
+    image: mongo:7
+    container_name: faynosync-dev-db
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: changeme
+    ports:
+      - "27017:27017"
+    volumes:
+      - dev-mongo:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - faynosync-dev
+
+  cache:
+    image: redis:7-alpine
+    container_name: faynosync-dev-cache
+    restart: unless-stopped
+    command: redis-server --save 20 1 --loglevel warning
+    ports:
+      - "6379:6379"
+    volumes:
+      - dev-redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - faynosync-dev
+
+  s3:
+    image: minio/minio
+    container_name: faynosync-dev-s3
+    restart: unless-stopped
+    ports:
+      - "9010:9000"
+      - "9011:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - dev-minio:/data
+    command: server --address 0.0.0.0:9000 --console-address :9001 /data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - faynosync-dev
+
+  s3-init:
+    image: minio/mc
+    container_name: faynosync-dev-s3-init
+    depends_on:
+      s3:
+        condition: service_healthy
+    restart: "no"
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc alias set local http://s3:9000 minioadmin minioadmin;
+      /usr/bin/mc mb --ignore-existing local/faynosync-private;
+      /usr/bin/mc mb --ignore-existing local/faynosync-public;
+      /usr/bin/mc anonymous set download local/faynosync-public;
+      echo 'MinIO buckets initialized.';
+      "
+    networks:
+      - faynosync-dev
+
+volumes:
+  dev-mongo:
+  dev-redis:
+  dev-minio:
+
+networks:
+  faynosync-dev:
+    driver: bridge
