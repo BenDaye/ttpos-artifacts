@@ -15,4 +15,14 @@ module.exports = {
       { allowConstantExport: true },
     ],
   },
+  overrides: [
+    {
+      files: ['e2e/**/*.ts'],
+      env: { node: true, browser: false },
+      rules: {
+        'react-hooks/rules-of-hooks': 'off',
+        'react-refresh/only-export-components': 'off',
+      },
+    },
+  ],
 }

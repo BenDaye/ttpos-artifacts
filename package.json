@@ -8,6 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint faynoSync --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "commitlint": "commitlint --edit"
   },
   "dependencies": {
@@ -44,6 +46,7 @@
   "devDependencies": {
     "@commitlint/cli": "^19.6.0",
     "@commitlint/config-conventional": "^19.6.0",
+    "@playwright/test": "^1.58.2",
     "@tailwindcss/typography": "^0.5.16",
     "@types/node": "^22.13.14",
     "@types/react": "^18.3.3",
