@@ -5,21 +5,55 @@ on:
   push:
     branches: [main, release]
     paths:
-      - "src/**"
-      - "public/**"
-      - "package.json"
-      - "yarn.lock"
-      - "vite.config.ts"
-      - "tsconfig*.json"
-      - "tailwind.config.js"
-      - "postcss.config.js"
-      - "Dockerfile"
-      - "nginx.conf"
-      - "docker-entrypoint.sh"
+      - "dashboard/src/**"
+      - "dashboard/public/**"
+      - "dashboard/package.json"
+      - "dashboard/yarn.lock"
+      - "dashboard/vite.config.ts"
+      - "dashboard/tsconfig*.json"
+      - "dashboard/tailwind.config.js"
+      - "dashboard/postcss.config.js"
+      - "dashboard/Dockerfile"
+      - "dashboard/nginx.conf"
+      - "dashboard/docker-entrypoint.sh"
       - ".github/workflows/build-dashboard.yaml"
+      - "e2e/**"
+      - "playwright.config.ts"
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 启用 Corepack
+        run: corepack enable
+
+      - name: 安装依赖
+        run: yarn install --immutable
+
+      - name: 安装 Playwright 浏览器
+        run: yarn playwright install --with-deps chromium
+
+      - name: 运行 E2E 测试
+        run: yarn test:e2e
+
+      - name: 上传测试报告
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
   build:
+    needs: [test]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -70,8 +104,8 @@ jobs:
       - name: 构建并推送 Docker 镜像
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: ./Dockerfile
+          context: ./dashboard
+          file: ./dashboard/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
