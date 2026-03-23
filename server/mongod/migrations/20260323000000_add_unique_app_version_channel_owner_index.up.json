@@ -1,0 +1,17 @@
+[
+  {
+    "createIndexes": "apps",
+    "indexes": [
+      {
+        "key": {
+          "app_id": 1,
+          "version": 1,
+          "channel_id": 1,
+          "owner": 1
+        },
+        "name": "unique_app_version_channel_owner",
+        "unique": true
+      }
+    ]
+  }
+]

@@ -5,17 +5,17 @@ on:
   push:
     branches: [main, release]
     paths:
-      - "src/**"
-      - "public/**"
-      - "package.json"
-      - "yarn.lock"
-      - "vite.config.ts"
-      - "tsconfig*.json"
-      - "tailwind.config.js"
-      - "postcss.config.js"
-      - "Dockerfile"
-      - "nginx.conf"
-      - "docker-entrypoint.sh"
+      - "dashboard/src/**"
+      - "dashboard/public/**"
+      - "dashboard/package.json"
+      - "dashboard/yarn.lock"
+      - "dashboard/vite.config.ts"
+      - "dashboard/tsconfig*.json"
+      - "dashboard/tailwind.config.js"
+      - "dashboard/postcss.config.js"
+      - "dashboard/Dockerfile"
+      - "dashboard/nginx.conf"
+      - "dashboard/docker-entrypoint.sh"
       - ".github/workflows/build-dashboard.yaml"
 
 jobs:
@@ -70,8 +70,8 @@ jobs:
       - name: 构建并推送 Docker 镜像
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: ./Dockerfile
+          context: ./dashboard
+          file: ./dashboard/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
