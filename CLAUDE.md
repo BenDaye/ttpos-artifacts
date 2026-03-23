@@ -43,6 +43,7 @@ yarn dev              # Vite dev server on port 3000
 yarn build            # tsc -b && vite build (production build)
 yarn lint             # ESLint check
 yarn preview          # Preview production build locally
+yarn commitlint       # Validate commit message format
 ```
 
 ### Server (`server/`)
@@ -216,13 +217,13 @@ All Flutter build workflows share a common pattern:
 
 - **release branch** → `Prod/` paths (GCS, SCP, no `test-` Docker prefix)
 - **other branches** → `Test/` paths (with `test-` Docker prefix)
-
 ## Editing Guidelines
 
 ### General Conventions
 
 - Path alias: `@/` → `dashboard/src/` (configured in tsconfig + vite, relative to dashboard/)
 - Dev proxy: set `VITE_DEV_PROXY_TARGET` for CORS-free local API access (leave `VITE_API_URL` empty)
+- Commit messages MUST follow Conventional Commits format
 - Workflow UIs use Chinese (中文) for step names and descriptions
 - Chinese pub mirrors: `PUB_HOSTED_URL=https://pub.flutter-io.cn`
 - SCP uses a two-hop relay pattern: runner → relay → target

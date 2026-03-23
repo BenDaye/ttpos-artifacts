@@ -45,3 +45,8 @@ generate-changelog.sh
 
 hitosea-ssh-key
 tmp*
+
+# Playwright
+playwright-report/
+test-results/
+e2e/.auth/
