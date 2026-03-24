@@ -186,7 +186,7 @@ jobs:
           echo "========================================="
 
       - name: 触发 Android 构建
-        if: inputs.platform == 'all' || inputs.platform == 'android'
+        if: (inputs.platform == 'all' || inputs.platform == 'android') && (inputs.package == 'all' || !contains(fromJSON('["menu","mobile","member"]'), inputs.package))
         run: |
           gh workflow run build-android.yaml \
             --repo ${{ github.repository }} \
@@ -204,7 +204,7 @@ jobs:
             -f update_cms=${{ inputs.update_cms }}
 
       - name: 触发 iOS 构建
-        if: inputs.platform == 'all' || inputs.platform == 'ios'
+        if: (inputs.platform == 'all' || inputs.platform == 'ios') && (inputs.package == 'all' || !contains(fromJSON('["menu","mobile","member","qds"]'), inputs.package))
         run: |
           gh workflow run build-ios.yaml \
             --repo ${{ github.repository }} \
@@ -220,7 +220,7 @@ jobs:
             -f faynosync=${{ inputs.faynosync }}
 
       - name: 触发 Windows 构建
-        if: inputs.platform == 'all' || inputs.platform == 'windows'
+        if: (inputs.platform == 'all' || inputs.platform == 'windows') && (inputs.package == 'all' || !contains(fromJSON('["menu","mobile","member","qds"]'), inputs.package))
         run: |
           gh workflow run build-windows.yaml \
             --repo ${{ github.repository }} \
@@ -238,7 +238,7 @@ jobs:
             -f update_cms=${{ inputs.update_cms }}
 
       - name: 触发 macOS 构建
-        if: inputs.platform == 'all' || inputs.platform == 'macos'
+        if: (inputs.platform == 'all' || inputs.platform == 'macos') && (inputs.package == 'all' || !contains(fromJSON('["menu","mobile","member","qds"]'), inputs.package))
         run: |
           gh workflow run build-macos.yaml \
             --repo ${{ github.repository }} \
@@ -256,7 +256,7 @@ jobs:
             -f update_cms=${{ inputs.update_cms }}
 
       - name: 触发 Web 构建 (Hitosea)
-        if: (inputs.platform == 'all' || inputs.platform == 'web') && inputs.branch == 'new-test' && inputs.env == 'test'
+        if: (inputs.platform == 'all' || inputs.platform == 'web') && inputs.branch == 'new-test' && inputs.env == 'test' && (inputs.package == 'all' || contains(fromJSON('["menu","mobile","member"]'), inputs.package))
         run: |
           gh workflow run build-web-hitosea.yaml \
             --repo ${{ github.repository }} \
@@ -269,7 +269,7 @@ jobs:
             -f deploy_test=true
 
       - name: 触发 Web 构建
-        if: (inputs.platform == 'all' || inputs.platform == 'web') && !(inputs.branch == 'new-test' && inputs.env == 'test')
+        if: (inputs.platform == 'all' || inputs.platform == 'web') && !(inputs.branch == 'new-test' && inputs.env == 'test') && (inputs.package == 'all' || contains(fromJSON('["menu","mobile","member"]'), inputs.package))
         run: |
           gh workflow run build-web.yaml \
             --repo ${{ github.repository }} \
