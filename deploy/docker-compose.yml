@@ -8,6 +8,8 @@ services:
     restart: unless-stopped
     ports:
       - "${API_PORT:-9000}:9000"
+    environment:
+      - GIN_MODE=release
     env_file:
       - .env
     depends_on:

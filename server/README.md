@@ -110,7 +110,7 @@ ALLOWED_CORS (urls to allow CORS configuration)
 PORT (The port on which the auto updater service will listen. Default: 9000)
 
 # Database Configuration
-MONGODB_URL=mongodb://root:MheCk6sSKB1m4xKNw5I@127.0.0.1/cb_faynosync_db?authSource=admin (see docker-compose file)
+MONGODB_URL=mongodb://root:MheCk6sSKB1m4xKNw5I@127.0.0.1/cb_faynosync_db?authSource=admin
 MONGODB_URL_TESTS (MongoDB connection string used for tests that require a MongoDB instance. Optional.)
 
 # Security Configuration
@@ -189,14 +189,6 @@ You can now run tests using this command after `docker compose up --build` finis
 
 ```bash
 docker exec -it faynoSync_backend "/usr/bin/faynoSync_tests"
-```
-
-### 🔧 Development Setup
-
-If you only want to run dependency services (for local development without Docker), use this command:
-
-```bash
-docker compose -f docker-compose.yaml -f docker-compose.development.yaml up
 ```
 
 ---
