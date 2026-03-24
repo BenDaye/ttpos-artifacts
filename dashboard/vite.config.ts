@@ -35,6 +35,11 @@ export default defineConfig(({ mode }) => {
             {
               target: devProxyTarget,
               changeOrigin: true,
+              bypass(req: import('http').IncomingMessage) {
+                if (req.headers.accept?.includes('text/html')) {
+                  return '/index.html';
+                }
+              },
             },
           ])
         )
