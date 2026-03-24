@@ -62,8 +62,6 @@ func extractParamsFromPost(c *gin.Context) (map[string]interface{}, error) {
 		return nil, errors.New("invalid JSON data")
 	}
 
-	upReq.Version = strings.ReplaceAll(upReq.Version, "-", ".")
-
 	publishStr := strconv.FormatBool(upReq.Publish)
 	criticalStr := strconv.FormatBool(upReq.Critical)
 	intermediateStr := strconv.FormatBool(upReq.Intermediate)
@@ -85,11 +83,9 @@ func extractParamsFromPost(c *gin.Context) (map[string]interface{}, error) {
 }
 
 func extractParamsFromGetOrDelete(c *gin.Context) (map[string]interface{}, error) {
-	version := c.Query("version")
-	version = strings.ReplaceAll(version, "-", ".")
 	return map[string]interface{}{
 		"app_name": c.Query("app_name"),
-		"version":  version,
+		"version":  c.Query("version"),
 		"channel":  c.Query("channel"),
 		"publish":  c.Query("publish"),
 		"platform": c.Query("platform"),

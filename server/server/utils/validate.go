@@ -170,33 +170,35 @@ func ValidateItemName(itemType, paramValue string) error {
 	return nil
 }
 
+var (
+	appNameRegex   = regexp.MustCompile(`^[a-zA-Z0-9\- ]+$`)
+	semverRegex    = regexp.MustCompile(
+		`^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)` +
+			`(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?` +
+			`(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$`)
+	channelRegex   = regexp.MustCompile(`^[a-zA-Z0-9]*$`)
+	platformRegex  = regexp.MustCompile(`^[a-zA-Z0-9-]*$`)
+	archRegex      = regexp.MustCompile(`^[a-zA-Z0-9]*$`)
+)
+
 func IsValidAppName(input string) bool {
-	// Only allow letters and numbers, no special characters
-	validName := regexp.MustCompile(`^[a-zA-Z0-9\- ]+$`)
-	return validName.MatchString(input)
+	return appNameRegex.MatchString(input)
 }
+
 func IsValidVersion(input string) bool {
-	// Only allow numbers and dots, no spaces or special characters
-	validVersion := regexp.MustCompile(`^[0-9.-]+$`)
-	return validVersion.MatchString(input)
+	return semverRegex.MatchString(input)
 }
 
 func IsValidChannelName(input string) bool {
-	// Allow empty input or only letters and numbers, no spaces or special characters
-	validName := regexp.MustCompile(`^[a-zA-Z0-9]*$`)
-	return validName.MatchString(input)
+	return channelRegex.MatchString(input)
 }
 
 func IsValidPlatformName(input string) bool {
-	// Allow empty input or only letters, numbers, and hyphens, no spaces or other special characters
-	validName := regexp.MustCompile(`^[a-zA-Z0-9-]*$`)
-	return validName.MatchString(input)
+	return platformRegex.MatchString(input)
 }
 
 func IsValidArchName(input string) bool {
-	// Allow empty input or only letters and numbers, no spaces or special characters
-	validName := regexp.MustCompile(`^[a-zA-Z0-9]*$`)
-	return validName.MatchString(input)
+	return archRegex.MatchString(input)
 }
 
 func ValidateUpdateParams(c *gin.Context, database *mongo.Database) (map[string]interface{}, error) {

@@ -833,7 +833,7 @@ func TestUpload(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	payload := `{"app_name": "testapp", "version": "0.0.1.137"}`
+	payload := `{"app_name": "testapp", "version": "0.0.1"}`
 	_, err = dataPart.Write([]byte(payload))
 	if err != nil {
 		t.Fatal(err)
@@ -912,7 +912,7 @@ func TestUploadDuplicateApp(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	payload := `{"app_name": "testapp", "version": "0.0.1.137"}`
+	payload := `{"app_name": "testapp", "version": "0.0.1"}`
 	_, err = dataPart.Write([]byte(payload))
 	if err != nil {
 		t.Fatal(err)
@@ -1220,7 +1220,7 @@ func TestUploadAppWithoutChannel(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	payload := `{"app_name": "testapp", "version": "0.0.1.137"}`
+	payload := `{"app_name": "testapp", "version": "0.0.1"}`
 	_, err = dataPart.Write([]byte(payload))
 	if err != nil {
 		t.Fatal(err)
@@ -1817,7 +1817,7 @@ func TestUploadAppWithoutPlatform(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	payload := `{"app_name": "testapp", "version": "0.0.1.137", "channel": "nightly"}`
+	payload := `{"app_name": "testapp", "version": "0.0.1", "channel": "nightly"}`
 	_, err = dataPart.Write([]byte(payload))
 	if err != nil {
 		t.Fatal(err)
@@ -2053,7 +2053,7 @@ func TestUploadAppWithoutArch(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	payload := `{"app_name": "testapp", "version": "0.0.1.137", "channel": "nightly", "platform": "universalPlatform"}`
+	payload := `{"app_name": "testapp", "version": "0.0.1", "channel": "nightly", "platform": "universalPlatform"}`
 	_, err = dataPart.Write([]byte(payload))
 	if err != nil {
 		t.Fatal(err)
@@ -2118,11 +2118,11 @@ func TestMultipleUpload(t *testing.T) {
 			Platform    string
 			Arch        string
 		}{
-			{"public testapp", "0.0.1.137", "nightly", true, false, "universalPlatform", "universalArch"},
-			{"testapp", "0.0.2.137", "nightly", true, false, "universalPlatform", "universalArch"},
-			{"testapp", "0.0.3.137", "nightly", false, false, "universalPlatform", "universalArch"},
-			{"testapp", "0.0.4.137", "stable", true, true, "universalPlatform", "universalArch"},
-			{"testapp", "0.0.5.137", "stable", false, false, "universalPlatform", "universalArch"},
+			{"public testapp", "0.0.1", "nightly", true, false, "universalPlatform", "universalArch"},
+			{"testapp", "0.0.2", "nightly", true, false, "universalPlatform", "universalArch"},
+			{"testapp", "0.0.3", "nightly", false, false, "universalPlatform", "universalArch"},
+			{"testapp", "0.0.4", "stable", true, true, "universalPlatform", "universalArch"},
+			{"testapp", "0.0.5", "stable", false, false, "universalPlatform", "universalArch"},
 		}
 
 		// Iterate through the combinations and upload the file for each combination.
@@ -2224,16 +2224,16 @@ func TestMultipleUploadWithUpdaters(t *testing.T) {
 		FileName    string
 		Signature   string
 	}{
-		{"updaters", "0.0.1.137", "nightly", false, false, "macosSquirrel", "universalArch", "squirrel_darwin", "testapp.dmg", ""},
-		{"updaters", "0.0.2.137", "nightly", true, false, "macosSquirrel", "universalArch", "squirrel_darwin", "test.zip", ""},
-		{"updaters", "0.0.1.137", "nightly", false, false, "macosTauri", "universalArch", "tauri", "test.zip", ""},
-		{"updaters", "0.0.2.137", "nightly", true, false, "macosTauri", "universalArch", "tauri", "test.zip", "dW50cnVzdGVkU2lnbmF0dXJlVGhhdExvb2tzTGlrZUFsb25nU3RyaW5n=="},
-		{"updaters", "0.0.3.137", "nightly", false, false, "macos", "universalArch", "electron-builder", "testapp.dmg", ""},
-		{"updaters", "0.0.4.137", "nightly", true, false, "macos", "universalArch", "electron-builder", "latest-mac.yml", ""},
-		{"updaters", "0.0.5.137", "stable", false, true, "windows", "universalArch", "squirrel_windows", "test.exe", ""},
-		{"updaters", "0.0.6.137", "stable", true, false, "windows", "universalArch", "squirrel_windows", "RELEASES", ""},
-		{"updaters", "0.0.7.137", "stable", false, false, "windows", "universalArch", "electron-builder", "test.exe", ""},
-		{"updaters", "0.0.8.137", "stable", true, false, "windows", "universalArch", "electron-builder", "latest.yml", ""},
+		{"updaters", "0.0.1", "nightly", false, false, "macosSquirrel", "universalArch", "squirrel_darwin", "testapp.dmg", ""},
+		{"updaters", "0.0.2", "nightly", true, false, "macosSquirrel", "universalArch", "squirrel_darwin", "test.zip", ""},
+		{"updaters", "0.0.1", "nightly", false, false, "macosTauri", "universalArch", "tauri", "test.zip", ""},
+		{"updaters", "0.0.2", "nightly", true, false, "macosTauri", "universalArch", "tauri", "test.zip", "dW50cnVzdGVkU2lnbmF0dXJlVGhhdExvb2tzTGlrZUFsb25nU3RyaW5n=="},
+		{"updaters", "0.0.3", "nightly", false, false, "macos", "universalArch", "electron-builder", "testapp.dmg", ""},
+		{"updaters", "0.0.4", "nightly", true, false, "macos", "universalArch", "electron-builder", "latest-mac.yml", ""},
+		{"updaters", "0.0.5", "stable", false, true, "windows", "universalArch", "squirrel_windows", "test.exe", ""},
+		{"updaters", "0.0.6", "stable", true, false, "windows", "universalArch", "squirrel_windows", "RELEASES", ""},
+		{"updaters", "0.0.7", "stable", false, false, "windows", "universalArch", "electron-builder", "test.exe", ""},
+		{"updaters", "0.0.8", "stable", true, false, "windows", "universalArch", "electron-builder", "latest.yml", ""},
 	}
 
 	// Iterate through the combinations and upload the file for each combination.
@@ -2290,11 +2290,11 @@ func TestMultipleUploadWithUpdaters(t *testing.T) {
 		router.ServeHTTP(w, req)
 
 		// Check if this combination should expect an error
-		shouldExpectError := (combo.AppVersion == "0.0.1.137" && combo.FileName == "testapp.dmg") ||
-			(combo.AppVersion == "0.0.3.137" && combo.FileName == "testapp.dmg") ||
-			(combo.AppVersion == "0.0.5.137" && combo.FileName == "test.exe") ||
-			(combo.AppVersion == "0.0.7.137" && combo.FileName == "test.exe") ||
-			(combo.AppVersion == "0.0.1.137" && combo.FileName == "test.zip")
+		shouldExpectError := (combo.AppVersion == "0.0.1" && combo.FileName == "testapp.dmg") ||
+			(combo.AppVersion == "0.0.3" && combo.FileName == "testapp.dmg") ||
+			(combo.AppVersion == "0.0.5" && combo.FileName == "test.exe") ||
+			(combo.AppVersion == "0.0.7" && combo.FileName == "test.exe") ||
+			(combo.AppVersion == "0.0.1" && combo.FileName == "test.zip")
 
 		if shouldExpectError {
 			// Expect 400 status code for error cases
@@ -2381,7 +2381,7 @@ func TestCheckVersionWithUpdaters(t *testing.T) {
 	}{
 		{
 			AppName:      "updaters",
-			Version:      "0.0.2.137",
+			Version:      "0.0.2",
 			ChannelName:  "nightly",
 			ExpectedJSON: map[string]interface{}{"status": "no_content"},
 			ExpectedCode: http.StatusNoContent,
@@ -2393,12 +2393,12 @@ func TestCheckVersionWithUpdaters(t *testing.T) {
 		},
 		{
 			AppName:     "updaters",
-			Version:     "0.0.1.135",
+			Version:     "0.0.1",
 			ChannelName: "nightly",
 			ExpectedJSON: map[string]interface{}{
 				"critical":         false,
 				"update_available": true,
-				"url":              fmt.Sprintf("%s/%s", s3Endpoint, "updaters-admin/nightly/macosSquirrel/universalArch/updaters-0.0.2.137.zip"),
+				"url":              fmt.Sprintf("%s/%s", s3Endpoint, "updaters-admin/nightly/macosSquirrel/universalArch/updaters-0.0.2.zip"),
 			},
 			ExpectedCode: http.StatusOK,
 			Platform:     "macosSquirrel",
@@ -2409,7 +2409,7 @@ func TestCheckVersionWithUpdaters(t *testing.T) {
 		},
 		{
 			AppName:      "updaters",
-			Version:      "0.0.2.137",
+			Version:      "0.0.2",
 			ChannelName:  "nightly",
 			ExpectedJSON: map[string]interface{}{"status": "no_content"},
 			ExpectedCode: http.StatusNoContent,
@@ -2421,12 +2421,12 @@ func TestCheckVersionWithUpdaters(t *testing.T) {
 		},
 		{
 			AppName:     "updaters",
-			Version:     "0.0.1.135",
+			Version:     "0.0.1",
 			ChannelName: "nightly",
 			ExpectedJSON: map[string]interface{}{
 				"signature": "dW50cnVzdGVkU2lnbmF0dXJlVGhhdExvb2tzTGlrZUFsb25nU3RyaW5n==",
-				"version":   "0.0.2.137",
-				"url":       fmt.Sprintf("%s/%s", s3Endpoint, "updaters-admin/nightly/macosTauri/universalArch/updaters-0.0.2.137.zip"),
+				"version":   "0.0.2",
+				"url":       fmt.Sprintf("%s/%s", s3Endpoint, "updaters-admin/nightly/macosTauri/universalArch/updaters-0.0.2.zip"),
 			},
 			ExpectedCode: http.StatusOK,
 			Platform:     "macosTauri",
@@ -2437,7 +2437,7 @@ func TestCheckVersionWithUpdaters(t *testing.T) {
 		},
 		{
 			AppName:      "updaters",
-			Version:      "0.0.4.137",
+			Version:      "0.0.4",
 			ChannelName:  "nightly",
 			ExpectedJSON: map[string]interface{}{"status": "no_content"},
 			ExpectedCode: http.StatusNoContent,
@@ -2450,12 +2450,12 @@ func TestCheckVersionWithUpdaters(t *testing.T) {
 		},
 		{
 			AppName:     "updaters",
-			Version:     "0.0.1.133",
+			Version:     "0.0.1",
 			ChannelName: "nightly",
 			ExpectedJSON: map[string]interface{}{
 				"critical":         false,
 				"update_available": true,
-				"update_url_yml":   fmt.Sprintf("%s/%s", s3Endpoint, "electron-builder/updaters-admin/0.0.4.137/nightly/macos/universalArch/latest-mac.yml"),
+				"update_url_yml":   fmt.Sprintf("%s/%s", s3Endpoint, "electron-builder/updaters-admin/0.0.4/nightly/macos/universalArch/latest-mac.yml"),
 			},
 			ExpectedCode: http.StatusFound,
 			// Published:    false,
@@ -2468,7 +2468,7 @@ func TestCheckVersionWithUpdaters(t *testing.T) {
 		},
 		{
 			AppName:      "updaters",
-			Version:      "0.0.8.137",
+			Version:      "0.0.8",
 			ChannelName:  "stable",
 			ExpectedJSON: map[string]interface{}{"status": "no_content"},
 			ExpectedCode: http.StatusNoContent,
@@ -2481,11 +2481,11 @@ func TestCheckVersionWithUpdaters(t *testing.T) {
 		},
 		{
 			AppName:     "updaters",
-			Version:     "0.0.1.131",
+			Version:     "0.0.1",
 			ChannelName: "stable",
 			ExpectedJSON: map[string]interface{}{
 				"status": "redirect",
-				"url":    fmt.Sprintf("%s/%s", s3Endpoint, "electron-builder/updaters-admin/0.0.8.137/stable/windows/universalArch/latest.yml"),
+				"url":    fmt.Sprintf("%s/%s", s3Endpoint, "electron-builder/updaters-admin/0.0.8/stable/windows/universalArch/latest.yml"),
 			},
 			ExpectedCode: http.StatusFound,
 			// Published:    false,
@@ -2597,7 +2597,7 @@ func TestCheckVersionWithUpdaters(t *testing.T) {
 // 			ChannelName:  "stable",
 // 			Platform:     "windows",
 // 			Arch:         "universalArch",
-// 			Version:      "0.0.1.137",
+// 			Version:      "0.0.1",
 // 			ExpectedCode: http.StatusFound, // 302 redirect
 // 			TestName:     "SquirrelReleasesUpdateAvailable",
 // 			ExpectedBody: "RELEASES FILE FOR WINDOWS sqirrel",
@@ -2608,7 +2608,7 @@ func TestCheckVersionWithUpdaters(t *testing.T) {
 // 			ChannelName:  "stable",
 // 			Platform:     "windows",
 // 			Arch:         "universalArch",
-// 			Version:      "0.0.6.137",
+// 			Version:      "0.0.6",
 // 			ExpectedCode: http.StatusFound, // 302 redirect
 // 			TestName:     "SquirrelReleasesUpdateNotAvailable",
 // 			ExpectedBody: "RELEASES FILE FOR WINDOWS sqirrel",
@@ -2619,7 +2619,7 @@ func TestCheckVersionWithUpdaters(t *testing.T) {
 // 		// 	ChannelName:  "stable",
 // 		// 	Platform:     "windows",
 // 		// 	Arch:         "universalArch",
-// 		// 	Version:      "0.0.1.137",
+// 		// 	Version:      "0.0.1",
 // 		// 	ExpectedCode: http.StatusBadRequest, // Should return error for non-existent app
 // 		// 	TestName:     "SquirrelReleasesNonExistentApp",
 // 		// },
@@ -3118,7 +3118,7 @@ func TestUpdateSpecificAppWithSecondUser(t *testing.T) {
 			Arch        string
 			Changelog   string
 		}{
-			{uploadedAppIDs[1], "0.0.2.137", "nightly", true, true, "universalPlatform", "universalArch", "### Changelog"},
+			{uploadedAppIDs[1], "0.0.2", "nightly", true, true, "universalPlatform", "universalArch", "### Changelog"},
 		}
 
 		// Iterate through the combinations and update the file for each combination.
@@ -3202,7 +3202,7 @@ func TestUpdateSpecificApp(t *testing.T) {
 			Arch        string
 			Changelog   string
 		}{
-			{uploadedAppIDs[1], "0.0.2.137", "nightly", true, true, "universalPlatform", "universalArch", "### Changelog"},
+			{uploadedAppIDs[1], "0.0.2", "nightly", true, true, "universalPlatform", "universalArch", "### Changelog"},
 		}
 
 		// Iterate through the combinations and update the file for each combination.
@@ -3308,7 +3308,7 @@ func TestSearch(t *testing.T) {
 	expected := []AppInfo{
 		{
 			AppName:   "testapp",
-			Version:   "0.0.5.137",
+			Version:   "0.0.5",
 			Channel:   "stable",
 			Published: false,
 			Critical:  false,
@@ -3331,7 +3331,7 @@ func TestSearch(t *testing.T) {
 			},
 			Changelog: []model.Changelog{
 				{
-					Version: "0.0.5.137",
+					Version: "0.0.5",
 					Changes: "",
 					Date:    time.Now().Format("2006-01-02"),
 				},
@@ -3339,7 +3339,7 @@ func TestSearch(t *testing.T) {
 		},
 		{
 			AppName:   "testapp",
-			Version:   "0.0.4.137",
+			Version:   "0.0.4",
 			Channel:   "stable",
 			Published: true,
 			Critical:  true,
@@ -3362,7 +3362,7 @@ func TestSearch(t *testing.T) {
 			},
 			Changelog: []model.Changelog{
 				{
-					Version: "0.0.4.137",
+					Version: "0.0.4",
 					Changes: "",
 					Date:    time.Now().Format("2006-01-02"),
 				},
@@ -3370,7 +3370,7 @@ func TestSearch(t *testing.T) {
 		},
 		{
 			AppName:   "testapp",
-			Version:   "0.0.3.137",
+			Version:   "0.0.3",
 			Channel:   "nightly",
 			Published: false,
 			Critical:  false,
@@ -3393,7 +3393,7 @@ func TestSearch(t *testing.T) {
 			},
 			Changelog: []model.Changelog{
 				{
-					Version: "0.0.3.137",
+					Version: "0.0.3",
 					Changes: "",
 					Date:    time.Now().Format("2006-01-02"),
 				},
@@ -3401,7 +3401,7 @@ func TestSearch(t *testing.T) {
 		},
 		{
 			AppName:   "testapp",
-			Version:   "0.0.2.137",
+			Version:   "0.0.2",
 			Channel:   "nightly",
 			Published: true,
 			Critical:  true,
@@ -3424,7 +3424,7 @@ func TestSearch(t *testing.T) {
 			},
 			Changelog: []model.Changelog{
 				{
-					Version: "0.0.2.137",
+					Version: "0.0.2",
 					Changes: "### Changelog",
 					Date:    time.Now().Format("2006-01-02"),
 				},
@@ -3521,7 +3521,7 @@ func TestFilterSearchWithChannel(t *testing.T) {
 	expected := []AppInfo{
 		{
 			AppName:   "testapp",
-			Version:   "0.0.3.137",
+			Version:   "0.0.3",
 			Channel:   "nightly",
 			Published: false,
 			Critical:  false,
@@ -3544,7 +3544,7 @@ func TestFilterSearchWithChannel(t *testing.T) {
 			},
 			Changelog: []model.Changelog{
 				{
-					Version: "0.0.3.137",
+					Version: "0.0.3",
 					Changes: "",
 					Date:    time.Now().Format("2006-01-02"),
 				},
@@ -3552,7 +3552,7 @@ func TestFilterSearchWithChannel(t *testing.T) {
 		},
 		{
 			AppName:   "testapp",
-			Version:   "0.0.2.137",
+			Version:   "0.0.2",
 			Channel:   "nightly",
 			Published: true,
 			Critical:  true,
@@ -3575,7 +3575,7 @@ func TestFilterSearchWithChannel(t *testing.T) {
 			},
 			Changelog: []model.Changelog{
 				{
-					Version: "0.0.2.137",
+					Version: "0.0.2",
 					Changes: "### Changelog",
 					Date:    time.Now().Format("2006-01-02"),
 				},
@@ -3672,7 +3672,7 @@ func TestFilterSearchWithChannelAndPublished(t *testing.T) {
 	expected := []AppInfo{
 		{
 			AppName:   "testapp",
-			Version:   "0.0.4.137",
+			Version:   "0.0.4",
 			Channel:   "stable",
 			Published: true,
 			Critical:  true,
@@ -3695,7 +3695,7 @@ func TestFilterSearchWithChannelAndPublished(t *testing.T) {
 			},
 			Changelog: []model.Changelog{
 				{
-					Version: "0.0.4.137",
+					Version: "0.0.4",
 					Changes: "",
 					Date:    time.Now().Format("2006-01-02"),
 				},
@@ -3792,7 +3792,7 @@ func TestFilterSearchWithChannelAndPublishedAndCritical(t *testing.T) {
 	expected := []AppInfo{
 		{
 			AppName:   "testapp",
-			Version:   "0.0.4.137",
+			Version:   "0.0.4",
 			Channel:   "stable",
 			Published: true,
 			Critical:  true,
@@ -3815,7 +3815,7 @@ func TestFilterSearchWithChannelAndPublishedAndCritical(t *testing.T) {
 			},
 			Changelog: []model.Changelog{
 				{
-					Version: "0.0.4.137",
+					Version: "0.0.4",
 					Changes: "",
 					Date:    time.Now().Format("2006-01-02"),
 				},
@@ -3912,7 +3912,7 @@ func TestFilterSearchWithChannelAndPublishedAndCriticalAndPlatform(t *testing.T)
 	expected := []AppInfo{
 		{
 			AppName:   "testapp",
-			Version:   "0.0.2.137",
+			Version:   "0.0.2",
 			Channel:   "nightly",
 			Published: true,
 			Critical:  true,
@@ -3935,7 +3935,7 @@ func TestFilterSearchWithChannelAndPublishedAndCriticalAndPlatform(t *testing.T)
 			},
 			Changelog: []model.Changelog{
 				{
-					Version: "0.0.2.137",
+					Version: "0.0.2",
 					Changes: "### Changelog",
 					Date:    time.Now().Format("2006-01-02"),
 				},
@@ -4033,7 +4033,7 @@ func TestFilterSearchWithChannelAndPublishedAndCriticalAndPlatformAndArch(t *tes
 
 		{
 			AppName:   "testapp",
-			Version:   "0.0.4.137",
+			Version:   "0.0.4",
 			Channel:   "stable",
 			Published: true,
 			Critical:  true,
@@ -4056,7 +4056,7 @@ func TestFilterSearchWithChannelAndPublishedAndCriticalAndPlatformAndArch(t *tes
 			},
 			Changelog: []model.Changelog{
 				{
-					Version: "0.0.4.137",
+					Version: "0.0.4",
 					Changes: "",
 					Date:    time.Now().Format("2006-01-02"),
 				},
@@ -4153,7 +4153,7 @@ func TestSearchOnlyPublished(t *testing.T) {
 	expected := []AppInfo{
 		{
 			AppName:   "testapp",
-			Version:   "0.0.4.137",
+			Version:   "0.0.4",
 			Channel:   "stable",
 			Published: true,
 			Critical:  true,
@@ -4176,7 +4176,7 @@ func TestSearchOnlyPublished(t *testing.T) {
 			},
 			Changelog: []model.Changelog{
 				{
-					Version: "0.0.4.137",
+					Version: "0.0.4",
 					Changes: "",
 					Date:    time.Now().Format("2006-01-02"),
 				},
@@ -4184,7 +4184,7 @@ func TestSearchOnlyPublished(t *testing.T) {
 		},
 		{
 			AppName:   "testapp",
-			Version:   "0.0.2.137",
+			Version:   "0.0.2",
 			Channel:   "nightly",
 			Published: true,
 			Critical:  true,
@@ -4207,7 +4207,7 @@ func TestSearchOnlyPublished(t *testing.T) {
 			},
 			Changelog: []model.Changelog{
 				{
-					Version: "0.0.2.137",
+					Version: "0.0.2",
 					Changes: "### Changelog",
 					Date:    time.Now().Format("2006-01-02"),
 				},
@@ -4304,7 +4304,7 @@ func TestSearchOnlyCritical(t *testing.T) {
 	expected := []AppInfo{
 		{
 			AppName:   "testapp",
-			Version:   "0.0.4.137",
+			Version:   "0.0.4",
 			Channel:   "stable",
 			Published: true,
 			Critical:  true,
@@ -4327,7 +4327,7 @@ func TestSearchOnlyCritical(t *testing.T) {
 			},
 			Changelog: []model.Changelog{
 				{
-					Version: "0.0.4.137",
+					Version: "0.0.4",
 					Changes: "",
 					Date:    time.Now().Format("2006-01-02"),
 				},
@@ -4335,7 +4335,7 @@ func TestSearchOnlyCritical(t *testing.T) {
 		},
 		{
 			AppName:   "testapp",
-			Version:   "0.0.2.137",
+			Version:   "0.0.2",
 			Channel:   "nightly",
 			Published: true,
 			Critical:  true,
@@ -4358,7 +4358,7 @@ func TestSearchOnlyCritical(t *testing.T) {
 			},
 			Changelog: []model.Changelog{
 				{
-					Version: "0.0.2.137",
+					Version: "0.0.2",
 					Changes: "### Changelog",
 					Date:    time.Now().Format("2006-01-02"),
 				},
@@ -4455,7 +4455,7 @@ func TestSearchOnlyUniversalPlatform(t *testing.T) {
 	expected := []AppInfo{
 		{
 			AppName:   "testapp",
-			Version:   "0.0.5.137",
+			Version:   "0.0.5",
 			Channel:   "stable",
 			Published: false,
 			Critical:  false,
@@ -4478,7 +4478,7 @@ func TestSearchOnlyUniversalPlatform(t *testing.T) {
 			},
 			Changelog: []model.Changelog{
 				{
-					Version: "0.0.5.137",
+					Version: "0.0.5",
 					Changes: "",
 					Date:    time.Now().Format("2006-01-02"),
 				},
@@ -4486,7 +4486,7 @@ func TestSearchOnlyUniversalPlatform(t *testing.T) {
 		},
 		{
 			AppName:   "testapp",
-			Version:   "0.0.4.137",
+			Version:   "0.0.4",
 			Channel:   "stable",
 			Published: true,
 			Critical:  true,
@@ -4509,7 +4509,7 @@ func TestSearchOnlyUniversalPlatform(t *testing.T) {
 			},
 			Changelog: []model.Changelog{
 				{
-					Version: "0.0.4.137",
+					Version: "0.0.4",
 					Changes: "",
 					Date:    time.Now().Format("2006-01-02"),
 				},
@@ -4517,7 +4517,7 @@ func TestSearchOnlyUniversalPlatform(t *testing.T) {
 		},
 		{
 			AppName:   "testapp",
-			Version:   "0.0.3.137",
+			Version:   "0.0.3",
 			Channel:   "nightly",
 			Published: false,
 			Critical:  false,
@@ -4540,7 +4540,7 @@ func TestSearchOnlyUniversalPlatform(t *testing.T) {
 			},
 			Changelog: []model.Changelog{
 				{
-					Version: "0.0.3.137",
+					Version: "0.0.3",
 					Changes: "",
 					Date:    time.Now().Format("2006-01-02"),
 				},
@@ -4548,7 +4548,7 @@ func TestSearchOnlyUniversalPlatform(t *testing.T) {
 		},
 		{
 			AppName:   "testapp",
-			Version:   "0.0.2.137",
+			Version:   "0.0.2",
 			Channel:   "nightly",
 			Published: true,
 			Critical:  true,
@@ -4571,7 +4571,7 @@ func TestSearchOnlyUniversalPlatform(t *testing.T) {
 			},
 			Changelog: []model.Changelog{
 				{
-					Version: "0.0.2.137",
+					Version: "0.0.2",
 					Changes: "### Changelog",
 					Date:    time.Now().Format("2006-01-02"),
 				},
@@ -4645,13 +4645,13 @@ func TestFetchkLatestVersionOfApp(t *testing.T) {
 					"universalPlatform": map[string]interface{}{
 						"universalArch": map[string]interface{}{
 							"dmg": map[string]interface{}{
-								"url": fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fnightly%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.2.137.dmg"),
+								"url": fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fnightly%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.2.dmg"),
 							},
 							"pkg": map[string]interface{}{
-								"url": fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fnightly%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.2.137.pkg"),
+								"url": fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fnightly%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.2.pkg"),
 							},
 							"no-extension": map[string]interface{}{
-								"url": fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fnightly%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.2.137"),
+								"url": fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fnightly%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.2"),
 							},
 						},
 					},
@@ -4671,13 +4671,13 @@ func TestFetchkLatestVersionOfApp(t *testing.T) {
 					"universalPlatform": map[string]interface{}{
 						"universalArch": map[string]interface{}{
 							"dmg": map[string]interface{}{
-								"url": fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fstable%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.4.137.dmg"),
+								"url": fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fstable%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.4.dmg"),
 							},
 							"pkg": map[string]interface{}{
-								"url": fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fstable%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.4.137.pkg"),
+								"url": fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fstable%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.4.pkg"),
 							},
 							"no-extension": map[string]interface{}{
-								"url": fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fstable%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.4.137"),
+								"url": fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fstable%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.4"),
 							},
 						},
 					},
@@ -4739,16 +4739,16 @@ func TestCheckVersion(t *testing.T) {
 	}{
 		{
 			AppName:     "public%20testapp",
-			Version:     "0.0.1.137",
+			Version:     "0.0.1",
 			ChannelName: "nightly",
 			ExpectedJSON: map[string]interface{}{
 				// "changelog":        "### Changelog\n",
 				"update_available":  false,
 				"critical":          false,
 				"possible_rollback": false,
-				"update_url_dmg":    fmt.Sprintf("%s/%s", s3Endpoint, "public%20testapp-admin/nightly/universalPlatform/universalArch/public%20testapp-0.0.1.137.dmg"),
-				"update_url_pkg":    fmt.Sprintf("%s/%s", s3Endpoint, "public%20testapp-admin/nightly/universalPlatform/universalArch/public%20testapp-0.0.1.137.pkg"),
-				"update_url":        fmt.Sprintf("%s/%s", s3Endpoint, "public%20testapp-admin/nightly/universalPlatform/universalArch/public%20testapp-0.0.1.137"),
+				"update_url_dmg":    fmt.Sprintf("%s/%s", s3Endpoint, "public%20testapp-admin/nightly/universalPlatform/universalArch/public%20testapp-0.0.1.dmg"),
+				"update_url_pkg":    fmt.Sprintf("%s/%s", s3Endpoint, "public%20testapp-admin/nightly/universalPlatform/universalArch/public%20testapp-0.0.1.pkg"),
+				"update_url":        fmt.Sprintf("%s/%s", s3Endpoint, "public%20testapp-admin/nightly/universalPlatform/universalArch/public%20testapp-0.0.1"),
 			},
 			ExpectedCode: http.StatusOK,
 			Platform:     "universalPlatform",
@@ -4758,15 +4758,15 @@ func TestCheckVersion(t *testing.T) {
 		},
 		{
 			AppName:     "testapp",
-			Version:     "0.0.2.137",
+			Version:     "0.0.2",
 			ChannelName: "nightly",
 			ExpectedJSON: map[string]interface{}{
 				"update_available":  false,
 				"critical":          false,
 				"possible_rollback": false,
-				"update_url_dmg":    fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fnightly%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.2.137.dmg"),
-				"update_url_pkg":    fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fnightly%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.2.137.pkg"),
-				"update_url":        fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fnightly%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.2.137"),
+				"update_url_dmg":    fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fnightly%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.2.dmg"),
+				"update_url_pkg":    fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fnightly%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.2.pkg"),
+				"update_url":        fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fnightly%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.2"),
 			},
 			ExpectedCode: http.StatusOK,
 			Platform:     "universalPlatform",
@@ -4776,16 +4776,16 @@ func TestCheckVersion(t *testing.T) {
 		},
 		{
 			AppName:     "testapp",
-			Version:     "0.0.3.137",
+			Version:     "0.0.3",
 			ChannelName: "nightly",
 			ExpectedJSON: map[string]interface{}{
 				"critical":          true,
 				"possible_rollback": true,
 				"changelog":         "### Changelog\n",
 				"update_available":  false,
-				"update_url_dmg":    fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fnightly%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.2.137.dmg"),
-				"update_url_pkg":    fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fnightly%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.2.137.pkg"),
-				"update_url":        fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fnightly%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.2.137"),
+				"update_url_dmg":    fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fnightly%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.2.dmg"),
+				"update_url_pkg":    fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fnightly%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.2.pkg"),
+				"update_url":        fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fnightly%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.2"),
 			},
 			ExpectedCode: http.StatusOK,
 			Platform:     "universalPlatform",
@@ -4795,15 +4795,15 @@ func TestCheckVersion(t *testing.T) {
 		},
 		{
 			AppName:     "testapp",
-			Version:     "0.0.4.137",
+			Version:     "0.0.4",
 			ChannelName: "stable",
 			ExpectedJSON: map[string]interface{}{
 				"update_available":  false,
 				"critical":          false,
 				"possible_rollback": false,
-				"update_url_dmg":    fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fstable%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.4.137.dmg"),
-				"update_url_pkg":    fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fstable%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.4.137.pkg"),
-				"update_url":        fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fstable%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.4.137"),
+				"update_url_dmg":    fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fstable%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.4.dmg"),
+				"update_url_pkg":    fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fstable%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.4.pkg"),
+				"update_url":        fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fstable%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.4"),
 			},
 			ExpectedCode: http.StatusOK,
 			Platform:     "universalPlatform",
@@ -4813,15 +4813,15 @@ func TestCheckVersion(t *testing.T) {
 		},
 		{
 			AppName:     "testapp",
-			Version:     "0.0.5.137",
+			Version:     "0.0.5",
 			ChannelName: "stable",
 			ExpectedJSON: map[string]interface{}{
 				"update_available":  false,
 				"critical":          true,
 				"possible_rollback": true,
-				"update_url_dmg":    fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fstable%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.4.137.dmg"),
-				"update_url_pkg":    fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fstable%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.4.137.pkg"),
-				"update_url":        fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fstable%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.4.137"),
+				"update_url_dmg":    fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fstable%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.4.dmg"),
+				"update_url_pkg":    fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fstable%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.4.pkg"),
+				"update_url":        fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fstable%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.4"),
 			},
 			ExpectedCode: http.StatusOK,
 			// Published:    false,
@@ -4956,11 +4956,11 @@ func TestMultipleUploadWithSameExtension(t *testing.T) {
 			Platform    string
 			Arch        string
 		}{
-			{"0.0.1.138", "nightly", true, false, "secondPlatform", "secondArch"},
-			{"0.0.2.138", "nightly", true, false, "universalPlatform", "secondArch"},
-			{"0.0.2.138", "nightly", true, false, "universalPlatform", "universalArch"},
-			{"0.0.4.138", "stable", true, true, "universalPlatform", "universalArch"},
-			{"0.0.4.138", "stable", true, true, "secondPlatform", "universalArch"},
+			{"0.0.1", "nightly", true, false, "secondPlatform", "secondArch"},
+			{"0.0.2", "nightly", true, false, "universalPlatform", "secondArch"},
+			{"0.0.2", "nightly", true, false, "universalPlatform", "universalArch"},
+			{"0.0.4", "stable", true, true, "universalPlatform", "universalArch"},
+			{"0.0.4", "stable", true, true, "secondPlatform", "universalArch"},
 		}
 		logrus.Infof("Initial combinations: %v", combinations)
 		// Iterate through the combinations and upload the file for each combination.
@@ -5061,12 +5061,12 @@ func TestCheckVersionWithSameExtensionArtifactsAndDiffPlatformsArchs(t *testing.
 	}{
 		{
 			AppName:     "testapp",
-			Version:     "0.0.1.138",
+			Version:     "0.0.1",
 			ChannelName: "nightly",
 			ExpectedJSON: map[string]interface{}{
 				"update_available": true,
 				"critical":         false,
-				"update_url_dmg":   fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fnightly%2FuniversalPlatform%2FsecondArch%2Ftestapp-0.0.2.138.dmg"),
+				"update_url_dmg":   fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fnightly%2FuniversalPlatform%2FsecondArch%2Ftestapp-0.0.2.dmg"),
 			},
 			ExpectedCode: http.StatusOK,
 			Platform:     "universalPlatform",
@@ -5077,12 +5077,12 @@ func TestCheckVersionWithSameExtensionArtifactsAndDiffPlatformsArchs(t *testing.
 		},
 		{
 			AppName:     "testapp",
-			Version:     "0.0.1.138",
+			Version:     "0.0.1",
 			ChannelName: "nightly",
 			ExpectedJSON: map[string]interface{}{
 				"update_available": true,
 				"critical":         false,
-				"update_url_dmg":   fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fnightly%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.2.138.dmg"),
+				"update_url_dmg":   fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fnightly%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.2.dmg"),
 			},
 			ExpectedCode: http.StatusOK,
 			Platform:     "universalPlatform",
@@ -5093,13 +5093,13 @@ func TestCheckVersionWithSameExtensionArtifactsAndDiffPlatformsArchs(t *testing.
 		},
 		{
 			AppName:     "testapp",
-			Version:     "0.0.3.138",
+			Version:     "0.0.3",
 			ChannelName: "nightly",
 			ExpectedJSON: map[string]interface{}{
 				"critical":          false,
 				"possible_rollback": true,
 				"update_available":  false,
-				"update_url_dmg":    fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fnightly%2FsecondPlatform%2FsecondArch%2Ftestapp-0.0.1.138.dmg"),
+				"update_url_dmg":    fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fnightly%2FsecondPlatform%2FsecondArch%2Ftestapp-0.0.1.dmg"),
 			},
 			ExpectedCode: http.StatusOK,
 			Platform:     "secondPlatform",
@@ -5110,12 +5110,12 @@ func TestCheckVersionWithSameExtensionArtifactsAndDiffPlatformsArchs(t *testing.
 		},
 		{
 			AppName:     "testapp",
-			Version:     "0.0.3.138",
+			Version:     "0.0.3",
 			ChannelName: "stable",
 			ExpectedJSON: map[string]interface{}{
 				"update_available": true,
 				"critical":         true,
-				"update_url_dmg":   fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fstable%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.4.138.dmg"),
+				"update_url_dmg":   fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fstable%2FuniversalPlatform%2FuniversalArch%2Ftestapp-0.0.4.dmg"),
 			},
 			ExpectedCode: http.StatusOK,
 			Platform:     "universalPlatform",
@@ -5126,12 +5126,12 @@ func TestCheckVersionWithSameExtensionArtifactsAndDiffPlatformsArchs(t *testing.
 		},
 		{
 			AppName:     "testapp",
-			Version:     "0.0.3.138",
+			Version:     "0.0.3",
 			ChannelName: "stable",
 			ExpectedJSON: map[string]interface{}{
 				"update_available": true,
 				"critical":         true,
-				"update_url_dmg":   fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fstable%2FsecondPlatform%2FuniversalArch%2Ftestapp-0.0.4.138.dmg"),
+				"update_url_dmg":   fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "testapp-admin%2Fstable%2FsecondPlatform%2FuniversalArch%2Ftestapp-0.0.4.dmg"),
 			},
 			ExpectedCode: http.StatusOK,
 			// Published:    false,
@@ -5206,11 +5206,11 @@ func TestTelemetryWithVariousParams(t *testing.T) {
 				"versions": map[string]interface{}{
 					"used_versions_count": float64(1),
 					"known_versions": []interface{}{
-						"0.0.1.138", "0.0.3.138",
+						"0.0.1", "0.0.3",
 					},
 					"usage": []interface{}{
 						map[string]interface{}{
-							"version":      "0.0.1.138",
+							"version":      "0.0.1",
 							"client_count": float64(1),
 						},
 					},
@@ -5264,11 +5264,11 @@ func TestTelemetryWithVariousParams(t *testing.T) {
 				"versions": map[string]interface{}{
 					"used_versions_count": float64(1),
 					"known_versions": []interface{}{
-						"0.0.1.138", "0.0.3.138",
+						"0.0.1", "0.0.3",
 					},
 					"usage": []interface{}{
 						map[string]interface{}{
-							"version":      "0.0.1.138",
+							"version":      "0.0.1",
 							"client_count": float64(1),
 						},
 					},
@@ -5321,11 +5321,11 @@ func TestTelemetryWithVariousParams(t *testing.T) {
 				"versions": map[string]interface{}{
 					"used_versions_count": float64(1),
 					"known_versions": []interface{}{
-						"0.0.1.138", "0.0.3.138",
+						"0.0.1", "0.0.3",
 					},
 					"usage": []interface{}{
 						map[string]interface{}{
-							"version":      "0.0.3.138",
+							"version":      "0.0.3",
 							"client_count": float64(1),
 						},
 					},
@@ -5378,11 +5378,11 @@ func TestTelemetryWithVariousParams(t *testing.T) {
 				"versions": map[string]interface{}{
 					"used_versions_count": float64(1),
 					"known_versions": []interface{}{
-						"0.0.1.138", "0.0.3.138",
+						"0.0.1", "0.0.3",
 					},
 					"usage": []interface{}{
 						map[string]interface{}{
-							"version":      "0.0.3.138",
+							"version":      "0.0.3",
 							"client_count": float64(1),
 						},
 					},
@@ -6123,7 +6123,7 @@ func TestFailedUploadAppUsingTeamUser(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	payload := `{"app_name": "testapp", "version": "0.0.1.137", "channel": "stable", "platform": "universalPlatform", "arch": "universalArch"}`
+	payload := `{"app_name": "testapp", "version": "0.0.1", "channel": "stable", "platform": "universalPlatform", "arch": "universalArch"}`
 	_, err = dataPart.Write([]byte(payload))
 	if err != nil {
 		t.Fatal(err)
@@ -7928,11 +7928,11 @@ func TestMultipleUploadWithIntermediate(t *testing.T) {
 			Platform     string
 			Arch         string
 		}{
-			{"newApp", "0.0.6.135", "nightly", true, false, false, "secondPlatform", "secondArch"},
-			{"newApp", "0.0.7.137", "nightly", true, false, true, "secondPlatform", "secondArch"},
-			{"newApp", "0.0.8.136", "nightly", true, false, false, "secondPlatform", "secondArch"},
-			{"newApp", "0.0.9.137", "nightly", true, true, true, "secondPlatform", "secondArch"},
-			{"newApp", "0.0.10.138", "nightly", true, false, false, "secondPlatform", "secondArch"},
+			{"newApp", "0.0.6", "nightly", true, false, false, "secondPlatform", "secondArch"},
+			{"newApp", "0.0.7", "nightly", true, false, true, "secondPlatform", "secondArch"},
+			{"newApp", "0.0.8", "nightly", true, false, false, "secondPlatform", "secondArch"},
+			{"newApp", "0.0.9", "nightly", true, true, true, "secondPlatform", "secondArch"},
+			{"newApp", "0.0.10", "nightly", true, false, false, "secondPlatform", "secondArch"},
 		}
 
 		// Iterate through the combinations and upload the file for each combination.
@@ -8040,7 +8040,7 @@ func TestUpdateSpecificAppWithIntermediate(t *testing.T) {
 			Arch         string
 			Changelog    string
 		}{
-			{uploadedAppIDsWithIntermediate[0], "0.0.6.135", "nightly", true, false, true, "secondPlatform", "secondArch", "### Changelog"},
+			{uploadedAppIDsWithIntermediate[0], "0.0.6", "nightly", true, false, true, "secondPlatform", "secondArch", "### Changelog"},
 		}
 
 		// Iterate through the combinations and update the file for each combination.
@@ -8119,16 +8119,16 @@ func TestCheckVersionWithIntermediate(t *testing.T) {
 	}{
 		{
 			AppName:     "newApp",
-			Version:     "0.0.6.135",
+			Version:     "0.0.6",
 			ChannelName: "nightly",
 			ExpectedJSON: map[string]interface{}{
 				// "changelog":                "### Changelog\n",
 				"critical":                 false,
 				"is_intermediate_required": true,
 				"update_available":         true,
-				"update_url_dmg":           fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "newApp-admin%2Fnightly%2FsecondPlatform%2FsecondArch%2FnewApp-0.0.7.137.dmg"),
-				"update_url_pkg":           fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "newApp-admin%2Fnightly%2FsecondPlatform%2FsecondArch%2FnewApp-0.0.7.137.pkg"),
-				"update_url":               fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "newApp-admin%2Fnightly%2FsecondPlatform%2FsecondArch%2FnewApp-0.0.7.137"),
+				"update_url_dmg":           fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "newApp-admin%2Fnightly%2FsecondPlatform%2FsecondArch%2FnewApp-0.0.7.dmg"),
+				"update_url_pkg":           fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "newApp-admin%2Fnightly%2FsecondPlatform%2FsecondArch%2FnewApp-0.0.7.pkg"),
+				"update_url":               fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "newApp-admin%2Fnightly%2FsecondPlatform%2FsecondArch%2FnewApp-0.0.7"),
 			},
 			ExpectedCode: http.StatusOK,
 			Platform:     "secondPlatform",
@@ -8138,15 +8138,15 @@ func TestCheckVersionWithIntermediate(t *testing.T) {
 		},
 		{
 			AppName:     "newApp",
-			Version:     "0.0.7.137",
+			Version:     "0.0.7",
 			ChannelName: "nightly",
 			ExpectedJSON: map[string]interface{}{
 				"critical":                 true,
 				"is_intermediate_required": true,
 				"update_available":         true,
-				"update_url_dmg":           fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "newApp-admin%2Fnightly%2FsecondPlatform%2FsecondArch%2FnewApp-0.0.9.137.dmg"),
-				"update_url_pkg":           fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "newApp-admin%2Fnightly%2FsecondPlatform%2FsecondArch%2FnewApp-0.0.9.137.pkg"),
-				"update_url":               fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "newApp-admin%2Fnightly%2FsecondPlatform%2FsecondArch%2FnewApp-0.0.9.137"),
+				"update_url_dmg":           fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "newApp-admin%2Fnightly%2FsecondPlatform%2FsecondArch%2FnewApp-0.0.9.dmg"),
+				"update_url_pkg":           fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "newApp-admin%2Fnightly%2FsecondPlatform%2FsecondArch%2FnewApp-0.0.9.pkg"),
+				"update_url":               fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "newApp-admin%2Fnightly%2FsecondPlatform%2FsecondArch%2FnewApp-0.0.9"),
 			},
 			ExpectedCode: http.StatusOK,
 			Platform:     "secondPlatform",
@@ -8156,15 +8156,15 @@ func TestCheckVersionWithIntermediate(t *testing.T) {
 		},
 		{
 			AppName:     "newApp",
-			Version:     "0.0.8.136",
+			Version:     "0.0.8",
 			ChannelName: "nightly",
 			ExpectedJSON: map[string]interface{}{
 				"critical":                 true,
 				"is_intermediate_required": true,
 				"update_available":         true,
-				"update_url_dmg":           fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "newApp-admin%2Fnightly%2FsecondPlatform%2FsecondArch%2FnewApp-0.0.9.137.dmg"),
-				"update_url_pkg":           fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "newApp-admin%2Fnightly%2FsecondPlatform%2FsecondArch%2FnewApp-0.0.9.137.pkg"),
-				"update_url":               fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "newApp-admin%2Fnightly%2FsecondPlatform%2FsecondArch%2FnewApp-0.0.9.137"),
+				"update_url_dmg":           fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "newApp-admin%2Fnightly%2FsecondPlatform%2FsecondArch%2FnewApp-0.0.9.dmg"),
+				"update_url_pkg":           fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "newApp-admin%2Fnightly%2FsecondPlatform%2FsecondArch%2FnewApp-0.0.9.pkg"),
+				"update_url":               fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "newApp-admin%2Fnightly%2FsecondPlatform%2FsecondArch%2FnewApp-0.0.9"),
 			},
 			ExpectedCode: http.StatusOK,
 			Platform:     "secondPlatform",
@@ -8174,14 +8174,14 @@ func TestCheckVersionWithIntermediate(t *testing.T) {
 		},
 		{
 			AppName:     "newApp",
-			Version:     "0.0.9.137",
+			Version:     "0.0.9",
 			ChannelName: "nightly",
 			ExpectedJSON: map[string]interface{}{
 				"critical":         false,
 				"update_available": true,
-				"update_url_dmg":   fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "newApp-admin%2Fnightly%2FsecondPlatform%2FsecondArch%2FnewApp-0.0.10.138.dmg"),
-				"update_url_pkg":   fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "newApp-admin%2Fnightly%2FsecondPlatform%2FsecondArch%2FnewApp-0.0.10.138.pkg"),
-				"update_url":       fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "newApp-admin%2Fnightly%2FsecondPlatform%2FsecondArch%2FnewApp-0.0.10.138"),
+				"update_url_dmg":   fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "newApp-admin%2Fnightly%2FsecondPlatform%2FsecondArch%2FnewApp-0.0.10.dmg"),
+				"update_url_pkg":   fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "newApp-admin%2Fnightly%2FsecondPlatform%2FsecondArch%2FnewApp-0.0.10.pkg"),
+				"update_url":       fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "newApp-admin%2Fnightly%2FsecondPlatform%2FsecondArch%2FnewApp-0.0.10"),
 			},
 			ExpectedCode: http.StatusOK,
 			Platform:     "secondPlatform",
@@ -8191,15 +8191,15 @@ func TestCheckVersionWithIntermediate(t *testing.T) {
 		},
 		{
 			AppName:     "newApp",
-			Version:     "0.0.10.138",
+			Version:     "0.0.10",
 			ChannelName: "nightly",
 			ExpectedJSON: map[string]interface{}{
 				"update_available":  false,
 				"critical":          false,
 				"possible_rollback": false,
-				"update_url_dmg":    fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "newApp-admin%2Fnightly%2FsecondPlatform%2FsecondArch%2FnewApp-0.0.10.138.dmg"),
-				"update_url_pkg":    fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "newApp-admin%2Fnightly%2FsecondPlatform%2FsecondArch%2FnewApp-0.0.10.138.pkg"),
-				"update_url":        fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "newApp-admin%2Fnightly%2FsecondPlatform%2FsecondArch%2FnewApp-0.0.10.138"),
+				"update_url_dmg":    fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "newApp-admin%2Fnightly%2FsecondPlatform%2FsecondArch%2FnewApp-0.0.10.dmg"),
+				"update_url_pkg":    fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "newApp-admin%2Fnightly%2FsecondPlatform%2FsecondArch%2FnewApp-0.0.10.pkg"),
+				"update_url":        fmt.Sprintf("%s/%s%s", apiUrl, "download?key=", "newApp-admin%2Fnightly%2FsecondPlatform%2FsecondArch%2FnewApp-0.0.10"),
 			},
 			ExpectedCode: http.StatusOK,
 			// Published:    false,
