@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import semver from 'semver';
 import { useAppsQuery } from '../hooks/use-query/useAppsQuery';
 import { useChannelQuery } from '../hooks/use-query/useChannelQuery';
 import { usePlatformQuery } from '../hooks/use-query/usePlatformQuery';
@@ -61,6 +62,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({ onClose }) => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [files, setFiles] = useState<{ file: File; id: string }[]>([]);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [versionError, setVersionError] = useState<string | null>(null);
 
   const { apps } = useAppsQuery();
   const { channels } = useChannelQuery();
@@ -85,6 +87,11 @@ export const UploadModal: React.FC<UploadModalProps> = ({ onClose }) => {
     e.preventDefault();
     e.stopPropagation();
     setUploadError(null);
+    if (!semver.valid(formData.version)) {
+      setVersionError('Invalid version format. Use semver (e.g., 1.0.0)');
+      return;
+    }
+    setVersionError(null);
     try {
       const formDataToSend = new FormData();
       
@@ -207,11 +214,24 @@ export const UploadModal: React.FC<UploadModalProps> = ({ onClose }) => {
               type="text"
               name="version"
               value={formData.version}
-              onChange={(e) => setFormData(prev => ({ ...prev, version: e.target.value }))}
-              className="w-full px-4 py-2 rounded-lg font-roboto bg-muted text-foreground border border-border transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring placeholder:text-muted-foreground shadow-sm"
-              placeholder="e.g., 0.0.1.0"
+              onChange={(e) => {
+                const v = e.target.value;
+                setFormData(prev => ({ ...prev, version: v }));
+                if (v && !semver.valid(v)) {
+                  setVersionError('Invalid version format. Use semver (e.g., 1.0.0)');
+                } else {
+                  setVersionError(null);
+                }
+              }}
+              className={`w-full px-4 py-2 rounded-lg font-roboto bg-muted text-foreground border transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring placeholder:text-muted-foreground shadow-sm ${
+                versionError ? 'border-destructive' : 'border-border'
+              }`}
+              placeholder="e.g., 1.0.0"
               required
             />
+            {versionError && (
+              <p className="text-destructive text-sm mt-1 font-roboto">{versionError}</p>
+            )}
           </div>
 
           {channels.length > 0 && (
