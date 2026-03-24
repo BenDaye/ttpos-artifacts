@@ -12,12 +12,14 @@ import (
 var (
 	migration bool
 	rollback  bool
+	seed      bool
 	logLevel  string
 )
 
 func init() {
 	flag.BoolVar(&migration, "migration", false, "Set true to run migrations.")
 	flag.BoolVar(&rollback, "rollback", false, "Set true to rollback migrations.")
+	flag.BoolVar(&seed, "seed", false, "Set true to seed initial data (channels, platforms, architectures, apps).")
 	flag.StringVar(&logLevel, "loglevel", "info", "log level (debug, info, warn, error, fatal, panic)")
 
 	logrus.New()
@@ -53,6 +55,7 @@ func main() {
 	flagMap := map[string]interface{}{
 		"migration": migration,
 		"rollback":  rollback,
+		"seed":      seed,
 	}
 
 	// Pass the config to another function

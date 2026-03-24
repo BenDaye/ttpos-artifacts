@@ -1,13 +1,15 @@
 package server
 
 import (
+	"context"
+	"os"
+	"strings"
+
 	db "faynoSync/mongod"
 	"faynoSync/redisdb"
 	"faynoSync/server/handler"
 	"faynoSync/server/tuf"
 	"faynoSync/server/utils"
-	"os"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
@@ -22,9 +24,13 @@ func StartServer(config *viper.Viper, flags map[string]interface{}) {
 
 	client, configDB := db.ConnectToDatabase(mongoUrl, flags)
 
-	db := db.NewAppRepository(&configDB, client)
-
+	repo := db.NewAppRepository(&configDB, client)
 	mongoDatabase := client.Database(configDB.Database)
+
+	// Run seed if requested via -seed flag
+	if flags["seed"].(bool) {
+		db.RunSeed(repo, mongoDatabase, context.Background(), config.GetString("SEED_OWNER"))
+	}
 
 	// Initialize Redis client
 	var redisClient *redis.Client
@@ -39,7 +45,7 @@ func StartServer(config *viper.Viper, flags map[string]interface{}) {
 		redisClient = redisdb.ConnectToRedis(redisConfig)
 	}
 
-	handler := handler.NewAppHandler(client, db, mongoDatabase, redisClient, config.GetBool("PERFORMANCE_MODE"))
+	handler := handler.NewAppHandler(client, repo, mongoDatabase, redisClient, config.GetBool("PERFORMANCE_MODE"))
 	os.Setenv("API_KEY", config.GetString("API_KEY"))
 	os.Setenv("ENABLE_PRIVATE_APP_DOWNLOADING", config.GetString("ENABLE_PRIVATE_APP_DOWNLOADING"))
 	// Add authentication middleware to required paths
@@ -117,7 +123,7 @@ func StartServer(config *viper.Viper, flags map[string]interface{}) {
 	router.DELETE("/token/delete", authMiddleware, utils.AdminOnlyMiddleware(mongoDatabase), handler.DeleteToken)
 
 	if config.GetBool("TUF_ENABLED") {
-		tuf.SetupRoutes(router, authMiddleware, mongoDatabase, redisClient, db)
+		tuf.SetupRoutes(router, authMiddleware, mongoDatabase, redisClient, repo)
 	}
 
 	// get the port from the configuration file
