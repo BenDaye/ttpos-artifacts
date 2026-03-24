@@ -5,6 +5,8 @@ services:
       context: ../server
       dockerfile: Dockerfile
     container_name: faynosync-api
+    volumes:
+      - ./gcs-credentials.json:/app/credentials.json:ro
     restart: unless-stopped
     ports:
       - "${API_PORT:-9000}:9000"
