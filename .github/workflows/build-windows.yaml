@@ -282,11 +282,7 @@ jobs:
           echo "MELOS_PACKAGE_NAME=$env:MELOS_PACKAGE_NAME" >> $env:GITHUB_ENV
           echo "MELOS_PACKAGE_VERSION=$env:MELOS_PACKAGE_VERSION" >> $env:GITHUB_ENV
 
-          switch ("${{ inputs.env }}") {
-            "prod" { echo "FS_VERSION=$version" >> $env:GITHUB_ENV }
-            "dev"  { echo "FS_VERSION=$version.800" >> $env:GITHUB_ENV }
-            default { echo "FS_VERSION=$version.900" >> $env:GITHUB_ENV }
-          }
+          echo "FS_VERSION=$version" >> $env:GITHUB_ENV
 
       - name: 检查 FaynoSync 版本是否已存在
         if: steps.check.outputs.should_run == 'true' && inputs.faynosync == 'on'

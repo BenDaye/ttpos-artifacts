@@ -286,11 +286,7 @@ jobs:
           echo "VERSION_APK=${{ matrix.apk_name }}-V${version}.apk" >> $GITHUB_ENV
           echo "LATEST_NAME=${{ matrix.apk_name }}-latest.apk" >> $GITHUB_ENV
 
-          case "${{ inputs.env }}" in
-            prod) echo "FS_VERSION=${version}" >> $GITHUB_ENV ;;
-            dev)  echo "FS_VERSION=${version}.800" >> $GITHUB_ENV ;;
-            *)    echo "FS_VERSION=${version}.900" >> $GITHUB_ENV ;;
-          esac
+          echo "FS_VERSION=${version}" >> $GITHUB_ENV
 
       - name: 检查 FaynoSync 版本是否已存在
         if: steps.check.outputs.should_run == 'true' && inputs.faynosync == 'on'
