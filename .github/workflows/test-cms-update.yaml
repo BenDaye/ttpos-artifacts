@@ -160,30 +160,36 @@ jobs:
           echo "download_url=${DOWNLOAD_URL}" >> $GITHUB_OUTPUT
           echo "has_url=true" >> $GITHUB_OUTPUT
 
-      - name: 从 FaynoSync 获取版本号
+      - name: 从下载链接提取版本号
         id: version
         if: steps.check.outputs.should_run == 'true' && steps.download.outputs.has_url == 'true'
+        env:
+          DOWNLOAD_URL: ${{ steps.download.outputs.download_url }}
         run: |
-          CHANNEL="${{ inputs.env }}"
+          CMS_VERSION=$(echo "$DOWNLOAD_URL" | grep -oP '\d+\.\d+\.\d+' | tail -1)
 
-          RESP=$(curl -s --max-time 10 -G "${FAYNOSYNC_URL}/checkVersion" \
-            --data-urlencode "app_name=${{ matrix.faynosync_name }}" \
-            --data-urlencode "version=0.0.0" \
-            --data-urlencode "channel=${CHANNEL}" \
-            --data-urlencode "platform=${{ matrix.cms_platform }}" \
-            --data-urlencode "arch=${{ matrix.cms_arch }}" \
-            --data-urlencode "owner=ttpos")
-
-          echo "checkVersion 响应:"
-          echo "$RESP" | jq . 2>/dev/null || echo "$RESP"
-
-          CMS_VERSION=$(echo "$RESP" | jq -r '.update_url // ""' | grep -oP '[\d]+\.[\d]+\.[\d]+' | head -1)
           if [ -z "$CMS_VERSION" ]; then
-            CMS_VERSION=$(echo "$RESP" | jq -r '.version // ""')
+            echo "::warning::无法从下载链接提取版本号: ${DOWNLOAD_URL}"
+            CHANNEL="${{ inputs.env }}"
+            RESP=$(curl -s --max-time 10 -G "${FAYNOSYNC_URL}/checkVersion" \
+              --data-urlencode "app_name=${{ matrix.faynosync_name }}" \
+              --data-urlencode "version=0.0.0" \
+              --data-urlencode "channel=${CHANNEL}" \
+              --data-urlencode "platform=${{ matrix.cms_platform }}" \
+              --data-urlencode "arch=${{ matrix.cms_arch }}" \
+              --data-urlencode "owner=ttpos")
+
+            echo "checkVersion 响应:"
+            echo "$RESP" | jq . 2>/dev/null || echo "$RESP"
+
+            CMS_VERSION=$(echo "$RESP" | jq -r '
+              [to_entries[] | select(.key | startswith("update_url")) | .value] | first // ""
+            ' | grep -oP '\d+\.\d+\.\d+' | head -1)
           fi
-          if [ -z "$CMS_VERSION" ] || [ "$CMS_VERSION" = "null" ]; then
-            echo "::warning::无法获取版本号，使用 0.0.0"
-            CMS_VERSION="0.0.0"
+
+          if [ -z "$CMS_VERSION" ]; then
+            echo "::error::无法获取版本号"
+            exit 1
           fi
 
           echo "版本: ${CMS_VERSION}"
@@ -195,32 +201,66 @@ jobs:
         run: |
           POPULATE="populate[items][populate][downloadButton]=*&populate[items][populate][downloadButtons]=*&populate[items][populate][thumbnail]=*&populate[items][populate][platforms]=*"
 
-          CMS_DATA=$(curl -s \
+          HTTP_BODY=$(mktemp)
+          HTTP_CODE=$(curl -s -o "$HTTP_BODY" -w "%{http_code}" \
             "${STRAPI_URL}/api/tt-pos-download?locale=en&${POPULATE}" \
             -H "Authorization: Bearer ${STRAPI_TOKEN}")
 
-          if ! echo "$CMS_DATA" | jq -e '.data.attributes.items' > /dev/null 2>&1; then
-            echo "::error::无法获取 CMS 数据"
-            echo "$CMS_DATA" | jq . 2>/dev/null || echo "$CMS_DATA"
+          echo "CMS API HTTP 状态: ${HTTP_CODE}"
+          BODY_SIZE=$(wc -c < "$HTTP_BODY")
+          echo "响应大小: ${BODY_SIZE} bytes"
+
+          if [ "$HTTP_CODE" -ge 400 ] || [ "$BODY_SIZE" -lt 10 ]; then
+            echo "::error::CMS API 请求失败 (HTTP ${HTTP_CODE}, ${BODY_SIZE} bytes)"
+            cat "$HTTP_BODY" | head -c 2000
+            rm -f "$HTTP_BODY"
             exit 1
           fi
 
-          echo "--- CMS 条目摘要 ---"
-          echo "$CMS_DATA" | jq -r '
-            .data.attributes.items[] |
+          CMS_DATA=$(cat "$HTTP_BODY")
+          rm -f "$HTTP_BODY"
+
+          if ! echo "$CMS_DATA" | jq -e '.' > /dev/null 2>&1; then
+            echo "::error::CMS 响应不是有效 JSON，前 500 字符:"
+            echo "$CMS_DATA" | head -c 500
+            exit 1
+          fi
+
+          echo ""
+          echo "--- CMS 响应顶层结构 ---"
+          echo "$CMS_DATA" | jq '{keys: keys, data_type: (.data | type), data_keys: (.data | if type == "object" then keys else "N/A" end)}'
+
+          if echo "$CMS_DATA" | jq -e '.data.attributes.items' > /dev/null 2>&1; then
+            echo "数据路径: .data.attributes.items (Strapi v4)"
+          elif echo "$CMS_DATA" | jq -e '.data.items' > /dev/null 2>&1; then
+            echo "数据路径: .data.items (Strapi v5)"
+            echo "::warning::检测到 Strapi v5 结构，生产 workflow 使用 v4 路径，可能需要同步更新"
+          else
+            echo "::error::无法定位 items 数组"
+            echo "--- 完整响应结构 (前 80 行) ---"
+            echo "$CMS_DATA" | jq '.' | head -80
+            exit 1
+          fi
+
+          ITEMS=$(echo "$CMS_DATA" | jq '.data.attributes.items // .data.items')
+
+          echo ""
+          echo "--- CMS 条目摘要 (共 $(echo "$ITEMS" | jq 'length') 条) ---"
+          echo "$ITEMS" | jq -r '.[] |
             "  [\(.title)] ver=\(.version // "N/A") date=\(.releasedAt // "N/A") buttons=\([.downloadButtons[]? | "\(.label):\(.href[0:50])..."] | join(" | "))"
           '
 
           echo ""
           echo "--- 目标条目: ${{ matrix.cms_title }} ---"
-          echo "$CMS_DATA" | jq --arg title "${{ matrix.cms_title }}" \
-            '.data.attributes.items[] | select(.title == $title) | {title, version, releasedAt, downloadButton: .downloadButton.href, downloadButtons: [.downloadButtons[]? | {label, href}]}'
+          echo "$ITEMS" | jq --arg title "${{ matrix.cms_title }}" '.[] | select(.title == $title) |
+            {title, version, releasedAt, downloadButton: .downloadButton.href, downloadButtons: [.downloadButtons[]? | {label, href}]}'
 
-          HAS_MATCH=$(echo "$CMS_DATA" | jq --arg title "${{ matrix.cms_title }}" \
-            '[.data.attributes.items[] | select(.title == $title)] | length')
+          HAS_MATCH=$(echo "$ITEMS" | jq --arg title "${{ matrix.cms_title }}" \
+            '[.[] | select(.title == $title)] | length')
 
           if [ "$HAS_MATCH" = "0" ]; then
             echo "::error::CMS 中未找到 [${{ matrix.cms_title }}]"
+            echo "可用标题: $(echo "$ITEMS" | jq -r '[.[].title] | join(", ")')"
             exit 1
           fi
 
@@ -237,6 +277,7 @@ jobs:
         run: |
           CMS_DATA=$(cat /tmp/cms_data.json)
 
+          # 与生产 workflow 一致的 jq 变换（Strapi v4 路径）
           UPDATED=$(echo "$CMS_DATA" | jq \
             --arg url "$DOWNLOAD_URL" \
             --arg ver "V${CMS_VERSION}" \
@@ -244,7 +285,7 @@ jobs:
             --arg label "$CMS_PLATFORM_LABEL" \
             --arg title "$CMS_TITLE" \
             '
-            .data.attributes |
+            (.data.attributes // .data) |
             del(.createdAt, .updatedAt, .publishedAt, .locale) |
             .localizations = [.localizations.data[]?.id] |
             .items |= map(
@@ -275,9 +316,10 @@ jobs:
           echo "平台:     ${CMS_PLATFORM_LABEL}"
           echo "链接:     ${DOWNLOAD_URL}"
           echo ""
+          ITEMS_BEFORE=$(cat /tmp/cms_data.json | jq '.data.attributes.items // .data.items')
           echo "--- 更新前 ---"
-          cat /tmp/cms_data.json | jq --arg title "$CMS_TITLE" \
-            '.data.attributes.items[] | select(.title == $title) | {version, releasedAt, downloadButton: .downloadButton.href, downloadButtons: [.downloadButtons[]? | "\(.label): \(.href)"]}'
+          echo "$ITEMS_BEFORE" | jq --arg title "$CMS_TITLE" \
+            '.[] | select(.title == $title) | {version, releasedAt, downloadButton: .downloadButton.href, downloadButtons: [.downloadButtons[]? | "\(.label): \(.href)"]}'
           echo "--- 更新后 ---"
           echo "$UPDATED" | jq --arg title "$CMS_TITLE" \
             '.data.items[] | select(.title == $title) | {version, releasedAt, downloadButton: .downloadButton.href, downloadButtons: [.downloadButtons[]? | "\(.label): \(.href)"]}'
@@ -327,7 +369,7 @@ jobs:
             -H "Authorization: Bearer ${STRAPI_TOKEN}")
 
           ITEM=$(echo "$VERIFY" | jq --arg title "$CMS_TITLE" \
-            '.data.attributes.items[] | select(.title == $title)')
+            '(.data.attributes.items // .data.items)[] | select(.title == $title)')
 
           ACTUAL_VER=$(echo "$ITEM" | jq -r '.version')
           EXPECTED_VER="V${CMS_VERSION}"
