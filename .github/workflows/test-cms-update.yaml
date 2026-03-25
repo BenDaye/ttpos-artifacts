@@ -1,4 +1,4 @@
-name: "Test: CMS 下载页更新"
+name: "Test: CMS Update"
 
 on:
   workflow_dispatch:
