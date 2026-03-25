@@ -202,7 +202,7 @@ jobs:
           POPULATE="populate[items][populate][downloadButton]=*&populate[items][populate][downloadButtons]=*&populate[items][populate][thumbnail]=*&populate[items][populate][platforms]=*"
 
           HTTP_BODY=$(mktemp)
-          HTTP_CODE=$(curl -s -o "$HTTP_BODY" -w "%{http_code}" \
+          HTTP_CODE=$(curl -g -s -o "$HTTP_BODY" -w "%{http_code}" \
             "${STRAPI_URL}/api/tt-pos-download?locale=en&${POPULATE}" \
             -H "Authorization: Bearer ${STRAPI_TOKEN}")
 
@@ -364,7 +364,7 @@ jobs:
 
           POPULATE="populate[items][populate][downloadButton]=*&populate[items][populate][downloadButtons]=*&populate[items][populate][thumbnail]=*&populate[items][populate][platforms]=*"
 
-          VERIFY=$(curl -s \
+          VERIFY=$(curl -g -s \
             "${STRAPI_URL}/api/tt-pos-download?locale=en&${POPULATE}" \
             -H "Authorization: Bearer ${STRAPI_TOKEN}")
 
