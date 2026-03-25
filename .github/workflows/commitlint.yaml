@@ -1,4 +1,4 @@
-name: Conventional Commits
+name: "CI: Commitlint"
 
 on:
   pull_request:

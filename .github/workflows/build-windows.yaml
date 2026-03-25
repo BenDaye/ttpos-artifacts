@@ -1,4 +1,4 @@
-name: Build Windows Inno Setup
+name: "Build: Windows"
 
 on:
   workflow_dispatch:

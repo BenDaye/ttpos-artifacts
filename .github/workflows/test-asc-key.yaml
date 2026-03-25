@@ -1,4 +1,4 @@
-name: 测试 ASC API Key
+name: "CI: Test ASC Key"
 
 on:
   workflow_dispatch:

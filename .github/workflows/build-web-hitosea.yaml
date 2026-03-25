@@ -1,4 +1,4 @@
-name: Build Web (Hitosea)
+name: "Build: Web (Hitosea)"
 
 on:
   workflow_dispatch:

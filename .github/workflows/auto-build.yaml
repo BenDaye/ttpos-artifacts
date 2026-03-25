@@ -1,4 +1,4 @@
-name: Auto Build
+name: "Dispatch: Auto Build"
 
 on:
   workflow_call:
