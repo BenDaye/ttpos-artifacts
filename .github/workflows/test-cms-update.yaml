@@ -156,7 +156,13 @@ jobs:
             exit 0
           fi
 
-          echo "下载链接: ${DOWNLOAD_URL}"
+          echo "FaynoSync 原始链接: ${DOWNLOAD_URL}"
+
+          DOWNLOAD_URL=$(echo "$DOWNLOAD_URL" | \
+            sed 's|https://storage.googleapis.com/|https://ttpos.com/storage_googleapis/|' | \
+            sed 's| |%20|g')
+
+          echo "CMS 下载链接:      ${DOWNLOAD_URL}"
           echo "download_url=${DOWNLOAD_URL}" >> $GITHUB_OUTPUT
           echo "has_url=true" >> $GITHUB_OUTPUT
 
