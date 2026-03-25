@@ -1,0 +1,357 @@
+name: "Test: CMS 下载页更新"
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: "选择应用端 (仅含 CMS 配置的应用)"
+        required: true
+        type: choice
+        options:
+          - all
+          - pos
+          - kds
+          - shop
+          - assistant
+          - tablet
+        default: "all"
+      platform:
+        description: "选择平台"
+        required: true
+        type: choice
+        options:
+          - all
+          - android
+          - windows
+          - macos
+        default: "all"
+      env:
+        description: "选择频道/环境"
+        required: true
+        type: choice
+        options:
+          - "prod"
+          - "test"
+          - "dev"
+        default: "test"
+      dry_run:
+        description: "Dry-run 模式：仅预览变更，不实际写入 CMS"
+        required: true
+        type: boolean
+        default: true
+
+jobs:
+  update-cms:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [pos, kds, shop, assistant, tablet]
+        platform: [android, windows, macos]
+        include:
+          # --- App 映射 ---
+          - app: pos
+            faynosync_name: "TTPOS"
+            cms_title: "Cashier"
+          - app: assistant
+            faynosync_name: "TTPOS Go"
+            cms_title: "Assistant"
+          - app: kds
+            faynosync_name: "TTPOS Kitchen"
+            cms_title: "KDS Kitchen"
+          - app: tablet
+            faynosync_name: "TTPOS Menu"
+            cms_title: "Tablet Menu"
+          - app: shop
+            faynosync_name: "TTPOS Shop"
+            cms_title: "Shop"
+          # --- Platform 映射 ---
+          - platform: android
+            cms_platform: android
+            cms_arch: arm64
+            cms_pkg_fmt: apk
+            cms_platform_label: Android
+          - platform: windows
+            cms_platform: windows
+            cms_arch: amd64
+            cms_pkg_fmt: exe
+            cms_platform_label: Windows
+          - platform: macos
+            cms_platform: macos
+            cms_arch: arm64
+            cms_pkg_fmt: dmg
+            cms_platform_label: MacOS
+    env:
+      STRAPI_URL: https://cms.hitosea.com
+      STRAPI_TOKEN: ${{ secrets.STRAPI_TOKEN }}
+      FAYNOSYNC_URL: ${{ secrets.FAYNOSYNC_URL }}
+    steps:
+      - name: 检查是否需要运行
+        id: check
+        run: |
+          SHOULD_RUN=true
+          if [ "${{ inputs.app }}" != "all" ] && [ "${{ inputs.app }}" != "${{ matrix.app }}" ]; then
+            SHOULD_RUN=false
+          fi
+          if [ "${{ inputs.platform }}" != "all" ] && [ "${{ inputs.platform }}" != "${{ matrix.platform }}" ]; then
+            SHOULD_RUN=false
+          fi
+          echo "should_run=${SHOULD_RUN}" >> $GITHUB_OUTPUT
+          if [ "$SHOULD_RUN" = "false" ]; then
+            echo "跳过 ${{ matrix.app }}/${{ matrix.platform }} (选择: ${{ inputs.app }}/${{ inputs.platform }})"
+          fi
+
+      - name: 显示测试参数
+        if: steps.check.outputs.should_run == 'true'
+        run: |
+          echo "========================================="
+          echo "CMS 下载页更新测试"
+          echo "========================================="
+          echo "应用:      ${{ matrix.app }} (${{ matrix.faynosync_name }})"
+          echo "CMS 标题:  ${{ matrix.cms_title }}"
+          echo "平台:      ${{ matrix.cms_platform }} / ${{ matrix.cms_arch }} / ${{ matrix.cms_pkg_fmt }}"
+          echo "平台标签:  ${{ matrix.cms_platform_label }}"
+          echo "频道:      ${{ inputs.env }}"
+          echo "Dry-run:   ${{ inputs.dry_run }}"
+          echo "========================================="
+
+      - name: 检查 Secrets 配置
+        if: steps.check.outputs.should_run == 'true'
+        run: |
+          MISSING=""
+          if [ -z "$STRAPI_TOKEN" ]; then MISSING="${MISSING} STRAPI_TOKEN"; fi
+          if [ -z "$FAYNOSYNC_URL" ]; then MISSING="${MISSING} FAYNOSYNC_URL"; fi
+          if [ -n "$MISSING" ]; then
+            echo "::error::缺少必要 Secrets:${MISSING}"
+            exit 1
+          fi
+          echo "Secrets 检查通过"
+
+      - name: 从 FaynoSync 获取下载链接
+        id: download
+        if: steps.check.outputs.should_run == 'true'
+        run: |
+          CHANNEL="${{ inputs.env }}"
+
+          echo "请求: ${FAYNOSYNC_URL}/apps/latest"
+          echo "  app_name=${{ matrix.faynosync_name }} channel=${CHANNEL} platform=${{ matrix.cms_platform }} arch=${{ matrix.cms_arch }} package=${{ matrix.cms_pkg_fmt }}"
+
+          HEADERS=$(mktemp)
+          DOWNLOAD_URL=$(curl -s -D "$HEADERS" -o /dev/null -w "%{redirect_url}" -G \
+            "${FAYNOSYNC_URL}/apps/latest" \
+            --data-urlencode "app_name=${{ matrix.faynosync_name }}" \
+            --data-urlencode "channel=${CHANNEL}" \
+            --data-urlencode "platform=${{ matrix.cms_platform }}" \
+            --data-urlencode "arch=${{ matrix.cms_arch }}" \
+            --data-urlencode "package=${{ matrix.cms_pkg_fmt }}" \
+            --data-urlencode "owner=ttpos")
+
+          HTTP_CODE=$(head -1 "$HEADERS" | grep -oP '\d{3}')
+          echo "HTTP 状态: ${HTTP_CODE}"
+          rm -f "$HEADERS"
+
+          if [ -z "$DOWNLOAD_URL" ]; then
+            echo "::warning::FaynoSync 中不存在 ${{ matrix.faynosync_name }} 的 ${CHANNEL}/${{ matrix.cms_platform }}/${{ matrix.cms_arch }} 版本，跳过"
+            echo "has_url=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "下载链接: ${DOWNLOAD_URL}"
+          echo "download_url=${DOWNLOAD_URL}" >> $GITHUB_OUTPUT
+          echo "has_url=true" >> $GITHUB_OUTPUT
+
+      - name: 从 FaynoSync 获取版本号
+        id: version
+        if: steps.check.outputs.should_run == 'true' && steps.download.outputs.has_url == 'true'
+        run: |
+          CHANNEL="${{ inputs.env }}"
+
+          RESP=$(curl -s --max-time 10 -G "${FAYNOSYNC_URL}/checkVersion" \
+            --data-urlencode "app_name=${{ matrix.faynosync_name }}" \
+            --data-urlencode "version=0.0.0" \
+            --data-urlencode "channel=${CHANNEL}" \
+            --data-urlencode "platform=${{ matrix.cms_platform }}" \
+            --data-urlencode "arch=${{ matrix.cms_arch }}" \
+            --data-urlencode "owner=ttpos")
+
+          echo "checkVersion 响应:"
+          echo "$RESP" | jq . 2>/dev/null || echo "$RESP"
+
+          CMS_VERSION=$(echo "$RESP" | jq -r '.update_url // ""' | grep -oP '[\d]+\.[\d]+\.[\d]+' | head -1)
+          if [ -z "$CMS_VERSION" ]; then
+            CMS_VERSION=$(echo "$RESP" | jq -r '.version // ""')
+          fi
+          if [ -z "$CMS_VERSION" ] || [ "$CMS_VERSION" = "null" ]; then
+            echo "::warning::无法获取版本号，使用 0.0.0"
+            CMS_VERSION="0.0.0"
+          fi
+
+          echo "版本: ${CMS_VERSION}"
+          echo "cms_version=${CMS_VERSION}" >> $GITHUB_OUTPUT
+
+      - name: 获取 CMS 当前数据
+        id: cms_read
+        if: steps.check.outputs.should_run == 'true' && steps.download.outputs.has_url == 'true'
+        run: |
+          POPULATE="populate[items][populate][downloadButton]=*&populate[items][populate][downloadButtons]=*&populate[items][populate][thumbnail]=*&populate[items][populate][platforms]=*"
+
+          CMS_DATA=$(curl -s \
+            "${STRAPI_URL}/api/tt-pos-download?locale=en&${POPULATE}" \
+            -H "Authorization: Bearer ${STRAPI_TOKEN}")
+
+          if ! echo "$CMS_DATA" | jq -e '.data.attributes.items' > /dev/null 2>&1; then
+            echo "::error::无法获取 CMS 数据"
+            echo "$CMS_DATA" | jq . 2>/dev/null || echo "$CMS_DATA"
+            exit 1
+          fi
+
+          echo "--- CMS 条目摘要 ---"
+          echo "$CMS_DATA" | jq -r '
+            .data.attributes.items[] |
+            "  [\(.title)] ver=\(.version // "N/A") date=\(.releasedAt // "N/A") buttons=\([.downloadButtons[]? | "\(.label):\(.href[0:50])..."] | join(" | "))"
+          '
+
+          echo ""
+          echo "--- 目标条目: ${{ matrix.cms_title }} ---"
+          echo "$CMS_DATA" | jq --arg title "${{ matrix.cms_title }}" \
+            '.data.attributes.items[] | select(.title == $title) | {title, version, releasedAt, downloadButton: .downloadButton.href, downloadButtons: [.downloadButtons[]? | {label, href}]}'
+
+          HAS_MATCH=$(echo "$CMS_DATA" | jq --arg title "${{ matrix.cms_title }}" \
+            '[.data.attributes.items[] | select(.title == $title)] | length')
+
+          if [ "$HAS_MATCH" = "0" ]; then
+            echo "::error::CMS 中未找到 [${{ matrix.cms_title }}]"
+            exit 1
+          fi
+
+          echo "$CMS_DATA" > /tmp/cms_data.json
+
+      - name: 生成更新 Payload 并对比
+        id: payload
+        if: steps.check.outputs.should_run == 'true' && steps.download.outputs.has_url == 'true'
+        env:
+          DOWNLOAD_URL: ${{ steps.download.outputs.download_url }}
+          CMS_VERSION: ${{ steps.version.outputs.cms_version }}
+          CMS_TITLE: ${{ matrix.cms_title }}
+          CMS_PLATFORM_LABEL: ${{ matrix.cms_platform_label }}
+        run: |
+          CMS_DATA=$(cat /tmp/cms_data.json)
+
+          UPDATED=$(echo "$CMS_DATA" | jq \
+            --arg url "$DOWNLOAD_URL" \
+            --arg ver "V${CMS_VERSION}" \
+            --arg date "$(date +%Y-%m-%d)" \
+            --arg label "$CMS_PLATFORM_LABEL" \
+            --arg title "$CMS_TITLE" \
+            '
+            .data.attributes |
+            del(.createdAt, .updatedAt, .publishedAt, .locale) |
+            .localizations = [.localizations.data[]?.id] |
+            .items |= map(
+              .thumbnail = (if .thumbnail and .thumbnail.data then .thumbnail.data.id else null end) |
+              .platforms = [.platforms[]? | {label}] |
+              .downloadButton = (if .downloadButton then {label: .downloadButton.label, href: .downloadButton.href, target: .downloadButton.target} else null end) |
+              .downloadButtons = [.downloadButtons[]? | {label, href, target}] |
+              if .title == $title then
+                .version = $ver |
+                .releasedAt = $date |
+                (.downloadButtons |= map(
+                  if .label == $label then .href = $url else . end
+                )) |
+                if $label == "Android" then .downloadButton.href = $url else . end
+              else . end
+            ) |
+            { data: . }
+            ')
+
+          echo "$UPDATED" > /tmp/cms_payload.json
+
+          echo "========================================="
+          echo "变更摘要: ${{ matrix.app }} / ${{ matrix.platform }}"
+          echo "========================================="
+          echo "目标:     ${CMS_TITLE}"
+          echo "版本:     V${CMS_VERSION}"
+          echo "日期:     $(date +%Y-%m-%d)"
+          echo "平台:     ${CMS_PLATFORM_LABEL}"
+          echo "链接:     ${DOWNLOAD_URL}"
+          echo ""
+          echo "--- 更新前 ---"
+          cat /tmp/cms_data.json | jq --arg title "$CMS_TITLE" \
+            '.data.attributes.items[] | select(.title == $title) | {version, releasedAt, downloadButton: .downloadButton.href, downloadButtons: [.downloadButtons[]? | "\(.label): \(.href)"]}'
+          echo "--- 更新后 ---"
+          echo "$UPDATED" | jq --arg title "$CMS_TITLE" \
+            '.data.items[] | select(.title == $title) | {version, releasedAt, downloadButton: .downloadButton.href, downloadButtons: [.downloadButtons[]? | "\(.label): \(.href)"]}'
+
+      - name: 写入 CMS
+        if: >-
+          steps.check.outputs.should_run == 'true'
+          && steps.download.outputs.has_url == 'true'
+          && inputs.dry_run == false
+        run: |
+          PAYLOAD=$(cat /tmp/cms_payload.json)
+
+          HTTP_BODY=$(mktemp)
+          HTTP_STATUS=$(curl -s -o "$HTTP_BODY" -w "%{http_code}" \
+            -X PUT "${STRAPI_URL}/api/tt-pos-download?locale=en" \
+            -H "Authorization: Bearer ${STRAPI_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD")
+
+          echo "HTTP 状态码: ${HTTP_STATUS}"
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+            echo "CMS 更新成功 (${{ matrix.app }}/${{ matrix.platform }})"
+          else
+            echo "::error::CMS 更新失败 (HTTP ${HTTP_STATUS})"
+            cat "$HTTP_BODY" | jq . 2>/dev/null || cat "$HTTP_BODY"
+            exit 1
+          fi
+          rm -f "$HTTP_BODY"
+
+      - name: 验证 CMS 更新结果
+        if: >-
+          steps.check.outputs.should_run == 'true'
+          && steps.download.outputs.has_url == 'true'
+          && inputs.dry_run == false
+        env:
+          CMS_VERSION: ${{ steps.version.outputs.cms_version }}
+          DOWNLOAD_URL: ${{ steps.download.outputs.download_url }}
+          CMS_PLATFORM_LABEL: ${{ matrix.cms_platform_label }}
+          CMS_TITLE: ${{ matrix.cms_title }}
+        run: |
+          sleep 3
+
+          POPULATE="populate[items][populate][downloadButton]=*&populate[items][populate][downloadButtons]=*&populate[items][populate][thumbnail]=*&populate[items][populate][platforms]=*"
+
+          VERIFY=$(curl -s \
+            "${STRAPI_URL}/api/tt-pos-download?locale=en&${POPULATE}" \
+            -H "Authorization: Bearer ${STRAPI_TOKEN}")
+
+          ITEM=$(echo "$VERIFY" | jq --arg title "$CMS_TITLE" \
+            '.data.attributes.items[] | select(.title == $title)')
+
+          ACTUAL_VER=$(echo "$ITEM" | jq -r '.version')
+          EXPECTED_VER="V${CMS_VERSION}"
+          if [ "$ACTUAL_VER" = "$EXPECTED_VER" ]; then
+            echo "版本号验证通过: ${ACTUAL_VER}"
+          else
+            echo "::warning::版本号不匹配 — 期望: ${EXPECTED_VER}, 实际: ${ACTUAL_VER}"
+          fi
+
+          ACTUAL_BTN=$(echo "$ITEM" | jq -r --arg label "$CMS_PLATFORM_LABEL" \
+            '.downloadButtons[]? | select(.label == $label) | .href')
+          if [ "$ACTUAL_BTN" = "$DOWNLOAD_URL" ]; then
+            echo "${CMS_PLATFORM_LABEL} 下载链接验证通过"
+          else
+            echo "::warning::下载链接不匹配 — 期望: ${DOWNLOAD_URL}, 实际: ${ACTUAL_BTN}"
+          fi
+
+      - name: 结果总结
+        if: always() && steps.check.outputs.should_run == 'true'
+        run: |
+          if [ "${{ steps.download.outputs.has_url }}" != "true" ]; then
+            echo "${{ matrix.app }}/${{ matrix.platform }}: 跳过 (FaynoSync 无此版本)"
+          elif [ "${{ inputs.dry_run }}" = "true" ]; then
+            echo "${{ matrix.app }}/${{ matrix.platform }}: Dry-run 完成，未写入 CMS"
+          else
+            echo "${{ matrix.app }}/${{ matrix.platform }}: CMS 更新完成"
+          fi
