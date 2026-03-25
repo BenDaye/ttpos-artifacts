@@ -943,7 +943,6 @@ jobs:
 
           CHANNEL="${{ inputs.env }}"
 
-          # 使用与 FaynoSync 上传相同的架构检测
           ARCH=$(uname -m)
           if [ "$ARCH" = "x86_64" ]; then
             CMS_ARCH="amd64"
@@ -951,8 +950,11 @@ jobs:
             CMS_ARCH="arm64"
           fi
 
-          # 从 FaynoSync 获取下载链接（使用 --data-urlencode 处理含空格的 app_name）
-          DOWNLOAD_URL=$(curl -s -o /dev/null -w "%{redirect_url}" -G \
+          echo "请求: ${FAYNOSYNC_URL}/apps/latest"
+          echo "  app_name=${{ matrix.faynosync_name }} channel=${CHANNEL} platform=macos arch=${CMS_ARCH} package=${CMS_PKG_FMT}"
+
+          HEADERS=$(mktemp)
+          DOWNLOAD_URL=$(curl -s -D "$HEADERS" -o /dev/null -w "%{redirect_url}" -G \
             "${FAYNOSYNC_URL}/apps/latest" \
             --data-urlencode "app_name=${{ matrix.faynosync_name }}" \
             --data-urlencode "channel=${CHANNEL}" \
@@ -961,8 +963,12 @@ jobs:
             --data-urlencode "package=${CMS_PKG_FMT}" \
             --data-urlencode "owner=ttpos")
 
+          FS_HTTP=$(head -1 "$HEADERS" | grep -oP '\d{3}' || echo "000")
+          echo "FaynoSync HTTP 状态: ${FS_HTTP}"
+          rm -f "$HEADERS"
+
           if [ -z "$DOWNLOAD_URL" ]; then
-            echo "::warning::无法从 FaynoSync 获取下载链接，跳过 CMS 更新"
+            echo "::warning::无法从 FaynoSync 获取下载链接 (HTTP ${FS_HTTP})，跳过 CMS 更新"
             exit 0
           fi
 
@@ -974,17 +980,35 @@ jobs:
 
           POPULATE="populate[items][populate][downloadButton]=*&populate[items][populate][downloadButtons]=*&populate[items][populate][thumbnail]=*&populate[items][populate][platforms]=*"
 
-          CMS_DATA=$(curl -g -s \
+          CMS_HTTP_BODY=$(mktemp)
+          CMS_HTTP_CODE=$(curl -g -s -o "$CMS_HTTP_BODY" -w "%{http_code}" \
             "${STRAPI_URL}/api/tt-pos-download?locale=en&${POPULATE}" \
             -H "Authorization: Bearer ${STRAPI_TOKEN}")
 
-          if ! echo "$CMS_DATA" | jq -e '.data.attributes.items' > /dev/null 2>&1; then
+          echo "CMS API HTTP 状态: ${CMS_HTTP_CODE}"
+
+          if [ "$CMS_HTTP_CODE" -ge 400 ]; then
+            echo "::warning::CMS API 请求失败 (HTTP ${CMS_HTTP_CODE})，跳过"
+            rm -f "$CMS_HTTP_BODY"
+            exit 0
+          fi
+
+          CMS_DATA=$(cat "$CMS_HTTP_BODY")
+          rm -f "$CMS_HTTP_BODY"
+
+          if ! echo "$CMS_DATA" | jq -e '.' > /dev/null 2>&1; then
+            echo "::warning::CMS 响应不是有效 JSON，跳过"
+            exit 0
+          fi
+
+          ITEMS=$(echo "$CMS_DATA" | jq '.data.attributes.items // .data.items // empty')
+          if [ -z "$ITEMS" ] || [ "$ITEMS" = "null" ]; then
             echo "::warning::无法获取 CMS 数据，跳过"
             exit 0
           fi
 
-          HAS_MATCH=$(echo "$CMS_DATA" | jq --arg title "$CMS_TITLE" \
-            '[.data.attributes.items[] | select(.title == $title)] | length')
+          HAS_MATCH=$(echo "$ITEMS" | jq --arg title "$CMS_TITLE" \
+            '[.[] | select(.title == $title)] | length')
 
           if [ "$HAS_MATCH" = "0" ]; then
             echo "::warning::CMS 中未找到 ${CMS_TITLE}，跳过"
@@ -998,7 +1022,7 @@ jobs:
             --arg label "$CMS_PLATFORM_LABEL" \
             --arg title "$CMS_TITLE" \
             '
-            .data.attributes |
+            (.data.attributes // .data) |
             del(.createdAt, .updatedAt, .publishedAt, .locale) |
             .localizations = [.localizations.data[]?.id] |
             .items |= map(
