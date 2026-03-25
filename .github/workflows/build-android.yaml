@@ -487,11 +487,15 @@ jobs:
             exit 0
           fi
 
-          echo "获取到下载链接: ${DOWNLOAD_URL}"
+          echo "FaynoSync 原始链接: ${DOWNLOAD_URL}"
+          DOWNLOAD_URL=$(echo "$DOWNLOAD_URL" | \
+            sed 's|https://storage.googleapis.com/|https://ttpos.com/storage_googleapis/|' | \
+            sed 's| |%20|g')
+          echo "CMS 下载链接: ${DOWNLOAD_URL}"
 
           POPULATE="populate[items][populate][downloadButton]=*&populate[items][populate][downloadButtons]=*&populate[items][populate][thumbnail]=*&populate[items][populate][platforms]=*"
 
-          CMS_DATA=$(curl -s \
+          CMS_DATA=$(curl -g -s \
             "${STRAPI_URL}/api/tt-pos-download?locale=en&${POPULATE}" \
             -H "Authorization: Bearer ${STRAPI_TOKEN}")
 
