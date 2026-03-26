@@ -106,7 +106,7 @@ jobs:
 
           RESULTS='[]'
 
-          for app_row in $(echo "$APPS" | jq -c '.[]'); do
+          while IFS= read -r app_row; do
             APP_ID=$(echo "$app_row" | jq -r '.app')
             APP_NAME=$(echo "$app_row" | jq -r '.faynosync_name')
             CMS_TITLE=$(echo "$app_row" | jq -r '.cms_title')
@@ -116,7 +116,7 @@ jobs:
             echo "查询: ${APP_ID} (${APP_NAME} → ${CMS_TITLE})"
             echo "========================================="
 
-            for plat_row in $(echo "$PLATFORMS" | jq -c '.[]'); do
+            while IFS= read -r plat_row; do
               PLAT=$(echo "$plat_row" | jq -r '.platform')
               ARCH=$(echo "$plat_row" | jq -r '.arch')
               PKG=$(echo "$plat_row" | jq -r '.pkg_fmt')
@@ -178,8 +178,8 @@ jobs:
               RESULTS=$(echo "$RESULTS" | jq -c \
                 --arg title "$CMS_TITLE" --arg label "$LABEL" --arg url "$DOWNLOAD_URL" --arg ver "$VER" \
                 '. + [{"cms_title": $title, "label": $label, "url": $url, "version": $ver}]')
-            done
-          done
+            done < <(echo "$PLATFORMS" | jq -c '.[]')
+          done < <(echo "$APPS" | jq -c '.[]')
 
           COUNT=$(echo "$RESULTS" | jq 'length')
           echo ""
@@ -309,7 +309,7 @@ jobs:
           echo "更新明细:"
           echo "$PLATFORM_RESULTS" | jq -r '.[] | "  [\(.cms_title)] \(.label): V\(.version) → \(.url[0:80])..."'
 
-          for title in $(echo "$PLATFORM_RESULTS" | jq -r '[.[].cms_title] | unique | .[]'); do
+          while IFS= read -r title; do
             echo ""
             echo "--- [${title}] 更新前 ---"
             cat /tmp/cms_data.json | jq --arg title "$title" \
@@ -317,7 +317,7 @@ jobs:
             echo "--- [${title}] 更新后 ---"
             echo "$UPDATED" | jq --arg title "$title" \
               '.data.items[] | select(.title == $title)'
-          done
+          done < <(echo "$PLATFORM_RESULTS" | jq -r '[.[].cms_title] | unique | .[]')
 
           echo ""
           echo "--- 完整 Payload ---"
@@ -360,7 +360,7 @@ jobs:
 
           ALL_PASS=true
 
-          for title in $(echo "$PLATFORM_RESULTS" | jq -r '[.[].cms_title] | unique | .[]'); do
+          while IFS= read -r title; do
             echo ""
             echo "--- 验证: ${title} ---"
             ITEM=$(echo "$VERIFY" | jq --arg title "$title" \
@@ -377,7 +377,7 @@ jobs:
               ALL_PASS=false
             fi
 
-            for row in $(echo "$PLATFORM_RESULTS" | jq -c --arg title "$title" '.[] | select(.cms_title == $title)'); do
+            while IFS= read -r row; do
               LABEL=$(echo "$row" | jq -r '.label')
               EXPECTED_URL=$(echo "$row" | jq -r '.url')
 
@@ -389,8 +389,8 @@ jobs:
                 echo "::warning::${LABEL} 下载链接不匹配 — 期望: ${EXPECTED_URL}, 实际: ${ACTUAL_BTN}"
                 ALL_PASS=false
               fi
-            done
-          done
+            done < <(echo "$PLATFORM_RESULTS" | jq -c --arg title "$title" '.[] | select(.cms_title == $title)')
+          done < <(echo "$PLATFORM_RESULTS" | jq -r '[.[].cms_title] | unique | .[]')
 
           if [ "$ALL_PASS" = "true" ]; then
             echo ""
