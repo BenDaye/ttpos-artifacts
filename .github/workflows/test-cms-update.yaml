@@ -16,7 +16,7 @@ on:
           - tablet
         default: "all"
       platform:
-        description: "选择平台"
+        description: "选择平台 (在单个 job 内过滤，不再按平台拆分 job)"
         required: true
         type: choice
         options:
@@ -47,9 +47,7 @@ jobs:
       fail-fast: false
       matrix:
         app: [pos, kds, shop, assistant, tablet]
-        platform: [android, windows, macos]
         include:
-          # --- App 映射 ---
           - app: pos
             faynosync_name: "TTPOS"
             cms_title: "Cashier"
@@ -65,22 +63,6 @@ jobs:
           - app: shop
             faynosync_name: "TTPOS Shop"
             cms_title: "Shop"
-          # --- Platform 映射 ---
-          - platform: android
-            cms_platform: android
-            cms_arch: arm64
-            cms_pkg_fmt: apk
-            cms_platform_label: Android
-          - platform: windows
-            cms_platform: windows
-            cms_arch: amd64
-            cms_pkg_fmt: exe
-            cms_platform_label: Windows
-          - platform: macos
-            cms_platform: macos
-            cms_arch: arm64
-            cms_pkg_fmt: dmg
-            cms_platform_label: MacOS
     env:
       STRAPI_URL: https://cms.hitosea.com
       STRAPI_TOKEN: ${{ secrets.STRAPI_TOKEN }}
@@ -93,12 +75,9 @@ jobs:
           if [ "${{ inputs.app }}" != "all" ] && [ "${{ inputs.app }}" != "${{ matrix.app }}" ]; then
             SHOULD_RUN=false
           fi
-          if [ "${{ inputs.platform }}" != "all" ] && [ "${{ inputs.platform }}" != "${{ matrix.platform }}" ]; then
-            SHOULD_RUN=false
-          fi
           echo "should_run=${SHOULD_RUN}" >> $GITHUB_OUTPUT
           if [ "$SHOULD_RUN" = "false" ]; then
-            echo "跳过 ${{ matrix.app }}/${{ matrix.platform }} (选择: ${{ inputs.app }}/${{ inputs.platform }})"
+            echo "跳过 ${{ matrix.app }} (选择: ${{ inputs.app }})"
           fi
 
       - name: 显示测试参数
@@ -109,8 +88,7 @@ jobs:
           echo "========================================="
           echo "应用:      ${{ matrix.app }} (${{ matrix.faynosync_name }})"
           echo "CMS 标题:  ${{ matrix.cms_title }}"
-          echo "平台:      ${{ matrix.cms_platform }} / ${{ matrix.cms_arch }} / ${{ matrix.cms_pkg_fmt }}"
-          echo "平台标签:  ${{ matrix.cms_platform_label }}"
+          echo "平台筛选:  ${{ inputs.platform }}"
           echo "频道:      ${{ inputs.env }}"
           echo "Dry-run:   ${{ inputs.dry_run }}"
           echo "========================================="
@@ -127,83 +105,125 @@ jobs:
           fi
           echo "Secrets 检查通过"
 
-      - name: 从 FaynoSync 获取下载链接
-        id: download
+      - name: 从 FaynoSync 查询各平台下载信息
+        id: query
         if: steps.check.outputs.should_run == 'true'
         run: |
           CHANNEL="${{ inputs.env }}"
+          APP_NAME="${{ matrix.faynosync_name }}"
 
-          echo "请求: ${FAYNOSYNC_URL}/apps/latest"
-          echo "  app_name=${{ matrix.faynosync_name }} channel=${CHANNEL} platform=${{ matrix.cms_platform }} arch=${{ matrix.cms_arch }} package=${{ matrix.cms_pkg_fmt }}"
+          ALL_PLATFORMS='[
+            {"platform":"android","arch":"arm64","pkg_fmt":"apk","label":"Android"},
+            {"platform":"windows","arch":"amd64","pkg_fmt":"exe","label":"Windows"},
+            {"platform":"macos","arch":"arm64","pkg_fmt":"dmg","label":"MacOS"}
+          ]'
 
-          HEADERS=$(mktemp)
-          DOWNLOAD_URL=$(curl -s -D "$HEADERS" -o /dev/null -w "%{redirect_url}" -G \
-            "${FAYNOSYNC_URL}/apps/latest" \
-            --data-urlencode "app_name=${{ matrix.faynosync_name }}" \
-            --data-urlencode "channel=${CHANNEL}" \
-            --data-urlencode "platform=${{ matrix.cms_platform }}" \
-            --data-urlencode "arch=${{ matrix.cms_arch }}" \
-            --data-urlencode "package=${{ matrix.cms_pkg_fmt }}" \
-            --data-urlencode "owner=ttpos")
+          if [ "${{ inputs.platform }}" != "all" ]; then
+            PLATFORMS=$(echo "$ALL_PLATFORMS" | jq -c --arg p "${{ inputs.platform }}" '[.[] | select(.platform == $p)]')
+          else
+            PLATFORMS="$ALL_PLATFORMS"
+          fi
 
-          HTTP_CODE=$(head -1 "$HEADERS" | grep -oP '\d{3}')
-          echo "HTTP 状态: ${HTTP_CODE}"
-          rm -f "$HEADERS"
+          echo "待查询平台: $(echo "$PLATFORMS" | jq -r '[.[].label] | join(", ")')"
 
-          if [ -z "$DOWNLOAD_URL" ]; then
-            echo "::warning::FaynoSync 中不存在 ${{ matrix.faynosync_name }} 的 ${CHANNEL}/${{ matrix.cms_platform }}/${{ matrix.cms_arch }} 版本，跳过"
-            echo "has_url=false" >> $GITHUB_OUTPUT
+          RESULTS='[]'
+
+          for row in $(echo "$PLATFORMS" | jq -c '.[]'); do
+            PLAT=$(echo "$row" | jq -r '.platform')
+            ARCH=$(echo "$row" | jq -r '.arch')
+            PKG=$(echo "$row" | jq -r '.pkg_fmt')
+            LABEL=$(echo "$row" | jq -r '.label')
+
+            echo ""
+            echo "--- 查询 ${LABEL} (${PLAT}/${ARCH}/${PKG}) ---"
+
+            HEADERS=$(mktemp)
+            DOWNLOAD_URL=$(curl -s -D "$HEADERS" -o /dev/null -w "%{redirect_url}" -G \
+              "${FAYNOSYNC_URL}/apps/latest" \
+              --data-urlencode "app_name=${APP_NAME}" \
+              --data-urlencode "channel=${CHANNEL}" \
+              --data-urlencode "platform=${PLAT}" \
+              --data-urlencode "arch=${ARCH}" \
+              --data-urlencode "package=${PKG}" \
+              --data-urlencode "owner=ttpos")
+
+            HTTP_CODE=$(head -1 "$HEADERS" | grep -oP '\d{3}')
+            echo "HTTP 状态: ${HTTP_CODE}"
+            rm -f "$HEADERS"
+
+            if [ -z "$DOWNLOAD_URL" ]; then
+              echo "::warning::FaynoSync 中不存在 ${APP_NAME} 的 ${CHANNEL}/${PLAT}/${ARCH} 版本，跳过"
+              continue
+            fi
+
+            echo "原始链接: ${DOWNLOAD_URL}"
+            DOWNLOAD_URL=$(echo "$DOWNLOAD_URL" | \
+              sed 's|https://storage.googleapis.com/|https://ttpos.com/storage_googleapis/|' | \
+              sed 's| |%20|g')
+            echo "CMS 链接: ${DOWNLOAD_URL}"
+
+            VER=$(echo "$DOWNLOAD_URL" | grep -oP '\d+\.\d+\.\d+' | tail -1)
+
+            if [ -z "$VER" ]; then
+              echo "::warning::无法从下载链接提取版本号，尝试 checkVersion API"
+              RESP=$(curl -s --max-time 10 -G "${FAYNOSYNC_URL}/checkVersion" \
+                --data-urlencode "app_name=${APP_NAME}" \
+                --data-urlencode "version=0.0.0" \
+                --data-urlencode "channel=${CHANNEL}" \
+                --data-urlencode "platform=${PLAT}" \
+                --data-urlencode "arch=${ARCH}" \
+                --data-urlencode "owner=ttpos")
+
+              echo "checkVersion 响应:"
+              echo "$RESP" | jq . 2>/dev/null || echo "$RESP"
+
+              VER=$(echo "$RESP" | jq -r '
+                [to_entries[] | select(.key | startswith("update_url")) | .value] | first // ""
+              ' | grep -oP '\d+\.\d+\.\d+' | head -1)
+            fi
+
+            if [ -z "$VER" ]; then
+              echo "::warning::无法获取 ${LABEL} 版本号，跳过此平台"
+              continue
+            fi
+
+            echo "版本: ${VER}"
+
+            RESULTS=$(echo "$RESULTS" | jq -c \
+              --arg label "$LABEL" --arg url "$DOWNLOAD_URL" --arg ver "$VER" \
+              '. + [{"label": $label, "url": $url, "version": $ver}]')
+          done
+
+          COUNT=$(echo "$RESULTS" | jq 'length')
+          echo ""
+          echo "========================================="
+          echo "查询结果: ${COUNT} 个平台有可用版本"
+          echo "$RESULTS" | jq -r '.[] | "  \(.label): V\(.version) → \(.url[0:80])..."'
+
+          if [ "$COUNT" -eq 0 ]; then
+            echo "::warning::所有平台均无可用版本"
+            echo "has_updates=false" >> $GITHUB_OUTPUT
+            echo "results=[]" >> $GITHUB_OUTPUT
+            echo "latest_version=" >> $GITHUB_OUTPUT
             exit 0
           fi
 
-          echo "FaynoSync 原始链接: ${DOWNLOAD_URL}"
-
-          DOWNLOAD_URL=$(echo "$DOWNLOAD_URL" | \
-            sed 's|https://storage.googleapis.com/|https://ttpos.com/storage_googleapis/|' | \
-            sed 's| |%20|g')
-
-          echo "CMS 下载链接:      ${DOWNLOAD_URL}"
-          echo "download_url=${DOWNLOAD_URL}" >> $GITHUB_OUTPUT
-          echo "has_url=true" >> $GITHUB_OUTPUT
-
-      - name: 从下载链接提取版本号
-        id: version
-        if: steps.check.outputs.should_run == 'true' && steps.download.outputs.has_url == 'true'
-        env:
-          DOWNLOAD_URL: ${{ steps.download.outputs.download_url }}
-        run: |
-          CMS_VERSION=$(echo "$DOWNLOAD_URL" | grep -oP '\d+\.\d+\.\d+' | tail -1)
-
-          if [ -z "$CMS_VERSION" ]; then
-            echo "::warning::无法从下载链接提取版本号: ${DOWNLOAD_URL}"
-            CHANNEL="${{ inputs.env }}"
-            RESP=$(curl -s --max-time 10 -G "${FAYNOSYNC_URL}/checkVersion" \
-              --data-urlencode "app_name=${{ matrix.faynosync_name }}" \
-              --data-urlencode "version=0.0.0" \
-              --data-urlencode "channel=${CHANNEL}" \
-              --data-urlencode "platform=${{ matrix.cms_platform }}" \
-              --data-urlencode "arch=${{ matrix.cms_arch }}" \
-              --data-urlencode "owner=ttpos")
-
-            echo "checkVersion 响应:"
-            echo "$RESP" | jq . 2>/dev/null || echo "$RESP"
-
-            CMS_VERSION=$(echo "$RESP" | jq -r '
-              [to_entries[] | select(.key | startswith("update_url")) | .value] | first // ""
-            ' | grep -oP '\d+\.\d+\.\d+' | head -1)
+          UNIQUE_VERS=$(echo "$RESULTS" | jq '[.[].version] | unique | length')
+          if [ "$UNIQUE_VERS" -gt 1 ]; then
+            echo "::warning::不同平台返回了不同的版本号: $(echo "$RESULTS" | jq -r '[.[].version] | unique | join(", ")')"
           fi
 
-          if [ -z "$CMS_VERSION" ]; then
-            echo "::error::无法获取版本号"
-            exit 1
-          fi
+          LATEST_VERSION=$(echo "$RESULTS" | jq -r \
+            '[.[].version] | unique | sort_by(split(".") | map(tonumber)) | last')
+          echo "采用版本: V${LATEST_VERSION}"
 
-          echo "版本: ${CMS_VERSION}"
-          echo "cms_version=${CMS_VERSION}" >> $GITHUB_OUTPUT
+          echo "results=$(echo "$RESULTS" | jq -c '.')" >> $GITHUB_OUTPUT
+          echo "has_updates=true" >> $GITHUB_OUTPUT
+          echo "latest_version=${LATEST_VERSION}" >> $GITHUB_OUTPUT
 
       - name: 获取 CMS 当前数据
         id: cms_read
-        if: steps.check.outputs.should_run == 'true' && steps.download.outputs.has_url == 'true'
+        if: steps.check.outputs.should_run == 'true' && steps.query.outputs.has_updates == 'true'
         run: |
           POPULATE="populate[items][populate][downloadButton]=*&populate[items][populate][downloadButtons]=*&populate[items][populate][thumbnail]=*&populate[items][populate][platforms]=*"
 
@@ -274,22 +294,19 @@ jobs:
 
       - name: 生成更新 Payload 并对比
         id: payload
-        if: steps.check.outputs.should_run == 'true' && steps.download.outputs.has_url == 'true'
+        if: steps.check.outputs.should_run == 'true' && steps.query.outputs.has_updates == 'true'
         env:
-          DOWNLOAD_URL: ${{ steps.download.outputs.download_url }}
-          CMS_VERSION: ${{ steps.version.outputs.cms_version }}
+          CMS_VERSION: ${{ steps.query.outputs.latest_version }}
           CMS_TITLE: ${{ matrix.cms_title }}
-          CMS_PLATFORM_LABEL: ${{ matrix.cms_platform_label }}
+          PLATFORM_RESULTS: ${{ steps.query.outputs.results }}
         run: |
           CMS_DATA=$(cat /tmp/cms_data.json)
 
-          # 与生产 workflow 一致的 jq 变换（Strapi v4 路径）
           UPDATED=$(echo "$CMS_DATA" | jq \
-            --arg url "$DOWNLOAD_URL" \
             --arg ver "V${CMS_VERSION}" \
             --arg date "$(date +%Y-%m-%d)" \
-            --arg label "$CMS_PLATFORM_LABEL" \
             --arg title "$CMS_TITLE" \
+            --argjson updates "$PLATFORM_RESULTS" \
             '
             (.data.attributes // .data) |
             del(.createdAt, .updatedAt, .publishedAt, .locale) |
@@ -302,10 +319,12 @@ jobs:
               if .title == $title then
                 .version = $ver |
                 .releasedAt = $date |
-                (.downloadButtons |= map(
-                  if .label == $label then .href = $url else . end
-                )) |
-                if $label == "Android" then .downloadButton.href = $url else . end
+                (.downloadButtons |= [.[] as $btn |
+                  ($updates | map(select(.label == $btn.label)) | first // null) as $upd |
+                  if $upd then ($btn | .href = $upd.url) else $btn end
+                ]) |
+                (($updates | map(select(.label == "Android")) | first // null) as $android |
+                  if $android then .downloadButton.href = $android.url else . end)
               else . end
             ) |
             { data: . }
@@ -314,18 +333,16 @@ jobs:
           echo "$UPDATED" > /tmp/cms_payload.json
 
           echo "========================================="
-          echo "变更摘要: ${{ matrix.app }} / ${{ matrix.platform }}"
+          echo "变更摘要: ${{ matrix.app }} (全平台合并)"
           echo "========================================="
           echo "目标:     ${CMS_TITLE}"
           echo "版本:     V${CMS_VERSION}"
           echo "日期:     $(date +%Y-%m-%d)"
-          echo "平台:     ${CMS_PLATFORM_LABEL}"
-          echo "链接:     ${DOWNLOAD_URL}"
+          echo "更新平台: $(echo "$PLATFORM_RESULTS" | jq -r '[.[].label] | join(", ")')"
           echo ""
-          ITEMS_BEFORE=$(cat /tmp/cms_data.json | jq '.data.attributes.items // .data.items')
           echo "--- 更新前 ---"
-          echo "$ITEMS_BEFORE" | jq --arg title "$CMS_TITLE" \
-            '.[] | select(.title == $title) | {version, releasedAt, downloadButton: .downloadButton.href, downloadButtons: [.downloadButtons[]? | "\(.label): \(.href)"]}'
+          cat /tmp/cms_data.json | jq --arg title "$CMS_TITLE" \
+            '(.data.attributes.items // .data.items)[] | select(.title == $title) | {version, releasedAt, downloadButton: .downloadButton.href, downloadButtons: [.downloadButtons[]? | "\(.label): \(.href)"]}'
           echo "--- 更新后 ---"
           echo "$UPDATED" | jq --arg title "$CMS_TITLE" \
             '.data.items[] | select(.title == $title) | {version, releasedAt, downloadButton: .downloadButton.href, downloadButtons: [.downloadButtons[]? | "\(.label): \(.href)"]}'
@@ -333,7 +350,7 @@ jobs:
       - name: 写入 CMS
         if: >-
           steps.check.outputs.should_run == 'true'
-          && steps.download.outputs.has_url == 'true'
+          && steps.query.outputs.has_updates == 'true'
           && inputs.dry_run == false
         run: |
           PAYLOAD=$(cat /tmp/cms_payload.json)
@@ -347,7 +364,7 @@ jobs:
 
           echo "HTTP 状态码: ${HTTP_STATUS}"
           if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
-            echo "CMS 更新成功 (${{ matrix.app }}/${{ matrix.platform }})"
+            echo "CMS 更新成功 (${{ matrix.app }} — 全平台合并写入)"
           else
             echo "::error::CMS 更新失败 (HTTP ${HTTP_STATUS})"
             cat "$HTTP_BODY" | jq . 2>/dev/null || cat "$HTTP_BODY"
@@ -358,13 +375,12 @@ jobs:
       - name: 验证 CMS 更新结果
         if: >-
           steps.check.outputs.should_run == 'true'
-          && steps.download.outputs.has_url == 'true'
+          && steps.query.outputs.has_updates == 'true'
           && inputs.dry_run == false
         env:
-          CMS_VERSION: ${{ steps.version.outputs.cms_version }}
-          DOWNLOAD_URL: ${{ steps.download.outputs.download_url }}
-          CMS_PLATFORM_LABEL: ${{ matrix.cms_platform_label }}
+          CMS_VERSION: ${{ steps.query.outputs.latest_version }}
           CMS_TITLE: ${{ matrix.cms_title }}
+          PLATFORM_RESULTS: ${{ steps.query.outputs.results }}
         run: |
           sleep 3
 
@@ -385,21 +401,28 @@ jobs:
             echo "::warning::版本号不匹配 — 期望: ${EXPECTED_VER}, 实际: ${ACTUAL_VER}"
           fi
 
-          ACTUAL_BTN=$(echo "$ITEM" | jq -r --arg label "$CMS_PLATFORM_LABEL" \
-            '.downloadButtons[]? | select(.label == $label) | .href')
-          if [ "$ACTUAL_BTN" = "$DOWNLOAD_URL" ]; then
-            echo "${CMS_PLATFORM_LABEL} 下载链接验证通过"
-          else
-            echo "::warning::下载链接不匹配 — 期望: ${DOWNLOAD_URL}, 实际: ${ACTUAL_BTN}"
-          fi
+          for row in $(echo "$PLATFORM_RESULTS" | jq -c '.[]'); do
+            LABEL=$(echo "$row" | jq -r '.label')
+            EXPECTED_URL=$(echo "$row" | jq -r '.url')
+
+            ACTUAL_BTN=$(echo "$ITEM" | jq -r --arg label "$LABEL" \
+              '.downloadButtons[]? | select(.label == $label) | .href')
+            if [ "$ACTUAL_BTN" = "$EXPECTED_URL" ]; then
+              echo "${LABEL} 下载链接验证通过"
+            else
+              echo "::warning::${LABEL} 下载链接不匹配 — 期望: ${EXPECTED_URL}, 实际: ${ACTUAL_BTN}"
+            fi
+          done
 
       - name: 结果总结
         if: always() && steps.check.outputs.should_run == 'true'
         run: |
-          if [ "${{ steps.download.outputs.has_url }}" != "true" ]; then
-            echo "${{ matrix.app }}/${{ matrix.platform }}: 跳过 (FaynoSync 无此版本)"
+          if [ "${{ steps.query.outputs.has_updates }}" != "true" ]; then
+            echo "${{ matrix.app }}: 跳过 (所有平台均无可用版本)"
           elif [ "${{ inputs.dry_run }}" = "true" ]; then
-            echo "${{ matrix.app }}/${{ matrix.platform }}: Dry-run 完成，未写入 CMS"
+            PLATFORMS=$(echo '${{ steps.query.outputs.results }}' | jq -r '[.[].label] | join(", ")')
+            echo "${{ matrix.app }}: Dry-run 完成 (${PLATFORMS})，未写入 CMS"
           else
-            echo "${{ matrix.app }}/${{ matrix.platform }}: CMS 更新完成"
+            PLATFORMS=$(echo '${{ steps.query.outputs.results }}' | jq -r '[.[].label] | join(", ")')
+            echo "${{ matrix.app }}: CMS 更新完成 (${PLATFORMS})"
           fi
