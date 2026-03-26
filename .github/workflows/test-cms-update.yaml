@@ -3,37 +3,6 @@ name: "Test: CMS Update"
 on:
   workflow_dispatch:
     inputs:
-      app:
-        description: "选择应用端 (仅含 CMS 配置的应用)"
-        required: true
-        type: choice
-        options:
-          - all
-          - pos
-          - kds
-          - shop
-          - assistant
-          - tablet
-        default: "all"
-      platform:
-        description: "选择平台"
-        required: true
-        type: choice
-        options:
-          - all
-          - android
-          - windows
-          - macos
-        default: "all"
-      env:
-        description: "选择频道/环境"
-        required: true
-        type: choice
-        options:
-          - "prod"
-          - "test"
-          - "dev"
-        default: "test"
       dry_run:
         description: "Dry-run 模式：仅预览变更，不实际写入 CMS"
         required: true
@@ -53,9 +22,8 @@ jobs:
           echo "========================================="
           echo "CMS 下载页更新测试"
           echo "========================================="
-          echo "应用筛选:  ${{ inputs.app }}"
-          echo "平台筛选:  ${{ inputs.platform }}"
-          echo "频道:      ${{ inputs.env }}"
+          echo "应用:      pos, kds, shop, assistant, tablet, qds, kiosk"
+          echo "频道:      prod"
           echo "Dry-run:   ${{ inputs.dry_run }}"
           echo "========================================="
 
@@ -73,36 +41,26 @@ jobs:
       - name: 从 FaynoSync 查询所有应用的各平台下载信息
         id: query
         run: |
-          CHANNEL="${{ inputs.env }}"
+          CHANNEL="prod"
 
           ALL_APPS='[
-            {"app":"pos",       "faynosync_name":"TTPOS",          "cms_title":"Cashier"},
-            {"app":"kds",       "faynosync_name":"TTPOS Kitchen",  "cms_title":"KDS Kitchen"},
-            {"app":"shop",      "faynosync_name":"TTPOS Shop",     "cms_title":"Shop"},
-            {"app":"assistant", "faynosync_name":"TTPOS Go",       "cms_title":"Assistant"},
-            {"app":"tablet",    "faynosync_name":"TTPOS Menu",     "cms_title":"Tablet Menu"}
+            {"app":"pos",       "faynosync_name":"TTPOS",          "cms_title":"Cashier",     "platforms":["android","ios","windows","macos"]},
+            {"app":"kds",       "faynosync_name":"TTPOS Kitchen",  "cms_title":"KDS Kitchen", "platforms":["android","ios","windows","macos"]},
+            {"app":"shop",      "faynosync_name":"TTPOS Shop",     "cms_title":"Shop",        "platforms":["android","ios","windows","macos"]},
+            {"app":"assistant", "faynosync_name":"TTPOS Go",       "cms_title":"Assistant",   "platforms":["android","ios","windows","macos"]},
+            {"app":"tablet",    "faynosync_name":"TTPOS Menu",     "cms_title":"Tablet Menu", "platforms":["android","ios","windows","macos"]},
+            {"app":"qds",       "faynosync_name":"TTPOS Queue",    "cms_title":"Queue",       "platforms":["android"]},
+            {"app":"kiosk",     "faynosync_name":"TTPOS Kiosk",    "cms_title":"Kiosk",       "platforms":["android","windows","macos"]}
           ]'
 
           ALL_PLATFORMS='[
             {"platform":"android","arch":"arm64","pkg_fmt":"apk","label":"Android"},
+            {"platform":"ios","arch":"arm64","pkg_fmt":"ipa","label":"iOS"},
             {"platform":"windows","arch":"amd64","pkg_fmt":"exe","label":"Windows"},
             {"platform":"macos","arch":"arm64","pkg_fmt":"dmg","label":"MacOS"}
           ]'
 
-          if [ "${{ inputs.app }}" != "all" ]; then
-            APPS=$(echo "$ALL_APPS" | jq -c --arg a "${{ inputs.app }}" '[.[] | select(.app == $a)]')
-          else
-            APPS="$ALL_APPS"
-          fi
-
-          if [ "${{ inputs.platform }}" != "all" ]; then
-            PLATFORMS=$(echo "$ALL_PLATFORMS" | jq -c --arg p "${{ inputs.platform }}" '[.[] | select(.platform == $p)]')
-          else
-            PLATFORMS="$ALL_PLATFORMS"
-          fi
-
-          echo "待查询应用: $(echo "$APPS" | jq -r '[.[].app] | join(", ")')"
-          echo "待查询平台: $(echo "$PLATFORMS" | jq -r '[.[].label] | join(", ")')"
+          echo "待查询应用: $(echo "$ALL_APPS" | jq -r '[.[].app] | join(", ")')"
 
           RESULTS='[]'
 
@@ -110,10 +68,14 @@ jobs:
             APP_ID=$(echo "$app_row" | jq -r '.app')
             APP_NAME=$(echo "$app_row" | jq -r '.faynosync_name')
             CMS_TITLE=$(echo "$app_row" | jq -r '.cms_title')
+            APP_PLATS=$(echo "$app_row" | jq -c '.platforms')
+
+            PLATFORMS=$(echo "$ALL_PLATFORMS" | jq -c --argjson supported "$APP_PLATS" \
+              '[.[] | select(.platform as $p | $supported | index($p))]')
 
             echo ""
             echo "========================================="
-            echo "查询: ${APP_ID} (${APP_NAME} → ${CMS_TITLE})"
+            echo "查询: ${APP_ID} (${APP_NAME} → ${CMS_TITLE}) 平台: $(echo "$PLATFORMS" | jq -r '[.[].label] | join(", ")')"
             echo "========================================="
 
             while IFS= read -r plat_row; do
@@ -179,7 +141,7 @@ jobs:
                 --arg title "$CMS_TITLE" --arg label "$LABEL" --arg url "$DOWNLOAD_URL" --arg ver "$VER" \
                 '. + [{"cms_title": $title, "label": $label, "url": $url, "version": $ver}]')
             done < <(echo "$PLATFORMS" | jq -c '.[]')
-          done < <(echo "$APPS" | jq -c '.[]')
+          done < <(echo "$ALL_APPS" | jq -c '.[]')
 
           COUNT=$(echo "$RESULTS" | jq 'length')
           echo ""
