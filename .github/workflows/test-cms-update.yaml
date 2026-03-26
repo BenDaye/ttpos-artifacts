@@ -278,8 +278,7 @@ jobs:
 
           echo ""
           echo "--- 目标条目: ${{ matrix.cms_title }} ---"
-          echo "$ITEMS" | jq --arg title "${{ matrix.cms_title }}" '.[] | select(.title == $title) |
-            {title, version, releasedAt, downloadButton: .downloadButton.href, downloadButtons: [.downloadButtons[]? | {label, href}]}'
+          echo "$ITEMS" | jq --arg title "${{ matrix.cms_title }}" '.[] | select(.title == $title)'
 
           HAS_MATCH=$(echo "$ITEMS" | jq --arg title "${{ matrix.cms_title }}" \
             '[.[] | select(.title == $title)] | length')
@@ -289,6 +288,10 @@ jobs:
             echo "可用标题: $(echo "$ITEMS" | jq -r '[.[].title] | join(", ")')"
             exit 1
           fi
+
+          echo ""
+          echo "--- CMS 完整响应 ---"
+          echo "$CMS_DATA" | jq '.'
 
           echo "$CMS_DATA" > /tmp/cms_data.json
 
@@ -338,12 +341,15 @@ jobs:
           echo "日期:     $(date +%Y-%m-%d)"
           echo "更新平台: $(echo "$PLATFORM_RESULTS" | jq -r '[.[].label] | join(", ")')"
           echo ""
-          echo "--- 更新前 ---"
+          echo "--- 更新前 (目标条目) ---"
           cat /tmp/cms_data.json | jq --arg title "$CMS_TITLE" \
-            '(.data.attributes.items // .data.items)[] | select(.title == $title) | {version, releasedAt, downloadButton: .downloadButton.href, downloadButtons: [.downloadButtons[]? | "\(.label): \(.href)"]}'
-          echo "--- 更新后 ---"
+            '(.data.attributes.items // .data.items)[] | select(.title == $title)'
+          echo "--- 更新后 (目标条目) ---"
           echo "$UPDATED" | jq --arg title "$CMS_TITLE" \
-            '.data.items[] | select(.title == $title) | {version, releasedAt, downloadButton: .downloadButton.href, downloadButtons: [.downloadButtons[]? | "\(.label): \(.href)"]}'
+            '.data.items[] | select(.title == $title)'
+          echo ""
+          echo "--- 完整 Payload ---"
+          echo "$UPDATED" | jq '.'
 
       - name: 写入 CMS
         if: >-
