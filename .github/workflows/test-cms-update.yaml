@@ -44,18 +44,17 @@ jobs:
           CHANNEL="prod"
 
           ALL_APPS='[
-            {"app":"pos",       "faynosync_name":"TTPOS",          "cms_title":"Cashier",     "platforms":["android","ios","windows","macos"]},
-            {"app":"kds",       "faynosync_name":"TTPOS Kitchen",  "cms_title":"KDS Kitchen", "platforms":["android","ios","windows","macos"]},
-            {"app":"shop",      "faynosync_name":"TTPOS Shop",     "cms_title":"Shop",        "platforms":["android","ios","windows","macos"]},
-            {"app":"assistant", "faynosync_name":"TTPOS Go",       "cms_title":"Assistant",   "platforms":["android","ios","windows","macos"]},
-            {"app":"tablet",    "faynosync_name":"TTPOS Menu",     "cms_title":"Tablet Menu", "platforms":["android","ios","windows","macos"]},
+            {"app":"pos",       "faynosync_name":"TTPOS",          "cms_title":"Cashier",     "platforms":["android","windows","macos"]},
+            {"app":"kds",       "faynosync_name":"TTPOS Kitchen",  "cms_title":"KDS Kitchen", "platforms":["android","windows","macos"]},
+            {"app":"shop",      "faynosync_name":"TTPOS Shop",     "cms_title":"Shop",        "platforms":["android","windows","macos"]},
+            {"app":"assistant", "faynosync_name":"TTPOS Go",       "cms_title":"Assistant",   "platforms":["android","windows","macos"]},
+            {"app":"tablet",    "faynosync_name":"TTPOS Menu",     "cms_title":"Tablet Menu", "platforms":["android","windows","macos"]},
             {"app":"qds",       "faynosync_name":"TTPOS Queue",    "cms_title":"Queue",       "platforms":["android"]},
             {"app":"kiosk",     "faynosync_name":"TTPOS Kiosk",    "cms_title":"Kiosk",       "platforms":["android","windows","macos"]}
           ]'
 
           ALL_PLATFORMS='[
             {"platform":"android","arch":"arm64","pkg_fmt":"apk","label":"Android"},
-            {"platform":"ios","arch":"arm64","pkg_fmt":"ipa","label":"iOS"},
             {"platform":"windows","arch":"amd64","pkg_fmt":"exe","label":"Windows"},
             {"platform":"macos","arch":"arm64","pkg_fmt":"dmg","label":"MacOS"}
           ]'
