@@ -281,6 +281,7 @@ jobs:
             .items |= map(
               .thumbnail = (if .thumbnail and .thumbnail.data then .thumbnail.data.id else null end) |
               .platforms = [.platforms[]? | {label}] |
+              .downloadButton = null |
               . as $item |
               if $by_title[$item.title] then
                 ($by_title[$item.title]) as $item_updates |
@@ -290,9 +291,7 @@ jobs:
                 (.downloadButtons |= [.[] as $btn |
                   ($item_updates | map(select(.label == $btn.label)) | first // null) as $upd |
                   if $upd then ($btn | .href = $upd.url) else $btn end
-                ]) |
-                (($item_updates | map(select(.label == "Android")) | first // null) as $android |
-                  if $android then .downloadButton.href = $android.url else . end)
+                ])
               else . end
             ) |
             { data: . }
