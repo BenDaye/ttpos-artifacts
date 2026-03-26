@@ -154,7 +154,7 @@ jobs:
           API_URL: ${{ inputs.base_url }}
           WS_URL: ${{ inputs.base_ws_url }}
         run: |
-          # 根据 env 输入选择对应的环境文件（与 scripts/utils.dart getEnv() 保持一致）
+          # 根据 env 输入选择对应的环境文件(与 scripts/utils.dart getEnv() 保持一致)
           case "${{ inputs.env }}" in
             dev)  ENV_SUFFIX="development" ;;
             test) ENV_SUFFIX="test" ;;
@@ -181,7 +181,7 @@ jobs:
           echo "--- 环境变量文件内容 ($ENV_PATH) ---"
           cat "$ENV_PATH"
 
-      - name: 设置 SENTRY_DSN（仅 release 分支）
+      - name: 设置 SENTRY_DSN(仅 release 分支)
         if: steps.check.outputs.should_run == 'true' && inputs.branch == 'release'
         env:
           SENTRYDSN_MENU: ${{ secrets.SENTRYDSN_MENU }}
@@ -255,7 +255,7 @@ jobs:
             echo "IMAGE_TAG=test-latest" >> $GITHUB_OUTPUT
           fi
 
-      - name: 更新测试服务器（提取自 ./cmd update）
+      - name: 更新测试服务器(提取自 ./cmd update)
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.HITOSEA_SSH_HOST }}

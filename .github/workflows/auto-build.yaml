@@ -49,10 +49,6 @@ on:
         required: false
         type: string
         default: "force"
-      update_cms:
-        required: false
-        type: boolean
-        default: false
   workflow_dispatch:
     inputs:
       branch:
@@ -150,11 +146,6 @@ on:
           - "off"
           - "on"
           - "force"
-      update_cms:
-        description: "是否更新 CMS 下载页"
-        required: false
-        type: boolean
-        default: false
 
 permissions:
   actions: write
@@ -182,7 +173,6 @@ jobs:
           echo "WS URL: ${{ inputs.base_ws_url }}"
           echo "SCP: ${{ inputs.scp }}"
           echo "FaynoSync: ${{ inputs.faynosync }}"
-          echo "更新CMS: ${{ inputs.update_cms }}"
           echo "========================================="
 
       - name: 触发 Android 构建
@@ -200,8 +190,7 @@ jobs:
             -f updater_owner=${{ inputs.updater_owner }} \
             -f updater_channel=${{ inputs.updater_channel }} \
             -f scp=${{ inputs.scp }} \
-            -f faynosync=${{ inputs.faynosync }} \
-            -f update_cms=${{ inputs.update_cms }}
+            -f faynosync=${{ inputs.faynosync }}
 
       - name: 触发 iOS 构建
         if: (inputs.platform == 'all' || inputs.platform == 'ios') && (inputs.package == 'all' || !contains(fromJSON('["menu","mobile","member","qds"]'), inputs.package))
@@ -234,8 +223,7 @@ jobs:
             -f updater_owner=${{ inputs.updater_owner }} \
             -f updater_channel=${{ inputs.updater_channel }} \
             -f scp=${{ inputs.scp }} \
-            -f faynosync=${{ inputs.faynosync }} \
-            -f update_cms=${{ inputs.update_cms }}
+            -f faynosync=${{ inputs.faynosync }}
 
       - name: 触发 macOS 构建
         if: (inputs.platform == 'all' || inputs.platform == 'macos') && (inputs.package == 'all' || !contains(fromJSON('["menu","mobile","member","qds"]'), inputs.package))
@@ -252,8 +240,7 @@ jobs:
             -f updater_owner=${{ inputs.updater_owner }} \
             -f updater_channel=${{ inputs.updater_channel }} \
             -f scp=${{ inputs.scp }} \
-            -f faynosync=${{ inputs.faynosync }} \
-            -f update_cms=${{ inputs.update_cms }}
+            -f faynosync=${{ inputs.faynosync }}
 
       - name: 触发 Web 构建 (Hitosea)
         if: (inputs.platform == 'all' || inputs.platform == 'web') && inputs.branch == 'new-test' && inputs.env == 'test' && (inputs.package == 'all' || contains(fromJSON('["menu","mobile","member"]'), inputs.package))

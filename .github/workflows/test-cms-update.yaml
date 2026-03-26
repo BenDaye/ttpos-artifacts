@@ -336,7 +336,7 @@ jobs:
 
           echo "HTTP 状态码: ${HTTP_STATUS}"
           if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
-            echo "CMS 更新成功（所有应用一次性写入）"
+            echo "CMS 更新成功(所有应用一次性写入)"
           else
             echo "::error::CMS 更新失败 (HTTP ${HTTP_STATUS})"
             cat "$HTTP_BODY" | jq . 2>/dev/null || cat "$HTTP_BODY"

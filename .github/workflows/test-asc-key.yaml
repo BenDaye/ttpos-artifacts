@@ -146,7 +146,7 @@ jobs:
                   return e.code, data, e
 
           # --- Test 1: 列出 Apps ---
-          status, data, err = call_api("/v1/apps?limit=5", "列出 Apps（验证认证 + App Manager 读取权限）")
+          status, data, err = call_api("/v1/apps?limit=5", "列出 Apps(验证认证 + App Manager 读取权限)")
           if err:
               errors = data.get("errors", [{}])
               detail = errors[0].get("detail", json.dumps(data, ensure_ascii=False)) if errors else str(data)
@@ -174,9 +174,9 @@ jobs:
               print(f"   • {name} ({bundle_id}) SKU={sku}")
 
           # --- Test 2: 列出 Bundle IDs ---
-          status2, data2, err2 = call_api("/v1/bundleIds?limit=10", "列出 Bundle IDs（验证开发者资源访问）")
+          status2, data2, err2 = call_api("/v1/bundleIds?limit=10", "列出 Bundle IDs(验证开发者资源访问)")
           if err2:
-              print(f"⚠️  HTTP {status2}: 无法列出 Bundle IDs（可能是权限范围限制，不影响 TestFlight 上传）")
+              print(f"⚠️  HTTP {status2}: 无法列出 Bundle IDs(可能是权限范围限制，不影响 TestFlight 上传)")
           else:
               bundles = data2.get("data", [])
               total2 = data2.get("meta", {}).get("paging", {}).get("total", len(bundles))
@@ -189,9 +189,9 @@ jobs:
                   print(f"   • {identifier} ({name}) [{platform}]")
 
           # --- Test 3: 列出构建 (验证 TestFlight 相关权限) ---
-          status3, data3, err3 = call_api("/v1/builds?limit=3&sort=-uploadedDate", "列出最近构建（验证 TestFlight 权限）")
+          status3, data3, err3 = call_api("/v1/builds?limit=3&sort=-uploadedDate", "列出最近构建(验证 TestFlight 权限)")
           if err3:
-              print(f"⚠️  HTTP {status3}: 无法列出构建记录（可能尚未上传过构建）")
+              print(f"⚠️  HTTP {status3}: 无法列出构建记录(可能尚未上传过构建)")
           else:
               builds = data3.get("data", [])
               total3 = data3.get("meta", {}).get("paging", {}).get("total", len(builds))

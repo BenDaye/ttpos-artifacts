@@ -158,7 +158,7 @@ jobs:
           UPDATER_OWNER: ${{ inputs.updater_owner }}
           UPDATER_CHANNEL: ${{ inputs.updater_channel }}
         run: |
-          # 根据 env 输入选择对应的环境文件（与 scripts/utils.dart getEnv() 保持一致）
+          # 根据 env 输入选择对应的环境文件(与 scripts/utils.dart getEnv() 保持一致)
           case "${{ inputs.env }}" in
             dev)  ENV_SUFFIX="development" ;;
             test) ENV_SUFFIX="test" ;;
@@ -198,7 +198,7 @@ jobs:
           echo "--- 环境变量文件内容 ($ENV_PATH) ---"
           cat "$ENV_PATH"
 
-      - name: 设置 SENTRY_DSN（仅 release 分支）
+      - name: 设置 SENTRY_DSN(仅 release 分支)
         if: steps.check.outputs.should_run == 'true' && inputs.branch == 'release'
         env:
           SENTRYDSN_MENU: ${{ secrets.SENTRYDSN_MENU }}

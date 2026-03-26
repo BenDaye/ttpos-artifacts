@@ -539,7 +539,7 @@ jobs:
           retention-days: 7
           compression-level: 0
 
-      - name: 上传到 FaynoSync（版本元数据）
+      - name: 上传到 FaynoSync(版本元数据)
         if: steps.check.outputs.should_run == 'true' && inputs.faynosync != 'off'
         continue-on-error: true
         env:
@@ -554,7 +554,7 @@ jobs:
           CHANNEL="${{ inputs.env }}"
 
           # iOS 通过 App Store 分发，无需上传真实 IPA 到 FaynoSync。
-          # 生成占位文件注册版本元数据（changelog、critical 等），
+          # 生成占位文件注册版本元数据(changelog、critical 等)，
           # new-test + test 上传时自动 publish；其余环境通常在 Dashboard 手动 publish。
           PLACEHOLDER="$RUNNER_TEMP/${{ matrix.app_name }}-${{ env.FS_VERSION }}-ios.txt"
           cat > "$PLACEHOLDER" <<EOF
