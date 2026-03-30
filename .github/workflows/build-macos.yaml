@@ -65,14 +65,6 @@ on:
           - "prod"
           - "test"
           - "dev"
-      scp:
-        description: "是否启用SCP传输"
-        required: true
-        default: "off"
-        type: choice
-        options:
-          - "on"
-          - "off"
       faynosync:
         description: "FaynoSync 上传模式 (on=检查版本已存在则跳过, force=强制覆盖)"
         required: false
@@ -94,36 +86,28 @@ jobs:
           - package: pos
             app_name: TTPOS
             vol_name: "TTPOS"
-            scp_folder: Cashier
             faynosync_name: "TTPOS"
           - package: assistant
             app_name: TTPOS-Go
             vol_name: "TTPOS Go"
-            scp_folder: Assistant
             faynosync_name: "TTPOS Go"
           - package: kds
             app_name: TTPOS-Kitchen
             vol_name: "TTPOS Kitchen"
-            scp_folder: Kitchen
             faynosync_name: "TTPOS Kitchen"
           - package: tablet
             app_name: TTPOS-Menu
             vol_name: "TTPOS Menu"
-            scp_folder: Menu
             faynosync_name: "TTPOS Menu"
           - package: shop
             app_name: TTPOS-Shop
             vol_name: "TTPOS Shop"
-            scp_folder: Shop
             faynosync_name: "TTPOS Shop"
           - package: kiosk
             app_name: TTPOS-Kiosk
             vol_name: "TTPOS Kiosk"
-            scp_folder: Kiosk
             faynosync_name: "TTPOS Kiosk"
     env:
-      SCP_S_PATH: ${{ inputs.branch == 'release' && format('/hitosea/ttpos-apk/Prod/{0}/', matrix.package) || format('/hitosea/ttpos-apk/Test/{0}/', matrix.package) }}
-      SCP_D_PATH: ${{ inputs.branch == 'release' && format('/root/web/web/restant/out/downloads/MacOS/{0}/', matrix.scp_folder) || format('/root/web/web/restant/out/downloads/MacOS/Test/{0}/', matrix.scp_folder) }}
       FAYNOSYNC_PUBLISH: ${{ inputs.branch == 'new-test' && inputs.env == 'test' }}
     steps:
       - name: 检查是否需要构建此应用端
@@ -147,7 +131,6 @@ jobs:
           echo "环境: ${{ inputs.env }}"
           echo "API URL: ${{ inputs.base_url }}"
           echo "WebSocket URL: ${{ inputs.base_ws_url }}"
-          echo "SCP传输: ${{ inputs.scp }}"
           echo "========================================="
 
       - name: Checkout the code
@@ -824,31 +807,6 @@ jobs:
           path: ${{ env.DMG_PATH }}
           retention-days: 7
           compression-level: 0
-
-      - name: SCP-UPLOAD
-        if: steps.check.outputs.should_run == 'true' && inputs.scp == 'on'
-        uses: Comori/ssh@v0.0.7
-        with:
-          host: ${{ secrets.SCP_S_HOST }}
-          username: ${{ secrets.SCP_S_USER }}
-          privateKey: ${{ secrets.SCP_S_RIVATEKEY }}
-          command: |
-            scp ${{ env.SCP_S_PATH }}${{ env.VERSION_DMG }} ${{ secrets.SCP_D_USER }}@${{ secrets.SCP_D_HOST }}:${{ env.SCP_D_PATH }}
-          sourceFiles: |
-            ${{ env.DMG_PATH }}
-          targetDir: ${{ env.SCP_S_PATH }}
-          scpFirst: true
-
-      - name: Create latest symlink
-        if: steps.check.outputs.should_run == 'true' && inputs.scp == 'on'
-        uses: Comori/ssh@v0.0.7
-        with:
-          host: ${{ secrets.SCP_S_HOST }}
-          username: ${{ secrets.SCP_S_USER }}
-          privateKey: ${{ secrets.SCP_S_RIVATEKEY }}
-          command: |
-            ssh -o StrictHostKeyChecking=no ${{ secrets.SCP_D_USER }}@${{ secrets.SCP_D_HOST }} "cd ${{ env.SCP_D_PATH }} && ln -sf ${{ env.VERSION_DMG }} ${{ env.LATEST_NAME }}"
-            echo "Created symlink: ${{ env.LATEST_NAME }} -> ${{ env.VERSION_DMG }}"
 
       - name: 上传到 FaynoSync
         id: faynosync

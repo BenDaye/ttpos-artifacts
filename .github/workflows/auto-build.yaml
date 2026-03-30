@@ -41,10 +41,6 @@ on:
         required: false
         type: string
         default: ""
-      scp:
-        required: false
-        type: string
-        default: "off"
       faynosync:
         required: false
         type: string
@@ -129,14 +125,6 @@ on:
           - "prod"
           - "test"
           - "dev"
-      scp:
-        description: "是否启用SCP传输"
-        required: true
-        type: choice
-        options:
-          - "on"
-          - "off"
-        default: "off"
       faynosync:
         description: "FaynoSync 上传模式 (on=检查版本已存在则跳过, force=强制覆盖)"
         required: false
@@ -171,7 +159,6 @@ jobs:
           echo "平台: ${{ inputs.platform }}"
           echo "API URL: ${{ inputs.base_url }}"
           echo "WS URL: ${{ inputs.base_ws_url }}"
-          echo "SCP: ${{ inputs.scp }}"
           echo "FaynoSync: ${{ inputs.faynosync }}"
           echo "========================================="
 
@@ -189,7 +176,6 @@ jobs:
             -f updater_url=${{ inputs.updater_url }} \
             -f updater_owner=${{ inputs.updater_owner }} \
             -f updater_channel=${{ inputs.updater_channel }} \
-            -f scp=${{ inputs.scp }} \
             -f faynosync=${{ inputs.faynosync }}
 
       - name: 触发 iOS 构建
@@ -222,7 +208,6 @@ jobs:
             -f updater_url=${{ inputs.updater_url }} \
             -f updater_owner=${{ inputs.updater_owner }} \
             -f updater_channel=${{ inputs.updater_channel }} \
-            -f scp=${{ inputs.scp }} \
             -f faynosync=${{ inputs.faynosync }}
 
       - name: 触发 macOS 构建
@@ -239,7 +224,6 @@ jobs:
             -f updater_url=${{ inputs.updater_url }} \
             -f updater_owner=${{ inputs.updater_owner }} \
             -f updater_channel=${{ inputs.updater_channel }} \
-            -f scp=${{ inputs.scp }} \
             -f faynosync=${{ inputs.faynosync }}
 
       - name: 触发 Web 构建

@@ -20,6 +20,5 @@ jobs:
       updater_url: ${{ github.event.client_payload.updater_url || '' }}
       updater_owner: ${{ github.event.client_payload.updater_owner || '' }}
       updater_channel: ${{ github.event.client_payload.updater_channel || '' }}
-      scp: ${{ github.event.client_payload.scp || 'off' }}
       faynosync: ${{ github.event.client_payload.faynosync || (github.event.action == 'test-build' && 'force') || 'off' }}
     secrets: inherit

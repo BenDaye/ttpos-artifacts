@@ -65,14 +65,6 @@ on:
           - "prod"
           - "test"
           - "dev"
-      scp:
-        description: "是否启用SCP传输"
-        required: true
-        default: "off"
-        type: choice
-        options:
-          - "on"
-          - "off"
       faynosync:
         description: "FaynoSync 上传模式 (on=检查版本已存在则跳过, force=强制覆盖)"
         required: false
@@ -93,32 +85,24 @@ jobs:
         include:
           - package: pos
             exe_prefix: "TTPOS"
-            scp_folder: "Cashier"
             faynosync_name: "TTPOS"
           - package: kds
             exe_prefix: "TTPOS-Kitchen"
-            scp_folder: "Kitchen"
             faynosync_name: "TTPOS Kitchen"
           - package: assistant
             exe_prefix: "TTPOS-Go"
-            scp_folder: "Assistant"
             faynosync_name: "TTPOS Go"
           - package: tablet
             exe_prefix: "TTPOS-Menu"
-            scp_folder: "Menu"
             faynosync_name: "TTPOS Menu"
           - package: shop
             exe_prefix: "TTPOS-Shop"
-            scp_folder: "Shop"
             faynosync_name: "TTPOS Shop"
           - package: kiosk
             exe_prefix: "TTPOS-Kiosk"
-            scp_folder: "Kiosk"
             faynosync_name: "TTPOS Kiosk"
     env:
       output_path: releases
-      SCP_S_PATH: ${{ inputs.branch == 'release' && format('/hitosea/ttpos-windows/Prod/{0}/', matrix.package) || format('/hitosea/ttpos-windows/Test/{0}/', matrix.package) }}
-      SCP_D_PATH: ${{ inputs.branch == 'release' && format('/root/web/web/restant/out/downloads/Windows/{0}/', matrix.scp_folder) || format('/root/web/web/restant/out/downloads/Windows/Test/{0}/', matrix.scp_folder) }}
       FAYNOSYNC_PUBLISH: ${{ inputs.branch == 'new-test' && inputs.env == 'test' }}
     steps:
       - name: 检查是否需要构建此应用端
@@ -143,7 +127,6 @@ jobs:
           Write-Host "环境: ${{ inputs.env }}"
           Write-Host "API URL: ${{ inputs.base_url }}"
           Write-Host "WebSocket URL: ${{ inputs.base_ws_url }}"
-          Write-Host "SCP传输: ${{ inputs.scp }}"
           Write-Host "========================================="
 
       - name: Checkout the code
@@ -347,34 +330,6 @@ jobs:
           path: releases/${{ matrix.package }}/${{ env.MELOS_PACKAGE_VERSION }}/
           retention-days: 7
           compression-level: 0
-
-      - name: SCP-UPLOAD
-        if: steps.check.outputs.should_run == 'true' && inputs.scp == 'on'
-        uses: Comori/ssh@v0.0.7
-        with:
-          host: ${{ secrets.SCP_S_HOST }}
-          username: ${{ secrets.SCP_S_USER }}
-          privateKey: ${{ secrets.SCP_S_RIVATEKEY }}
-          command: |
-            mkdir -p ${{ env.SCP_S_PATH }}
-            # 传输到最终服务器
-            scp -o StrictHostKeyChecking=no ${{ env.SCP_S_PATH }}${{ matrix.exe_prefix }}-${{ env.MELOS_PACKAGE_VERSION }}.exe ${{ secrets.SCP_D_USER }}@${{ secrets.SCP_D_HOST }}:${{ env.SCP_D_PATH }}
-          sourceFiles: |
-            releases/${{ matrix.package }}/${{ env.MELOS_PACKAGE_VERSION }}/${{ matrix.exe_prefix }}-${{ env.MELOS_PACKAGE_VERSION }}.exe
-          targetDir: ${{ env.SCP_S_PATH }}
-          scpFirst: true
-
-      - name: Create latest symlink
-        if: steps.check.outputs.should_run == 'true' && inputs.scp == 'on'
-        uses: Comori/ssh@v0.0.7
-        with:
-          host: ${{ secrets.SCP_S_HOST }}
-          username: ${{ secrets.SCP_S_USER }}
-          privateKey: ${{ secrets.SCP_S_RIVATEKEY }}
-          command: |
-            # 在最终服务器创建软链
-            ssh -o StrictHostKeyChecking=no ${{ secrets.SCP_D_USER }}@${{ secrets.SCP_D_HOST }} "mkdir -p ${{ env.SCP_D_PATH }} && cd ${{ env.SCP_D_PATH }} && ln -sf ${{ matrix.exe_prefix }}-${{ env.MELOS_PACKAGE_VERSION }}.exe ${{ matrix.exe_prefix }}-latest.exe"
-            echo "Created symlink: ${{ matrix.exe_prefix }}-latest.exe -> ${{ matrix.exe_prefix }}-${{ env.MELOS_PACKAGE_VERSION }}.exe"
 
       - name: 上传到 FaynoSync
         id: faynosync
