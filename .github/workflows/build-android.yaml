@@ -154,7 +154,7 @@ jobs:
         if: steps.check.outputs.should_run == 'true'
         uses: actions/checkout@v4
         with:
-          repository: innet8/ttpos-flutter
+          repository: ${{ secrets.PRIVATE_REPO_NAME }}
           token: ${{ secrets.PRIVATE_REPO_PAT }}
           ref: ${{ inputs.branch }}
 

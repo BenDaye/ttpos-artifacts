@@ -242,21 +242,8 @@ jobs:
             -f scp=${{ inputs.scp }} \
             -f faynosync=${{ inputs.faynosync }}
 
-      - name: 触发 Web 构建 (Hitosea)
-        if: (inputs.platform == 'all' || inputs.platform == 'web') && inputs.branch == 'new-test' && inputs.env == 'test' && (inputs.package == 'all' || contains(fromJSON('["menu","mobile","member"]'), inputs.package))
-        run: |
-          gh workflow run build-web-hitosea.yaml \
-            --repo ${{ github.repository }} \
-            --ref ${{ github.ref }} \
-            -f branch=${{ inputs.branch }} \
-            -f env=${{ inputs.env }} \
-            -f package=${{ inputs.package }} \
-            -f base_url=${{ inputs.base_url }} \
-            -f base_ws_url=${{ inputs.base_ws_url }} \
-            -f deploy_test=true
-
       - name: 触发 Web 构建
-        if: (inputs.platform == 'all' || inputs.platform == 'web') && !(inputs.branch == 'new-test' && inputs.env == 'test') && (inputs.package == 'all' || contains(fromJSON('["menu","mobile","member"]'), inputs.package))
+        if: (inputs.platform == 'all' || inputs.platform == 'web') && (inputs.package == 'all' || contains(fromJSON('["menu","mobile","member"]'), inputs.package))
         run: |
           gh workflow run build-web.yaml \
             --repo ${{ github.repository }} \
