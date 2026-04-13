@@ -7,7 +7,7 @@ on:
         description: "构建分支 (e.g. release, new-test, feature/xxx)"
         required: true
         type: string
-        default: "new-test"
+        default: "release"
       env:
         description: "选择构建环境"
         required: true
@@ -16,7 +16,7 @@ on:
           - "prod"
           - "test"
           - "dev"
-        default: "test"
+        default: "prod"
       package:
         description: "选择要构建的应用端"
         required: true
@@ -28,23 +28,15 @@ on:
           - member
         default: "all"
       base_url:
-        description: "选择API基础URL"
+        description: "API基础URL"
         required: true
-        type: choice
-        default: "https://ttpos-test1.ttpos.com/api/v1"
-        options:
-          - "https://ttpos-test1.ttpos.com/api/v1"
-          - "https://api.ttpos.com/api/v1"
-          - "https://ttpos-pro.keli.vip/api/v1"
+        type: string
+        default: "https://api.ttpos.com/api/v1"
       base_ws_url:
-        description: "选择WebSocket基础URL"
+        description: "WebSocket基础URL"
         required: true
-        type: choice
-        default: "wss://ttpos-test1.ttpos.com/ws"
-        options:
-          - "wss://ttpos-test1.ttpos.com/ws"
-          - "wss://api.ttpos.com/ws"
-          - "wss://ttpos-pro.keli.vip/ws"
+        type: string
+        default: "wss://api.ttpos.com/ws"
       updater_url:
         description: "自定义更新服务URL (覆盖 UPDATER_URL)"
         required: false
