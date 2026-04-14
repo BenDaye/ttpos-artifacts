@@ -273,9 +273,6 @@ jobs:
 
       - name: Melos Init
         if: steps.check.outputs.should_run == 'true'
-        env:
-          PUB_HOSTED_URL: https://pub.flutter-io.cn
-          FLUTTER_STORAGE_BASE_URL: https://storage.flutter-io.cn
         run: |
           melos bs
           melos run env:setup -- --env=${{ inputs.env }} --file=${{ inputs.env }}

@@ -225,7 +225,6 @@ All Flutter build workflows share a common pattern:
 - Dev proxy: set `VITE_DEV_PROXY_TARGET` for CORS-free local API access (leave `VITE_API_URL` empty)
 - Commit messages MUST follow Conventional Commits format
 - Workflow UIs use Chinese (中文) for step names and descriptions
-- Chinese pub mirrors: `PUB_HOSTED_URL=https://pub.flutter-io.cn`
 - SCP uses a two-hop relay pattern: runner → relay → target
 
 ### Dashboard
