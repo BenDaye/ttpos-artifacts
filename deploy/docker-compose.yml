@@ -1,9 +1,6 @@
 services:
   api:
     image: ghcr.io/bendaye/ttpos-artifacts/faynosync-server:latest
-    build:
-      context: ../server
-      dockerfile: Dockerfile
     container_name: faynosync-api
     volumes:
       - ./gcs-credentials.json:/app/credentials.json:ro
@@ -21,12 +18,10 @@ services:
         condition: service_healthy
     networks:
       - faynosync
+      - caddy-net
 
   dashboard:
     image: ghcr.io/bendaye/ttpos-artifacts/faynosync-dashboard:latest
-    build:
-      context: ../dashboard
-      dockerfile: Dockerfile
     platform: linux/amd64
     container_name: faynosync-dashboard
     restart: unless-stopped
@@ -40,6 +35,7 @@ services:
       - api
     networks:
       - faynosync
+      - caddy-net
 
   db:
     image: mongo:7
@@ -76,3 +72,5 @@ services:
 networks:
   faynosync:
     driver: bridge
+  caddy-net:
+    external: true

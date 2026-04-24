@@ -1,0 +1,15 @@
+# 站点片段：追加到 vm-node02 /opt/caddy/Caddyfile 后执行
+#   docker exec caddy caddy reload --config /etc/caddy/Caddyfile
+# 前置条件：faynosync-api / faynosync-dashboard 已加入外部 caddy-net 网络。
+
+releases.ttpos.dev {
+	reverse_proxy faynosync-dashboard:3000
+}
+
+update.ttpos.dev {
+	# 放宽请求体上限以支持 >200MB 制品上传
+	request_body {
+		max_size 1GB
+	}
+	reverse_proxy faynosync-api:9000
+}
