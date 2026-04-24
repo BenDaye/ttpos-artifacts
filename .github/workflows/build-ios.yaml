@@ -74,7 +74,8 @@ on:
 
 jobs:
   build:
-    runs-on: macos-latest
+    # 显式钉到 macos-26 (macos-latest 现已等价, 但显式声明可避免后续镜像漂移)。
+    runs-on: macos-26
     env:
       FAYNOSYNC_PUBLISH: ${{ inputs.branch == 'new-test' && inputs.env == 'test' }}
     strategy:
@@ -111,6 +112,14 @@ jobs:
             echo "跳过 ${{ matrix.package }} (选择的应用端: ${{ inputs.package }})"
           fi
 
+      # Apple 要求: 自 2026-04-28 起, 上传 App Store 的构建必须使用 iOS 26 SDK (Xcode 26) 或更新版本。
+      # 钉到具体版本而非 latest-stable, 避免镜像滚动更新期间版本漂移 (参考 setup-xcode#96)。
+      - name: 选择 Xcode 版本 (iOS 26 SDK)
+        if: steps.check.outputs.should_run == 'true'
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "26.4"
+
       - name: 显示构建信息
         if: steps.check.outputs.should_run == 'true'
         run: |
@@ -123,6 +132,10 @@ jobs:
           echo "API URL: ${{ inputs.base_url }}"
           echo "WebSocket URL: ${{ inputs.base_ws_url }}"
           echo "分发到 App Store: ${{ inputs.distribute_appstore }}"
+          echo "-----------------------------------------"
+          echo "Runner: ${{ runner.os }} / $(sw_vers -productVersion)"
+          echo "Xcode: $(xcodebuild -version | tr '\n' ' ')"
+          echo "iOS SDK: $(xcrun --sdk iphoneos --show-sdk-version)"
           echo "========================================="
 
       - name: Checkout the code
