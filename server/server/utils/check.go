@@ -19,123 +19,54 @@ func DumpRequest(c *gin.Context) {
 	logrus.Debugln("Request data:", string(requestDump))
 }
 
-func CheckPlatforms(input string, db *mongo.Database, ctx *gin.Context) error {
+func checkMetaItemExists(input, fieldName, itemType string, db *mongo.Database, ctx *gin.Context) error {
 	if input == "" {
-		filter := bson.M{"platform_name": bson.M{"$exists": true}}
+		filter := bson.M{fieldName: bson.M{"$exists": true}}
 		count, err := db.Collection("apps_meta").CountDocuments(ctx, filter)
 		if err != nil {
 			return err
 		}
-
 		if count > 0 {
-			return errors.New("you have a created platforms, setting platform is required")
+			return errors.New("you have created " + itemType + "s, setting " + itemType + " is required")
 		}
-
 		return nil
 	}
-	// Check if the platform exists in the database
-	cursor, err := db.Collection("apps_meta").Find(ctx, bson.M{"platform_name": input})
+	cursor, err := db.Collection("apps_meta").Find(ctx, bson.M{fieldName: input})
 	if err != nil {
 		return err
 	}
 	defer cursor.Close(ctx)
-
-	// Check if any documents were returned
 	if !cursor.Next(ctx) {
-		return errors.New("wrong name of platform. Platform does not exist")
+		return errors.New("wrong name of " + itemType + ". " + strings.ToUpper(itemType[:1]) + itemType[1:] + " does not exist")
 	}
-
-	// If a document was returned, the channel exists
 	return nil
+}
+
+func CheckPlatforms(input string, db *mongo.Database, ctx *gin.Context) error {
+	return checkMetaItemExists(input, "platform_name", "platform", db, ctx)
+}
+
+func CheckArchs(input string, db *mongo.Database, ctx *gin.Context) error {
+	return checkMetaItemExists(input, "arch_id", "arch", db, ctx)
+}
+
+func CheckChannels(input string, db *mongo.Database, ctx *gin.Context) error {
+	return checkMetaItemExists(input, "channel_name", "channel", db, ctx)
 }
 
 func CheckArchsLatest(input string, db *mongo.Database, ctx *gin.Context) (string, error) {
 	if input == "" {
-		filter := bson.M{"arch_id": bson.M{"$exists": true}}
-		count, err := db.Collection("apps_meta").CountDocuments(ctx, filter)
-		if err != nil {
-			return "", err
-		}
-
-		if count > 0 {
-			return "", nil
-		}
-
 		return "", nil
-	} else {
-		// Check if the channel exists in the database
-		cursor, err := db.Collection("apps_meta").Find(ctx, bson.M{"arch_id": input})
-		if err != nil {
-			return "", err
-		}
-		defer cursor.Close(ctx)
-
-		// Check if any documents were returned
-		if !cursor.Next(ctx) {
-			input = ""
-		}
 	}
-	return input, nil
-}
-
-func CheckArchs(input string, db *mongo.Database, ctx *gin.Context) error {
-	if input == "" {
-		filter := bson.M{"arch_id": bson.M{"$exists": true}}
-		count, err := db.Collection("apps_meta").CountDocuments(ctx, filter)
-		if err != nil {
-			return err
-		}
-
-		if count > 0 {
-			return errors.New("you have a created archs, setting arch is required")
-		}
-
-		return nil
-	}
-	// Check if the channel exists in the database
 	cursor, err := db.Collection("apps_meta").Find(ctx, bson.M{"arch_id": input})
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer cursor.Close(ctx)
-
-	// Check if any documents were returned
 	if !cursor.Next(ctx) {
-		return errors.New("wrong name of arch. Arch does not exist")
+		input = ""
 	}
-
-	// If a document was returned, the channel exists
-	return nil
-}
-
-func CheckChannels(input string, db *mongo.Database, ctx *gin.Context) error {
-	if input == "" {
-		filter := bson.M{"channel_name": bson.M{"$exists": true}}
-		count, err := db.Collection("apps_meta").CountDocuments(ctx, filter)
-		if err != nil {
-			return err
-		}
-
-		if count > 0 {
-			return errors.New("you have a created channels, setting channel is required")
-		}
-
-		return nil
-	}
-	// Check if the channel exists in the database
-	cursor, err := db.Collection("apps_meta").Find(ctx, bson.M{"channel_name": input})
-	if err != nil {
-		return err
-	}
-	defer cursor.Close(ctx)
-
-	// Check if any documents were returned
-	if !cursor.Next(ctx) {
-		return errors.New("wrong name of channel. Channel does not exist")
-	}
-
-	// If a document was returned, the channel exists
-	return nil
+	return input, nil
 }
 
 func CheckPlatformsLatest(input string, updater string, db *mongo.Database, ctx *gin.Context) (string, string, error) {

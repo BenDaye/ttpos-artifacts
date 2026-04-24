@@ -4,6 +4,7 @@ import (
 	"context"
 	"faynoSync/mongod"
 	"faynoSync/server/model"
+	"faynoSync/server/utils"
 	"net/http"
 	"os"
 	"time"
@@ -24,8 +25,13 @@ func SignUp(c *gin.Context, database *mongo.Database, client *mongo.Client) {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "wrong api key"})
 		return
 	}
-	ctx, ctxErr := context.WithTimeout(c.Request.Context(), 30*time.Second)
-	defer ctxErr()
+
+	if err := utils.ValidatePasswordStrength(creds.Password); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	defer cancel()
 	// check the user credentials against the admins collection in MongoDB
 	admins := database.Collection("admins")
 	var result bson.M

@@ -296,7 +296,11 @@ func GetUsernameFromContext(c *gin.Context) (string, error) {
 	if !exists {
 		return "", errors.New("username not found in token")
 	}
-	return username.(string), nil
+	usernameStr, ok := username.(string)
+	if !ok {
+		return "", errors.New("invalid username type in token")
+	}
+	return usernameStr, nil
 }
 
 // CalculateFileHashes calculates SHA256 and SHA512 hashes and file length from a multipart file

@@ -20,8 +20,8 @@ import (
 
 func DeleteSpecificVersionOfApp(c *gin.Context, repository db.AppRepository, db *mongo.Database, rdb *redis.Client) {
 	env := viper.GetViper()
-	ctx, ctxErr := context.WithTimeout(c.Request.Context(), 30*time.Second)
-	defer ctxErr()
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	defer cancel()
 	owner, err := utils.GetUsernameFromContext(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
@@ -50,7 +50,7 @@ func DeleteSpecificVersionOfApp(c *gin.Context, repository db.AppRepository, db 
 	links, result, appName, err := repository.DeleteSpecificVersionOfApp(objID, owner, ctx)
 	if err != nil {
 		logrus.Error(err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete specific version of app", "details": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete specific version of app"})
 		return
 	}
 
@@ -186,8 +186,8 @@ func DeletePlatform(c *gin.Context, repository db.AppRepository) {
 }
 
 func deleteEntity(c *gin.Context, repository db.AppRepository, itemType string) {
-	ctx, ctxErr := context.WithTimeout(c.Request.Context(), 30*time.Second)
-	defer ctxErr()
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	defer cancel()
 
 	// Convert string to ObjectID
 	objID, err := primitive.ObjectIDFromHex(c.Query("id"))
@@ -218,7 +218,7 @@ func deleteEntity(c *gin.Context, repository db.AppRepository, itemType string) 
 	}
 	if err != nil {
 		logrus.Error(err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete " + itemType, "details": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete " + itemType})
 		return
 	}
 	var tag language.Tag

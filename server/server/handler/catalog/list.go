@@ -13,8 +13,8 @@ import (
 )
 
 func ListChannels(c *gin.Context, repository db.AppRepository) {
-	ctx, ctxErr := context.WithTimeout(c.Request.Context(), 30*time.Second)
-	defer ctxErr()
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	defer cancel()
 
 	owner, err := utils.GetUsernameFromContext(c)
 	if err != nil {
@@ -35,8 +35,8 @@ func ListChannels(c *gin.Context, repository db.AppRepository) {
 }
 
 func ListPlatforms(c *gin.Context, repository db.AppRepository) {
-	ctx, ctxErr := context.WithTimeout(c.Request.Context(), 30*time.Second)
-	defer ctxErr()
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	defer cancel()
 
 	owner, err := utils.GetUsernameFromContext(c)
 	if err != nil {
@@ -57,8 +57,8 @@ func ListPlatforms(c *gin.Context, repository db.AppRepository) {
 }
 
 func ListArchs(c *gin.Context, repository db.AppRepository) {
-	ctx, ctxErr := context.WithTimeout(c.Request.Context(), 30*time.Second)
-	defer ctxErr()
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	defer cancel()
 
 	owner, err := utils.GetUsernameFromContext(c)
 	if err != nil {
@@ -79,8 +79,8 @@ func ListArchs(c *gin.Context, repository db.AppRepository) {
 }
 
 func ListApps(c *gin.Context, repository db.AppRepository) {
-	ctx, ctxErr := context.WithTimeout(c.Request.Context(), 30*time.Second)
-	defer ctxErr()
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	defer cancel()
 
 	owner, err := utils.GetUsernameFromContext(c)
 	if err != nil {

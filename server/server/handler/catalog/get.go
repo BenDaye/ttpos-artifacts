@@ -14,8 +14,8 @@ import (
 )
 
 func GetAppByName(c *gin.Context, repository db.AppRepository) {
-	ctx, ctxErr := context.WithTimeout(c.Request.Context(), 30*time.Second)
-	defer ctxErr()
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	defer cancel()
 
 	// Get username from JWT token
 	owner, err := utils.GetUsernameFromContext(c)
@@ -60,6 +60,9 @@ func GetAppByName(c *gin.Context, repository db.AppRepository) {
 	if limitStr := c.Query("limit"); limitStr != "" {
 		if parsedLimit, err := strconv.ParseInt(limitStr, 10, 64); err == nil && parsedLimit > 0 {
 			limit = parsedLimit
+			if limit > 1000 {
+				limit = 1000
+			}
 		}
 	}
 
@@ -67,7 +70,7 @@ func GetAppByName(c *gin.Context, repository db.AppRepository) {
 	result, err := repository.GetAppByName(appName, ctx, page, limit, owner, filters)
 	if err != nil {
 		logrus.Error(err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch application data"})
 		return
 	}
 
@@ -75,8 +78,8 @@ func GetAppByName(c *gin.Context, repository db.AppRepository) {
 }
 
 func GetAllApps(c *gin.Context, repository db.AppRepository) {
-	ctx, ctxErr := context.WithTimeout(c.Request.Context(), 30*time.Second)
-	defer ctxErr()
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	defer cancel()
 
 	// Get username from JWT token
 	owner, err := utils.GetUsernameFromContext(c)
@@ -92,6 +95,9 @@ func GetAllApps(c *gin.Context, repository db.AppRepository) {
 	if limitStr := c.Query("limit"); limitStr != "" {
 		if parsedLimit, err := strconv.ParseInt(limitStr, 10, 64); err == nil && parsedLimit > 0 {
 			limit = parsedLimit
+			if limit > 1000 {
+				limit = 1000
+			}
 		}
 	}
 

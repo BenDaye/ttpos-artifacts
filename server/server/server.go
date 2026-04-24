@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"strings"
+	"time"
 
 	db "faynoSync/mongod"
 	"faynoSync/redisdb"
@@ -15,12 +16,19 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"golang.org/x/time/rate"
 )
 
 func StartServer(config *viper.Viper, flags map[string]interface{}) {
+	jwtSecret := config.GetString("JWT_SECRET")
+	if jwtSecret == "" || len(jwtSecret) < 32 {
+		logrus.Fatal("JWT_SECRET must be configured and at least 32 characters long")
+	}
+
 	mongoUrl := config.GetString("MONGODB_URL")
 
 	router := gin.Default()
+	router.MaxMultipartMemory = 100 << 20
 
 	client, configDB := db.ConnectToDatabase(mongoUrl, flags)
 
@@ -28,7 +36,7 @@ func StartServer(config *viper.Viper, flags map[string]interface{}) {
 	mongoDatabase := client.Database(configDB.Database)
 
 	// Run seed if requested via -seed flag
-	if flags["seed"].(bool) {
+	if seedFlag, ok := flags["seed"].(bool); ok && seedFlag {
 		db.RunSeed(repo, mongoDatabase, context.Background(), config.GetString("SEED_OWNER"))
 	}
 
@@ -63,8 +71,10 @@ func StartServer(config *viper.Viper, flags map[string]interface{}) {
 
 	router.GET("/checkVersion", handler.FindLatestVersion)
 	router.GET("/apps/latest", handler.FetchLatestVersionOfApp)
-	router.POST("/signup", handler.SignUp)
-	router.POST("/login", handler.Login)
+	loginLimiter := utils.NewIPRateLimiter(rate.Every(6*time.Second), 10)
+	signupLimiter := utils.NewIPRateLimiter(rate.Every(20*time.Second), 3)
+	router.POST("/signup", utils.RateLimitMiddleware(signupLimiter), handler.SignUp)
+	router.POST("/login", utils.RateLimitMiddleware(loginLimiter), handler.Login)
 
 	if config.GetBool("ENABLE_PRIVATE_APP_DOWNLOADING") {
 		router.GET("/download", handler.DownloadArtifact)

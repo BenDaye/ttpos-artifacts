@@ -22,15 +22,16 @@ func CreateItem(c *gin.Context, repository db.AppRepository, itemType string) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
 	defer cancel()
 
-	// Get username from JWT token
-	owner, exists := c.Get("username")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "username not found in token"})
+	owner, err := utils.GetUsernameFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
-	var result interface{}
-	var err error
+	var (
+		result interface{}
+		createErr error
+	)
 
 	switch itemType {
 	case "channel":
@@ -43,7 +44,7 @@ func CreateItem(c *gin.Context, repository db.AppRepository, itemType string) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		result, err = repository.CreateChannel(req.ChannelName, owner.(string), ctx)
+		result, createErr = repository.CreateChannel(req.ChannelName, owner, ctx)
 	case "platform":
 		var req model.CreatePlatformRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
@@ -61,7 +62,7 @@ func CreateItem(c *gin.Context, repository db.AppRepository, itemType string) {
 				return
 			}
 		}
-		result, err = repository.CreatePlatform(req.PlatformName, req.Updaters, owner.(string), ctx)
+		result, createErr = repository.CreatePlatform(req.PlatformName, req.Updaters, owner, ctx)
 	case "arch":
 		var req model.CreateArchRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
@@ -72,7 +73,7 @@ func CreateItem(c *gin.Context, repository db.AppRepository, itemType string) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		result, err = repository.CreateArch(req.ArchID, owner.(string), ctx)
+		result, createErr = repository.CreateArch(req.ArchID, owner, ctx)
 	case "app":
 		var logoLink string
 		jsonData := c.PostForm("data")
@@ -98,9 +99,9 @@ func CreateItem(c *gin.Context, repository db.AppRepository, itemType string) {
 			files := form.File["file"]
 			if len(files) > 0 {
 				file := files[0]
-				logoLink, err = utils.UploadLogo(paramValue, owner.(string), file, c, viper.GetViper())
-				if err != nil {
-					logrus.Error(err)
+				logoLink, createErr = utils.UploadLogo(paramValue, owner, file, c, viper.GetViper())
+				if createErr != nil {
+					logrus.Error(createErr)
 					c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to upload logo to S3"})
 					return
 				}
@@ -109,14 +110,15 @@ func CreateItem(c *gin.Context, repository db.AppRepository, itemType string) {
 		description := params["description"]
 		private := utils.GetBoolParam(params["private"])
 		tuf := utils.GetBoolParam(params["tuf"])
-		result, err = repository.CreateApp(paramValue, logoLink, description, private, tuf, owner.(string), ctx)
+		result, createErr = repository.CreateApp(paramValue, logoLink, description, private, tuf, owner, ctx)
 	default:
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid item type"})
 		return
 	}
 
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	if createErr != nil {
+		logrus.Error(createErr)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create " + itemType})
 		return
 	}
 	var tag language.Tag

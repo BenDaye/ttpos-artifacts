@@ -110,8 +110,8 @@ func FindLatestVersion(c *gin.Context, repository db.AppRepository, db *mongo.Da
 		return
 	}
 	logrus.Debugf("Validated parameters: %+v", validatedParams)
-	ctx, ctxErr := context.WithTimeout(c.Request.Context(), 30*time.Second)
-	defer ctxErr()
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	defer cancel()
 
 	cacheKey := CreateCacheKey(validatedParams)
 	logrus.Debugf("Generated cache key: %s", cacheKey)
@@ -231,8 +231,8 @@ func FetchLatestVersionOfApp(c *gin.Context, repository db.AppRepository, rdb *r
 		"package":  c.Query("package"),
 		"owner":    c.Query("owner"),
 	}
-	ctx, ctxErr := context.WithTimeout(c.Request.Context(), 30*time.Second)
-	defer ctxErr()
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	defer cancel()
 
 	cacheKey := CreateCacheKey(params)
 	logrus.Debugf("Generated cache key: %s", cacheKey)
@@ -263,7 +263,7 @@ func FetchLatestVersionOfApp(c *gin.Context, repository db.AppRepository, rdb *r
 	checkResult, err := repository.FetchLatestVersionOfApp(params["app_name"].(string), params["channel"].(string), ctx, params["owner"].(string))
 	if err != nil {
 		logrus.Error(err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch latest version"})
 		return
 	}
 

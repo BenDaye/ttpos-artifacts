@@ -32,7 +32,7 @@ func RunMigrations(client *mongo.Client, dbName string, flags map[string]interfa
 		}
 	}
 
-	if flags["rollback"].(bool) {
+	if rollbackFlag, ok := flags["rollback"].(bool); ok && rollbackFlag {
 		if err := m.Down(); err != nil {
 			panic(err)
 		}

@@ -12,8 +12,8 @@ import (
 )
 
 func DownloadArtifact(c *gin.Context) {
-	_, ctxErr := context.WithTimeout(c.Request.Context(), 30*time.Second)
-	defer ctxErr()
+	_, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	defer cancel()
 	urlStr, err := utils.GeneratePresignedURL(c, c.Query("key"), 15*time.Minute)
 	if err != nil {
 		logrus.Error("Failed to generate pre-signed URL: ", err)

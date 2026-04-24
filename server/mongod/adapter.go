@@ -30,7 +30,7 @@ func ConnectToDatabase(mongoUrl string, flags map[string]interface{}) (*mongo.Cl
 	}
 
 	logrus.Infoln("Connected to MongoDB!")
-	if flags["migration"].(bool) {
+	if migrationFlag, ok := flags["migration"].(bool); ok && migrationFlag {
 		RunMigrations(client, uriOptions.Database, flags)
 	}
 	return client, *uriOptions

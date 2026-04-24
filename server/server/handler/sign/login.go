@@ -38,7 +38,12 @@ func Login(c *gin.Context, database *mongo.Database) {
 	if err == nil {
 		logrus.Debugf("User %s found in admins collection", credentials.Username)
 		// User is an admin, verify password
-		hashedPassword := adminResult["password"].(string)
+		hashedPassword, ok := adminResult["password"].(string)
+		if !ok {
+			logrus.Errorf("Invalid password record for admin user %s", credentials.Username)
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+			return
+		}
 		if err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(credentials.Password)); err != nil {
 			logrus.Errorf("Invalid password for admin user %s: %v", credentials.Username, err)
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid username or password"})
@@ -74,7 +79,12 @@ func Login(c *gin.Context, database *mongo.Database) {
 	logrus.Debugf("User %s found in team_users collection", credentials.Username)
 
 	// User is a team user, verify password
-	hashedPassword := teamUserResult["password"].(string)
+	hashedPassword, ok := teamUserResult["password"].(string)
+	if !ok {
+		logrus.Errorf("Invalid password record for team user %s", credentials.Username)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
 	if err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(credentials.Password)); err != nil {
 		logrus.Errorf("Invalid password for team user %s: %v", credentials.Username, err)
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid username or password"})

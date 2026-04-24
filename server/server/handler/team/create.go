@@ -43,6 +43,11 @@ func CreateTeamUser(c *gin.Context, database *mongo.Database) {
 
 	logrus.Debugf("Team user will be owned by admin: %s", owner)
 
+	if err := utils.ValidatePasswordStrength(req.Password); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
 	// Hash the password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
