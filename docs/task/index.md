@@ -12,3 +12,4 @@
 | [x] | QUAL-001 | Dashboard 代码质量改善 | P2 | completed |
 | [x] | PERF-001 | Server 性能优化 | P2 | completed |
 | [x] | PERF-002 | Dashboard 性能优化 | P2 | completed |
+| [x] | FEAT-001 | 新增 latest 路径式下载入口 | P2 | completed |

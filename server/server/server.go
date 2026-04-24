@@ -71,6 +71,8 @@ func StartServer(config *viper.Viper, flags map[string]interface{}) {
 
 	router.GET("/checkVersion", handler.FindLatestVersion)
 	router.GET("/apps/latest", handler.FetchLatestVersionOfApp)
+	router.GET("/latest/:owner/:app_name/:channel/:platform/:arch", handler.LatestDownload)
+	router.GET("/latest/:owner/:app_name/:channel/:platform/:arch/:package", handler.LatestDownload)
 	loginLimiter := utils.NewIPRateLimiter(rate.Every(6*time.Second), 10)
 	signupLimiter := utils.NewIPRateLimiter(rate.Every(20*time.Second), 3)
 	router.POST("/signup", utils.RateLimitMiddleware(signupLimiter), handler.SignUp)

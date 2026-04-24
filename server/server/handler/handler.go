@@ -54,6 +54,7 @@ type AppHandler interface {
 	UpdateAdmin(*gin.Context)
 	GetTelemetry(*gin.Context)
 	SquirrelReleases(*gin.Context)
+	LatestDownload(*gin.Context)
 	CreateToken(*gin.Context)
 	ListTokens(*gin.Context)
 	DeleteToken(*gin.Context)
@@ -255,6 +256,28 @@ func (ch *appHandler) SquirrelReleases(c *gin.Context) {
 	c.Request.URL.RawQuery = q.Encode()
 
 	info.FindLatestVersion(c, ch.repository, ch.database, ch.redisClient, ch.performanceMode)
+}
+
+// LatestDownload exposes a path-based shortcut to the latest installer.
+// Routes:
+//   GET /latest/:owner/:app_name/:channel/:platform/:arch
+//   GET /latest/:owner/:app_name/:channel/:platform/:arch/:package
+// Path params are mapped onto the query string and the call is delegated to
+// FetchLatestVersionOfApp, which already handles the 302 redirect when a
+// single artifact matches.
+func (ch *appHandler) LatestDownload(c *gin.Context) {
+	q := c.Request.URL.Query()
+	q.Set("owner", c.Param("owner"))
+	q.Set("app_name", c.Param("app_name"))
+	q.Set("channel", c.Param("channel"))
+	q.Set("platform", c.Param("platform"))
+	q.Set("arch", c.Param("arch"))
+	if pkg := c.Param("package"); pkg != "" {
+		q.Set("package", pkg)
+	}
+	c.Request.URL.RawQuery = q.Encode()
+
+	info.FetchLatestVersionOfApp(c, ch.repository, ch.redisClient, ch.performanceMode)
 }
 
 func (ch *appHandler) CreateToken(c *gin.Context) {
