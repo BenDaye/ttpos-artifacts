@@ -12,6 +12,7 @@ import { Plus } from 'lucide-react';
 import { useLayoutPreference } from '../hooks/useLayoutPreference';
 import { LayoutSwitcher } from '../components/layouts/LayoutSwitcher';
 import { ThemeSwitcher } from '../components/ThemeSwitcher';
+import { useDebounce } from '../hooks/useDebounce';
 
 export const HomePage = () => {
   const { appName } = useParams();
@@ -30,6 +31,7 @@ export const HomePage = () => {
   >([]);
   const [refreshKey, setRefreshKey] = React.useState(0);
   const [searchTerm, setSearchTerm] = React.useState('');
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [layout, setLayout] = useLayoutPreference();
 
   React.useEffect(() => {
@@ -95,7 +97,7 @@ export const HomePage = () => {
         onChangelogClick={handleChangelogClick}
         onBackClick={handleBackClick}
         refreshKey={refreshKey}
-        searchTerm={searchTerm}
+        searchTerm={debouncedSearchTerm}
         layout={layout}
       />
       {showUploadModal && <UploadModal onClose={toggleUploadModal} />}

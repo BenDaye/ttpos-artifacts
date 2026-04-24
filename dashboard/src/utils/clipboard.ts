@@ -71,12 +71,12 @@ export const copyToClipboard = async (text: string): Promise<boolean> => {
     instructions.style.textAlign = 'center';
     instructions.style.fontFamily = 'sans-serif';
     instructions.style.color = 'black';
-    instructions.innerHTML = 'Please select and copy the text below (Cmd+C or right-click → Copy)';
+    instructions.textContent = 'Please select and copy the text below (Cmd+C or right-click → Copy)';
     instructions.className = 'temp-clipboard-element';
 
     // Add close button
     const closeButton = document.createElement('button');
-    closeButton.innerHTML = '×';
+    closeButton.textContent = '×';
     closeButton.style.position = 'fixed';
     closeButton.style.top = 'calc(50% - 150px)';
     closeButton.style.right = 'calc(10% + 10px)';

@@ -7,6 +7,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { MainLayout } from '../components/MainLayout';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 
 const SignInPage = lazy(() => import('../pages/signInPage.tsx').then(module => ({ default: module.SignInPage })));
 const SignUpPage = lazy(() => import('../pages/signUpPage.tsx').then(module => ({ default: module.SignUpPage })));
@@ -18,12 +19,14 @@ const StatisticsPage = lazy(() => import('../pages/StatisticsPage.tsx').then(mod
 const SettingsPage = lazy(() => import('../pages/SettingsPage.tsx').then(module => ({ default: module.SettingsPage })));
 
 const RootLayout = () => (
-  <AuthProvider>
-    <ToastContainer />
-    <Suspense fallback={<LoadingSpinner />}>
-      <Outlet />
-    </Suspense>
-  </AuthProvider>
+  <ErrorBoundary>
+    <AuthProvider>
+      <ToastContainer />
+      <Suspense fallback={<LoadingSpinner />}>
+        <Outlet />
+      </Suspense>
+    </AuthProvider>
+  </ErrorBoundary>
 );
 
 export const router = createBrowserRouter([
