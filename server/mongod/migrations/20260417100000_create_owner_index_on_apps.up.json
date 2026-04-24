@@ -1,0 +1,20 @@
+[{
+    "createIndexes": "apps",
+    "indexes": [
+        {
+            "key": {
+                "owner": 1
+            },
+            "name": "index_on_owner",
+            "background": true
+        },
+        {
+            "key": {
+                "owner": 1,
+                "app_id": 1
+            },
+            "name": "index_on_owner_app_id",
+            "background": true
+        }
+    ]
+}]

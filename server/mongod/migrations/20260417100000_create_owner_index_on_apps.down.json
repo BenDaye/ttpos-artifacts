@@ -1,0 +1,10 @@
+[
+  {
+    "dropIndexes": "apps",
+    "index": "index_on_owner"
+  },
+  {
+    "dropIndexes": "apps",
+    "index": "index_on_owner_app_id"
+  }
+]
