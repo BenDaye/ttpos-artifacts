@@ -50,3 +50,6 @@ tmp*
 playwright-report/
 test-results/
 e2e/.auth/
+
+# AISSH
+.aissh.yaml
