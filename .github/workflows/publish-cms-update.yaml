@@ -1,4 +1,4 @@
-name: "Test: CMS Update"
+name: "Publish: CMS Update"
 
 on:
   workflow_dispatch:
@@ -13,7 +13,7 @@ jobs:
   update-cms:
     runs-on: ubuntu-latest
     env:
-      STRAPI_URL: https://cms.hitosea.com
+      STRAPI_URL: ${{ secrets.STRAPI_URL }}
       STRAPI_TOKEN: ${{ secrets.STRAPI_TOKEN }}
       FAYNOSYNC_URL: ${{ secrets.FAYNOSYNC_URL }}
     steps:
@@ -30,6 +30,7 @@ jobs:
       - name: 检查 Secrets 配置
         run: |
           MISSING=""
+          if [ -z "$STRAPI_URL" ]; then MISSING="${MISSING} STRAPI_URL"; fi
           if [ -z "$STRAPI_TOKEN" ]; then MISSING="${MISSING} STRAPI_TOKEN"; fi
           if [ -z "$FAYNOSYNC_URL" ]; then MISSING="${MISSING} FAYNOSYNC_URL"; fi
           if [ -n "$MISSING" ]; then
