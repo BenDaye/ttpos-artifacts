@@ -1,0 +1,21 @@
+{
+  "description": "管理应用的发布渠道。",
+  "create_title": "新建渠道",
+  "edit_title": "编辑渠道",
+  "delete_title": "删除渠道？",
+  "delete_description": "绑定到此渠道的版本将失去渠道关联。",
+  "form": {
+    "name": "渠道名称",
+    "description": "使用短小写标识符（如 stable、beta）。"
+  },
+  "empty": {
+    "title": "暂无渠道",
+    "description": "创建第一个渠道以开始标记版本。"
+  },
+  "validation": {
+    "required": "必填"
+  },
+  "created": "渠道已创建",
+  "updated": "渠道已更新",
+  "deleted": "渠道已删除"
+}

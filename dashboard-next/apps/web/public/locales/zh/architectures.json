@@ -1,0 +1,21 @@
+{
+  "description": "管理构建产物对应的 CPU 架构。",
+  "create_title": "新建架构",
+  "edit_title": "编辑架构",
+  "delete_title": "删除架构？",
+  "delete_description": "绑定到此架构的版本将失去架构关联。",
+  "form": {
+    "name": "架构名称",
+    "description": "使用 amd64、arm64、x86_64 等小写标识。"
+  },
+  "empty": {
+    "title": "暂无架构",
+    "description": "添加架构后可对构建产物进行分类。"
+  },
+  "validation": {
+    "required": "必填"
+  },
+  "created": "架构已创建",
+  "updated": "架构已更新",
+  "deleted": "架构已删除"
+}

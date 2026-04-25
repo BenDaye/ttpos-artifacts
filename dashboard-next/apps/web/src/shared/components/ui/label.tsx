@@ -1,0 +1,14 @@
+import type { ComponentPropsWithoutRef } from 'react'
+import { cn } from '@/shared/lib/utils'
+
+export function Label({ className, ...props }: ComponentPropsWithoutRef<'label'>) {
+  return (
+    <label
+      className={cn(
+        'text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70',
+        className,
+      )}
+      {...props}
+    />
+  )
+}

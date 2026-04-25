@@ -1,0 +1,21 @@
+{
+  "description": "Manage CPU architectures for your artifacts.",
+  "create_title": "Create architecture",
+  "edit_title": "Edit architecture",
+  "delete_title": "Delete architecture?",
+  "delete_description": "Versions tied to this architecture will lose their architecture reference.",
+  "form": {
+    "name": "Architecture name",
+    "description": "Use a lowercase identifier (e.g. amd64, arm64, x86_64)."
+  },
+  "empty": {
+    "title": "No architectures yet",
+    "description": "Add architectures so artifacts can be classified."
+  },
+  "validation": {
+    "required": "Required"
+  },
+  "created": "Architecture created",
+  "updated": "Architecture updated",
+  "deleted": "Architecture deleted"
+}

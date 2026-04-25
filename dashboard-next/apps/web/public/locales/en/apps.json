@@ -1,0 +1,16 @@
+{
+  "title": "Applications",
+  "description": "Manage application versions and artifacts.",
+  "empty": {
+    "title": "No applications yet",
+    "description": "Create one or upload your first artifact to get started."
+  },
+  "detail": {
+    "description": "Versions, artifacts and deployment activity.",
+    "back": "Back",
+    "empty": {
+      "title": "Detail view pending",
+      "description": "Wiring will be completed in stage S3."
+    }
+  }
+}

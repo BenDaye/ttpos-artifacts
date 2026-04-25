@@ -1,0 +1,18 @@
+{
+  "name": "@ttpos/shared",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@ttpos/config": "workspace:*",
+    "typescript": "^5.9.0"
+  }
+}

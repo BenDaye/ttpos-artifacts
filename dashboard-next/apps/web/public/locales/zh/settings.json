@@ -1,0 +1,21 @@
+{
+  "title": "设置",
+  "description": "用户、安全与访问控制。",
+  "tabs": {
+    "users": "用户",
+    "tuf": "TUF",
+    "tokens": "API 令牌"
+  },
+  "users": {
+    "empty": "用户管理待接入",
+    "description": "将在 S4 阶段完成接入。"
+  },
+  "tuf": {
+    "empty": "TUF 管理待接入",
+    "description": "将在 S4 阶段完成接入。"
+  },
+  "tokens": {
+    "empty": "API 令牌管理待接入",
+    "description": "将在 S4 阶段完成接入。"
+  }
+}

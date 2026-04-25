@@ -1,0 +1,40 @@
+{
+  "app": {
+    "name": "FaynoSync Dashboard"
+  },
+  "actions": {
+    "create": "Create",
+    "edit": "Edit",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "save": "Save",
+    "confirm": "Confirm",
+    "search": "Search",
+    "upload": "Upload",
+    "refresh": "Refresh",
+    "close": "Close"
+  },
+  "states": {
+    "loading": "Loading…",
+    "empty": "Nothing here yet.",
+    "error": "Something went wrong."
+  },
+  "nav": {
+    "applications": "Applications",
+    "channels": "Channels",
+    "platforms": "Platforms",
+    "architectures": "Architectures",
+    "statistics": "Statistics",
+    "settings": "Settings"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "auto": "Auto"
+  },
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "zh": "简体中文"
+  }
+}

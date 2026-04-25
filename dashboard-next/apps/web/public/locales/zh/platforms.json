@@ -1,0 +1,21 @@
+{
+  "description": "管理目标平台（android/ios/macos/windows/web）。",
+  "create_title": "新建平台",
+  "edit_title": "编辑平台",
+  "delete_title": "删除平台？",
+  "delete_description": "绑定到此平台的版本将失去平台关联。",
+  "form": {
+    "name": "平台名称",
+    "description": "使用 android、ios、macos 等小写标识。"
+  },
+  "empty": {
+    "title": "暂无平台",
+    "description": "添加平台后可对构建产物进行分类。"
+  },
+  "validation": {
+    "required": "必填"
+  },
+  "created": "平台已创建",
+  "updated": "平台已更新",
+  "deleted": "平台已删除"
+}

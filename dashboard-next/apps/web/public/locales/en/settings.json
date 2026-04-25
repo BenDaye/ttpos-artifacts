@@ -1,0 +1,21 @@
+{
+  "title": "Settings",
+  "description": "Users, security, and access.",
+  "tabs": {
+    "users": "Users",
+    "tuf": "TUF",
+    "tokens": "API Tokens"
+  },
+  "users": {
+    "empty": "User administration pending",
+    "description": "Wiring will be completed in stage S4."
+  },
+  "tuf": {
+    "empty": "TUF administration pending",
+    "description": "Wiring will be completed in stage S4."
+  },
+  "tokens": {
+    "empty": "API token management pending",
+    "description": "Wiring will be completed in stage S4."
+  }
+}

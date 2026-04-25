@@ -1,0 +1,9 @@
+{
+  "name": "@ttpos/config",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "files": [
+    "tsconfig"
+  ]
+}

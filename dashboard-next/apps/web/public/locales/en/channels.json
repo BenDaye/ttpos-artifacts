@@ -1,0 +1,21 @@
+{
+  "description": "Manage release channels for your applications.",
+  "create_title": "Create channel",
+  "edit_title": "Edit channel",
+  "delete_title": "Delete channel?",
+  "delete_description": "Versions tied to this channel will lose their channel reference.",
+  "form": {
+    "name": "Channel name",
+    "description": "Use a short, lowercase identifier (e.g. stable, beta)."
+  },
+  "empty": {
+    "title": "No channels yet",
+    "description": "Create your first channel to start tagging releases."
+  },
+  "validation": {
+    "required": "Required"
+  },
+  "created": "Channel created",
+  "updated": "Channel updated",
+  "deleted": "Channel deleted"
+}

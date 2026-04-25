@@ -1,0 +1,146 @@
+import { Copy, Key, Plus, Trash2 } from 'lucide-react'
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
+import { ConfirmDialog } from '@/shared/components/common/confirm-dialog'
+import { EmptyState } from '@/shared/components/empty-state'
+import { Badge } from '@/shared/components/ui/badge'
+import { Button } from '@/shared/components/ui/button'
+import { Card, CardContent } from '@/shared/components/ui/card'
+import { Skeleton } from '@/shared/components/ui/skeleton'
+import { useRevokeTokenMutation, useTokensQuery } from '../hooks'
+import { CreateTokenDialog } from './create-token-dialog'
+
+export function TokensPanel() {
+  const { t } = useTranslation(['settings', 'common'])
+  const tokensQuery = useTokensQuery()
+  const revoke = useRevokeTokenMutation()
+  const [creating, setCreating] = useState(false)
+  const [revoking, setRevoking] = useState<string | null>(null)
+
+  const onRevoke = async () => {
+    if (!revoking)
+      return
+    try {
+      await revoke.mutateAsync(revoking)
+      toast.success(t('tokens.revoked', { defaultValue: 'Token revoked' }))
+      setRevoking(null)
+    }
+    catch (err) {
+      const message = err instanceof Error ? err.message : t('common:states.error')
+      toast.error(message)
+    }
+  }
+
+  return (
+    <div>
+      <div className="mb-4 flex justify-end">
+        <Button onClick={() => setCreating(true)}>
+          <Plus className="size-4" />
+          {t('tokens.create', { defaultValue: 'Create token' })}
+        </Button>
+      </div>
+
+      {tokensQuery.isPending && (
+        <div className="grid gap-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-16 rounded-xl" />
+          ))}
+        </div>
+      )}
+
+      {tokensQuery.isError && (
+        <EmptyState
+          title={t('common:states.error')}
+          description={(tokensQuery.error as Error)?.message}
+        />
+      )}
+
+      {tokensQuery.isSuccess && tokensQuery.data.length === 0 && (
+        <EmptyState
+          icon={Key}
+          title={t('tokens.empty', { defaultValue: 'No API tokens' })}
+          description={t('tokens.empty_description', { defaultValue: 'Create one for CI uploads.' })}
+        />
+      )}
+
+      {tokensQuery.isSuccess && tokensQuery.data.length > 0 && (
+        <div className="grid gap-3">
+          {tokensQuery.data.map(token => (
+            <Card key={token.id}>
+              <CardContent className="flex items-center justify-between gap-3 p-4">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
+                    <Key className="size-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">{token.name}</p>
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                      {token.prefix && (
+                        <Badge variant="outline">
+                          {token.prefix}
+                          …
+                        </Badge>
+                      )}
+                      <span>
+                        {t('tokens.created_at', { defaultValue: 'Created' })}
+                        {' '}
+                        {new Date(token.created_at).toLocaleString()}
+                      </span>
+                      {token.last_used_at && (
+                        <span>
+                          {t('tokens.last_used', { defaultValue: 'Last used' })}
+                          {' '}
+                          {new Date(token.last_used_at).toLocaleString()}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label={t('tokens.revoke', { defaultValue: 'Revoke' })}
+                  onClick={() => setRevoking(token.id)}
+                >
+                  <Trash2 className="size-4 text-destructive" />
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <CreateTokenDialog open={creating} onOpenChange={setCreating} />
+      <ConfirmDialog
+        open={Boolean(revoking)}
+        onOpenChange={open => !open && setRevoking(null)}
+        title={t('tokens.revoke_title', { defaultValue: 'Revoke token?' })}
+        description={t('tokens.revoke_description', {
+          defaultValue: 'CI tools using this token will lose access immediately.',
+        })}
+        confirmLabel={t('tokens.revoke', { defaultValue: 'Revoke' })}
+        destructive
+        loading={revoke.isPending}
+        onConfirm={onRevoke}
+      />
+    </div>
+  )
+}
+
+export function CopyButton({ value }: { value: string }) {
+  const { t } = useTranslation('common')
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      aria-label={t('actions.copy', { defaultValue: 'Copy' })}
+      onClick={() => {
+        void navigator.clipboard.writeText(value)
+        toast.success(t('actions.copied', { defaultValue: 'Copied' }))
+      }}
+    >
+      <Copy className="size-4" />
+    </Button>
+  )
+}

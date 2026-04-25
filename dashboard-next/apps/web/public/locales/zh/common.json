@@ -1,0 +1,40 @@
+{
+  "app": {
+    "name": "FaynoSync 控制台"
+  },
+  "actions": {
+    "create": "新建",
+    "edit": "编辑",
+    "delete": "删除",
+    "cancel": "取消",
+    "save": "保存",
+    "confirm": "确认",
+    "search": "搜索",
+    "upload": "上传",
+    "refresh": "刷新",
+    "close": "关闭"
+  },
+  "states": {
+    "loading": "加载中…",
+    "empty": "暂无内容",
+    "error": "出现错误"
+  },
+  "nav": {
+    "applications": "应用",
+    "channels": "渠道",
+    "platforms": "平台",
+    "architectures": "架构",
+    "statistics": "统计",
+    "settings": "设置"
+  },
+  "theme": {
+    "light": "浅色",
+    "dark": "深色",
+    "auto": "自动"
+  },
+  "language": {
+    "label": "语言",
+    "en": "English",
+    "zh": "简体中文"
+  }
+}

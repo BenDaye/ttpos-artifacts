@@ -1,0 +1,21 @@
+{
+  "description": "Manage target platforms (android/ios/macos/windows/web).",
+  "create_title": "Create platform",
+  "edit_title": "Edit platform",
+  "delete_title": "Delete platform?",
+  "delete_description": "Versions tied to this platform will lose their platform reference.",
+  "form": {
+    "name": "Platform name",
+    "description": "Use a lowercase identifier such as android, ios, macos."
+  },
+  "empty": {
+    "title": "No platforms yet",
+    "description": "Add platforms so artifacts can be classified."
+  },
+  "validation": {
+    "required": "Required"
+  },
+  "created": "Platform created",
+  "updated": "Platform updated",
+  "deleted": "Platform deleted"
+}
