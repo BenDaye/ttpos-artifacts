@@ -13,3 +13,4 @@
 | [x] | PERF-001 | Server 性能优化 | P2 | completed |
 | [x] | PERF-002 | Dashboard 性能优化 | P2 | completed |
 | [x] | FEAT-001 | 新增 latest 路径式下载入口 | P2 | completed |
+| [x] | REFACTOR-001 | 按 pma-web 规范重构 Dashboard | P1 | completed |
