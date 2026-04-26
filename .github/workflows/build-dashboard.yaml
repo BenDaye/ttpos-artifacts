@@ -1,9 +1,13 @@
-name: "Build: Dashboard"
+name: "Build: Dashboard (deprecated)"
+
+# DEPRECATED: 旧版 dashboard 已被 dashboard-next 取代，生产环境镜像由
+# .github/workflows/build-dashboard-next.yaml 构建。本工作流仅作为回滚锚点保留，
+# 不再随主线代码自动触发；如需手工构建旧镜像请走 workflow_dispatch。
 
 on:
   workflow_dispatch:
   push:
-    branches: [main, release]
+    branches: [release]
     paths:
       - "dashboard/src/**"
       - "dashboard/public/**"

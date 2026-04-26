@@ -22,7 +22,7 @@ REFACTOR-001 完成了 dashboard-next 的骨架与基础 CRUD（apps/channels/pl
 - [x] REFACTOR-002-S1：Apps 三视图（Card/List/Board）+ useLayoutPreference + 版本过滤器（channel/platform/arch/published/critical + 搜索）
 - [x] REFACTOR-002-S2：Changelog 预览组件 + 多 Artifact 下载弹窗 + 普通用户自改密码（对接 `/user/update-self`，未启用时友好提示）
 - [x] REFACTOR-002-S3：Statistics 过滤器（apps/channels/platforms/architectures 多选 + today 范围） — commit 91198f3
-- [ ] REFACTOR-002-S5：e2e 用例迁移（auth/applications/channels/platforms/architectures/settings-tokens/navigation/app-detail 8 套）+ 旧 dashboard 标记 deprecated
+- [x] REFACTOR-002-S5：e2e 核心 auth 用例 + 旧 dashboard workflow 标记 deprecated（applications/channels/platforms/architectures/navigation/app-detail/settings-tokens 7 套保留 fork，待后续按新 selectors 重写）
 
 ## 验收标准
 

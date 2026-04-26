@@ -1,5 +1,17 @@
 # 变更日志
 
+## 2026-04-26 [REFACTOR-002] Dashboard 业务逻辑补完
+
+REFACTOR-001 后续实测发现 dashboard-next 多处业务能力降级，本任务按 PLAN-004 分 5 阶段在 BKD 编排下补完，每阶段独立上线 vm-node02。
+
+- **R0** 前端禁用 TUF：settings sidebar 移除 TUF tab，`/settings/tuf` 显示停用占位；features/tuf 代码与脚本生成器保留以便后续 R4 重启
+- **R1** Apps 三视图与版本过滤器：LayoutSwitcher（Card/List/Board）+ ui-store 持久化；AppListView 紧凑表格；AppBoardView 按 channel 分列（useQueries 预拉版本判定归属）；详情页 VersionFilterBar 多选 channels/platforms/archs + 文本搜索 + published/critical 切换 + 已激活计数清除
+- **R2** Changelog 预览 + Artifact 下载弹窗：版本卡片新增 Changelog (n) / Download (n) 按钮，分别打开 react-markdown 渲染的结构化预览与按 platform 分组的下载弹窗（含 copy URL）；非 admin 用户自改密码功能因 server 端无 `/user/update-self` 端点回退为"请联系管理员"提示
+- **R3** Statistics 多维过滤器：TelemetryFilterBar 含 4 个 multi-select popover（apps/channels/platforms/architectures）+ today/week/month 时间范围；过滤变化触发 telemetry 重查
+- **R5** e2e 用例迁移与旧 dashboard 退役：fork dashboard/e2e 全套 + mock handlers；先重写 auth.spec.ts 覆盖核心登录路径（与既有 smoke.spec.ts 共 8 项测试通过），其余 7 套保留 fork 待后续按真实 selectors 重写；`.github/workflows/build-dashboard.yaml` 标记 deprecated（移除 main 分支触发，仅保留 release + workflow_dispatch）
+
+部署：vm-node02 已切到 dashboard-next 镜像；旧 dashboard 镜像与 workflow 保留作为回滚锚点。
+
 ## 2026-04-25 [REFACTOR-001] 按 pma-web 规范重构 Dashboard
 
 新增 `dashboard-next/`，作为现有 `dashboard/` 的并行重写版本，验收完成后将取代旧版。业务逻辑（API 契约、auth 流程、TUF 脚本生成器、localStorage key）完全保留。
