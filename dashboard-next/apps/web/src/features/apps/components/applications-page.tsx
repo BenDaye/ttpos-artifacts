@@ -1,5 +1,5 @@
 import type { AppSummary } from '@ttpos/shared'
-import { Link } from '@tanstack/react-router'
+import { useNavigate } from '@tanstack/react-router'
 import { Boxes, Pencil, Plus, Search, Trash2, Upload } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -18,6 +18,7 @@ import { UploadVersionDialog } from './upload-version-dialog'
 
 export function ApplicationsPage() {
   const { t } = useTranslation(['apps', 'common'])
+  const navigate = useNavigate()
   const appsQuery = useAppsListQuery({ page: 1, limit: 50 })
   const deleteMutation = useDeleteAppMutation()
   const [search, setSearch] = useState('')
@@ -25,6 +26,10 @@ export function ApplicationsPage() {
   const [editing, setEditing] = useState<AppSummary | null>(null)
   const [uploading, setUploading] = useState(false)
   const [deleting, setDeleting] = useState<AppSummary | null>(null)
+
+  const goToDetail = (appName: string) => {
+    void navigate({ to: '/applications/$appName', params: { appName } })
+  }
 
   const filtered = (appsQuery.data?.apps ?? []).filter(app =>
     !search || app.AppName.toLowerCase().includes(search.toLowerCase()),
@@ -107,14 +112,20 @@ export function ApplicationsPage() {
       {filtered.length > 0 && (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map(app => (
-            <Card key={app.ID} className="relative transition-colors hover:border-foreground/30 hover:shadow-sm">
-              <Link
-                to="/applications/$appName"
-                params={{ appName: app.AppName }}
-                aria-label={app.AppName}
-                className="absolute inset-0 z-0 rounded-xl outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-              />
-              <CardContent className="pointer-events-none relative z-10 p-5">
+            <Card
+              key={app.ID}
+              role="button"
+              tabIndex={0}
+              onClick={() => goToDetail(app.AppName)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  goToDetail(app.AppName)
+                }
+              }}
+              className="cursor-pointer transition-colors hover:border-foreground/30 hover:shadow-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <CardContent className="p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex min-w-0 flex-1 items-center gap-3">
                     <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
@@ -133,13 +144,12 @@ export function ApplicationsPage() {
                       )}
                     </div>
                   </div>
-                  <div className="pointer-events-auto flex items-center gap-1">
+                  <div className="flex items-center gap-1">
                     <Button
                       variant="ghost"
                       size="icon"
                       aria-label={t('common:actions.edit')}
                       onClick={(e) => {
-                        e.preventDefault()
                         e.stopPropagation()
                         setEditing(app)
                       }}
@@ -151,7 +161,6 @@ export function ApplicationsPage() {
                       size="icon"
                       aria-label={t('common:actions.delete')}
                       onClick={(e) => {
-                        e.preventDefault()
                         e.stopPropagation()
                         setDeleting(app)
                       }}
