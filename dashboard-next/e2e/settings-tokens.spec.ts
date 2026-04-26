@@ -16,8 +16,7 @@ test.describe('Settings — CI/CD Tokens', () => {
     await expect(page.getByRole('link', { name: 'API Tokens' })).toBeVisible()
   })
 
-  // TODO(REFACTOR-002 R5 follow-up): CI timing
-  test.skip('opens create token dialog with required fields', async ({ page }) => {
+  test('opens create token dialog with required fields', async ({ page }) => {
     await page.getByRole('button', { name: 'Create token' }).first().click()
 
     await expect(page.getByRole('heading', { name: 'Create API token' })).toBeVisible()
@@ -26,8 +25,7 @@ test.describe('Settings — CI/CD Tokens', () => {
     await expect(page.getByText('All apps')).toBeVisible()
   })
 
-  // TODO(REFACTOR-002 R5 follow-up): CI timing
-  test.skip('reveals token value after successful creation', async ({ page }) => {
+  test('reveals token value after successful creation', async ({ page }) => {
     await page.getByRole('button', { name: 'Create token' }).first().click()
 
     await page.getByLabel('Name').fill('Deploy Token')
@@ -40,8 +38,7 @@ test.describe('Settings — CI/CD Tokens', () => {
     await expect(page.getByRole('button', { name: 'Close', exact: true }).first()).toBeVisible()
   })
 
-  // TODO(REFACTOR-002 R5 follow-up): CI timing
-  test.skip('toggling scope reveals app checkboxes', async ({ page }) => {
+  test('toggling scope reveals app checkboxes', async ({ page }) => {
     await page.getByRole('button', { name: 'Create token' }).first().click()
 
     // BaseCheckbox renders both a visible widget (role="checkbox") and an

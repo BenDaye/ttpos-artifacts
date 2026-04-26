@@ -1,10 +1,12 @@
-import { expect, authedTest as test } from './_fixtures/auth.fixture'
+import { authedTest as test, expect } from './_fixtures/auth.fixture'
 
 test.describe('App detail — version management', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/applications')
     await page.getByText('TTPOS-Cashier').click()
     await expect(page).toHaveURL(/\/applications\/TTPOS-Cashier/)
+    // Wait for the detail page header to render so version actions are settled.
+    await expect(page.getByRole('heading', { level: 1, name: 'TTPOS-Cashier' })).toBeVisible()
   })
 
   test('renders version row with metadata badges', async ({ page }) => {
