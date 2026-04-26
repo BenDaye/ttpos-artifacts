@@ -4,6 +4,7 @@ import { ArrowLeft, BookOpen, Boxes, Download, Pencil, Plus, Trash2 } from 'luci
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+import { ChangelogModal } from '@/shared/components/common/changelog-modal'
 import { ConfirmDialog } from '@/shared/components/common/confirm-dialog'
 import { EmptyState } from '@/shared/components/empty-state'
 import { PageHeader } from '@/shared/components/page-header'
@@ -18,7 +19,6 @@ import {
   useDeleteArtifactMutation,
   useDeleteVersionMutation,
 } from '../hooks'
-import { ChangelogModal } from './changelog-modal'
 import { DownloadArtifactsDialog } from './download-artifacts-dialog'
 import { UploadVersionDialog } from './upload-version-dialog'
 import { VersionEditDialog } from './version-edit-dialog'
@@ -302,9 +302,12 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
           <ChangelogModal
             open={showChangelog}
             onOpenChange={setShowChangelog}
-            appName={version.AppName}
-            versionStr={version.Version}
             entries={changelog}
+            title={`${version.AppName} · v${version.Version} · ${t('changelog')}`}
+            description={t('changelog_modal.description', {
+              count: changelog.length,
+              defaultValue: '{{count}} change set(s)',
+            })}
           />
           <DownloadArtifactsDialog
             open={showDownloads}

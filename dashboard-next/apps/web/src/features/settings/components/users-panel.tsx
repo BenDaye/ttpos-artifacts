@@ -12,6 +12,7 @@ import { Card, CardContent } from '@/shared/components/ui/card'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 import { useDeleteUserMutation, useUsersListQuery, useWhoamiQuery } from '../hooks'
 import { AdminCredentialDialog } from './admin-credential-dialog'
+import { ChangeSelfPasswordDialog } from './change-self-password-dialog'
 import { TeamUserFormDialog } from './team-user-form-dialog'
 
 export function UsersPanel() {
@@ -24,6 +25,7 @@ export function UsersPanel() {
   const [editing, setEditing] = useState<TeamUser | null>(null)
   const [deleting, setDeleting] = useState<TeamUser | null>(null)
   const [adminEdit, setAdminEdit] = useState(false)
+  const [selfPasswordEdit, setSelfPasswordEdit] = useState(false)
 
   const onDelete = async () => {
     if (!deleting)
@@ -68,9 +70,10 @@ export function UsersPanel() {
                   </Button>
                 )
               : (
-                  <span className="text-xs text-muted-foreground">
-                    {t('users.contact_admin', { defaultValue: 'Contact admin to change credentials' })}
-                  </span>
+                  <Button variant="outline" size="sm" onClick={() => setSelfPasswordEdit(true)}>
+                    <KeyRound className="size-4" />
+                    {t('users.change_my_password', { defaultValue: 'Change my password' })}
+                  </Button>
                 )}
           </CardContent>
         </Card>
@@ -168,6 +171,10 @@ export function UsersPanel() {
         open={adminEdit}
         onOpenChange={setAdminEdit}
         user={me.data ?? null}
+      />
+      <ChangeSelfPasswordDialog
+        open={selfPasswordEdit}
+        onOpenChange={setSelfPasswordEdit}
       />
       <ConfirmDialog
         open={Boolean(deleting)}

@@ -12,11 +12,17 @@
   "updated": "应用已更新",
   "deleted": "应用已删除",
   "changelog": "更新日志",
-  "changelog_count": "共 {{count}} 条记录",
-  "changelog_empty": "暂无更新日志。",
+  "changelog_modal": {
+    "description": "共 {{count}} 条更新记录",
+    "empty": "暂无更新日志。",
+    "unversioned": "未指定版本"
+  },
   "download_dialog": {
     "title": "下载构建产物",
-    "description": "为目标平台/架构选择构建产物（共 {{count}} 个）。"
+    "count": "共 {{count}} 个构建产物",
+    "copy_url": "复制链接",
+    "copied": "链接已复制",
+    "copy_failed": "复制链接失败"
   },
   "version_updated": "版本已更新",
   "version_deleted": "版本已删除",

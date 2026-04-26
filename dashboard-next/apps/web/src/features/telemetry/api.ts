@@ -1,6 +1,6 @@
 import { http } from '@/shared/lib/http'
 
-export type TelemetryRange = 'week' | 'month'
+export type TelemetryRange = 'today' | 'week' | 'month'
 
 export interface TelemetryParams {
   apps?: string[]

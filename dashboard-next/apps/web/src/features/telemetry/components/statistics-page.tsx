@@ -1,4 +1,4 @@
-import type { TelemetryRange, TelemetrySummary, TelemetryVersions } from '../api'
+import type { TelemetrySummary, TelemetryVersions } from '../api'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
@@ -6,10 +6,8 @@ import { EmptyState } from '@/shared/components/empty-state'
 import { PageHeader } from '@/shared/components/page-header'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { Skeleton } from '@/shared/components/ui/skeleton'
-import { ToggleGroup, ToggleGroupItem } from '@/shared/components/ui/toggle-group'
 import { useTelemetryQuery } from '../hooks'
-
-const RANGES: TelemetryRange[] = ['week', 'month']
+import { EMPTY_TELEMETRY_FILTERS, TelemetryFilterBar } from './filter-bar'
 
 const tooltipStyle = {
   background: 'var(--popover)',
@@ -25,30 +23,22 @@ interface BucketDatum {
 
 export function StatisticsPage() {
   const { t } = useTranslation(['telemetry', 'common'])
-  const [range, setRange] = useState<TelemetryRange>('week')
-  const telemetry = useTelemetryQuery({ range })
+  const [filters, setFilters] = useState(EMPTY_TELEMETRY_FILTERS)
+  const telemetry = useTelemetryQuery({
+    range: filters.range,
+    apps: filters.apps.length > 0 ? filters.apps : undefined,
+    channels: filters.channels.length > 0 ? filters.channels : undefined,
+    platforms: filters.platforms.length > 0 ? filters.platforms : undefined,
+    architectures: filters.architectures.length > 0 ? filters.architectures : undefined,
+  })
 
   return (
     <div>
       <PageHeader
         title={t('common:nav.statistics')}
         description={t('description', { defaultValue: 'Adoption and download metrics across releases.' })}
-        actions={(
-          <ToggleGroup>
-            {RANGES.map(r => (
-              <ToggleGroupItem
-                key={r}
-                value={r}
-                aria-pressed={r === range}
-                data-pressed={r === range}
-                onClick={() => setRange(r)}
-              >
-                {t(`range.${r}`)}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-        )}
       />
+      <TelemetryFilterBar value={filters} onChange={setFilters} />
 
       {telemetry.isPending && (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

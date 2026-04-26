@@ -1,8 +1,16 @@
 {
   "description": "Adoption and download metrics across releases.",
   "range": {
+    "today": "Today",
     "week": "Last 7 days",
     "month": "Last 30 days"
+  },
+  "filter": {
+    "apps": "Apps",
+    "channels": "Channels",
+    "platforms": "Platforms",
+    "architectures": "Architectures",
+    "clear": "Clear"
   },
   "summary": {
     "requests": "Requests",

@@ -1,8 +1,16 @@
 {
   "description": "跨版本的采用与下载指标。",
   "range": {
+    "today": "今日",
     "week": "近 7 天",
     "month": "近 30 天"
+  },
+  "filter": {
+    "apps": "应用",
+    "channels": "渠道",
+    "platforms": "平台",
+    "architectures": "架构",
+    "clear": "清除"
   },
   "summary": {
     "requests": "请求数",

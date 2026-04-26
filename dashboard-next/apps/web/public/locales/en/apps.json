@@ -12,11 +12,17 @@
   "updated": "Application updated",
   "deleted": "Application deleted",
   "changelog": "Changelog",
-  "changelog_count": "{{count}} change set(s)",
-  "changelog_empty": "No changelog entries.",
+  "changelog_modal": {
+    "description": "{{count}} change set(s)",
+    "empty": "No changelog entries.",
+    "unversioned": "Unversioned"
+  },
   "download_dialog": {
     "title": "Download artifacts",
-    "description": "Pick the artifact for your platform/architecture ({{count}} total)."
+    "count": "{{count}} artifact(s)",
+    "copy_url": "Copy URL",
+    "copied": "URL copied",
+    "copy_failed": "Could not copy URL"
   },
   "version_updated": "Version updated",
   "version_deleted": "Version deleted",
