@@ -1,8 +1,9 @@
 # PLAN-004 Dashboard 业务逻辑补完
 
-- **status**: in_progress
+- **status**: completed
 - **createdAt**: 2026-04-26
 - **approvedAt**: 2026-04-26
+- **completedAt**: 2026-04-26
 - **relatedTask**: REFACTOR-002
 
 ## 现状

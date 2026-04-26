@@ -1,4 +1,4 @@
-import { authedTest as test, expect } from './_fixtures/auth.fixture'
+import { expect, authedTest as test } from './_fixtures/auth.fixture'
 
 test.describe('App detail — version management', () => {
   test.beforeEach(async ({ page }) => {
