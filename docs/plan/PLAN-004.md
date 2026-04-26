@@ -91,3 +91,10 @@ REFACTOR-001 已完成 dashboard-next 的 monorepo 骨架与基础 CRUD（Apps /
 - AppDetailPage：filter 多选 length===1 时透传到 /search 单值参数，length>1 时 fallback 到 client-side 多值过滤；published/critical 始终透传
 - i18n（en/zh）补 layout.\* / apps.filter.search_placeholder / apps.board.\*
 - typecheck/lint（0 errors）/build/test 全绿
+
+2026-04-26 R3 实施完成（commit 91198f3）：
+- features/telemetry/api.ts：TelemetryRange 增加 `today`，TelemetryParams 已支持 apps/channels/platforms/architectures string[]
+- 新增 features/telemetry/components/filter-bar.tsx：TelemetryFilterBar 含 4 个 multi-select Popover（apps/channels/platforms/architectures，复用 useAppsListQuery / useChannelsQuery / usePlatformsQuery / useArchitecturesQuery）+ ToggleGroup 范围（today/week/month）+ totalActive 计数与 Clear（保留当前 range）
+- StatisticsPage：useState 改为完整 TelemetryFilters；useTelemetryQuery 接入完整过滤；空数组转 undefined 避免无效查询参数；EmptyChart 占位逻辑保留；移除 PageHeader actions 内的旧 ToggleGroup
+- en/zh telemetry.json 新增 `range.today` + `filter.{apps,channels,platforms,architectures,clear}`
+- typecheck/lint（0 errors，warning 不增）/build/test 全绿
