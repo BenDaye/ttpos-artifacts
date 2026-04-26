@@ -84,3 +84,10 @@ REFACTOR-001 已完成 dashboard-next 的 monorepo 骨架与基础 CRUD（Apps /
 ## 批注
 
 2026-04-26 用户批准 R0/R1/R2/R3/R5（不含 R4）。TUF 前端禁用，代码保留。进入实施。
+
+2026-04-26 R1 实施完成：
+- AppBoardView 重写为「按 channel 分列」模式：每列一个渠道，列内展示在该渠道下有版本的应用卡片；无版本应用归入「无渠道」列；通过 useQueries 并行预取每个 app 的 versions（limit=100, staleTime=30s）来构建渠道→应用映射
+- VersionFilterBar 新增文本搜索框（client-side 匹配 Version / Channel / Changelog 文本），TotalActive 计入 search
+- AppDetailPage：filter 多选 length===1 时透传到 /search 单值参数，length>1 时 fallback 到 client-side 多值过滤；published/critical 始终透传
+- i18n（en/zh）补 layout.\* / apps.filter.search_placeholder / apps.board.\*
+- typecheck/lint（0 errors）/build/test 全绿
