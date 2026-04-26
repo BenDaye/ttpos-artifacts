@@ -14,10 +14,21 @@
   "changelog": "Changelog",
   "version_updated": "Version updated",
   "version_deleted": "Version deleted",
+  "artifact_deleted": "Artifact deleted",
   "edit_version_title": "Edit version",
-  "edit_version_description": "Update channel, platform, arch and metadata. Files cannot be replaced here.",
+  "edit_version_description": "Update version metadata. To replace artifacts upload a new version.",
   "delete_version_title": "Delete version?",
   "delete_version_description": "Version {{version}} and its artifacts will be permanently removed.",
+  "delete_artifact_title": "Delete artifact?",
+  "delete_artifact_description": "Artifact {{name}} will be permanently removed.",
+  "badge": {
+    "critical": "Critical",
+    "intermediate": "Intermediate",
+    "draft": "Draft"
+  },
+  "actions": {
+    "download": "Download"
+  },
   "form": {
     "name": "Name",
     "description": "Use a short identifier; description and logo are optional.",
@@ -32,7 +43,9 @@
   },
   "detail": {
     "description": "Versions, artifacts and deployment activity.",
+    "summary": "{{count}} version(s)",
     "back": "Back",
+    "no_artifacts": "No artifacts attached.",
     "empty": {
       "title": "No versions yet",
       "description": "Upload your first artifact to get started."

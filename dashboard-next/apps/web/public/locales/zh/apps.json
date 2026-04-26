@@ -14,10 +14,21 @@
   "changelog": "更新日志",
   "version_updated": "版本已更新",
   "version_deleted": "版本已删除",
+  "artifact_deleted": "构建产物已删除",
   "edit_version_title": "编辑版本",
-  "edit_version_description": "可修改渠道、平台、架构与元数据，文件不可在此替换。",
+  "edit_version_description": "更新版本元数据。需替换构建产物请上传新版本。",
   "delete_version_title": "删除版本？",
   "delete_version_description": "版本 {{version}} 与其构建产物将被永久删除。",
+  "delete_artifact_title": "删除构建产物？",
+  "delete_artifact_description": "构建产物 {{name}} 将被永久删除。",
+  "badge": {
+    "critical": "关键",
+    "intermediate": "中间版本",
+    "draft": "草稿"
+  },
+  "actions": {
+    "download": "下载"
+  },
   "form": {
     "name": "名称",
     "description": "使用短标识符；描述与 Logo 可选。",
@@ -32,7 +43,9 @@
   },
   "detail": {
     "description": "版本、构建产物与发布动态。",
+    "summary": "共 {{count}} 个版本",
     "back": "返回",
+    "no_artifacts": "暂无构建产物。",
     "empty": {
       "title": "暂无版本",
       "description": "上传第一个构建产物来开始。"

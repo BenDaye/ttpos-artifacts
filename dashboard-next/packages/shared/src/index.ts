@@ -42,21 +42,25 @@ export interface AppVersion {
   AppName: string
   Version: string
   Channel: string
-  Platform: string
-  Arch: string
-  Package: string
-  Critical: boolean
   Published: boolean
-  Changelog: string
-  Updated_at: string
+  Critical: boolean
+  Intermediate: boolean
   Artifacts: ArtifactEntry[]
+  Changelog: ChangelogEntry[]
+  Updated_at: string
 }
 
 export interface ArtifactEntry {
   link: string
-  package: string
-  arch: string
   platform: string
+  arch: string
+  package: string
+}
+
+export interface ChangelogEntry {
+  Version: string
+  Changes: string
+  Date: string
 }
 
 export interface Channel {

@@ -23,8 +23,10 @@ interface AppListResponse {
 }
 
 interface SearchResponse {
-  apps?: AppVersion[]
+  items?: AppVersion[]
   total?: number
+  page?: number
+  limit?: number
 }
 
 export interface UploadVersionPayload {
@@ -47,10 +49,10 @@ export interface UpdateVersionPayload {
   app_name: string
   version: string
   channel: string
-  platform: string
-  arch: string
   publish: boolean
   critical: boolean
+  platform?: string
+  arch?: string
   changelog?: string
   files?: File[]
 }
@@ -90,11 +92,13 @@ export const appsApi = {
     }
   },
 
-  async search(params: SearchVersionsParams): Promise<{ versions: AppVersion[], total: number }> {
+  async search(params: SearchVersionsParams): Promise<{ versions: AppVersion[], total: number, page: number, limit: number }> {
     const data = await http.get<SearchResponse>('/search', { query: { ...params } })
     return {
-      versions: data?.apps ?? [],
+      versions: data?.items ?? [],
       total: data?.total ?? 0,
+      page: data?.page ?? 1,
+      limit: data?.limit ?? 0,
     }
   },
 
