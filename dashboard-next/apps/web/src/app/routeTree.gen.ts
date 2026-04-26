@@ -21,6 +21,7 @@ import { Route as PrivateChannelsRouteImport } from './routes/_private/channels'
 import { Route as PrivateArchitecturesRouteImport } from './routes/_private/architectures'
 import { Route as PrivateApplicationsRouteImport } from './routes/_private/applications'
 import { Route as PrivateSettingsIndexRouteImport } from './routes/_private/settings/index'
+import { Route as PrivateApplicationsIndexRouteImport } from './routes/_private/applications/index'
 import { Route as PrivateSettingsTufRouteImport } from './routes/_private/settings/tuf'
 import { Route as PrivateSettingsTokensRouteImport } from './routes/_private/settings/tokens'
 import { Route as PrivateApplicationsAppNameRouteImport } from './routes/_private/applications/$appName'
@@ -83,6 +84,12 @@ const PrivateSettingsIndexRoute = PrivateSettingsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => PrivateSettingsRoute,
 } as any)
+const PrivateApplicationsIndexRoute =
+  PrivateApplicationsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PrivateApplicationsRoute,
+  } as any)
 const PrivateSettingsTufRoute = PrivateSettingsTufRouteImport.update({
   id: '/tuf',
   path: '/tuf',
@@ -113,11 +120,11 @@ export interface FileRoutesByFullPath {
   '/applications/$appName': typeof PrivateApplicationsAppNameRoute
   '/settings/tokens': typeof PrivateSettingsTokensRoute
   '/settings/tuf': typeof PrivateSettingsTufRoute
+  '/applications/': typeof PrivateApplicationsIndexRoute
   '/settings/': typeof PrivateSettingsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/applications': typeof PrivateApplicationsRouteWithChildren
   '/architectures': typeof PrivateArchitecturesRoute
   '/channels': typeof PrivateChannelsRoute
   '/platforms': typeof PrivatePlatformsRoute
@@ -127,6 +134,7 @@ export interface FileRoutesByTo {
   '/applications/$appName': typeof PrivateApplicationsAppNameRoute
   '/settings/tokens': typeof PrivateSettingsTokensRoute
   '/settings/tuf': typeof PrivateSettingsTufRoute
+  '/applications': typeof PrivateApplicationsIndexRoute
   '/settings': typeof PrivateSettingsIndexRoute
 }
 export interface FileRoutesById {
@@ -145,6 +153,7 @@ export interface FileRoutesById {
   '/_private/applications/$appName': typeof PrivateApplicationsAppNameRoute
   '/_private/settings/tokens': typeof PrivateSettingsTokensRoute
   '/_private/settings/tuf': typeof PrivateSettingsTufRoute
+  '/_private/applications/': typeof PrivateApplicationsIndexRoute
   '/_private/settings/': typeof PrivateSettingsIndexRoute
 }
 export interface FileRouteTypes {
@@ -162,11 +171,11 @@ export interface FileRouteTypes {
     | '/applications/$appName'
     | '/settings/tokens'
     | '/settings/tuf'
+    | '/applications/'
     | '/settings/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/applications'
     | '/architectures'
     | '/channels'
     | '/platforms'
@@ -176,6 +185,7 @@ export interface FileRouteTypes {
     | '/applications/$appName'
     | '/settings/tokens'
     | '/settings/tuf'
+    | '/applications'
     | '/settings'
   id:
     | '__root__'
@@ -193,6 +203,7 @@ export interface FileRouteTypes {
     | '/_private/applications/$appName'
     | '/_private/settings/tokens'
     | '/_private/settings/tuf'
+    | '/_private/applications/'
     | '/_private/settings/'
   fileRoutesById: FileRoutesById
 }
@@ -288,6 +299,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrivateSettingsIndexRouteImport
       parentRoute: typeof PrivateSettingsRoute
     }
+    '/_private/applications/': {
+      id: '/_private/applications/'
+      path: '/'
+      fullPath: '/applications/'
+      preLoaderRoute: typeof PrivateApplicationsIndexRouteImport
+      parentRoute: typeof PrivateApplicationsRoute
+    }
     '/_private/settings/tuf': {
       id: '/_private/settings/tuf'
       path: '/tuf'
@@ -314,10 +332,12 @@ declare module '@tanstack/react-router' {
 
 interface PrivateApplicationsRouteChildren {
   PrivateApplicationsAppNameRoute: typeof PrivateApplicationsAppNameRoute
+  PrivateApplicationsIndexRoute: typeof PrivateApplicationsIndexRoute
 }
 
 const PrivateApplicationsRouteChildren: PrivateApplicationsRouteChildren = {
   PrivateApplicationsAppNameRoute: PrivateApplicationsAppNameRoute,
+  PrivateApplicationsIndexRoute: PrivateApplicationsIndexRoute,
 }
 
 const PrivateApplicationsRouteWithChildren =

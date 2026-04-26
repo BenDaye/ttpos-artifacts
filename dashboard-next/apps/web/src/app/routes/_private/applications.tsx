@@ -1,6 +1,5 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { ApplicationsPage } from '@/features/apps/components/applications-page'
+import { Outlet, createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/_private/applications')({
-  component: ApplicationsPage,
+  component: () => <Outlet />,
 })
