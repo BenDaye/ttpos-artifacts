@@ -69,4 +69,21 @@ test.describe('App detail — version management', () => {
 
     await expect(page.getByRole('heading', { name: 'Upload new version' })).toBeVisible()
   })
+
+  test('add artifact button opens dialog with simplified form fields', async ({ page }) => {
+    await page.getByRole('button', { name: 'Add artifact' }).click()
+
+    const dialog = page.getByRole('dialog', { name: /Add artifact to 1\.0\.0/ })
+    await expect(dialog).toBeVisible()
+    // Simplified scope: only platform / arch / files / optional changelog.
+    await expect(dialog.getByText('Platform', { exact: true })).toBeVisible()
+    await expect(dialog.getByText('Architecture', { exact: true })).toBeVisible()
+    await expect(dialog.getByText('Artifacts', { exact: true })).toBeVisible()
+    await expect(dialog.getByText(/Changelog\s*\(\s*optional\s*\)/i)).toBeVisible()
+    // App + channel context line is auto-filled from the version row.
+    await expect(dialog.getByText(/App:\s*TTPOS-Cashier.*Channel:\s*stable/)).toBeVisible()
+
+    await page.locator('button[type="button"]:visible', { hasText: /^Cancel$/ }).first().click()
+    await expect(dialog).not.toBeVisible({ timeout: 5000 })
+  })
 })
