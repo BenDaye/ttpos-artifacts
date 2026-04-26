@@ -107,14 +107,16 @@ export function ApplicationsPage() {
       {filtered.length > 0 && (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map(app => (
-            <Card key={app.ID} className="transition-colors hover:border-foreground/20">
-              <CardContent className="p-5">
+            <Card key={app.ID} className="relative transition-colors hover:border-foreground/30 hover:shadow-sm">
+              <Link
+                to="/applications/$appName"
+                params={{ appName: app.AppName }}
+                aria-label={app.AppName}
+                className="absolute inset-0 z-0 rounded-xl outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+              />
+              <CardContent className="pointer-events-none relative z-10 p-5">
                 <div className="flex items-start justify-between gap-3">
-                  <Link
-                    to="/applications/$appName"
-                    params={{ appName: app.AppName }}
-                    className="flex flex-1 items-center gap-3 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-                  >
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
                     <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
                       {app.Logo
                         ? (
@@ -130,13 +132,17 @@ export function ApplicationsPage() {
                         <p className="line-clamp-1 text-xs text-muted-foreground">{app.Description}</p>
                       )}
                     </div>
-                  </Link>
-                  <div className="flex items-center gap-1">
+                  </div>
+                  <div className="pointer-events-auto flex items-center gap-1">
                     <Button
                       variant="ghost"
                       size="icon"
                       aria-label={t('common:actions.edit')}
-                      onClick={() => setEditing(app)}
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        setEditing(app)
+                      }}
                     >
                       <Pencil className="size-4" />
                     </Button>
@@ -144,7 +150,11 @@ export function ApplicationsPage() {
                       variant="ghost"
                       size="icon"
                       aria-label={t('common:actions.delete')}
-                      onClick={() => setDeleting(app)}
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        setDeleting(app)
+                      }}
                     >
                       <Trash2 className="size-4 text-destructive" />
                     </Button>
