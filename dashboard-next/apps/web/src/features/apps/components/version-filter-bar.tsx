@@ -1,4 +1,4 @@
-import { Filter, X } from 'lucide-react'
+import { Filter, Search, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useArchitecturesQuery } from '@/features/architectures/hooks'
 import { useChannelsQuery } from '@/features/channels/hooks'
@@ -6,6 +6,7 @@ import { usePlatformsQuery } from '@/features/platforms/hooks'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import { Checkbox } from '@/shared/components/ui/checkbox'
+import { Input } from '@/shared/components/ui/input'
 import {
   Popover,
   PopoverContent,
@@ -18,6 +19,7 @@ export interface VersionFilters {
   archs: string[]
   publishedOnly: boolean
   criticalOnly: boolean
+  search: string
 }
 
 export const EMPTY_VERSION_FILTERS: VersionFilters = {
@@ -26,6 +28,7 @@ export const EMPTY_VERSION_FILTERS: VersionFilters = {
   archs: [],
   publishedOnly: false,
   criticalOnly: false,
+  search: '',
 }
 
 interface Props {
@@ -49,11 +52,21 @@ export function VersionFilterBar({ value, onChange }: Props) {
       + value.archs.length
       + (value.publishedOnly ? 1 : 0)
       + (value.criticalOnly ? 1 : 0)
+      + (value.search ? 1 : 0)
 
   const reset = () => onChange(EMPTY_VERSION_FILTERS)
 
   return (
     <div className="mb-4 flex flex-wrap items-center gap-2">
+      <div className="relative w-full sm:w-60">
+        <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          value={value.search}
+          onChange={e => onChange({ ...value, search: e.target.value })}
+          placeholder={t('filter.search_placeholder', { defaultValue: 'Search version…' })}
+          className="h-8 pl-8 text-sm"
+        />
+      </div>
       <MultiSelectPopover
         label={t('filter.channels', { defaultValue: 'Channels' })}
         options={channelOptions}

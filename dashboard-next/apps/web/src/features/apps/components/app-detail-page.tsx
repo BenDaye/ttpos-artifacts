@@ -1,6 +1,6 @@
 import type { AppVersion, ArtifactEntry, ChangelogEntry } from '@ttpos/shared'
 import { Link } from '@tanstack/react-router'
-import { ArrowLeft, Boxes, ChevronDown, Download, Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { ArrowLeft, Boxes, ChevronDown, Download, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -10,7 +10,6 @@ import { PageHeader } from '@/shared/components/page-header'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button, buttonVariants } from '@/shared/components/ui/button'
 import { Card, CardContent } from '@/shared/components/ui/card'
-import { Input } from '@/shared/components/ui/input'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 import { formatDateTime } from '@/shared/lib/format'
 import { cn } from '@/shared/lib/utils'
@@ -34,15 +33,14 @@ interface ArtifactKey {
 export function AppDetailPage({ appName }: { appName: string }) {
   const { t } = useTranslation(['apps', 'common'])
   const [page] = useState(1)
-  const [search, setSearch] = useState('')
   const [filters, setFilters] = useState(EMPTY_VERSION_FILTERS)
   const versionsQuery = useAppVersionsQuery({
     app_name: appName,
     page,
     limit: 50,
-    channel: filters.channels[0],
-    platform: filters.platforms[0],
-    arch: filters.archs[0],
+    channel: filters.channels.length === 1 ? filters.channels[0] : undefined,
+    platform: filters.platforms.length === 1 ? filters.platforms[0] : undefined,
+    arch: filters.archs.length === 1 ? filters.archs[0] : undefined,
     published: filters.publishedOnly || undefined,
     critical: filters.criticalOnly || undefined,
   })
