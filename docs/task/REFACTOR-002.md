@@ -18,7 +18,7 @@ REFACTOR-001 完成了 dashboard-next 的骨架与基础 CRUD（apps/channels/pl
 
 ## 子任务
 
-- [ ] REFACTOR-002-S0：前端禁用 TUF tab（隐藏 settings 子路由，保留代码）
+- [x] REFACTOR-002-S0：前端禁用 TUF tab（隐藏 settings 子路由，保留代码） — commit 6a8f17a
 - [ ] REFACTOR-002-S1：Apps 三视图（Card/List/Board）+ useLayoutPreference + 版本过滤器（channel/platform/arch/published/critical + 搜索）
 - [ ] REFACTOR-002-S2：Changelog 预览组件 + 多 Artifact 下载弹窗 + 普通用户自改密码
 - [ ] REFACTOR-002-S3：Statistics 过滤器（apps/channels/platforms/architectures 多选 + today 范围）
