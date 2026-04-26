@@ -22,26 +22,27 @@ test.describe('Settings — CI/CD Tokens', () => {
     await expect(page.getByRole('heading', { name: 'Create API token' })).toBeVisible()
     await expect(page.getByLabel('Name')).toBeVisible()
     await expect(page.getByLabel(/Expires in/i)).toBeVisible()
-    await expect(page.getByLabel('All apps')).toBeVisible()
+    await expect(page.getByRole('checkbox', { name: 'All apps' })).toBeVisible()
   })
 
-  // TODO(REFACTOR-002 R5 follow-up): selector / mock alignment pending
-  test.skip('reveals token value after successful creation', async ({ page }) => {
+  test('reveals token value after successful creation', async ({ page }) => {
     await page.getByRole('button', { name: 'Create token' }).first().click()
 
     await page.getByLabel('Name').fill('Deploy Token')
+    // Submit label is "Create" before reveal (CreateTokenDialog overrides submitLabel).
     await page.getByRole('button', { name: 'Create', exact: true }).click()
 
-    // Token value text revealed; "Close" replaces "Create" submit label.
-    await expect(page.getByDisplayValue('fns_new_token_value_shown_once')).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Close' })).toBeVisible()
+    // Token value field is a readOnly input with the freshly issued token.
+    await expect(page.getByLabel('Token value')).toHaveValue('fns_new_token_value_shown_once')
+    // After reveal the submit label flips to "Close".
+    await expect(page.getByRole('button', { name: 'Close', exact: true }).first()).toBeVisible()
   })
 
-  test.skip('toggling scope reveals app checkboxes', async ({ page }) => {
+  test('toggling scope reveals app checkboxes', async ({ page }) => {
     await page.getByRole('button', { name: 'Create token' }).first().click()
 
-    // Uncheck "All apps" → app list appears
-    await page.getByLabel('All apps').click()
+    // BaseCheckbox.Root exposes role="checkbox"; the wrapped input is aria-hidden.
+    await page.getByRole('checkbox', { name: 'All apps' }).click()
     await expect(page.getByText('TTPOS-Cashier')).toBeVisible()
     await expect(page.getByText('TTPOS-KDS')).toBeVisible()
   })
