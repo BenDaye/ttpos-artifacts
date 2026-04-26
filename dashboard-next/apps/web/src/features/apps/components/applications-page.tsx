@@ -1,24 +1,28 @@
 import type { AppSummary } from '@ttpos/shared'
 import { useNavigate } from '@tanstack/react-router'
-import { Boxes, Pencil, Plus, Search, Trash2, Upload } from 'lucide-react'
+import { Boxes, Plus, Search, Upload } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/shared/components/common/confirm-dialog'
 import { EmptyState } from '@/shared/components/empty-state'
+import { LayoutSwitcher } from '@/shared/components/layout-switcher'
 import { PageHeader } from '@/shared/components/page-header'
 import { Button } from '@/shared/components/ui/button'
-import { Card, CardContent } from '@/shared/components/ui/card'
 import { Input } from '@/shared/components/ui/input'
 import { Skeleton } from '@/shared/components/ui/skeleton'
-import { formatDateTime } from '@/shared/lib/format'
+import { useUiStore } from '@/shared/stores/ui-store'
 import { useAppsListQuery, useDeleteAppMutation } from '../hooks'
 import { AppFormDialog } from './app-form-dialog'
 import { UploadVersionDialog } from './upload-version-dialog'
+import { AppBoardView } from './views/app-board-view'
+import { AppCardView } from './views/app-card-view'
+import { AppListView } from './views/app-list-view'
 
 export function ApplicationsPage() {
   const { t } = useTranslation(['apps', 'common'])
   const navigate = useNavigate()
+  const layout = useUiStore(s => s.layout)
   const appsQuery = useAppsListQuery({ page: 1, limit: 50 })
   const deleteMutation = useDeleteAppMutation()
   const [search, setSearch] = useState('')
@@ -27,13 +31,13 @@ export function ApplicationsPage() {
   const [uploading, setUploading] = useState(false)
   const [deleting, setDeleting] = useState<AppSummary | null>(null)
 
-  const goToDetail = (appName: string) => {
-    void navigate({ to: '/applications/$appName', params: { appName } })
-  }
-
   const filtered = (appsQuery.data?.apps ?? []).filter(app =>
     !search || app.AppName.toLowerCase().includes(search.toLowerCase()),
   )
+
+  const goToDetail = (app: AppSummary) => {
+    void navigate({ to: '/applications/$appName', params: { appName: app.AppName } })
+  }
 
   const onDelete = async () => {
     if (!deleting)
@@ -49,6 +53,31 @@ export function ApplicationsPage() {
     }
   }
 
+  const renderView = () => {
+    if (filtered.length === 0) {
+      return (
+        <EmptyState
+          icon={Boxes}
+          title={t('empty.title')}
+          description={t('empty.description')}
+          action={(
+            <Button onClick={() => setCreating(true)}>
+              <Plus className="size-4" />
+              {t('create', { defaultValue: 'New app' })}
+            </Button>
+          )}
+        />
+      )
+    }
+    if (layout === 'list') {
+      return <AppListView apps={filtered} onSelect={goToDetail} onEdit={setEditing} onDelete={setDeleting} />
+    }
+    if (layout === 'board') {
+      return <AppBoardView apps={filtered} onSelect={goToDetail} onEdit={setEditing} onDelete={setDeleting} />
+    }
+    return <AppCardView apps={filtered} onSelect={goToDetail} onEdit={setEditing} onDelete={setDeleting} />
+  }
+
   return (
     <div>
       <PageHeader
@@ -56,6 +85,7 @@ export function ApplicationsPage() {
         description={t('description')}
         actions={(
           <div className="flex items-center gap-2">
+            <LayoutSwitcher />
             <Button variant="outline" onClick={() => setUploading(true)}>
               <Upload className="size-4" />
               {t('upload', { defaultValue: 'Upload version' })}
@@ -95,92 +125,7 @@ export function ApplicationsPage() {
         />
       )}
 
-      {appsQuery.isSuccess && filtered.length === 0 && (
-        <EmptyState
-          icon={Boxes}
-          title={t('empty.title')}
-          description={t('empty.description')}
-          action={(
-            <Button onClick={() => setCreating(true)}>
-              <Plus className="size-4" />
-              {t('create', { defaultValue: 'New app' })}
-            </Button>
-          )}
-        />
-      )}
-
-      {filtered.length > 0 && (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map(app => (
-            <Card
-              key={app.ID}
-              role="button"
-              tabIndex={0}
-              onClick={() => goToDetail(app.AppName)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault()
-                  goToDetail(app.AppName)
-                }
-              }}
-              className="cursor-pointer transition-colors hover:border-foreground/30 hover:shadow-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <CardContent className="p-5">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex min-w-0 flex-1 items-center gap-3">
-                    <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
-                      {app.Logo
-                        ? (
-                            <img src={app.Logo} alt="" className="size-full rounded-md object-cover" />
-                          )
-                        : (
-                            <Boxes className="size-5" />
-                          )}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">{app.AppName}</p>
-                      {app.Description && (
-                        <p className="line-clamp-1 text-xs text-muted-foreground">{app.Description}</p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label={t('common:actions.edit')}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setEditing(app)
-                      }}
-                    >
-                      <Pencil className="size-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label={t('common:actions.delete')}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setDeleting(app)
-                      }}
-                    >
-                      <Trash2 className="size-4 text-destructive" />
-                    </Button>
-                  </div>
-                </div>
-                {formatDateTime(app.Updated_at) && (
-                  <p className="mt-3 text-xs text-muted-foreground">
-                    {t('updated_at', { defaultValue: 'Updated' })}
-                    {' '}
-                    {formatDateTime(app.Updated_at)}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+      {appsQuery.isSuccess && renderView()}
 
       <AppFormDialog open={creating} onOpenChange={setCreating} />
       <AppFormDialog

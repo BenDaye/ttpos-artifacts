@@ -29,6 +29,19 @@
   "actions": {
     "download": "下载"
   },
+  "filter": {
+    "channels": "渠道",
+    "platforms": "平台",
+    "archs": "架构",
+    "published_only": "仅已发布",
+    "critical_only": "仅关键",
+    "clear": "清除"
+  },
+  "list": {
+    "name": "名称",
+    "description": "描述",
+    "actions": "操作"
+  },
   "form": {
     "name": "名称",
     "description": "使用短标识符；描述与 Logo 可选。",

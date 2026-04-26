@@ -1,7 +1,7 @@
 import type { AppVersion, ArtifactEntry, ChangelogEntry } from '@ttpos/shared'
 import { Link } from '@tanstack/react-router'
-import { ArrowLeft, Boxes, ChevronDown, Download, Pencil, Plus, Trash2 } from 'lucide-react'
-import { useState } from 'react'
+import { ArrowLeft, Boxes, ChevronDown, Download, Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/shared/components/common/confirm-dialog'
@@ -10,6 +10,7 @@ import { PageHeader } from '@/shared/components/page-header'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button, buttonVariants } from '@/shared/components/ui/button'
 import { Card, CardContent } from '@/shared/components/ui/card'
+import { Input } from '@/shared/components/ui/input'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 import { formatDateTime } from '@/shared/lib/format'
 import { cn } from '@/shared/lib/utils'
@@ -20,6 +21,7 @@ import {
 } from '../hooks'
 import { UploadVersionDialog } from './upload-version-dialog'
 import { VersionEditDialog } from './version-edit-dialog'
+import { EMPTY_VERSION_FILTERS, VersionFilterBar } from './version-filter-bar'
 
 interface ArtifactKey {
   versionId: string
@@ -32,7 +34,18 @@ interface ArtifactKey {
 export function AppDetailPage({ appName }: { appName: string }) {
   const { t } = useTranslation(['apps', 'common'])
   const [page] = useState(1)
-  const versionsQuery = useAppVersionsQuery({ app_name: appName, page, limit: 50 })
+  const [search, setSearch] = useState('')
+  const [filters, setFilters] = useState(EMPTY_VERSION_FILTERS)
+  const versionsQuery = useAppVersionsQuery({
+    app_name: appName,
+    page,
+    limit: 50,
+    channel: filters.channels[0],
+    platform: filters.platforms[0],
+    arch: filters.archs[0],
+    published: filters.publishedOnly || undefined,
+    critical: filters.criticalOnly || undefined,
+  })
   const deleteVersion = useDeleteVersionMutation()
   const deleteArtifact = useDeleteArtifactMutation()
   const [uploading, setUploading] = useState(false)
@@ -73,8 +86,30 @@ export function AppDetailPage({ appName }: { appName: string }) {
     }
   }
 
-  const versions = versionsQuery.data?.versions ?? []
-  const total = versionsQuery.data?.total ?? versions.length
+  const allVersions = versionsQuery.data?.versions ?? []
+  const versions = useMemo(() => {
+    return allVersions.filter((v) => {
+      if (filters.channels.length > 1 && !filters.channels.includes(v.Channel))
+        return false
+      if (filters.platforms.length > 1) {
+        const hit = (v.Artifacts ?? []).some(a => filters.platforms.includes(a.platform))
+        if (!hit)
+          return false
+      }
+      if (filters.archs.length > 1) {
+        const hit = (v.Artifacts ?? []).some(a => filters.archs.includes(a.arch))
+        if (!hit)
+          return false
+      }
+      if (search) {
+        const hay = [v.Version, v.Channel, ...(v.Changelog ?? []).map(c => c.Changes)].join(' ').toLowerCase()
+        if (!hay.includes(search.toLowerCase()))
+          return false
+      }
+      return true
+    })
+  }, [allVersions, filters, search])
+  const total = versionsQuery.data?.total ?? allVersions.length
 
   return (
     <div>
@@ -98,6 +133,19 @@ export function AppDetailPage({ appName }: { appName: string }) {
           </div>
         )}
       />
+
+      <div className="mb-3 flex max-w-sm items-center gap-2">
+        <div className="relative flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder={t('common:actions.search')}
+            className="pl-9"
+          />
+        </div>
+      </div>
+      <VersionFilterBar value={filters} onChange={setFilters} />
 
       {versionsQuery.isPending && (
         <div className="grid gap-3">

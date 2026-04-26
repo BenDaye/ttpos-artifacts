@@ -27,6 +27,11 @@
     "statistics": "Statistics",
     "settings": "Settings"
   },
+  "layout": {
+    "card": "Card view",
+    "list": "List view",
+    "board": "Board view"
+  },
   "theme": {
     "light": "Light",
     "dark": "Dark",

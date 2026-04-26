@@ -29,6 +29,19 @@
   "actions": {
     "download": "Download"
   },
+  "filter": {
+    "channels": "Channels",
+    "platforms": "Platforms",
+    "archs": "Architectures",
+    "published_only": "Published only",
+    "critical_only": "Critical only",
+    "clear": "Clear"
+  },
+  "list": {
+    "name": "Name",
+    "description": "Description",
+    "actions": "Actions"
+  },
   "form": {
     "name": "Name",
     "description": "Use a short identifier; description and logo are optional.",

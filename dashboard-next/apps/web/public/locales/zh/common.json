@@ -27,6 +27,11 @@
     "statistics": "统计",
     "settings": "设置"
   },
+  "layout": {
+    "card": "卡片视图",
+    "list": "列表视图",
+    "board": "看板视图"
+  },
   "theme": {
     "light": "浅色",
     "dark": "深色",
