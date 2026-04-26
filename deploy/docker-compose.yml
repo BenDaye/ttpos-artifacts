@@ -21,7 +21,7 @@ services:
       - caddy-net
 
   dashboard:
-    image: ghcr.io/bendaye/ttpos-artifacts/faynosync-dashboard:latest
+    image: ghcr.io/bendaye/ttpos-artifacts/faynosync-dashboard-next:latest
     platform: linux/amd64
     container_name: faynosync-dashboard
     restart: unless-stopped
