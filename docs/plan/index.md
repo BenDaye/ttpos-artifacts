@@ -5,3 +5,4 @@
 | [x] | PLAN-001 | Fork FaynoSync 并重构为 Monorepo | BEN-46 |
 | [x] | PLAN-002 | 代码审查问题分阶段修复 | SEC-001 ~ PERF-002 |
 | [x] | PLAN-003 | Dashboard 按 pma-web 规范重构 | REFACTOR-001 |
+| [-] | PLAN-004 | Dashboard 业务逻辑补完 | REFACTOR-002 |

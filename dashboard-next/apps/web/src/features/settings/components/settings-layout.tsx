@@ -6,7 +6,6 @@ import { cn } from '@/shared/lib/utils'
 
 const TABS = [
   { to: '/settings', match: '/settings', labelKey: 'tabs.users' },
-  { to: '/settings/tuf', match: '/settings/tuf', labelKey: 'tabs.tuf' },
   { to: '/settings/tokens', match: '/settings/tokens', labelKey: 'tabs.tokens' },
 ] as const
 

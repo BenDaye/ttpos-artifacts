@@ -3,7 +3,6 @@
   "description": "Users, security, and access.",
   "tabs": {
     "users": "Users",
-    "tuf": "TUF",
     "tokens": "API Tokens"
   },
   "users": {
@@ -48,22 +47,8 @@
     "allowed_archs": "Allowed architectures (empty = all)"
   },
   "tuf": {
-    "title": "TUF tooling",
-    "intro": "Generate Python scripts to bootstrap, sign and rotate TUF metadata. Run scripts locally with the Python tuf CLI.",
-    "note": "Step-by-step bootstrap and rotate wizards remain on the legacy dashboard during this rollout. The script generators below produce identical output.",
-    "bootstrap": {
-      "title": "Bootstrap script",
-      "description": "Generate a Python script that initializes TUF metadata for an application."
-    },
-    "fields": {
-      "appName": "App name",
-      "keyType": "Key type",
-      "adminName": "Admin name",
-      "roleName": "Role name"
-    },
-    "actions": {
-      "generate": "Generate script"
-    }
+    "disabled_title": "TUF management is disabled",
+    "disabled_description": "TUF wizard is not available in this dashboard. Use the legacy dashboard or run the Python tuf CLI directly."
   },
   "tokens": {
     "create": "Create token",

@@ -3,7 +3,6 @@
   "description": "用户、安全与访问控制。",
   "tabs": {
     "users": "用户",
-    "tuf": "TUF",
     "tokens": "API 令牌"
   },
   "users": {
@@ -48,22 +47,8 @@
     "allowed_archs": "允许的架构（空=全部）"
   },
   "tuf": {
-    "title": "TUF 工具",
-    "intro": "生成用于初始化、签名与轮换 TUF 元数据的 Python 脚本，在本地结合 Python tuf CLI 执行。",
-    "note": "完整的多步引导/轮换向导仍保留在旧版 dashboard，本面板生成的脚本输出与旧版一致。",
-    "bootstrap": {
-      "title": "Bootstrap 脚本",
-      "description": "生成用于初始化某应用 TUF 元数据的 Python 脚本。"
-    },
-    "fields": {
-      "appName": "应用名",
-      "keyType": "密钥类型",
-      "adminName": "管理员",
-      "roleName": "角色"
-    },
-    "actions": {
-      "generate": "生成脚本"
-    }
+    "disabled_title": "TUF 管理已停用",
+    "disabled_description": "本面板暂未启用 TUF 向导，请使用旧版 dashboard 或直接调用 Python tuf CLI。"
   },
   "tokens": {
     "create": "创建令牌",
