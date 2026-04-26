@@ -2,8 +2,10 @@ import { Copy } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+import { useAppsListQuery } from '@/features/apps/hooks'
 import { EntityFormDialog } from '@/shared/components/common/entity-form-dialog'
 import { Button } from '@/shared/components/ui/button'
+import { Checkbox } from '@/shared/components/ui/checkbox'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
 import { useCreateTokenMutation } from '../hooks'
@@ -13,17 +15,31 @@ interface Props {
   onOpenChange: (open: boolean) => void
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000
+
+function isoExpiresFromDays(days: number | null): string | undefined {
+  if (!days || days <= 0) {
+    return undefined
+  }
+  return new Date(Date.now() + days * DAY_MS).toISOString()
+}
+
 export function CreateTokenDialog({ open, onOpenChange }: Props) {
   const { t } = useTranslation(['settings', 'common'])
   const create = useCreateTokenMutation()
+  const apps = useAppsListQuery({ page: 1, limit: 200 })
   const [name, setName] = useState('')
-  const [expires, setExpires] = useState('')
+  const [expiresDays, setExpiresDays] = useState('')
+  const [scopeAll, setScopeAll] = useState(true)
+  const [allowed, setAllowed] = useState<Set<string>>(new Set())
   const [revealed, setRevealed] = useState<string | null>(null)
 
   useEffect(() => {
     if (!open) {
       setName('')
-      setExpires('')
+      setExpiresDays('')
+      setScopeAll(true)
+      setAllowed(new Set())
       setRevealed(null)
     }
   }, [open])
@@ -37,7 +53,8 @@ export function CreateTokenDialog({ open, onOpenChange }: Props) {
     try {
       const result = await create.mutateAsync({
         name: trimmed,
-        expires_in_days: expires ? Number(expires) : undefined,
+        allowed_apps: scopeAll ? [] : Array.from(allowed),
+        expires_at: isoExpiresFromDays(expiresDays ? Number(expiresDays) : null),
       })
       setRevealed(result.token)
       toast.success(t('tokens.created', { defaultValue: 'Token created' }))
@@ -46,6 +63,19 @@ export function CreateTokenDialog({ open, onOpenChange }: Props) {
       const message = err instanceof Error ? err.message : t('common:states.error')
       toast.error(message)
     }
+  }
+
+  const toggleApp = (name_: string) => {
+    setAllowed((prev) => {
+      const next = new Set(prev)
+      if (next.has(name_)) {
+        next.delete(name_)
+      }
+      else {
+        next.add(name_)
+      }
+      return next
+    })
   }
 
   return (
@@ -98,14 +128,45 @@ export function CreateTokenDialog({ open, onOpenChange }: Props) {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="token-expires">{t('tokens.expires', { defaultValue: 'Expires in (days, optional)' })}</Label>
+                <Label htmlFor="token-expires">
+                  {t('tokens.expires_in_days', { defaultValue: 'Expires in (days, optional)' })}
+                </Label>
                 <Input
                   id="token-expires"
                   type="number"
-                  value={expires}
-                  onChange={e => setExpires(e.target.value)}
+                  min={1}
+                  value={expiresDays}
+                  onChange={e => setExpiresDays(e.target.value)}
                   placeholder="90"
                 />
+              </div>
+              <div className="space-y-2">
+                <Label>{t('tokens.scope_label', { defaultValue: 'Scope' })}</Label>
+                <label className="flex items-center gap-2 text-sm">
+                  <Checkbox
+                    checked={scopeAll}
+                    onCheckedChange={(v: boolean | 'indeterminate') => setScopeAll(v === true)}
+                  />
+                  {t('tokens.scope_all', { defaultValue: 'All apps' })}
+                </label>
+                {!scopeAll && (
+                  <div className="max-h-40 space-y-1 overflow-auto rounded-md border border-border p-2">
+                    {apps.data?.apps.map(app => (
+                      <label key={app.ID} className="flex items-center gap-2 text-sm">
+                        <Checkbox
+                          checked={allowed.has(app.AppName)}
+                          onCheckedChange={() => toggleApp(app.AppName)}
+                        />
+                        {app.AppName}
+                      </label>
+                    ))}
+                    {!apps.data?.apps.length && (
+                      <p className="text-xs text-muted-foreground">
+                        {t('tokens.no_apps', { defaultValue: 'No apps available.' })}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}

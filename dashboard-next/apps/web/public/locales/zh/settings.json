@@ -7,15 +7,86 @@
     "tokens": "API 令牌"
   },
   "users": {
-    "empty": "用户管理待接入",
-    "description": "将在 S4 阶段完成接入。"
+    "team_title": "团队用户",
+    "create": "新建用户",
+    "create_title": "创建团队用户",
+    "edit_title": "编辑团队用户",
+    "delete_title": "删除团队用户？",
+    "delete_description": "{{name}} 将立即失去访问权限。",
+    "form_description": "团队用户在应用、渠道、平台与架构上拥有受限权限。",
+    "username": "用户名",
+    "password": "密码",
+    "new_password": "新密码",
+    "password_length": "密码长度至少 8 位",
+    "admin_badge": "管理员",
+    "admin_edit_title": "更新管理员凭证",
+    "admin_edit_description": "更新管理员需要同时填写用户名与密码。",
+    "change_credentials": "修改凭证",
+    "empty": "暂无团队用户",
+    "empty_description": "邀请同事并授予受限的访问权限。",
+    "forbidden": "仅管理员可用",
+    "forbidden_description": "请使用管理员账号登录后管理团队用户。",
+    "created": "用户已创建",
+    "updated": "用户已更新",
+    "deleted": "团队用户已删除"
+  },
+  "permissions": {
+    "apps": "应用",
+    "channels": "渠道",
+    "platforms": "平台",
+    "archs": "架构",
+    "flags": {
+      "create": "创建",
+      "edit": "编辑",
+      "delete": "删除",
+      "upload": "上传",
+      "download": "下载"
+    },
+    "allowed_apps": "允许的应用（空=全部）",
+    "allowed_channels": "允许的渠道（空=全部）",
+    "allowed_platforms": "允许的平台（空=全部）",
+    "allowed_archs": "允许的架构（空=全部）"
   },
   "tuf": {
-    "empty": "TUF 管理待接入",
-    "description": "将在 S4 阶段完成接入。"
+    "title": "TUF 工具",
+    "intro": "生成用于初始化、签名与轮换 TUF 元数据的 Python 脚本，在本地结合 Python tuf CLI 执行。",
+    "note": "完整的多步引导/轮换向导仍保留在旧版 dashboard，本面板生成的脚本输出与旧版一致。",
+    "bootstrap": {
+      "title": "Bootstrap 脚本",
+      "description": "生成用于初始化某应用 TUF 元数据的 Python 脚本。"
+    },
+    "fields": {
+      "appName": "应用名",
+      "keyType": "密钥类型",
+      "adminName": "管理员",
+      "roleName": "角色"
+    },
+    "actions": {
+      "generate": "生成脚本"
+    }
   },
   "tokens": {
-    "empty": "API 令牌管理待接入",
-    "description": "将在 S4 阶段完成接入。"
+    "create": "创建令牌",
+    "create_title": "创建 API 令牌",
+    "create_description": "令牌用于 CI 访问。请妥善保存——令牌值仅显示一次。",
+    "name": "名称",
+    "expires_in_days": "有效期（天，可选）",
+    "expires_at": "过期",
+    "expired": "已过期",
+    "scope_label": "范围",
+    "scope_all": "全部应用",
+    "scope": "范围：",
+    "no_apps": "暂无可选应用。",
+    "value": "令牌值",
+    "value_warning": "请立即复制，此值不会再次显示。",
+    "created": "令牌已创建",
+    "created_at": "创建时间",
+    "last_used": "上次使用",
+    "revoke": "撤销",
+    "revoked": "令牌已撤销",
+    "revoke_title": "撤销令牌？",
+    "revoke_description": "使用此令牌的 CI 工具将立即失去访问权限。",
+    "empty": "暂无 API 令牌",
+    "empty_description": "为 CI 上传创建一个令牌。"
   }
 }

@@ -1,8 +1,8 @@
-import type { ApiToken, UserProfile } from '@ttpos/shared'
+import type { ApiToken, TeamUser, TeamUserPermissions, UserProfile } from '@ttpos/shared'
 import { http } from '@/shared/lib/http'
 
-interface UsersListResponse {
-  users?: UserProfile[]
+interface TeamUsersListResponse {
+  users?: TeamUser[]
 }
 
 interface TokenListResponse {
@@ -11,24 +11,49 @@ interface TokenListResponse {
 
 export interface CreateTokenPayload {
   name: string
-  expires_in_days?: number
+  allowed_apps?: string[]
+  expires_at?: string
 }
 
-export interface CreateTokenResponse {
+export interface CreateTokenResponse extends ApiToken {
   token: string
-  details?: ApiToken
 }
 
 export interface AdminUpdatePayload {
   id: string
+  username: string
+  password: string
+}
+
+export interface CreateTeamUserPayload {
+  username: string
+  password: string
+  permissions: TeamUserPermissions
+}
+
+export interface UpdateTeamUserPayload {
+  id: string
   username?: string
   password?: string
+  permissions: TeamUserPermissions
 }
 
 export const settingsApi = {
-  async usersList(): Promise<UserProfile[]> {
-    const data = await http.get<UsersListResponse>('/users/list')
+  whoami() {
+    return http.get<UserProfile>('/whoami')
+  },
+  async usersList(): Promise<TeamUser[]> {
+    const data = await http.get<TeamUsersListResponse>('/users/list')
     return data?.users ?? []
+  },
+  createUser(payload: CreateTeamUserPayload) {
+    return http.post('/user/create', payload)
+  },
+  updateUser(payload: UpdateTeamUserPayload) {
+    return http.post('/user/update', payload)
+  },
+  deleteUser(id: string) {
+    return http.delete('/user/delete', { body: { id } })
   },
   adminUpdate(payload: AdminUpdatePayload) {
     return http.post('/admin/update', payload)

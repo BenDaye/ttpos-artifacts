@@ -131,7 +131,7 @@ export const http = {
   patch<T>(path: string, body?: HttpRequestInit['body'], init?: Omit<HttpRequestInit, 'method' | 'body'>) {
     return request<T>(path, { ...init, method: 'PATCH', body })
   },
-  delete<T>(path: string, init?: Omit<HttpRequestInit, 'method' | 'body'>) {
+  delete<T>(path: string, init?: Omit<HttpRequestInit, 'method'>) {
     return request<T>(path, { ...init, method: 'DELETE' })
   },
 }

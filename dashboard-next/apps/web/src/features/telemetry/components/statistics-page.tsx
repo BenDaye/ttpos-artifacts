@@ -1,7 +1,7 @@
-import type { TelemetryRange } from '../api'
+import type { TelemetryRange, TelemetrySummary, TelemetryVersions } from '../api'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { EmptyState } from '@/shared/components/empty-state'
 import { PageHeader } from '@/shared/components/page-header'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card'
@@ -9,7 +9,19 @@ import { Skeleton } from '@/shared/components/ui/skeleton'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/components/ui/toggle-group'
 import { useTelemetryQuery } from '../hooks'
 
-const RANGES: TelemetryRange[] = ['today', 'week', 'month']
+const RANGES: TelemetryRange[] = ['week', 'month']
+
+const tooltipStyle = {
+  background: 'var(--popover)',
+  borderColor: 'var(--border)',
+  borderRadius: 8,
+  fontSize: 12,
+} as const
+
+interface BucketDatum {
+  name: string
+  count: number
+}
 
 export function StatisticsPage() {
   const { t } = useTranslation(['telemetry', 'common'])
@@ -31,7 +43,7 @@ export function StatisticsPage() {
                 data-pressed={r === range}
                 onClick={() => setRange(r)}
               >
-                {t(`range.${r}`, { defaultValue: r })}
+                {t(`range.${r}`)}
               </ToggleGroupItem>
             ))}
           </ToggleGroup>
@@ -40,7 +52,7 @@ export function StatisticsPage() {
 
       {telemetry.isPending && (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
+          {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-24 rounded-xl" />
           ))}
         </div>
@@ -57,21 +69,26 @@ export function StatisticsPage() {
         <>
           <SummaryGrid summary={telemetry.data.summary} />
           <div className="mt-6 grid gap-4 lg:grid-cols-2">
-            <ChartCard
-              title={t('charts.daily', { defaultValue: 'Downloads over time' })}
-              data={telemetry.data.daily_stats?.map(d => ({ name: d.date, total: d.total })) ?? []}
+            <DailyTrendCard
+              title={t('charts.daily', { defaultValue: 'Activity over time' })}
+              data={telemetry.data.daily_stats ?? []}
             />
-            <ChartCard
+            <BucketChartCard
               title={t('charts.platforms', { defaultValue: 'By platform' })}
-              data={telemetry.data.platforms ?? []}
+              data={(telemetry.data.platforms ?? []).map(p => ({ name: p.platform, count: p.client_count }))}
             />
-            <ChartCard
+            <BucketChartCard
               title={t('charts.channels', { defaultValue: 'By channel' })}
-              data={telemetry.data.channels ?? []}
+              data={(telemetry.data.channels ?? []).map(c => ({ name: c.channel, count: c.client_count }))}
             />
-            <ChartCard
+            <BucketChartCard
+              title={t('charts.architectures', { defaultValue: 'By architecture' })}
+              data={(telemetry.data.architectures ?? []).map(a => ({ name: a.arch, count: a.client_count }))}
+            />
+            <VersionUsageCard
               title={t('charts.versions', { defaultValue: 'Top versions' })}
-              data={telemetry.data.versions ?? []}
+              versions={telemetry.data.versions}
+              className="lg:col-span-2"
             />
           </div>
         </>
@@ -80,24 +97,27 @@ export function StatisticsPage() {
   )
 }
 
-function SummaryGrid({ summary }: { summary?: { total_downloads?: number, unique_apps?: number, unique_versions?: number, unique_users?: number } }) {
+function SummaryGrid({ summary }: { summary?: TelemetrySummary }) {
   const { t } = useTranslation('telemetry')
   if (!summary) {
     return null
   }
   const items = [
-    { label: t('summary.downloads', { defaultValue: 'Downloads' }), value: summary.total_downloads ?? 0 },
-    { label: t('summary.apps', { defaultValue: 'Applications' }), value: summary.unique_apps ?? 0 },
-    { label: t('summary.versions', { defaultValue: 'Versions' }), value: summary.unique_versions ?? 0 },
-    { label: t('summary.users', { defaultValue: 'Unique users' }), value: summary.unique_users ?? 0 },
+    { label: t('summary.requests', { defaultValue: 'Requests' }), value: summary.total_requests ?? 0 },
+    { label: t('summary.clients', { defaultValue: 'Unique clients' }), value: summary.unique_clients ?? 0 },
+    { label: t('summary.latest', { defaultValue: 'On latest version' }), value: summary.clients_using_latest_version ?? 0 },
+    { label: t('summary.outdated', { defaultValue: 'Outdated clients' }), value: summary.clients_outdated ?? 0 },
+    { label: t('summary.apps', { defaultValue: 'Active apps' }), value: summary.total_active_apps ?? 0 },
   ]
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
       {items.map(item => (
         <Card key={item.label}>
           <CardHeader className="pb-2">
             <CardDescription>{item.label}</CardDescription>
-            <CardTitle className="text-3xl tabular-nums">{item.value.toLocaleString()}</CardTitle>
+            <CardTitle className="text-3xl tabular-nums">
+              {Number(item.value).toLocaleString()}
+            </CardTitle>
           </CardHeader>
         </Card>
       ))}
@@ -105,39 +125,134 @@ function SummaryGrid({ summary }: { summary?: { total_downloads?: number, unique
   )
 }
 
-function ChartCard({ title, data }: { title: string, data: { name: string, total: number }[] }) {
+function DailyTrendCard({
+  title,
+  data,
+}: {
+  title: string
+  data: { date: string, total_requests: number, unique_clients: number }[]
+}) {
+  const { t } = useTranslation('telemetry')
+  if (data.length === 0) {
+    return (
+      <ChartShell title={title}>
+        <EmptyChart />
+      </ChartShell>
+    )
+  }
   return (
-    <Card>
+    <ChartShell title={title}>
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={data} margin={{ top: 10, right: 8, bottom: 0, left: -20 }}>
+          <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
+          <XAxis dataKey="date" tickLine={false} stroke="var(--muted-foreground)" fontSize={11} />
+          <YAxis tickLine={false} stroke="var(--muted-foreground)" fontSize={11} />
+          <Tooltip
+            cursor={{ stroke: 'var(--accent)' }}
+            contentStyle={tooltipStyle}
+          />
+          <Line
+            type="monotone"
+            dataKey="total_requests"
+            name={t('summary.requests', { defaultValue: 'Requests' })}
+            stroke="var(--chart-1)"
+            strokeWidth={2}
+            dot={false}
+          />
+          <Line
+            type="monotone"
+            dataKey="unique_clients"
+            name={t('summary.clients', { defaultValue: 'Unique clients' })}
+            stroke="var(--chart-2)"
+            strokeWidth={2}
+            dot={false}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </ChartShell>
+  )
+}
+
+function BucketChartCard({ title, data }: { title: string, data: BucketDatum[] }) {
+  if (data.length === 0) {
+    return (
+      <ChartShell title={title}>
+        <EmptyChart />
+      </ChartShell>
+    )
+  }
+  return (
+    <ChartShell title={title}>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={data} margin={{ top: 10, right: 8, bottom: 0, left: -20 }}>
+          <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
+          <XAxis dataKey="name" tickLine={false} stroke="var(--muted-foreground)" fontSize={11} />
+          <YAxis tickLine={false} stroke="var(--muted-foreground)" fontSize={11} allowDecimals={false} />
+          <Tooltip cursor={{ fill: 'var(--accent)' }} contentStyle={tooltipStyle} />
+          <Bar dataKey="count" fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+    </ChartShell>
+  )
+}
+
+function VersionUsageCard({
+  title,
+  versions,
+  className,
+}: {
+  title: string
+  versions?: TelemetryVersions
+  className?: string
+}) {
+  const usage = versions?.usage ?? []
+  if (usage.length === 0) {
+    return (
+      <ChartShell title={title} className={className}>
+        <EmptyChart />
+      </ChartShell>
+    )
+  }
+  const data: BucketDatum[] = usage.map(u => ({ name: u.version, count: u.client_count }))
+  return (
+    <ChartShell title={title} className={className}>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={data} margin={{ top: 10, right: 8, bottom: 0, left: -20 }}>
+          <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
+          <XAxis dataKey="name" tickLine={false} stroke="var(--muted-foreground)" fontSize={11} />
+          <YAxis tickLine={false} stroke="var(--muted-foreground)" fontSize={11} allowDecimals={false} />
+          <Tooltip cursor={{ fill: 'var(--accent)' }} contentStyle={tooltipStyle} />
+          <Bar dataKey="count" fill="var(--chart-2)" radius={[4, 4, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+    </ChartShell>
+  )
+}
+
+function ChartShell({
+  title,
+  className,
+  children,
+}: {
+  title: string
+  className?: string
+  children: React.ReactNode
+}) {
+  return (
+    <Card className={className}>
       <CardHeader>
         <CardTitle className="text-base">{title}</CardTitle>
       </CardHeader>
-      <CardContent className="h-64 pt-0">
-        {data.length === 0
-          ? (
-              <p className="flex h-full items-center justify-center text-sm text-muted-foreground">
-                —
-              </p>
-            )
-          : (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data}>
-                  <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="name" tickLine={false} stroke="var(--muted-foreground)" fontSize={11} />
-                  <YAxis tickLine={false} stroke="var(--muted-foreground)" fontSize={11} />
-                  <Tooltip
-                    cursor={{ fill: 'var(--accent)' }}
-                    contentStyle={{
-                      background: 'var(--popover)',
-                      borderColor: 'var(--border)',
-                      borderRadius: 8,
-                      fontSize: 12,
-                    }}
-                  />
-                  <Bar dataKey="total" fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-      </CardContent>
+      <CardContent className="h-64 pt-0">{children}</CardContent>
     </Card>
+  )
+}
+
+function EmptyChart() {
+  const { t } = useTranslation('common')
+  return (
+    <p className="flex h-full items-center justify-center text-sm text-muted-foreground">
+      {t('states.empty')}
+    </p>
   )
 }

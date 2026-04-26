@@ -1,20 +1,21 @@
 {
   "description": "Adoption and download metrics across releases.",
   "range": {
-    "today": "Today",
     "week": "Last 7 days",
     "month": "Last 30 days"
   },
   "summary": {
-    "downloads": "Downloads",
-    "apps": "Applications",
-    "versions": "Versions",
-    "users": "Unique users"
+    "requests": "Requests",
+    "clients": "Unique clients",
+    "latest": "On latest version",
+    "outdated": "Outdated clients",
+    "apps": "Active apps"
   },
   "charts": {
-    "daily": "Downloads over time",
+    "daily": "Activity over time",
     "platforms": "By platform",
     "channels": "By channel",
+    "architectures": "By architecture",
     "versions": "Top versions"
   }
 }

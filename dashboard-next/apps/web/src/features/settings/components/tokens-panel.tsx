@@ -1,4 +1,4 @@
-import { Copy, Key, Plus, Trash2 } from 'lucide-react'
+import { Key, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -66,48 +66,72 @@ export function TokensPanel() {
 
       {tokensQuery.isSuccess && tokensQuery.data.length > 0 && (
         <div className="grid gap-3">
-          {tokensQuery.data.map(token => (
-            <Card key={token.id}>
-              <CardContent className="flex items-center justify-between gap-3 p-4">
-                <div className="flex min-w-0 items-center gap-3">
-                  <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
-                    <Key className="size-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">{token.name}</p>
-                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                      {token.prefix && (
-                        <Badge variant="outline">
-                          {token.prefix}
-                          …
-                        </Badge>
-                      )}
-                      <span>
-                        {t('tokens.created_at', { defaultValue: 'Created' })}
-                        {' '}
-                        {new Date(token.created_at).toLocaleString()}
-                      </span>
-                      {token.last_used_at && (
+          {tokensQuery.data.map((token) => {
+            const expired = token.expires_at && new Date(token.expires_at) < new Date()
+            return (
+              <Card key={token.id}>
+                <CardContent className="flex items-center justify-between gap-3 p-4">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
+                      <Key className="size-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="truncate text-sm font-medium">{token.name}</p>
+                        {expired && <Badge variant="destructive">{t('tokens.expired', { defaultValue: 'Expired' })}</Badge>}
+                      </div>
+                      <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                        {token.token_prefix && (
+                          <Badge variant="outline">
+                            {token.token_prefix}
+                            …
+                          </Badge>
+                        )}
+                        {token.allowed_apps?.length
+                          ? (
+                              <span>
+                                {t('tokens.scope', { defaultValue: 'Scope:' })}
+                                {' '}
+                                {token.allowed_apps.join(', ')}
+                              </span>
+                            )
+                          : (
+                              <span>{t('tokens.scope_all', { defaultValue: 'All apps' })}</span>
+                            )}
                         <span>
-                          {t('tokens.last_used', { defaultValue: 'Last used' })}
+                          {t('tokens.created_at', { defaultValue: 'Created' })}
                           {' '}
-                          {new Date(token.last_used_at).toLocaleString()}
+                          {new Date(token.created_at).toLocaleString()}
                         </span>
-                      )}
+                        {token.expires_at && (
+                          <span>
+                            {t('tokens.expires_at', { defaultValue: 'Expires' })}
+                            {' '}
+                            {new Date(token.expires_at).toLocaleString()}
+                          </span>
+                        )}
+                        {token.last_used_at && (
+                          <span>
+                            {t('tokens.last_used', { defaultValue: 'Last used' })}
+                            {' '}
+                            {new Date(token.last_used_at).toLocaleString()}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label={t('tokens.revoke', { defaultValue: 'Revoke' })}
-                  onClick={() => setRevoking(token.id)}
-                >
-                  <Trash2 className="size-4 text-destructive" />
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={t('tokens.revoke', { defaultValue: 'Revoke' })}
+                    onClick={() => setRevoking(token.id)}
+                  >
+                    <Trash2 className="size-4 text-destructive" />
+                  </Button>
+                </CardContent>
+              </Card>
+            )
+          })}
         </div>
       )}
 
@@ -125,22 +149,5 @@ export function TokensPanel() {
         onConfirm={onRevoke}
       />
     </div>
-  )
-}
-
-export function CopyButton({ value }: { value: string }) {
-  const { t } = useTranslation('common')
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      aria-label={t('actions.copy', { defaultValue: 'Copy' })}
-      onClick={() => {
-        void navigator.clipboard.writeText(value)
-        toast.success(t('actions.copied', { defaultValue: 'Copied' }))
-      }}
-    >
-      <Copy className="size-4" />
-    </Button>
   )
 }

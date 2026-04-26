@@ -1,5 +1,6 @@
+import type { AppSummary } from '@ttpos/shared'
 import { Link } from '@tanstack/react-router'
-import { Boxes, Plus, Search, Trash2 } from 'lucide-react'
+import { Boxes, Pencil, Plus, Search, Trash2, Upload } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -11,6 +12,7 @@ import { Card, CardContent } from '@/shared/components/ui/card'
 import { Input } from '@/shared/components/ui/input'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 import { useAppsListQuery, useDeleteAppMutation } from '../hooks'
+import { AppFormDialog } from './app-form-dialog'
 import { UploadVersionDialog } from './upload-version-dialog'
 
 export function ApplicationsPage() {
@@ -18,8 +20,10 @@ export function ApplicationsPage() {
   const appsQuery = useAppsListQuery({ page: 1, limit: 50 })
   const deleteMutation = useDeleteAppMutation()
   const [search, setSearch] = useState('')
+  const [creating, setCreating] = useState(false)
+  const [editing, setEditing] = useState<AppSummary | null>(null)
   const [uploading, setUploading] = useState(false)
-  const [deleting, setDeleting] = useState<{ id: string, name: string } | null>(null)
+  const [deleting, setDeleting] = useState<AppSummary | null>(null)
 
   const filtered = (appsQuery.data?.apps ?? []).filter(app =>
     !search || app.AppName.toLowerCase().includes(search.toLowerCase()),
@@ -29,7 +33,7 @@ export function ApplicationsPage() {
     if (!deleting)
       return
     try {
-      await deleteMutation.mutateAsync(deleting.id)
+      await deleteMutation.mutateAsync(deleting.ID)
       toast.success(t('deleted', { defaultValue: 'Application deleted' }))
       setDeleting(null)
     }
@@ -45,10 +49,16 @@ export function ApplicationsPage() {
         title={t('title')}
         description={t('description')}
         actions={(
-          <Button onClick={() => setUploading(true)}>
-            <Plus className="size-4" />
-            {t('upload', { defaultValue: 'Upload version' })}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => setUploading(true)}>
+              <Upload className="size-4" />
+              {t('upload', { defaultValue: 'Upload version' })}
+            </Button>
+            <Button onClick={() => setCreating(true)}>
+              <Plus className="size-4" />
+              {t('create', { defaultValue: 'New app' })}
+            </Button>
+          </div>
         )}
       />
 
@@ -85,9 +95,9 @@ export function ApplicationsPage() {
           title={t('empty.title')}
           description={t('empty.description')}
           action={(
-            <Button onClick={() => setUploading(true)}>
+            <Button onClick={() => setCreating(true)}>
               <Plus className="size-4" />
-              {t('upload', { defaultValue: 'Upload version' })}
+              {t('create', { defaultValue: 'New app' })}
             </Button>
           )}
         />
@@ -120,14 +130,24 @@ export function ApplicationsPage() {
                       )}
                     </div>
                   </Link>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label={t('common:actions.delete')}
-                    onClick={() => setDeleting({ id: app.ID, name: app.AppName })}
-                  >
-                    <Trash2 className="size-4 text-destructive" />
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label={t('common:actions.edit')}
+                      onClick={() => setEditing(app)}
+                    >
+                      <Pencil className="size-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label={t('common:actions.delete')}
+                      onClick={() => setDeleting(app)}
+                    >
+                      <Trash2 className="size-4 text-destructive" />
+                    </Button>
+                  </div>
                 </div>
                 {app.Updated_at && (
                   <p className="mt-3 text-xs text-muted-foreground">
@@ -142,13 +162,19 @@ export function ApplicationsPage() {
         </div>
       )}
 
+      <AppFormDialog open={creating} onOpenChange={setCreating} />
+      <AppFormDialog
+        open={Boolean(editing)}
+        onOpenChange={open => !open && setEditing(null)}
+        app={editing}
+      />
       <UploadVersionDialog open={uploading} onOpenChange={setUploading} />
       <ConfirmDialog
         open={Boolean(deleting)}
         onOpenChange={open => !open && setDeleting(null)}
         title={t('delete_title', { defaultValue: 'Delete application?' })}
         description={t('delete_description', {
-          name: deleting?.name ?? '',
+          name: deleting?.AppName ?? '',
           defaultValue: 'All versions and artifacts of {{name}} will be removed. This cannot be undone.',
         })}
         confirmLabel={t('common:actions.delete')}

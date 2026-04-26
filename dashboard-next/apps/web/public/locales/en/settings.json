@@ -7,15 +7,86 @@
     "tokens": "API Tokens"
   },
   "users": {
-    "empty": "User administration pending",
-    "description": "Wiring will be completed in stage S4."
+    "team_title": "Team users",
+    "create": "New user",
+    "create_title": "Create team user",
+    "edit_title": "Edit team user",
+    "delete_title": "Delete team user?",
+    "delete_description": "{{name}} will lose access immediately.",
+    "form_description": "Team users have scoped permissions across apps, channels, platforms and architectures.",
+    "username": "Username",
+    "password": "Password",
+    "new_password": "New password",
+    "password_length": "Password must be at least 8 characters",
+    "admin_badge": "Admin",
+    "admin_edit_title": "Update admin credentials",
+    "admin_edit_description": "Both username and password are required for an admin update.",
+    "change_credentials": "Change credentials",
+    "empty": "No team users yet",
+    "empty_description": "Invite teammates to grant scoped access.",
+    "forbidden": "Admin only",
+    "forbidden_description": "Sign in as an admin to manage team users.",
+    "created": "User created",
+    "updated": "User updated",
+    "deleted": "Team user deleted"
+  },
+  "permissions": {
+    "apps": "Applications",
+    "channels": "Channels",
+    "platforms": "Platforms",
+    "archs": "Architectures",
+    "flags": {
+      "create": "Create",
+      "edit": "Edit",
+      "delete": "Delete",
+      "upload": "Upload",
+      "download": "Download"
+    },
+    "allowed_apps": "Allowed apps (empty = all)",
+    "allowed_channels": "Allowed channels (empty = all)",
+    "allowed_platforms": "Allowed platforms (empty = all)",
+    "allowed_archs": "Allowed architectures (empty = all)"
   },
   "tuf": {
-    "empty": "TUF administration pending",
-    "description": "Wiring will be completed in stage S4."
+    "title": "TUF tooling",
+    "intro": "Generate Python scripts to bootstrap, sign and rotate TUF metadata. Run scripts locally with the Python tuf CLI.",
+    "note": "Step-by-step bootstrap and rotate wizards remain on the legacy dashboard during this rollout. The script generators below produce identical output.",
+    "bootstrap": {
+      "title": "Bootstrap script",
+      "description": "Generate a Python script that initializes TUF metadata for an application."
+    },
+    "fields": {
+      "appName": "App name",
+      "keyType": "Key type",
+      "adminName": "Admin name",
+      "roleName": "Role name"
+    },
+    "actions": {
+      "generate": "Generate script"
+    }
   },
   "tokens": {
-    "empty": "API token management pending",
-    "description": "Wiring will be completed in stage S4."
+    "create": "Create token",
+    "create_title": "Create API token",
+    "create_description": "Tokens grant CI access. Store them securely — you will not see the value again.",
+    "name": "Name",
+    "expires_in_days": "Expires in (days, optional)",
+    "expires_at": "Expires",
+    "expired": "Expired",
+    "scope_label": "Scope",
+    "scope_all": "All apps",
+    "scope": "Scope:",
+    "no_apps": "No apps available.",
+    "value": "Token value",
+    "value_warning": "Copy this value now. It will not be shown again.",
+    "created": "Token created",
+    "created_at": "Created",
+    "last_used": "Last used",
+    "revoke": "Revoke",
+    "revoked": "Token revoked",
+    "revoke_title": "Revoke token?",
+    "revoke_description": "CI tools using this token will lose access immediately.",
+    "empty": "No API tokens",
+    "empty_description": "Create one for CI uploads."
   }
 }

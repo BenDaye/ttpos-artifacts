@@ -1,3 +1,4 @@
+import type { UserProfile } from '@ttpos/shared'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -9,39 +10,37 @@ import { useAdminUpdateMutation } from '../hooks'
 interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
-  userId: string | null
-  username: string
+  user: UserProfile | null
 }
 
-export function UserCredentialDialog({ open, onOpenChange, userId, username }: Props) {
+export function AdminCredentialDialog({ open, onOpenChange, user }: Props) {
   const { t } = useTranslation(['settings', 'common'])
   const update = useAdminUpdateMutation()
-  const [name, setName] = useState(username)
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
 
   useEffect(() => {
-    setName(username)
-    setPassword('')
-  }, [username, open])
+    if (open) {
+      setUsername(user?.username ?? '')
+      setPassword('')
+    }
+  }, [open, user])
 
   const onSubmit = async () => {
-    if (!userId) {
+    if (!user) {
       return
     }
-    const payload: { id: string, username?: string, password?: string } = { id: userId }
-    if (name && name !== username) {
-      payload.username = name
-    }
-    if (password) {
-      payload.password = password
-    }
-    if (!payload.username && !payload.password) {
-      onOpenChange(false)
+    if (!username.trim() || !password) {
+      toast.error(t('users.password_length', { defaultValue: 'Username and password required' }))
       return
     }
     try {
-      await update.mutateAsync(payload)
-      toast.success(t('users.updated', { defaultValue: 'User updated' }))
+      await update.mutateAsync({
+        id: user.id,
+        username: username.trim(),
+        password,
+      })
+      toast.success(t('users.updated', { defaultValue: 'Updated' }))
       onOpenChange(false)
     }
     catch (err) {
@@ -54,28 +53,32 @@ export function UserCredentialDialog({ open, onOpenChange, userId, username }: P
     <EntityFormDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={t('users.edit_title', { defaultValue: 'Edit user' })}
-      description={t('users.edit_description', { defaultValue: 'Update credentials. Leave password empty to keep it.' })}
+      title={t('users.admin_edit_title', { defaultValue: 'Update admin credentials' })}
+      description={t('users.admin_edit_description', {
+        defaultValue: 'Both username and password are required for an admin update.',
+      })}
       loading={update.isPending}
       onSubmit={onSubmit}
     >
       <div className="space-y-3">
         <div className="space-y-2">
-          <Label htmlFor="user-username">{t('common:actions.username', { defaultValue: 'Username' })}</Label>
+          <Label htmlFor="admin-username">{t('users.username', { defaultValue: 'Username' })}</Label>
           <Input
-            id="user-username"
-            value={name}
-            onChange={e => setName(e.target.value)}
+            id="admin-username"
+            value={username}
+            onChange={e => setUsername(e.target.value)}
+            autoFocus
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="user-password">{t('users.new_password', { defaultValue: 'New password' })}</Label>
+          <Label htmlFor="admin-password">{t('users.new_password', { defaultValue: 'New password' })}</Label>
           <Input
-            id="user-password"
+            id="admin-password"
             type="password"
             value={password}
             onChange={e => setPassword(e.target.value)}
             placeholder="••••••••"
+            autoComplete="new-password"
           />
         </div>
       </div>

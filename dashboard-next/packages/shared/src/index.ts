@@ -87,8 +87,35 @@ export interface UserProfile {
 export interface ApiToken {
   id: string
   name: string
-  prefix: string
+  token_prefix: string
+  allowed_apps: string[]
   created_at: string
   last_used_at?: string
   expires_at?: string
+}
+
+export interface TeamUserPermissionGroup {
+  Create: boolean
+  Delete: boolean
+  Edit: boolean
+  Allowed: string[]
+}
+
+export interface TeamUserAppsPermission extends TeamUserPermissionGroup {
+  Download: boolean
+  Upload: boolean
+}
+
+export interface TeamUserPermissions {
+  Apps: TeamUserAppsPermission
+  Channels: TeamUserPermissionGroup
+  Platforms: TeamUserPermissionGroup
+  Archs: TeamUserPermissionGroup
+}
+
+export interface TeamUser {
+  id: string
+  username: string
+  permissions: TeamUserPermissions
+  updated_at?: string
 }

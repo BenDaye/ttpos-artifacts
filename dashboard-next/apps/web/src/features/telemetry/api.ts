@@ -1,6 +1,6 @@
 import { http } from '@/shared/lib/http'
 
-export type TelemetryRange = 'today' | 'week' | 'month'
+export type TelemetryRange = 'week' | 'month'
 
 export interface TelemetryParams {
   apps?: string[]
@@ -11,28 +11,58 @@ export interface TelemetryParams {
   date?: string
 }
 
-export interface TelemetryDailyEntry {
-  date: string
-  total: number
+export interface TelemetrySummary {
+  total_requests: number
+  unique_clients: number
+  clients_using_latest_version: number
+  clients_outdated: number
+  total_active_apps: number
 }
 
-export interface TelemetryBucket {
-  name: string
-  total: number
+export interface TelemetryDailyEntry {
+  date: string
+  total_requests: number
+  unique_clients: number
+  clients_using_latest_version: number
+  clients_outdated: number
+}
+
+export interface VersionUsage {
+  version: string
+  client_count: number
+}
+
+export interface TelemetryVersions {
+  used_versions_count: number
+  known_versions: string[]
+  usage: VersionUsage[]
+}
+
+export interface PlatformUsage {
+  platform: string
+  client_count: number
+}
+
+export interface ArchitectureUsage {
+  arch: string
+  client_count: number
+}
+
+export interface ChannelUsage {
+  channel: string
+  client_count: number
 }
 
 export interface TelemetryResponse {
-  summary?: {
-    total_downloads?: number
-    unique_apps?: number
-    unique_versions?: number
-    unique_users?: number
-  }
-  daily_stats?: TelemetryDailyEntry[]
-  versions?: TelemetryBucket[]
-  platforms?: TelemetryBucket[]
-  architectures?: TelemetryBucket[]
-  channels?: TelemetryBucket[]
+  date: string
+  date_range?: string[]
+  admin: string
+  summary: TelemetrySummary
+  versions: TelemetryVersions
+  platforms: PlatformUsage[]
+  architectures: ArchitectureUsage[]
+  channels: ChannelUsage[]
+  daily_stats: TelemetryDailyEntry[]
 }
 
 export const telemetryApi = {

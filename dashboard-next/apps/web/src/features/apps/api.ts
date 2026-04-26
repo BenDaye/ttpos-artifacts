@@ -42,7 +42,42 @@ export interface UploadVersionPayload {
   files: File[]
 }
 
-function appendData(form: FormData, data: Record<string, unknown>) {
+export interface UpdateVersionPayload {
+  id: string
+  app_name: string
+  version: string
+  channel: string
+  platform: string
+  arch: string
+  publish: boolean
+  critical: boolean
+  changelog?: string
+  files?: File[]
+}
+
+export interface CreateAppPayload {
+  app: string
+  description?: string
+  private?: boolean
+  tuf?: boolean
+  logo?: File | null
+}
+
+export interface UpdateAppPayload {
+  id: string
+  app?: string
+  description?: string
+  logo?: File | null
+}
+
+export interface DeleteArtifactPayload {
+  id: string
+  app_name: string
+  version: string
+  artifacts_to_delete: string[]
+}
+
+function attachData(form: FormData, data: object) {
   form.append('data', JSON.stringify(data))
 }
 
@@ -66,22 +101,50 @@ export const appsApi = {
   async upload(payload: UploadVersionPayload): Promise<unknown> {
     const { files, ...rest } = payload
     const form = new FormData()
-    appendData(form, rest)
+    attachData(form, rest)
     files.forEach(file => form.append('file', file, file.name))
     return http.post('/upload', form)
   },
 
-  async update(payload: { id: string, app_name?: string, logo?: string, description?: string }): Promise<unknown> {
+  async updateVersion(payload: UpdateVersionPayload): Promise<unknown> {
+    const { files, ...rest } = payload
     const form = new FormData()
-    appendData(form, payload)
+    attachData(form, rest)
+    files?.forEach(file => form.append('file', file, file.name))
     return http.post('/apps/update', form)
   },
 
-  remove(id: string) {
+  async deleteVersion(id: string): Promise<unknown> {
     return http.delete('/apps/delete', { query: { id } })
   },
 
-  removeArtifact(id: string) {
-    return http.post('/artifact/delete', null, { query: { id } })
+  async deleteArtifact(payload: DeleteArtifactPayload): Promise<unknown> {
+    const form = new FormData()
+    attachData(form, payload)
+    return http.post('/artifact/delete', form)
+  },
+
+  async createApp(payload: CreateAppPayload): Promise<unknown> {
+    const { logo, ...rest } = payload
+    const form = new FormData()
+    attachData(form, rest)
+    if (logo) {
+      form.append('file', logo, logo.name)
+    }
+    return http.post('/app/create', form)
+  },
+
+  async updateApp(payload: UpdateAppPayload): Promise<unknown> {
+    const { logo, ...rest } = payload
+    const form = new FormData()
+    attachData(form, rest)
+    if (logo) {
+      form.append('file', logo, logo.name)
+    }
+    return http.post('/app/update', form)
+  },
+
+  async deleteApp(id: string): Promise<unknown> {
+    return http.delete('/app/delete', { query: { id } })
   },
 }

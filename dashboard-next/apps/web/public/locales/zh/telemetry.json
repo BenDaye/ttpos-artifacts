@@ -1,20 +1,21 @@
 {
   "description": "跨版本的采用与下载指标。",
   "range": {
-    "today": "今日",
     "week": "近 7 天",
     "month": "近 30 天"
   },
   "summary": {
-    "downloads": "下载量",
-    "apps": "应用数",
-    "versions": "版本数",
-    "users": "独立用户"
+    "requests": "请求数",
+    "clients": "独立客户端",
+    "latest": "已到最新版本",
+    "outdated": "落后版本",
+    "apps": "活跃应用"
   },
   "charts": {
-    "daily": "每日下载趋势",
+    "daily": "活动趋势",
     "platforms": "按平台",
     "channels": "按渠道",
+    "architectures": "按架构",
     "versions": "热门版本"
   }
 }
