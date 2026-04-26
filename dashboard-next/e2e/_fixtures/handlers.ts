@@ -146,8 +146,14 @@ export async function setupMockApi(page: Page, overrides: MockOverrides = {}) {
     return route.fulfill({ status: 200, json: { token: TEST_TOKEN } })
   })
 
-  await page.route('**/signup', route =>
-    route.fulfill({ status: 200, json: { token: TEST_TOKEN } }))
+  await page.route('**/signup', (route) => {
+    // /signup is both a frontend route (GET → SPA HTML) and a backend POST
+    // endpoint. Only intercept the API call so the SPA navigation still loads.
+    if (route.request().method() !== 'POST') {
+      return route.fallback()
+    }
+    return route.fulfill({ status: 200, json: { token: TEST_TOKEN } })
+  })
 
   await page.route('**/whoami', jsonHandler(TEST_USER))
 
