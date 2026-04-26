@@ -8,6 +8,7 @@ import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import { Card, CardContent } from '@/shared/components/ui/card'
 import { Skeleton } from '@/shared/components/ui/skeleton'
+import { formatDateTime } from '@/shared/lib/format'
 import { useRevokeTokenMutation, useTokensQuery } from '../hooks'
 import { CreateTokenDialog } from './create-token-dialog'
 
@@ -67,7 +68,8 @@ export function TokensPanel() {
       {tokensQuery.isSuccess && tokensQuery.data.length > 0 && (
         <div className="grid gap-3">
           {tokensQuery.data.map((token) => {
-            const expired = token.expires_at && new Date(token.expires_at) < new Date()
+            const expiresAt = token.expires_at ? new Date(token.expires_at) : null
+            const expired = expiresAt && !Number.isNaN(expiresAt.getTime()) && expiresAt < new Date()
             return (
               <Card key={token.id}>
                 <CardContent className="flex items-center justify-between gap-3 p-4">
@@ -98,23 +100,25 @@ export function TokensPanel() {
                           : (
                               <span>{t('tokens.scope_all', { defaultValue: 'All apps' })}</span>
                             )}
-                        <span>
-                          {t('tokens.created_at', { defaultValue: 'Created' })}
-                          {' '}
-                          {new Date(token.created_at).toLocaleString()}
-                        </span>
-                        {token.expires_at && (
+                        {formatDateTime(token.created_at) && (
+                          <span>
+                            {t('tokens.created_at', { defaultValue: 'Created' })}
+                            {' '}
+                            {formatDateTime(token.created_at)}
+                          </span>
+                        )}
+                        {formatDateTime(token.expires_at) && (
                           <span>
                             {t('tokens.expires_at', { defaultValue: 'Expires' })}
                             {' '}
-                            {new Date(token.expires_at).toLocaleString()}
+                            {formatDateTime(token.expires_at)}
                           </span>
                         )}
-                        {token.last_used_at && (
+                        {formatDateTime(token.last_used_at) && (
                           <span>
                             {t('tokens.last_used', { defaultValue: 'Last used' })}
                             {' '}
-                            {new Date(token.last_used_at).toLocaleString()}
+                            {formatDateTime(token.last_used_at)}
                           </span>
                         )}
                       </div>

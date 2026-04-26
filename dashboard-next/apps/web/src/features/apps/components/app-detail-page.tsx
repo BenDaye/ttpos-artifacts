@@ -11,6 +11,7 @@ import { Badge } from '@/shared/components/ui/badge'
 import { Button, buttonVariants } from '@/shared/components/ui/button'
 import { Card, CardContent } from '@/shared/components/ui/card'
 import { Skeleton } from '@/shared/components/ui/skeleton'
+import { formatDateTime } from '@/shared/lib/format'
 import { useAppVersionsQuery, useDeleteVersionMutation } from '../hooks'
 import { UploadVersionDialog } from './upload-version-dialog'
 import { VersionEditDialog } from './version-edit-dialog'
@@ -141,9 +142,9 @@ function VersionRow({ version, onEdit, onDelete }: VersionRowProps) {
                 {version.Critical && <Badge variant="destructive">Critical</Badge>}
                 {!version.Published && <Badge variant="warning">Draft</Badge>}
               </div>
-              {version.Updated_at && (
+              {formatDateTime(version.Updated_at) && (
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {new Date(version.Updated_at).toLocaleString()}
+                  {formatDateTime(version.Updated_at)}
                 </p>
               )}
             </div>

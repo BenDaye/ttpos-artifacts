@@ -11,6 +11,7 @@ import { Button } from '@/shared/components/ui/button'
 import { Card, CardContent } from '@/shared/components/ui/card'
 import { Input } from '@/shared/components/ui/input'
 import { Skeleton } from '@/shared/components/ui/skeleton'
+import { formatDateTime } from '@/shared/lib/format'
 import { useAppsListQuery, useDeleteAppMutation } from '../hooks'
 import { AppFormDialog } from './app-form-dialog'
 import { UploadVersionDialog } from './upload-version-dialog'
@@ -149,11 +150,11 @@ export function ApplicationsPage() {
                     </Button>
                   </div>
                 </div>
-                {app.Updated_at && (
+                {formatDateTime(app.Updated_at) && (
                   <p className="mt-3 text-xs text-muted-foreground">
                     {t('updated_at', { defaultValue: 'Updated' })}
                     {' '}
-                    {new Date(app.Updated_at).toLocaleString()}
+                    {formatDateTime(app.Updated_at)}
                   </p>
                 )}
               </CardContent>
