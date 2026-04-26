@@ -1,6 +1,6 @@
 import type { AppVersion, ArtifactEntry } from '@ttpos/shared'
 import { Link } from '@tanstack/react-router'
-import { ArrowLeft, BookOpen, Boxes, Download, Pencil, Plus, Trash2 } from 'lucide-react'
+import { ArrowLeft, BookOpen, Boxes, Download, FilePlus, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -19,6 +19,7 @@ import {
   useDeleteArtifactMutation,
   useDeleteVersionMutation,
 } from '../hooks'
+import { AddArtifactDialog } from './add-artifact-dialog'
 import { DownloadArtifactsDialog } from './download-artifacts-dialog'
 import { UploadVersionDialog } from './upload-version-dialog'
 import { VersionEditDialog } from './version-edit-dialog'
@@ -235,6 +236,7 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
   const { t } = useTranslation(['apps', 'common'])
   const [showChangelog, setShowChangelog] = useState(false)
   const [showDownloads, setShowDownloads] = useState(false)
+  const [showAddArtifact, setShowAddArtifact] = useState(false)
   const artifacts = version.Artifacts ?? []
   const changelog = version.Changelog ?? []
   const updatedAt = formatDateTime(version.Updated_at)
@@ -285,6 +287,14 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
                   )
                 </Button>
               )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowAddArtifact(true)}
+              >
+                <FilePlus className="size-3.5" />
+                {t('add_artifact.button', { defaultValue: 'Add artifact' })}
+              </Button>
               <Button variant="ghost" size="icon" aria-label={t('common:actions.edit')} onClick={onEdit}>
                 <Pencil className="size-4" />
               </Button>
@@ -298,6 +308,12 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
               </Button>
             </div>
           </div>
+
+          <AddArtifactDialog
+            open={showAddArtifact}
+            onOpenChange={setShowAddArtifact}
+            version={version}
+          />
 
           <ChangelogModal
             open={showChangelog}

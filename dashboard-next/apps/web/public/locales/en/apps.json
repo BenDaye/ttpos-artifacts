@@ -24,6 +24,15 @@
     "copied": "URL copied",
     "copy_failed": "Could not copy URL"
   },
+  "add_artifact": {
+    "button": "Add artifact",
+    "title": "Add artifact to {{version}}",
+    "description": "Upload a binary for a new platform / architecture combination on this version.",
+    "validation_meta": "Please select platform and architecture",
+    "changelog_optional": "optional",
+    "context": "App: {{appName}} · Channel: {{channel}}",
+    "success": "Artifact added"
+  },
   "version_updated": "Version updated",
   "version_deleted": "Version deleted",
   "artifact_deleted": "Artifact deleted",

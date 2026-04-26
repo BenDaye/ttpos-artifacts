@@ -24,6 +24,15 @@
     "copied": "链接已复制",
     "copy_failed": "复制链接失败"
   },
+  "add_artifact": {
+    "button": "添加构建产物",
+    "title": "为版本 {{version}} 添加构建产物",
+    "description": "为该版本上传一个新的 平台/架构 组合的二进制文件。",
+    "validation_meta": "请选择平台和架构",
+    "changelog_optional": "可选",
+    "context": "应用：{{appName}} · 渠道：{{channel}}",
+    "success": "构建产物已添加"
+  },
   "version_updated": "版本已更新",
   "version_deleted": "版本已删除",
   "artifact_deleted": "构建产物已删除",

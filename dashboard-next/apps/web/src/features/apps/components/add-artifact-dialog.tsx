@@ -1,0 +1,153 @@
+import type { AppVersion } from '@ttpos/shared'
+import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
+import { useArchitecturesQuery } from '@/features/architectures/hooks'
+import { usePlatformsQuery } from '@/features/platforms/hooks'
+import { EntityFormDialog } from '@/shared/components/common/entity-form-dialog'
+import { Label } from '@/shared/components/ui/label'
+import { Textarea } from '@/shared/components/ui/textarea'
+import { useUpdateVersionMutation } from '../hooks'
+
+interface Props {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  version: AppVersion | null
+}
+
+export function AddArtifactDialog({ open, onOpenChange, version }: Props) {
+  const { t } = useTranslation(['apps', 'common'])
+  const update = useUpdateVersionMutation()
+  const platforms = usePlatformsQuery()
+  const archs = useArchitecturesQuery()
+
+  const [platform, setPlatform] = useState('')
+  const [arch, setArch] = useState('')
+  const [files, setFiles] = useState<File[]>([])
+  const [changelog, setChangelog] = useState('')
+
+  useEffect(() => {
+    if (open) {
+      setPlatform('')
+      setArch('')
+      setFiles([])
+      setChangelog('')
+    }
+  }, [open])
+
+  const onSubmit = async () => {
+    if (!version) {
+      return
+    }
+    if (!platform || !arch) {
+      toast.error(t('add_artifact.validation_meta', { defaultValue: 'Please select platform and architecture' }))
+      return
+    }
+    if (files.length === 0) {
+      toast.error(t('upload_dialog.no_file', { defaultValue: 'Please choose at least one file.' }))
+      return
+    }
+    try {
+      await update.mutateAsync({
+        id: version.ID,
+        app_name: version.AppName,
+        version: version.Version,
+        channel: version.Channel,
+        publish: version.Published,
+        critical: version.Critical,
+        platform,
+        arch,
+        files,
+        changelog: changelog.trim() || undefined,
+      })
+      toast.success(t('add_artifact.success', { defaultValue: 'Artifact added' }))
+      onOpenChange(false)
+    }
+    catch (err) {
+      const message = err instanceof Error ? err.message : t('common:states.error')
+      toast.error(message)
+    }
+  }
+
+  const inputClass = 'flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring'
+
+  return (
+    <EntityFormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={t('add_artifact.title', {
+        version: version?.Version ?? '',
+        defaultValue: 'Add artifact to {{version}}',
+      })}
+      description={t('add_artifact.description', {
+        defaultValue: 'Upload a binary for a new platform / architecture combination on this version.',
+      })}
+      submitLabel={t('common:actions.upload')}
+      loading={update.isPending}
+      onSubmit={onSubmit}
+    >
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label>{t('upload_dialog.platform', { defaultValue: 'Platform' })}</Label>
+          <select className={inputClass} value={platform} onChange={e => setPlatform(e.target.value)}>
+            <option value="">—</option>
+            {platforms.data?.map(p => (
+              <option key={p.ID} value={p.PlatformName}>
+                {p.PlatformName}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="space-y-2">
+          <Label>{t('upload_dialog.arch', { defaultValue: 'Architecture' })}</Label>
+          <select className={inputClass} value={arch} onChange={e => setArch(e.target.value)}>
+            <option value="">—</option>
+            {archs.data?.map(a => (
+              <option key={a.ID} value={a.ArchID}>
+                {a.ArchID}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <div className="mt-3 space-y-2">
+        <Label>{t('upload_dialog.files', { defaultValue: 'Artifacts' })}</Label>
+        <input
+          type="file"
+          multiple
+          onChange={(e) => {
+            const list = e.target.files
+            setFiles(list ? Array.from(list) : [])
+          }}
+          className="block w-full text-sm text-muted-foreground file:mr-3 file:rounded-md file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-secondary-foreground hover:file:bg-secondary/80"
+        />
+        {files.length > 0 && (
+          <p className="text-xs text-muted-foreground">
+            {files.length}
+            {' '}
+            {t('upload_dialog.file_count', { defaultValue: 'file(s) selected' })}
+          </p>
+        )}
+      </div>
+      <div className="mt-3 space-y-2">
+        <Label>
+          {t('upload_dialog.changelog', { defaultValue: 'Changelog' })}
+          {' '}
+          <span className="text-xs text-muted-foreground">
+            (
+            {t('add_artifact.changelog_optional', { defaultValue: 'optional' })}
+            )
+          </span>
+        </Label>
+        <Textarea rows={3} value={changelog} onChange={e => setChangelog(e.target.value)} />
+      </div>
+      <p className="mt-3 text-xs text-muted-foreground">
+        {t('add_artifact.context', {
+          appName: version?.AppName ?? '',
+          channel: version?.Channel ?? '',
+          defaultValue: 'App: {{appName}} · Channel: {{channel}}',
+        })}
+      </p>
+    </EntityFormDialog>
+  )
+}
