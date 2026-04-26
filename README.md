@@ -16,8 +16,9 @@ Build workflows for TTPOS Flutter applications.
 | `build-android.yaml`   | Android (APK)        | `ubuntu-latest`  | `workflow_dispatch`                       |
 | `build-macos.yaml`     | macOS (DMG)          | `macos-latest`   | `workflow_dispatch`                       |
 | `build-web.yaml`       | Web (Docker)         | `ubuntu-22.04`   | `workflow_dispatch`                       |
-| `build-dashboard.yaml` | Dashboard (Docker)   | `ubuntu-latest`  | `workflow_dispatch`, push to main/release |
-| `build-server.yaml`    | Server (Docker)      | `ubuntu-latest`  | `workflow_dispatch`, push to main/release |
+| `build-dashboard-next.yaml` | Dashboard (Docker)   | `ubuntu-latest`  | `workflow_dispatch`, push to main/release |
+| `build-dashboard.yaml`      | Dashboard 旧版 (回滚锚点) | `ubuntu-latest`  | `workflow_dispatch`, push to release      |
+| `build-server.yaml`         | Server (Docker)      | `ubuntu-latest`  | `workflow_dispatch`, push to main/release |
 
 ### Required Secrets
 
@@ -61,31 +62,27 @@ Build workflows for TTPOS Flutter applications.
 
 ## FaynoSync Dashboard
 
+线上前端为 `dashboard-next/`（React 19 + Vite 8 + TanStack Router + Tailwind v4，Bun workspaces）。
+旧版 `dashboard/`（React 18 + Yarn 4）仅作为回滚锚点保留，不再随主线代码自动构建。
+
 ### CI/CD 构建
 
-Dashboard 通过 `build-dashboard.yaml` 自动构建并推送 Docker 镜像到 **GitHub Container Registry (ghcr.io)**：
+通过 `build-dashboard-next.yaml` 自动构建并推送 Docker 镜像到 **GitHub Container Registry (ghcr.io)**：
 
 - **触发**：手动触发 (`workflow_dispatch`) 或 push 到 `main`/`release` 分支
-- **镜像**：`ghcr.io/<owner>/<repo>/faynosync-dashboard`
+- **质量门禁**：typecheck → lint → 单元测试 → 生产构建 → Playwright e2e
+- **镜像**：`ghcr.io/<owner>/<repo>/faynosync-dashboard-next`
 - **标签**：`latest`、短 commit SHA、分支名
+
+旧版 `build-dashboard.yaml` 已标记 deprecated，仅保留 `release` 分支与手动触发，用于必要时的回滚镜像构建。
 
 ### Conventional Commits
 
-本仓库要求 **Commit 信息符合 [Conventional Commits](https://www.conventionalcommits.org/) 规范**。PR 合并前会通过 `commitlint.yaml` 自动校验。
+本仓库要求 **Commit 信息符合 [Conventional Commits](https://www.conventionalcommits.org/) 规范**。PR 合并前会通过 `commitlint.yaml` 自动校验。提交说明、PR 标题与描述均使用中文。
 
-格式示例：`feat(dashboard): 添加统计页面`、`fix: 修复登录跳转`
-
-本地校验：`yarn commitlint`（需配合 `git commit` 使用）
+格式示例：`feat: 添加统计页面`、`fix: 修复登录跳转`
 
 ---
-
-![demo](https://github.com/user-attachments/assets/21b0bd02-484c-49fc-ad48-b1201f6e5d75)
-
-### 🧠 Built with CursorAI
-
-The entire UI was created with the help of [CursorAI](https://www.cursor.sh/) — an AI assistant in VSCode that made this possible, since I'm a **DevOps engineer**, not a frontend developer 😅
-
-I did my best, but if you see anything that can be improved — **any suggestions, feedback, or corrections are more than welcome!** 🙌
 
 ### Description 📄
 
@@ -94,40 +91,35 @@ This frontend works with the FaynoSync API (included in `server/`), providing se
 ### Installing Dependencies 📦
 
 ```bash
-cd dashboard
-yarn install
+cd dashboard-next
+bun install --frozen-lockfile
 ```
 
 ### Running in Development Mode 🛠️
 
 ```bash
-cd dashboard
-yarn dev
+cd dashboard-next
+bun dev
 ```
 
-This will launch a local server, usually on port 3000. Open it in your browser at `http://localhost:3000`.
+Vite 默认监听 `http://localhost:3000`，对应 `apps/web/` 子项目。
 
 ### Running in Production Mode 🚀
 
 ```bash
-cd dashboard
-yarn build
+cd dashboard-next
+bun run build      # 生成 apps/web/dist/
+bun run preview    # 本地预览生产产物
 ```
 
-### Environment File Setup ⚙️
+### Environment Variables ⚙️
 
-Create a `.env` file in `dashboard/` and add:
+`dashboard-next/apps/web/` 支持以下变量（一般通过 `.env.local` 或 Docker 环境注入）：
 
 ```
-VITE_API_URL=http://localhost:9000
-VITE_PORT=3000
+VITE_API_URL=http://localhost:9000   # FaynoSync API 基址
+VITE_PORT=3000                        # 开发服务器端口
+VITE_DEV_PROXY_TARGET=                # 开发代理目标（可选，置空即不代理）
 ```
 
-Or copy the example:
-
-```bash
-cd dashboard
-cp .env.example .env
-```
-
-Then add or modify the necessary environment variables if needed.
+镜像启动时若设置 `VITE_API_URL`，`docker-entrypoint.sh` 会替换构建产物中的占位符 `__VITE_API_URL_PLACEHOLDER__`，无需重新构建即可切换后端。
