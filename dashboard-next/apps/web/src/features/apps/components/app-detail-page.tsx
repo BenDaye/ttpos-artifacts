@@ -1,6 +1,6 @@
-import type { AppVersion, ArtifactEntry, ChangelogEntry } from '@ttpos/shared'
+import type { AppVersion, ArtifactEntry } from '@ttpos/shared'
 import { Link } from '@tanstack/react-router'
-import { ArrowLeft, Boxes, ChevronDown, Download, Pencil, Plus, Trash2 } from 'lucide-react'
+import { ArrowLeft, BookOpen, Boxes, Download, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -18,6 +18,8 @@ import {
   useDeleteArtifactMutation,
   useDeleteVersionMutation,
 } from '../hooks'
+import { ChangelogModal } from './changelog-modal'
+import { DownloadArtifactsDialog } from './download-artifacts-dialog'
 import { UploadVersionDialog } from './upload-version-dialog'
 import { VersionEditDialog } from './version-edit-dialog'
 import { EMPTY_VERSION_FILTERS, VersionFilterBar } from './version-filter-bar'
@@ -232,6 +234,7 @@ interface VersionRowProps {
 function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowProps) {
   const { t } = useTranslation(['apps', 'common'])
   const [showChangelog, setShowChangelog] = useState(false)
+  const [showDownloads, setShowDownloads] = useState(false)
   const artifacts = version.Artifacts ?? []
   const changelog = version.Changelog ?? []
   const updatedAt = formatDateTime(version.Updated_at)
@@ -253,7 +256,35 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
                 <p className="mt-1 text-xs text-muted-foreground">{updatedAt}</p>
               )}
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex flex-wrap items-center gap-1">
+              {changelog.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowChangelog(true)}
+                >
+                  <BookOpen className="size-3.5" />
+                  {t('changelog')}
+                  {' '}
+                  (
+                  {changelog.length}
+                  )
+                </Button>
+              )}
+              {artifacts.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowDownloads(true)}
+                >
+                  <Download className="size-3.5" />
+                  {t('actions.download')}
+                  {' '}
+                  (
+                  {artifacts.length}
+                  )
+                </Button>
+              )}
               <Button variant="ghost" size="icon" aria-label={t('common:actions.edit')} onClick={onEdit}>
                 <Pencil className="size-4" />
               </Button>
@@ -267,6 +298,21 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
               </Button>
             </div>
           </div>
+
+          <ChangelogModal
+            open={showChangelog}
+            onOpenChange={setShowChangelog}
+            appName={version.AppName}
+            versionStr={version.Version}
+            entries={changelog}
+          />
+          <DownloadArtifactsDialog
+            open={showDownloads}
+            onOpenChange={setShowDownloads}
+            appName={version.AppName}
+            versionStr={version.Version}
+            artifacts={artifacts}
+          />
 
           {artifacts.length > 0
             ? (
@@ -313,45 +359,8 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
                 </p>
               )}
 
-          {changelog.length > 0 && (
-            <div className="mt-3">
-              <button
-                type="button"
-                onClick={() => setShowChangelog(s => !s)}
-                className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
-              >
-                <ChevronDown
-                  className={cn('size-3 transition-transform', showChangelog && 'rotate-180')}
-                />
-                {t('changelog', { defaultValue: 'Changelog' })}
-                {' '}
-                (
-                {changelog.length}
-                )
-              </button>
-              {showChangelog && (
-                <div className="mt-2 space-y-2">
-                  {changelog.map((entry, i) => (
-                    <ChangelogItem key={`${entry.Version}-${entry.Date}-${i}`} entry={entry} />
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
         </CardContent>
       </Card>
     </li>
-  )
-}
-
-function ChangelogItem({ entry }: { entry: ChangelogEntry }) {
-  return (
-    <div className="rounded-md border border-border bg-muted/20 p-3 text-xs">
-      <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
-        <span className="font-semibold">{entry.Version}</span>
-        {entry.Date && <span className="text-muted-foreground">{entry.Date}</span>}
-      </div>
-      <pre className="whitespace-pre-wrap font-sans text-foreground">{entry.Changes}</pre>
-    </div>
   )
 }

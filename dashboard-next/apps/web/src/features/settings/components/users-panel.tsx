@@ -60,12 +60,18 @@ export function UsersPanel() {
                 </div>
               </div>
             </div>
-            {me.data.is_admin && (
-              <Button variant="outline" size="sm" onClick={() => setAdminEdit(true)}>
-                <KeyRound className="size-4" />
-                {t('users.change_credentials', { defaultValue: 'Change credentials' })}
-              </Button>
-            )}
+            {me.data.is_admin
+              ? (
+                  <Button variant="outline" size="sm" onClick={() => setAdminEdit(true)}>
+                    <KeyRound className="size-4" />
+                    {t('users.change_credentials', { defaultValue: 'Change credentials' })}
+                  </Button>
+                )
+              : (
+                  <span className="text-xs text-muted-foreground">
+                    {t('users.contact_admin', { defaultValue: 'Contact admin to change credentials' })}
+                  </span>
+                )}
           </CardContent>
         </Card>
       )}

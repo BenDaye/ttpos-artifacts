@@ -12,6 +12,12 @@
   "updated": "Application updated",
   "deleted": "Application deleted",
   "changelog": "Changelog",
+  "changelog_count": "{{count}} change set(s)",
+  "changelog_empty": "No changelog entries.",
+  "download_dialog": {
+    "title": "Download artifacts",
+    "description": "Pick the artifact for your platform/architecture ({{count}} total)."
+  },
   "version_updated": "Version updated",
   "version_deleted": "Version deleted",
   "artifact_deleted": "Artifact deleted",

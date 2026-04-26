@@ -12,6 +12,12 @@
   "updated": "应用已更新",
   "deleted": "应用已删除",
   "changelog": "更新日志",
+  "changelog_count": "共 {{count}} 条记录",
+  "changelog_empty": "暂无更新日志。",
+  "download_dialog": {
+    "title": "下载构建产物",
+    "description": "为目标平台/架构选择构建产物（共 {{count}} 个）。"
+  },
   "version_updated": "版本已更新",
   "version_deleted": "版本已删除",
   "artifact_deleted": "构建产物已删除",

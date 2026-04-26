@@ -21,6 +21,7 @@
     "admin_edit_title": "更新管理员凭证",
     "admin_edit_description": "更新管理员需要同时填写用户名与密码。",
     "change_credentials": "修改凭证",
+    "contact_admin": "请联系管理员修改凭证",
     "empty": "暂无团队用户",
     "empty_description": "邀请同事并授予受限的访问权限。",
     "forbidden": "仅管理员可用",
