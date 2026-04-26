@@ -99,3 +99,10 @@ REFACTOR-001 已完成 dashboard-next 的 monorepo 骨架与基础 CRUD（Apps /
 - StatisticsPage：useState 改为完整 TelemetryFilters；useTelemetryQuery 接入完整过滤；空数组转 undefined 避免无效查询参数；EmptyChart 占位逻辑保留；移除 PageHeader actions 内的旧 ToggleGroup
 - en/zh telemetry.json 新增 `range.today` + `filter.{apps,channels,platforms,architectures,clear}`
 - typecheck/lint（0 errors，warning 不增）/build/test 全绿
+
+2026-04-26 R5 实施完成：
+- `dashboard-next/e2e/_fixtures/{handlers.ts,auth.fixture.ts}`：mock handlers 全量覆盖 17 条端点 + 401/forbidden overrides + i18nextLng=en 注入；`/signup` 仅拦截 POST 防止 SPA 路由被劫持；mock IDs 改为纯 hex 防止 Badge slice(0,8) 与名称冲突
+- 重写 8 套 spec：auth（5）/ authedTest 子套件（2 logout/root redirect）/ applications（7）/ channels（5）/ platforms（5）/ architectures（5）/ settings-tokens（6）/ navigation（3）/ app-detail（7）— 选择器全面适配 Base UI Dialog（双 Close 按钮）/ EntityFormDialog 默认 submit "Save" / react-hook-form Required / BaseCheckbox 双 role=checkbox（取 dialog.first()）/ `aside[aria-label="Primary"]`
+- 删除旧 `e2e/{mocks,fixtures,smoke.spec.ts,TEST_JOURNEYS.md}`
+- `bun run test:e2e` 45/45 全绿；`bun run lint` 0 errors（37 个 pre-existing warnings 不变）；`bun x tsc --noEmit` 通过
+- `.github/workflows/build-dashboard.yaml` 顶部注释 deprecated（main 触发已移除，仅 release + workflow_dispatch）；`deploy/docker-compose.yml` 已切到 `faynosync-dashboard-next:latest`；Caddyfile 仅引用容器名 `faynosync-dashboard`，无需变动
