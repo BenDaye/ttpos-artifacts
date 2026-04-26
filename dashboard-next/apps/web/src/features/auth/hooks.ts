@@ -1,4 +1,4 @@
-import type { ChangePasswordPayload, LoginPayload, SignUpPayload } from './api'
+import type { LoginPayload, SignUpPayload } from './api'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { authApi } from './api'
 import { useAuthStore } from './auth-store'
@@ -32,11 +32,5 @@ export function useWhoamiQuery() {
     queryFn: () => authApi.whoami(),
     enabled: Boolean(token),
     staleTime: 1000 * 60 * 10,
-  })
-}
-
-export function useChangePasswordMutation() {
-  return useMutation({
-    mutationFn: (payload: ChangePasswordPayload) => authApi.changeOwnPassword(payload),
   })
 }

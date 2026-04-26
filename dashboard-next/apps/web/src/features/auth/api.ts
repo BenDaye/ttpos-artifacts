@@ -19,10 +19,6 @@ export interface WhoamiResponse {
   permissions?: Record<string, unknown>
 }
 
-export interface ChangePasswordPayload {
-  password: string
-}
-
 export const authApi = {
   login(payload: LoginPayload) {
     return http.post<LoginResponse>('/login', payload, { skipAuth: true })
@@ -32,8 +28,5 @@ export const authApi = {
   },
   whoami() {
     return http.get<WhoamiResponse>('/whoami')
-  },
-  changeOwnPassword(payload: ChangePasswordPayload) {
-    return http.post('/user/update-self', payload)
   },
 }
