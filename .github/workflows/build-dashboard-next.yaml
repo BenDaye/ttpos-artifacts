@@ -21,6 +21,8 @@ on:
       - "dashboard-next/bun.lock"
       - "dashboard-next/eslint.config.js"
       - "dashboard-next/Dockerfile"
+      - "dashboard-next/e2e/**"
+      - "dashboard-next/playwright.config.ts"
       - ".github/workflows/build-dashboard-next.yaml"
 
 jobs:
