@@ -35,12 +35,18 @@
     "archs": "架构",
     "published_only": "仅已发布",
     "critical_only": "仅关键",
-    "clear": "清除"
+    "clear": "清除",
+    "search_placeholder": "搜索版本…"
   },
   "list": {
     "name": "名称",
     "description": "描述",
     "actions": "操作"
+  },
+  "board": {
+    "unassigned": "无渠道",
+    "empty": "尚未配置渠道，请先创建渠道。",
+    "column_empty": "该渠道下暂无应用。"
   },
   "form": {
     "name": "名称",

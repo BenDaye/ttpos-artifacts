@@ -35,12 +35,18 @@
     "archs": "Architectures",
     "published_only": "Published only",
     "critical_only": "Critical only",
-    "clear": "Clear"
+    "clear": "Clear",
+    "search_placeholder": "Search version…"
   },
   "list": {
     "name": "Name",
     "description": "Description",
     "actions": "Actions"
+  },
+  "board": {
+    "unassigned": "No channel",
+    "empty": "No channels configured. Create a channel first.",
+    "column_empty": "No apps in this channel."
   },
   "form": {
     "name": "Name",

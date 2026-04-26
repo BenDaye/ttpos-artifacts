@@ -99,14 +99,15 @@ export function AppDetailPage({ appName }: { appName: string }) {
         if (!hit)
           return false
       }
-      if (search) {
+      const q = filters.search.trim().toLowerCase()
+      if (q) {
         const hay = [v.Version, v.Channel, ...(v.Changelog ?? []).map(c => c.Changes)].join(' ').toLowerCase()
-        if (!hay.includes(search.toLowerCase()))
+        if (!hay.includes(q))
           return false
       }
       return true
     })
-  }, [allVersions, filters, search])
+  }, [allVersions, filters])
   const total = versionsQuery.data?.total ?? allVersions.length
 
   return (
@@ -132,17 +133,6 @@ export function AppDetailPage({ appName }: { appName: string }) {
         )}
       />
 
-      <div className="mb-3 flex max-w-sm items-center gap-2">
-        <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder={t('common:actions.search')}
-            className="pl-9"
-          />
-        </div>
-      </div>
       <VersionFilterBar value={filters} onChange={setFilters} />
 
       {versionsQuery.isPending && (
