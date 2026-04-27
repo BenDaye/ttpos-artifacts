@@ -52,11 +52,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <aside
         className={cn(
           'sticky top-0 flex h-svh shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width] duration-200',
-          collapsed ? 'w-16' : 'w-60',
+          collapsed ? 'w-14' : 'w-60',
         )}
         aria-label="Primary"
       >
-        <div className="flex h-14 items-center justify-between gap-2 px-3">
+        <div
+          className={cn(
+            'flex h-14 items-center',
+            collapsed ? 'justify-center px-1' : 'justify-between gap-2 px-3',
+          )}
+        >
           {!collapsed && (
             <span className="truncate text-sm font-semibold tracking-tight">
               {t('app.name')}
@@ -73,7 +78,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </Button>
         </div>
         <Separator />
-        <nav className="flex-1 overflow-y-auto p-2">
+        <nav className={cn('flex-1 overflow-y-auto', collapsed ? 'p-1' : 'p-2')}>
           <ul className="space-y-1">
             {NAV.map(item => (
               <li key={item.to}>
@@ -81,7 +86,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   to={item.to}
                   activeOptions={{ exact: item.to === '/' }}
                   className={cn(
-                    'flex items-center gap-2 rounded-md px-2 py-2 text-sm font-medium text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                    'flex items-center rounded-md py-2 text-sm font-medium text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                    collapsed ? 'justify-center px-0' : 'gap-2 px-2',
                   )}
                   activeProps={{
                     className:
@@ -96,11 +102,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </ul>
         </nav>
         <Separator />
-        <div className="p-2">
+        <div className={collapsed ? 'p-1' : 'p-2'}>
           <Button
             variant="ghost"
             size={collapsed ? 'icon' : 'sm'}
-            className={cn('w-full justify-start gap-2', collapsed && 'justify-center')}
+            className={cn(collapsed ? 'w-full justify-center' : 'w-full justify-start gap-2')}
             onClick={handleLogout}
             aria-label="Sign out"
           >
