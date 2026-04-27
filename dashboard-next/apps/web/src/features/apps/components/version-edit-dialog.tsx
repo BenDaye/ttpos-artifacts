@@ -66,7 +66,7 @@ export function VersionEditDialog({ open, onOpenChange, version }: Props) {
     }
   }
 
-  const inputClass = 'flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring'
+  const inputClass = 'flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60'
 
   return (
     <EntityFormDialog
@@ -81,12 +81,32 @@ export function VersionEditDialog({ open, onOpenChange, version }: Props) {
     >
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label>{t('upload_dialog.version', { defaultValue: 'Version' })}</Label>
-          <Input value={versionStr} onChange={e => setVersionStr(e.target.value)} />
+          <Label className="flex items-center justify-between">
+            <span>{t('upload_dialog.version', { defaultValue: 'Version' })}</span>
+            <span className="text-xs text-muted-foreground">
+              {t('edit_version_immutable_hint', { defaultValue: 'Read-only after creation' })}
+            </span>
+          </Label>
+          <Input
+            value={versionStr}
+            onChange={e => setVersionStr(e.target.value)}
+            disabled
+            readOnly
+          />
         </div>
         <div className="space-y-2">
-          <Label>{t('upload_dialog.channel', { defaultValue: 'Channel' })}</Label>
-          <select className={inputClass} value={channel} onChange={e => setChannel(e.target.value)}>
+          <Label className="flex items-center justify-between">
+            <span>{t('upload_dialog.channel', { defaultValue: 'Channel' })}</span>
+            <span className="text-xs text-muted-foreground">
+              {t('edit_version_immutable_hint', { defaultValue: 'Read-only after creation' })}
+            </span>
+          </Label>
+          <select
+            className={inputClass}
+            value={channel}
+            onChange={e => setChannel(e.target.value)}
+            disabled
+          >
             <option value="">—</option>
             {channels.data?.map(c => (
               <option key={c.ID} value={c.ChannelName}>
