@@ -7,7 +7,7 @@ import { EntityFormDialog } from '@/shared/components/common/entity-form-dialog'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
 import { useCreateUserMutation, useUpdateUserMutation } from '../hooks'
-import { makeEmptyPermissions, PermissionMatrix } from './permission-matrix'
+import { makeEmptyPermissions, normalizePermissions, PermissionMatrix } from './permission-matrix'
 
 interface Props {
   open: boolean
@@ -31,7 +31,7 @@ export function TeamUserFormDialog({ open, onOpenChange, user }: Props) {
     if (open) {
       setUsername(user?.username ?? '')
       setPassword('')
-      setPerms(user?.permissions ?? makeEmptyPermissions())
+      setPerms(user ? normalizePermissions(user.permissions) : makeEmptyPermissions())
     }
   }, [open, user])
 

@@ -6,12 +6,24 @@ import { usePlatformsQuery } from '@/features/platforms/hooks'
 import { Checkbox } from '@/shared/components/ui/checkbox'
 
 export function makeEmptyPermissions(): TeamUserPermissions {
-  const base = { Create: false, Delete: false, Edit: false, Allowed: [] }
   return {
-    Apps: { ...base, Download: false, Upload: false },
-    Channels: { ...base },
-    Platforms: { ...base },
-    Archs: { ...base },
+    Apps: { Create: false, Delete: false, Edit: false, Download: false, Upload: false, Allowed: [] },
+    Channels: { Create: false, Delete: false, Edit: false, Allowed: [] },
+    Platforms: { Create: false, Delete: false, Edit: false, Allowed: [] },
+    Archs: { Create: false, Delete: false, Edit: false, Allowed: [] },
+  }
+}
+
+// 后端 Allowed 字段为 nil slice 时会被序列化为 null，需要在前端归一化为空数组
+export function normalizePermissions(perms?: TeamUserPermissions | null): TeamUserPermissions {
+  const empty = makeEmptyPermissions()
+  if (!perms)
+    return empty
+  return {
+    Apps: { ...empty.Apps, ...perms.Apps, Allowed: perms.Apps?.Allowed ?? [] },
+    Channels: { ...empty.Channels, ...perms.Channels, Allowed: perms.Channels?.Allowed ?? [] },
+    Platforms: { ...empty.Platforms, ...perms.Platforms, Allowed: perms.Platforms?.Allowed ?? [] },
+    Archs: { ...empty.Archs, ...perms.Archs, Allowed: perms.Archs?.Allowed ?? [] },
   }
 }
 
@@ -37,9 +49,10 @@ export function PermissionMatrix({ value, onChange, appNames }: Props) {
   }
 
   const toggleAllowed = (group: Group, name: string) => {
-    const allowed = value[group].Allowed.includes(name)
-      ? value[group].Allowed.filter(x => x !== name)
-      : [...value[group].Allowed, name]
+    const current = value[group].Allowed ?? []
+    const allowed = current.includes(name)
+      ? current.filter(x => x !== name)
+      : [...current, name]
     setGroup(group, { Allowed: allowed })
   }
 
@@ -155,7 +168,7 @@ function PermissionGroupCard({
             {allowedItems.map(name => (
               <label key={name} className="flex items-center gap-2 text-xs">
                 <Checkbox
-                  checked={allowedSelected.includes(name)}
+                  checked={(allowedSelected ?? []).includes(name)}
                   onCheckedChange={() => onToggleAllowed(name)}
                 />
                 <span className="truncate">{name}</span>
