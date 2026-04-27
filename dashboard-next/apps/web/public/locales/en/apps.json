@@ -65,9 +65,13 @@
     "actions": "Actions"
   },
   "board": {
-    "unassigned": "No channel",
-    "empty": "No channels configured. Create a channel first.",
-    "column_empty": "No apps in this channel."
+    "versions_count_one": "{{count}} version",
+    "versions_count_other": "{{count}} versions",
+    "artifacts_count_one": "{{count}} artifact",
+    "artifacts_count_other": "{{count}} artifacts",
+    "column_empty": "No versions yet",
+    "versions_error": "Failed to load versions",
+    "published": "Published"
   },
   "form": {
     "name": "Name",

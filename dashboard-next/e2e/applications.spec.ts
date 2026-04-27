@@ -48,6 +48,20 @@ test.describe('Applications page', () => {
     await expect(page.getByText('TTPOS-Cashier')).toBeVisible()
   })
 
+  test('board view shows one column per app with version cards inside', async ({ page }) => {
+    await page.goto('/applications')
+
+    await page.getByRole('button', { name: 'Board view' }).click()
+
+    // Each app gets its own column header (app name + version count).
+    await expect(page.getByText('TTPOS-Cashier')).toBeVisible()
+    await expect(page.getByText('TTPOS-KDS')).toBeVisible()
+    // Mocked search returns 1 version per app, so both columns render the
+    // 1.0.0 / stable badge inside their version card.
+    await expect(page.getByText('1.0.0').first()).toBeVisible()
+    await expect(page.getByText('stable', { exact: true }).first()).toBeVisible()
+  })
+
   test('upload version button opens upload dialog', async ({ page }) => {
     await page.goto('/applications')
 

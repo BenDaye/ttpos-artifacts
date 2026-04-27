@@ -65,9 +65,13 @@
     "actions": "操作"
   },
   "board": {
-    "unassigned": "无渠道",
-    "empty": "尚未配置渠道，请先创建渠道。",
-    "column_empty": "该渠道下暂无应用。"
+    "versions_count_one": "共 {{count}} 个版本",
+    "versions_count_other": "共 {{count}} 个版本",
+    "artifacts_count_one": "{{count}} 个产物",
+    "artifacts_count_other": "{{count}} 个产物",
+    "column_empty": "暂无版本",
+    "versions_error": "加载版本失败",
+    "published": "已发布"
   },
   "form": {
     "name": "名称",
