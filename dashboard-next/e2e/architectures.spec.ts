@@ -10,6 +10,15 @@ test.describe('Architectures CRUD', () => {
     }
   })
 
+  test('search filters architectures', async ({ page }) => {
+    await page.goto('/architectures')
+
+    await page.getByPlaceholder('Search').fill('arm64')
+
+    await expect(page.getByText('arm64', { exact: true })).toBeVisible()
+    await expect(page.getByText('amd64', { exact: true })).not.toBeVisible()
+  })
+
   test('creates a new architecture', async ({ page }) => {
     await page.goto('/architectures')
 

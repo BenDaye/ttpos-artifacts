@@ -10,11 +10,22 @@ test.describe('Platforms CRUD', () => {
     }
   })
 
+  test('search filters platforms', async ({ page }) => {
+    await page.goto('/platforms')
+
+    await page.getByPlaceholder('Search').fill('windows')
+
+    await expect(page.getByText('windows', { exact: true })).toBeVisible()
+    await expect(page.getByText('android', { exact: true })).not.toBeVisible()
+  })
+
   test('creates a new platform', async ({ page }) => {
     await page.goto('/platforms')
 
     await page.getByRole('button', { name: 'Create' }).first().click()
-    await expect(page.getByRole('heading', { name: 'Create platform' })).toBeVisible()
+    const dialog = page.getByRole('dialog', { name: 'Create platform' })
+    await expect(dialog).toBeVisible()
+    await expect(dialog.getByText('Manual', { exact: true }).last()).toBeVisible()
 
     await page.getByLabel('Platform name').fill('linux')
     await page.getByRole('button', { name: 'Save' }).click()

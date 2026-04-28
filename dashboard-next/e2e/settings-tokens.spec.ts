@@ -22,13 +22,15 @@ test.describe('Settings — CI/CD Tokens', () => {
     await expect(page.getByRole('heading', { name: 'Create API token' })).toBeVisible()
     await expect(page.getByLabel('Name')).toBeVisible()
     await expect(page.getByLabel(/Expires in/i)).toBeVisible()
-    await expect(page.getByText('All apps')).toBeVisible()
+    const dialog = page.getByRole('dialog', { name: 'Create API token' })
+    await expect(dialog.getByText('TTPOS-Cashier', { exact: true }).last()).toBeVisible()
   })
 
   test('reveals token value after successful creation', async ({ page }) => {
     await page.getByRole('button', { name: 'Create token' }).first().click()
 
     await page.getByLabel('Name').fill('Deploy Token')
+    await page.getByRole('dialog', { name: 'Create API token' }).getByText('TTPOS-Cashier').click()
     // Submit label is "Create" before reveal (CreateTokenDialog overrides submitLabel).
     await page.getByRole('button', { name: 'Create', exact: true }).click()
 
@@ -38,26 +40,22 @@ test.describe('Settings — CI/CD Tokens', () => {
     await expect(page.getByRole('button', { name: 'Close', exact: true }).first()).toBeVisible()
   })
 
-  test('toggling scope reveals app checkboxes', async ({ page }) => {
+  test('token scope lists app names while submitting app IDs', async ({ page }) => {
     await page.getByRole('button', { name: 'Create token' }).first().click()
 
-    // BaseCheckbox renders both a visible widget (role="checkbox") and an
-    // aria-hidden input mirror. The dialog has only one checkbox before the
-    // app list mounts, so target it directly.
     const dialog = page.getByRole('dialog', { name: 'Create API token' })
-    await dialog.getByRole('checkbox').first().click()
 
-    // Existing token row also mentions both app names in its Scope label;
-    // scope the assertion to the dialog so we hit the freshly mounted list.
     await expect(dialog.getByText('TTPOS-Cashier')).toBeVisible()
     await expect(dialog.getByText('TTPOS-KDS')).toBeVisible()
+    await dialog.getByText('TTPOS-Cashier').click()
+    await expect(dialog.getByRole('checkbox').first()).toBeChecked()
   })
 
-  test('revoke button on token row opens confirmation', async ({ page }) => {
+  test('revoke button on token row submits JSON body after confirmation', async ({ page }) => {
     await page.getByRole('button', { name: 'Revoke' }).first().click()
 
     await expect(page.getByRole('heading', { name: 'Revoke token?' })).toBeVisible()
-    await page.getByRole('button', { name: 'Cancel' }).click()
+    await page.getByRole('button', { name: 'Revoke', exact: true }).last().click()
     await expect(page.getByRole('heading', { name: 'Revoke token?' })).not.toBeVisible({ timeout: 5000 })
   })
 })

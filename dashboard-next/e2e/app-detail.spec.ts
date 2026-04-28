@@ -1,3 +1,4 @@
+import { Buffer } from 'node:buffer'
 import { expect, authedTest as test } from './_fixtures/auth.fixture'
 
 test.describe('App detail — version management', () => {
@@ -35,11 +36,14 @@ test.describe('App detail — version management', () => {
   })
 
   test('download button opens artifacts dialog with copy/download actions', async ({ page }) => {
+    await page.context().grantPermissions(['clipboard-read', 'clipboard-write'])
     await page.getByRole('button', { name: /^Download\s*\(\d+\)$/ }).click()
 
     await expect(page.getByRole('heading', { name: 'Download artifacts' })).toBeVisible()
     await expect(page.getByText('cashier-1.0.0.apk').first()).toBeVisible()
     await expect(page.getByRole('button', { name: 'Copy URL' }).first()).toBeVisible()
+    await page.getByRole('button', { name: 'Copy URL' }).first().click()
+    await expect(page.getByText('URL copied')).toBeVisible()
 
     await page.locator('button[type="button"]:visible', { hasText: /^Close$/ }).first().click()
     await expect(page.getByRole('heading', { name: 'Download artifacts' })).not.toBeVisible({ timeout: 5000 })
@@ -70,20 +74,57 @@ test.describe('App detail — version management', () => {
     await expect(page.getByRole('heading', { name: 'Upload new version' })).toBeVisible()
   })
 
-  test('add artifact button opens dialog with simplified form fields', async ({ page }) => {
+  test('upload version submits updater and intermediate fields', async ({ page }) => {
+    await page.getByRole('button', { name: 'Upload version' }).click()
+
+    const dialog = page.getByRole('dialog', { name: 'Upload new version' })
+    await dialog.getByPlaceholder('1.2.3').fill('1.1.0')
+    await dialog.locator('select').nth(0).selectOption('stable')
+    await dialog.locator('select').nth(2).selectOption('arm64')
+    await dialog.locator('select').nth(1).selectOption('android')
+    await dialog.locator('input[type="file"]').setInputFiles({
+      name: 'cashier-1.1.0.apk',
+      mimeType: 'application/octet-stream',
+      buffer: Buffer.from('apk'),
+    })
+
+    await dialog.getByRole('button', { name: 'Upload', exact: true }).click()
+    await expect(dialog).not.toBeVisible({ timeout: 5000 })
+  })
+
+  test('add artifact dialog exposes updater-specific fields', async ({ page }) => {
     await page.getByRole('button', { name: 'Add artifact' }).click()
 
     const dialog = page.getByRole('dialog', { name: /Add artifact to 1\.0\.0/ })
     await expect(dialog).toBeVisible()
-    // Simplified scope: only platform / arch / files / optional changelog.
     await expect(dialog.getByText('Platform', { exact: true })).toBeVisible()
     await expect(dialog.getByText('Architecture', { exact: true })).toBeVisible()
     await expect(dialog.getByText('Artifacts', { exact: true })).toBeVisible()
     await expect(dialog.getByText(/Changelog\s*\(\s*optional\s*\)/i)).toBeVisible()
+    await dialog.locator('select').nth(0).selectOption('android')
+    await expect(dialog.getByText('Updater', { exact: true })).toBeVisible()
+    await dialog.locator('select').nth(1).selectOption('tauri')
+    await expect(dialog.getByText('Signature', { exact: true })).toBeVisible()
     // App + channel context line is auto-filled from the version row.
     await expect(dialog.getByText(/App:\s*TTPOS-Cashier.*Channel:\s*stable/)).toBeVisible()
 
     await page.locator('button[type="button"]:visible', { hasText: /^Cancel$/ }).first().click()
+    await expect(dialog).not.toBeVisible({ timeout: 5000 })
+  })
+
+  test('add artifact submits updater and preserves intermediate flag', async ({ page }) => {
+    await page.getByRole('button', { name: 'Add artifact' }).click()
+
+    const dialog = page.getByRole('dialog', { name: /Add artifact to 1\.0\.0/ })
+    await dialog.locator('select').nth(0).selectOption('android')
+    await dialog.locator('select').nth(2).selectOption('arm64')
+    await dialog.locator('input[type="file"]').setInputFiles({
+      name: 'cashier-1.0.0-arm64.apk',
+      mimeType: 'application/octet-stream',
+      buffer: Buffer.from('apk'),
+    })
+
+    await dialog.getByRole('button', { name: 'Upload', exact: true }).click()
     await expect(dialog).not.toBeVisible({ timeout: 5000 })
   })
 })

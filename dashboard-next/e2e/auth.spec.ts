@@ -18,6 +18,17 @@ test.describe('Authentication', () => {
     await expect(page).toHaveURL(/\/applications/)
   })
 
+  test('preserves protected route redirect after sign-in', async ({ page }) => {
+    await page.goto('/platforms')
+    await expect(page).toHaveURL(/\/signin.*redirect=/)
+
+    await page.getByLabel('Username').fill('admin')
+    await page.getByLabel('Password').fill('password123')
+    await page.getByRole('button', { name: 'Sign in', exact: true }).click()
+
+    await expect(page).toHaveURL(/\/platforms$/)
+  })
+
   test('shows validation errors for empty form', async ({ page }) => {
     await page.goto('/signin')
 

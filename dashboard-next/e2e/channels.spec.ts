@@ -10,6 +10,15 @@ test.describe('Channels CRUD', () => {
     }
   })
 
+  test('search filters channels', async ({ page }) => {
+    await page.goto('/channels')
+
+    await page.getByPlaceholder('Search').fill('beta')
+
+    await expect(page.getByText('beta', { exact: true })).toBeVisible()
+    await expect(page.getByText('stable', { exact: true })).not.toBeVisible()
+  })
+
   test('creates a new channel', async ({ page }) => {
     await page.goto('/channels')
 
