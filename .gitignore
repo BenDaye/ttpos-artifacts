@@ -50,6 +50,10 @@ tmp*
 playwright-report/
 test-results/
 e2e/.auth/
+.playwright-mcp/
 
 # AISSH
 .aissh.yaml
+
+# Local agent runtime state
+.claude/scheduled_tasks.lock
