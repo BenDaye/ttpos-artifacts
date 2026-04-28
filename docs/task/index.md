@@ -16,3 +16,4 @@
 | [x] | REFACTOR-001 | 按 pma-web 规范重构 Dashboard | P1 | completed |
 | [x] | REFACTOR-002 | Dashboard 业务逻辑补完 | P1 | completed |
 | [x] | ENH-001 | 版本卡片增加快速添加构建产物入口 | P2 | completed |
+| [x] | REFACTOR-003 | 修复 Dashboard Next 生产替换阻断项 | P1 | completed |

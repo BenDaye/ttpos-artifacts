@@ -1,5 +1,19 @@
 # 变更日志
 
+## 2026-04-28 17:16 [REFACTOR-003]
+
+Fixed dashboard-next production replacement blockers from PLAN-005:
+
+- aligned CI/CD token create/revoke with server contracts: non-empty app ObjectID scopes and DELETE JSON body
+- restored private artifact copy/download signed URL resolution through authenticated `/download?key=...`
+- restored platform updater management with required `updaters` objects and a single default updater
+- restored upload/add-artifact updater, Tauri signature, and intermediate support; version edit now preserves intermediate
+- restored channels/platforms/architectures local search and safe login redirect preservation
+- changed team user allowed scopes to save IDs while displaying names and coercing legacy name values on save
+- hardened Playwright mocks to reject incorrect token, platform, upload/update, and private download request shapes
+
+Quality gates passed for dashboard-next: typecheck, lint, unit tests, production build, and 53/53 Playwright e2e. Reassessment: dashboard-next meets the production replacement bar for the audited blockers in REFACTOR-003; TUF remains intentionally disabled.
+
 ## 2026-04-26 [REFACTOR-002] Dashboard 业务逻辑补完
 
 REFACTOR-001 后续实测发现 dashboard-next 多处业务能力降级，本任务按 PLAN-004 分 5 阶段在 BKD 编排下补完，每阶段独立上线 vm-node02。
