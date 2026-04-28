@@ -14,7 +14,7 @@ export function makeEmptyPermissions(): TeamUserPermissions {
   }
 }
 
-// 后端 Allowed 字段为 nil slice 时会被序列化为 null，需要在前端归一化为空数组
+// Backend nil slices are serialized as null; normalize them before rendering.
 export function normalizePermissions(perms?: TeamUserPermissions | null): TeamUserPermissions {
   const empty = makeEmptyPermissions()
   if (!perms)
@@ -30,12 +30,36 @@ export function normalizePermissions(perms?: TeamUserPermissions | null): TeamUs
 interface Props {
   value: TeamUserPermissions
   onChange: (next: TeamUserPermissions) => void
-  appNames: string[]
+  appItems: PermissionResourceItem[]
 }
 
 type Group = keyof TeamUserPermissions
 
-export function PermissionMatrix({ value, onChange, appNames }: Props) {
+export interface PermissionResourceItem {
+  value: string
+  label: string
+}
+
+export function makePermissionItems<T>(
+  items: T[] | undefined,
+  getValue: (item: T) => string,
+  getLabel: (item: T) => string,
+): PermissionResourceItem[] {
+  return (items ?? []).map(item => ({
+    value: getValue(item),
+    label: getLabel(item),
+  }))
+}
+
+export function coerceAllowedValuesToIds(
+  allowed: string[],
+  items: PermissionResourceItem[],
+): string[] {
+  const idByLabel = new Map(items.map(item => [item.label, item.value]))
+  return allowed.map(value => idByLabel.get(value) ?? value)
+}
+
+export function PermissionMatrix({ value, onChange, appItems }: Props) {
   const { t } = useTranslation('settings')
   const channels = useChannelsQuery()
   const platforms = usePlatformsQuery()
@@ -48,17 +72,18 @@ export function PermissionMatrix({ value, onChange, appNames }: Props) {
     } as TeamUserPermissions)
   }
 
-  const toggleAllowed = (group: Group, name: string) => {
+  const toggleAllowed = (group: Group, item: PermissionResourceItem) => {
     const current = value[group].Allowed ?? []
-    const allowed = current.includes(name)
-      ? current.filter(x => x !== name)
-      : [...current, name]
+    const selected = current.includes(item.value) || current.includes(item.label)
+    const allowed = selected
+      ? current.filter(x => x !== item.value && x !== item.label)
+      : [...current, item.value]
     setGroup(group, { Allowed: allowed })
   }
 
-  const channelNames = channels.data?.map(c => c.ChannelName) ?? []
-  const platformNames = platforms.data?.map(p => p.PlatformName) ?? []
-  const archNames = archs.data?.map(a => a.ArchID) ?? []
+  const channelItems = makePermissionItems(channels.data, c => c.ID, c => c.ChannelName)
+  const platformItems = makePermissionItems(platforms.data, p => p.ID, p => p.PlatformName)
+  const archItems = makePermissionItems(archs.data, a => a.ID, a => a.ArchID)
 
   return (
     <div className="space-y-3">
@@ -74,9 +99,9 @@ export function PermissionMatrix({ value, onChange, appNames }: Props) {
         flagValues={value.Apps as unknown as Record<string, boolean>}
         onFlag={(flag, v) => setGroup('Apps', { [flag]: v } as Partial<TeamUserPermissions['Apps']>)}
         allowedTitle={t('permissions.allowed_apps', { defaultValue: 'Allowed apps (empty = all)' })}
-        allowedItems={appNames}
+        allowedItems={appItems}
         allowedSelected={value.Apps.Allowed}
-        onToggleAllowed={n => toggleAllowed('Apps', n)}
+        onToggleAllowed={item => toggleAllowed('Apps', item)}
       />
       <PermissionGroupCard
         title={t('permissions.channels', { defaultValue: 'Channels' })}
@@ -88,9 +113,9 @@ export function PermissionMatrix({ value, onChange, appNames }: Props) {
         flagValues={value.Channels as unknown as Record<string, boolean>}
         onFlag={(flag, v) => setGroup('Channels', { [flag]: v })}
         allowedTitle={t('permissions.allowed_channels', { defaultValue: 'Allowed channels (empty = all)' })}
-        allowedItems={channelNames}
+        allowedItems={channelItems}
         allowedSelected={value.Channels.Allowed}
-        onToggleAllowed={n => toggleAllowed('Channels', n)}
+        onToggleAllowed={item => toggleAllowed('Channels', item)}
       />
       <PermissionGroupCard
         title={t('permissions.platforms', { defaultValue: 'Platforms' })}
@@ -102,9 +127,9 @@ export function PermissionMatrix({ value, onChange, appNames }: Props) {
         flagValues={value.Platforms as unknown as Record<string, boolean>}
         onFlag={(flag, v) => setGroup('Platforms', { [flag]: v })}
         allowedTitle={t('permissions.allowed_platforms', { defaultValue: 'Allowed platforms (empty = all)' })}
-        allowedItems={platformNames}
+        allowedItems={platformItems}
         allowedSelected={value.Platforms.Allowed}
-        onToggleAllowed={n => toggleAllowed('Platforms', n)}
+        onToggleAllowed={item => toggleAllowed('Platforms', item)}
       />
       <PermissionGroupCard
         title={t('permissions.archs', { defaultValue: 'Architectures' })}
@@ -116,9 +141,9 @@ export function PermissionMatrix({ value, onChange, appNames }: Props) {
         flagValues={value.Archs as unknown as Record<string, boolean>}
         onFlag={(flag, v) => setGroup('Archs', { [flag]: v })}
         allowedTitle={t('permissions.allowed_archs', { defaultValue: 'Allowed architectures (empty = all)' })}
-        allowedItems={archNames}
+        allowedItems={archItems}
         allowedSelected={value.Archs.Allowed}
-        onToggleAllowed={n => toggleAllowed('Archs', n)}
+        onToggleAllowed={item => toggleAllowed('Archs', item)}
       />
     </div>
   )
@@ -130,9 +155,9 @@ interface GroupCardProps {
   flagValues: Record<string, boolean>
   onFlag: (flag: string, value: boolean) => void
   allowedTitle: string
-  allowedItems: string[]
+  allowedItems: PermissionResourceItem[]
   allowedSelected: string[]
-  onToggleAllowed: (name: string) => void
+  onToggleAllowed: (item: PermissionResourceItem) => void
 }
 
 function PermissionGroupCard({
@@ -165,13 +190,13 @@ function PermissionGroupCard({
             {allowedTitle}
           </summary>
           <div className="mt-2 grid grid-cols-2 gap-1 sm:grid-cols-3">
-            {allowedItems.map(name => (
-              <label key={name} className="flex items-center gap-2 text-xs">
+            {allowedItems.map(item => (
+              <label key={item.value} className="flex items-center gap-2 text-xs">
                 <Checkbox
-                  checked={(allowedSelected ?? []).includes(name)}
-                  onCheckedChange={() => onToggleAllowed(name)}
+                  checked={(allowedSelected ?? []).includes(item.value) || (allowedSelected ?? []).includes(item.label)}
+                  onCheckedChange={() => onToggleAllowed(item)}
                 />
-                <span className="truncate">{name}</span>
+                <span className="truncate">{item.label}</span>
               </label>
             ))}
           </div>

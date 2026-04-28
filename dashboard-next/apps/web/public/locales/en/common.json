@@ -12,7 +12,8 @@
     "search": "Search",
     "upload": "Upload",
     "refresh": "Refresh",
-    "close": "Close"
+    "close": "Close",
+    "copied": "Copied"
   },
   "states": {
     "loading": "Loading…",

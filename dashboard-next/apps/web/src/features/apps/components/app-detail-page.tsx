@@ -13,7 +13,7 @@ import { Button, buttonVariants } from '@/shared/components/ui/button'
 import { Card, CardContent } from '@/shared/components/ui/card'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 import { formatDateTime } from '@/shared/lib/format'
-import { cn } from '@/shared/lib/utils'
+import { appsApi } from '../api'
 import {
   useAppVersionsQuery,
   useDeleteArtifactMutation,
@@ -237,9 +237,24 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
   const [showChangelog, setShowChangelog] = useState(false)
   const [showDownloads, setShowDownloads] = useState(false)
   const [showAddArtifact, setShowAddArtifact] = useState(false)
+  const [downloading, setDownloading] = useState<string | null>(null)
   const artifacts = version.Artifacts ?? []
   const changelog = version.Changelog ?? []
   const updatedAt = formatDateTime(version.Updated_at)
+
+  const onDownload = async (link: string) => {
+    try {
+      setDownloading(link)
+      const resolvedLink = await appsApi.resolveDownloadUrl(link)
+      window.open(resolvedLink, '_blank', 'noreferrer')
+    }
+    catch {
+      toast.error(t('download_dialog.resolve_failed', { defaultValue: 'Could not prepare download URL' }))
+    }
+    finally {
+      setDownloading(null)
+    }
+  }
 
   return (
     <li>
@@ -349,15 +364,16 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
                         </span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <a
-                          href={a.link}
-                          target="_blank"
-                          rel="noreferrer"
-                          className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'h-7 px-2.5 text-xs')}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 px-2.5 text-xs"
+                          disabled={downloading === a.link}
+                          onClick={() => onDownload(a.link)}
                         >
                           <Download className="size-3" />
                           {t('actions.download', { defaultValue: 'Download' })}
-                        </a>
+                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"

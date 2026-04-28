@@ -22,7 +22,8 @@
     "count": "{{count}} artifact(s)",
     "copy_url": "Copy URL",
     "copied": "URL copied",
-    "copy_failed": "Could not copy URL"
+    "copy_failed": "Could not copy URL",
+    "resolve_failed": "Could not prepare download URL"
   },
   "add_artifact": {
     "button": "Add artifact",
@@ -106,6 +107,11 @@
     "arch": "Architecture",
     "publish": "Publish",
     "critical": "Critical",
+    "intermediate": "Intermediate",
+    "updater": "Updater",
+    "default_updater": "default",
+    "signature": "Signature",
+    "signature_required": "Signature is required for Tauri artifacts.",
     "changelog": "Changelog",
     "files": "Artifacts",
     "no_file": "Please choose at least one file.",

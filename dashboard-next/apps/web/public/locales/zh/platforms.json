@@ -6,7 +6,10 @@
   "delete_description": "绑定到此平台的版本将失去平台关联。",
   "form": {
     "name": "平台名称",
-    "description": "使用 android、ios、macos 等小写标识。"
+    "description": "使用 android、ios、macos 等小写标识。",
+    "updaters": "更新器",
+    "default_updater": "默认",
+    "set_default": "设为默认更新器"
   },
   "empty": {
     "title": "暂无平台",

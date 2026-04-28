@@ -21,10 +21,7 @@ interface HttpRequestInit extends Omit<RequestInit, 'body'> {
   skipAuth?: boolean
 }
 
-function buildUrl(path: string, query?: HttpRequestInit['query']): string {
-  const base = env.API_URL || ''
-  const normalized = path.startsWith('/') ? path : `/${path}`
-  const url = `${base}${normalized}`
+function appendQuery(url: string, query?: HttpRequestInit['query']): string {
   if (!query) {
     return url
   }
@@ -32,7 +29,19 @@ function buildUrl(path: string, query?: HttpRequestInit['query']): string {
     .filter(([, v]) => v !== undefined && v !== null && v !== '')
     .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
     .join('&')
-  return qs ? `${url}?${qs}` : url
+  if (!qs) {
+    return url
+  }
+  return `${url}${url.includes('?') ? '&' : '?'}${qs}`
+}
+
+function buildUrl(path: string, query?: HttpRequestInit['query']): string {
+  if (/^https?:\/\//i.test(path)) {
+    return appendQuery(path, query)
+  }
+  const base = env.API_URL || ''
+  const normalized = path.startsWith('/') ? path : `/${path}`
+  return appendQuery(`${base}${normalized}`, query)
 }
 
 function getToken(): string | null {
@@ -52,7 +61,9 @@ function clearTokenAndRedirect() {
     /* swallow */
   }
   if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/signin')) {
-    window.location.href = '/signin'
+    const current = `${window.location.pathname}${window.location.search}${window.location.hash}`
+    const redirect = current && current !== '/' ? `?redirect=${encodeURIComponent(current)}` : ''
+    window.location.href = `/signin${redirect}`
   }
 }
 

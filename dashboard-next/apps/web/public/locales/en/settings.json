@@ -62,6 +62,8 @@
     "scope_label": "Scope",
     "scope_all": "All apps",
     "scope": "Scope:",
+    "select_app_required": "Select at least one app",
+    "scope_required_hint": "API tokens require at least one allowed app.",
     "no_apps": "No apps available.",
     "value": "Token value",
     "value_warning": "Copy this value now. It will not be shown again.",

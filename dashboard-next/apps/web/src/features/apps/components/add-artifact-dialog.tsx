@@ -4,7 +4,9 @@ import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { useArchitecturesQuery } from '@/features/architectures/hooks'
 import { usePlatformsQuery } from '@/features/platforms/hooks'
+import { getDefaultUpdaterType, getUpdaterLabel, normalizeUpdaters } from '@/features/platforms/updaters'
 import { EntityFormDialog } from '@/shared/components/common/entity-form-dialog'
+import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
 import { Textarea } from '@/shared/components/ui/textarea'
 import { useUpdateVersionMutation } from '../hooks'
@@ -23,17 +25,34 @@ export function AddArtifactDialog({ open, onOpenChange, version }: Props) {
 
   const [platform, setPlatform] = useState('')
   const [arch, setArch] = useState('')
+  const [updater, setUpdater] = useState('manual')
+  const [signature, setSignature] = useState('')
   const [files, setFiles] = useState<File[]>([])
   const [changelog, setChangelog] = useState('')
+
+  const selectedPlatform = platforms.data?.find(item => item.PlatformName === platform)
+  const availableUpdaters = normalizeUpdaters(selectedPlatform?.Updaters)
 
   useEffect(() => {
     if (open) {
       setPlatform('')
       setArch('')
+      setUpdater('manual')
+      setSignature('')
       setFiles([])
       setChangelog('')
     }
   }, [open])
+
+  useEffect(() => {
+    if (!platform) {
+      setUpdater('manual')
+      setSignature('')
+      return
+    }
+    setUpdater(getDefaultUpdaterType(selectedPlatform))
+    setSignature('')
+  }, [platform, selectedPlatform])
 
   const onSubmit = async () => {
     if (!version) {
@@ -47,6 +66,10 @@ export function AddArtifactDialog({ open, onOpenChange, version }: Props) {
       toast.error(t('upload_dialog.no_file', { defaultValue: 'Please choose at least one file.' }))
       return
     }
+    if (updater === 'tauri' && !signature.trim()) {
+      toast.error(t('upload_dialog.signature_required', { defaultValue: 'Signature is required for Tauri artifacts.' }))
+      return
+    }
     try {
       await update.mutateAsync({
         id: version.ID,
@@ -55,8 +78,11 @@ export function AddArtifactDialog({ open, onOpenChange, version }: Props) {
         channel: version.Channel,
         publish: version.Published,
         critical: version.Critical,
+        intermediate: version.Intermediate,
         platform,
         arch,
+        updater,
+        signature: updater === 'tauri' ? signature.trim() : undefined,
         files,
         changelog: changelog.trim() || undefined,
       })
@@ -89,7 +115,11 @@ export function AddArtifactDialog({ open, onOpenChange, version }: Props) {
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-2">
           <Label>{t('upload_dialog.platform', { defaultValue: 'Platform' })}</Label>
-          <select className={inputClass} value={platform} onChange={e => setPlatform(e.target.value)}>
+          <select
+            className={inputClass}
+            value={platform}
+            onChange={e => setPlatform(e.target.value)}
+          >
             <option value="">—</option>
             {platforms.data?.map(p => (
               <option key={p.ID} value={p.PlatformName}>
@@ -98,6 +128,36 @@ export function AddArtifactDialog({ open, onOpenChange, version }: Props) {
             ))}
           </select>
         </div>
+        {availableUpdaters.length > 1 && (
+          <div className="space-y-2">
+            <Label>{t('upload_dialog.updater', { defaultValue: 'Updater' })}</Label>
+            <select
+              className={inputClass}
+              value={updater}
+              onChange={(event) => {
+                setUpdater(event.target.value)
+                setSignature('')
+              }}
+            >
+              {availableUpdaters.map(item => (
+                <option key={item.type} value={item.type}>
+                  {getUpdaterLabel(item.type)}
+                  {item.default ? ` (${t('upload_dialog.default_updater', { defaultValue: 'default' })})` : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+        {updater === 'tauri' && (
+          <div className="space-y-2">
+            <Label>{t('upload_dialog.signature', { defaultValue: 'Signature' })}</Label>
+            <Input
+              value={signature}
+              onChange={event => setSignature(event.target.value)}
+              placeholder="Tauri signature"
+            />
+          </div>
+        )}
         <div className="space-y-2">
           <Label>{t('upload_dialog.arch', { defaultValue: 'Architecture' })}</Label>
           <select className={inputClass} value={arch} onChange={e => setArch(e.target.value)}>

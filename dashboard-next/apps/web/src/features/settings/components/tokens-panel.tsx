@@ -2,6 +2,7 @@ import { Key, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+import { useAppsListQuery } from '@/features/apps/hooks'
 import { ConfirmDialog } from '@/shared/components/common/confirm-dialog'
 import { EmptyState } from '@/shared/components/empty-state'
 import { Badge } from '@/shared/components/ui/badge'
@@ -15,9 +16,11 @@ import { CreateTokenDialog } from './create-token-dialog'
 export function TokensPanel() {
   const { t } = useTranslation(['settings', 'common'])
   const tokensQuery = useTokensQuery()
+  const appsQuery = useAppsListQuery({ page: 1, limit: 200 })
   const revoke = useRevokeTokenMutation()
   const [creating, setCreating] = useState(false)
   const [revoking, setRevoking] = useState<string | null>(null)
+  const appNameById = new Map((appsQuery.data?.apps ?? []).map(app => [app.ID, app.AppName]))
 
   const onRevoke = async () => {
     if (!revoking)
@@ -94,7 +97,7 @@ export function TokensPanel() {
                               <span>
                                 {t('tokens.scope', { defaultValue: 'Scope:' })}
                                 {' '}
-                                {token.allowed_apps.join(', ')}
+                                {token.allowed_apps.map(id => appNameById.get(id) ?? id).join(', ')}
                               </span>
                             )
                           : (

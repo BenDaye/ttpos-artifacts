@@ -1,4 +1,4 @@
-import type { Platform } from '@ttpos/shared'
+import type { Platform, Updater } from '@ttpos/shared'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -9,6 +9,8 @@ import {
   useCreatePlatformMutation,
   useUpdatePlatformMutation,
 } from '../hooks'
+import { normalizeUpdaters } from '../updaters'
+import { UpdaterSelector } from './updater-selector'
 
 interface Props {
   open: boolean
@@ -23,9 +25,11 @@ export function PlatformFormDialog({ open, onOpenChange, platform }: Props) {
   const editing = Boolean(platform)
   const mutation = editing ? update : create
   const [name, setName] = useState('')
+  const [updaters, setUpdaters] = useState<Updater[]>(() => normalizeUpdaters())
 
   useEffect(() => {
     setName(platform?.PlatformName ?? '')
+    setUpdaters(normalizeUpdaters(platform?.Updaters))
   }, [platform, open])
 
   const handleSubmit = async () => {
@@ -34,12 +38,13 @@ export function PlatformFormDialog({ open, onOpenChange, platform }: Props) {
       toast.error(t('validation.required', { defaultValue: 'Required' }))
       return
     }
+    const normalizedUpdaters = normalizeUpdaters(updaters)
     try {
       if (editing && platform) {
-        await update.mutateAsync({ id: platform.ID, platform: trimmed })
+        await update.mutateAsync({ id: platform.ID, platform: trimmed, updaters: normalizedUpdaters })
       }
       else {
-        await create.mutateAsync({ platform: trimmed })
+        await create.mutateAsync({ platform: trimmed, updaters: normalizedUpdaters })
       }
       toast.success(t(editing ? 'updated' : 'created', { defaultValue: 'Saved' }))
       onOpenChange(false)
@@ -59,15 +64,18 @@ export function PlatformFormDialog({ open, onOpenChange, platform }: Props) {
       loading={mutation.isPending}
       onSubmit={handleSubmit}
     >
-      <div className="space-y-2">
-        <Label htmlFor="platform-name">{t('form.name')}</Label>
-        <Input
-          id="platform-name"
-          value={name}
-          onChange={e => setName(e.target.value)}
-          placeholder="android"
-          autoFocus
-        />
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="platform-name">{t('form.name')}</Label>
+          <Input
+            id="platform-name"
+            value={name}
+            onChange={e => setName(e.target.value)}
+            placeholder="android"
+            autoFocus
+          />
+        </div>
+        <UpdaterSelector value={updaters} onChange={setUpdaters} />
       </div>
     </EntityFormDialog>
   )

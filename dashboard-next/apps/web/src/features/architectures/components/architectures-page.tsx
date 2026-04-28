@@ -1,6 +1,6 @@
 import type { Architecture } from '@ttpos/shared'
-import { Cpu, Pencil, Plus, Trash2 } from 'lucide-react'
-import { useState } from 'react'
+import { Cpu, Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/shared/components/common/confirm-dialog'
@@ -9,6 +9,7 @@ import { PageHeader } from '@/shared/components/page-header'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import { Card, CardContent } from '@/shared/components/ui/card'
+import { Input } from '@/shared/components/ui/input'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 import {
   useArchitecturesQuery,
@@ -23,6 +24,17 @@ export function ArchitecturesPage() {
   const [editing, setEditing] = useState<Architecture | null>(null)
   const [creating, setCreating] = useState(false)
   const [deleting, setDeleting] = useState<Architecture | null>(null)
+  const [search, setSearch] = useState('')
+
+  const filteredArchitectures = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    if (!q) {
+      return archQuery.data ?? []
+    }
+    return (archQuery.data ?? []).filter(arch =>
+      `${arch.ArchID} ${arch.ID}`.toLowerCase().includes(q),
+    )
+  }, [archQuery.data, search])
 
   const onDelete = async () => {
     if (!deleting)
@@ -51,6 +63,18 @@ export function ArchitecturesPage() {
         )}
       />
 
+      <div className="mb-4 flex max-w-sm items-center gap-2">
+        <div className="relative flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder={t('common:actions.search')}
+            className="pl-9"
+          />
+        </div>
+      </div>
+
       {archQuery.isPending && (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -66,7 +90,7 @@ export function ArchitecturesPage() {
         />
       )}
 
-      {archQuery.isSuccess && archQuery.data.length === 0 && (
+      {archQuery.isSuccess && filteredArchitectures.length === 0 && (
         <EmptyState
           icon={Cpu}
           title={t('empty.title')}
@@ -80,9 +104,9 @@ export function ArchitecturesPage() {
         />
       )}
 
-      {archQuery.isSuccess && archQuery.data.length > 0 && (
+      {archQuery.isSuccess && filteredArchitectures.length > 0 && (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {archQuery.data.map(arch => (
+          {filteredArchitectures.map(arch => (
             <Card key={arch.ID}>
               <CardContent className="flex items-center justify-between gap-3 p-4">
                 <div className="flex min-w-0 items-center gap-3">

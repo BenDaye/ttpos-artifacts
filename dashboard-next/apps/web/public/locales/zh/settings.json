@@ -62,6 +62,8 @@
     "scope_label": "范围",
     "scope_all": "全部应用",
     "scope": "范围：",
+    "select_app_required": "请至少选择一个应用",
+    "scope_required_hint": "API 令牌必须至少绑定一个应用。",
     "no_apps": "暂无可选应用。",
     "value": "令牌值",
     "value_warning": "请立即复制，此值不会再次显示。",

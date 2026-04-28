@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -7,6 +7,7 @@ import { z } from 'zod'
 import { useArchitecturesQuery } from '@/features/architectures/hooks'
 import { useChannelsQuery } from '@/features/channels/hooks'
 import { usePlatformsQuery } from '@/features/platforms/hooks'
+import { getDefaultUpdaterType, getUpdaterLabel, normalizeUpdaters } from '@/features/platforms/updaters'
 import { EntityFormDialog } from '@/shared/components/common/entity-form-dialog'
 import { Checkbox } from '@/shared/components/ui/checkbox'
 import { Input } from '@/shared/components/ui/input'
@@ -22,7 +23,10 @@ const schema = z.object({
   arch: z.string().min(1),
   publish: z.boolean(),
   critical: z.boolean(),
+  intermediate: z.boolean(),
   changelog: z.string().optional(),
+  updater: z.string().optional(),
+  signature: z.string().optional(),
 })
 
 type Values = z.infer<typeof schema>
@@ -51,18 +55,43 @@ export function UploadVersionDialog({ open, onOpenChange, defaultAppName }: Prop
       arch: '',
       publish: true,
       critical: false,
+      intermediate: false,
       changelog: '',
+      updater: 'manual',
+      signature: '',
     },
   })
+
+  const selectedPlatformName = form.watch('platform')
+  const selectedUpdater = form.watch('updater')
+  const selectedPlatform = platforms.data?.find(platform => platform.PlatformName === selectedPlatformName)
+  const availableUpdaters = normalizeUpdaters(selectedPlatform?.Updaters)
+
+  useEffect(() => {
+    if (!selectedPlatformName) {
+      form.setValue('updater', 'manual')
+      form.setValue('signature', '')
+      return
+    }
+    form.setValue('updater', getDefaultUpdaterType(selectedPlatform))
+    form.setValue('signature', '')
+  }, [form, selectedPlatform, selectedPlatformName])
 
   const handleSubmit = form.handleSubmit(async (values) => {
     if (files.length === 0) {
       toast.error(t('upload_dialog.no_file', { defaultValue: 'Please choose at least one file.' }))
       return
     }
+    const updater = values.updater || getDefaultUpdaterType(selectedPlatform)
+    if (updater === 'tauri' && !values.signature?.trim()) {
+      toast.error(t('upload_dialog.signature_required', { defaultValue: 'Signature is required for Tauri artifacts.' }))
+      return
+    }
     try {
       await upload.mutateAsync({
         ...values,
+        updater,
+        signature: updater === 'tauri' ? values.signature?.trim() : undefined,
         files,
       })
       toast.success(t('upload_dialog.success', { defaultValue: 'Version uploaded' }))
@@ -129,6 +158,23 @@ export function UploadVersionDialog({ open, onOpenChange, defaultAppName }: Prop
             ))}
           </select>
         </FormBlock>
+        {availableUpdaters.length > 1 && (
+          <FormBlock label={t('upload_dialog.updater', { defaultValue: 'Updater' })}>
+            <select className={inputClass} {...form.register('updater')}>
+              {availableUpdaters.map(updater => (
+                <option key={updater.type} value={updater.type}>
+                  {getUpdaterLabel(updater.type)}
+                  {updater.default ? ` (${t('upload_dialog.default_updater', { defaultValue: 'default' })})` : ''}
+                </option>
+              ))}
+            </select>
+          </FormBlock>
+        )}
+        {selectedUpdater === 'tauri' && (
+          <FormBlock label={t('upload_dialog.signature', { defaultValue: 'Signature' })}>
+            <Input placeholder="Tauri signature" {...form.register('signature')} />
+          </FormBlock>
+        )}
         <div className="flex items-center gap-4 self-end pb-2">
           <FlagCheckbox
             label={t('upload_dialog.publish', { defaultValue: 'Publish' })}
@@ -139,6 +185,11 @@ export function UploadVersionDialog({ open, onOpenChange, defaultAppName }: Prop
             label={t('upload_dialog.critical', { defaultValue: 'Critical' })}
             checked={form.watch('critical')}
             onChange={v => form.setValue('critical', v)}
+          />
+          <FlagCheckbox
+            label={t('upload_dialog.intermediate', { defaultValue: 'Intermediate' })}
+            checked={form.watch('intermediate')}
+            onChange={v => form.setValue('intermediate', v)}
           />
         </div>
       </div>

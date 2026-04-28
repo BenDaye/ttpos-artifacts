@@ -22,7 +22,8 @@
     "count": "共 {{count}} 个构建产物",
     "copy_url": "复制链接",
     "copied": "链接已复制",
-    "copy_failed": "复制链接失败"
+    "copy_failed": "复制链接失败",
+    "resolve_failed": "无法准备下载链接"
   },
   "add_artifact": {
     "button": "添加构建产物",
@@ -106,6 +107,11 @@
     "arch": "架构",
     "publish": "发布",
     "critical": "关键更新",
+    "intermediate": "中间版本",
+    "updater": "更新器",
+    "default_updater": "默认",
+    "signature": "签名",
+    "signature_required": "Tauri 构建产物必须填写签名。",
     "changelog": "更新日志",
     "files": "构建产物",
     "no_file": "请至少选择一个文件。",

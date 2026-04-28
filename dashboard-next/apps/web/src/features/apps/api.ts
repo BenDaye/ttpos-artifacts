@@ -29,6 +29,10 @@ interface SearchResponse {
   limit?: number
 }
 
+interface DownloadUrlResponse {
+  download_url?: string
+}
+
 export interface UploadVersionPayload {
   app_name: string
   version: string
@@ -51,9 +55,12 @@ export interface UpdateVersionPayload {
   channel: string
   publish: boolean
   critical: boolean
+  intermediate?: boolean
   platform?: string
   arch?: string
   changelog?: string
+  updater?: string
+  signature?: string
   files?: File[]
 }
 
@@ -81,6 +88,19 @@ export interface DeleteArtifactPayload {
 
 function attachData(form: FormData, data: object) {
   form.append('data', JSON.stringify(data))
+}
+
+function getDownloadKey(link: string): string | null {
+  try {
+    const url = new URL(link, window.location.origin)
+    if (url.pathname !== '/download') {
+      return null
+    }
+    return url.searchParams.get('key')
+  }
+  catch {
+    return null
+  }
 }
 
 export const appsApi = {
@@ -126,6 +146,18 @@ export const appsApi = {
     const form = new FormData()
     attachData(form, payload)
     return http.post('/artifact/delete', form)
+  },
+
+  async resolveDownloadUrl(link: string): Promise<string> {
+    const key = getDownloadKey(link)
+    if (!key) {
+      return link
+    }
+    const data = await http.get<DownloadUrlResponse | string>('/download', { query: { key } })
+    if (data && typeof data === 'object' && 'download_url' in data && data.download_url) {
+      return data.download_url
+    }
+    return link
   },
 
   async createApp(payload: CreateAppPayload): Promise<unknown> {

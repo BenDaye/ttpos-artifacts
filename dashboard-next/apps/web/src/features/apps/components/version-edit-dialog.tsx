@@ -31,6 +31,7 @@ export function VersionEditDialog({ open, onOpenChange, version }: Props) {
   const [channel, setChannel] = useState('')
   const [publish, setPublish] = useState(true)
   const [critical, setCritical] = useState(false)
+  const [intermediate, setIntermediate] = useState(false)
   const [changelogText, setChangelogText] = useState('')
 
   useEffect(() => {
@@ -39,6 +40,7 @@ export function VersionEditDialog({ open, onOpenChange, version }: Props) {
       setChannel(version.Channel ?? '')
       setPublish(Boolean(version.Published))
       setCritical(Boolean(version.Critical))
+      setIntermediate(Boolean(version.Intermediate))
       setChangelogText(changelogToText(version.Changelog ?? []))
     }
   }, [open, version])
@@ -55,6 +57,7 @@ export function VersionEditDialog({ open, onOpenChange, version }: Props) {
         channel,
         publish,
         critical,
+        intermediate,
         changelog: changelogText,
       })
       toast.success(t('version_updated', { defaultValue: 'Version updated' }))
@@ -129,6 +132,13 @@ export function VersionEditDialog({ open, onOpenChange, version }: Props) {
               onCheckedChange={(v: boolean | 'indeterminate') => setCritical(v === true)}
             />
             {t('upload_dialog.critical', { defaultValue: 'Critical' })}
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox
+              checked={intermediate}
+              onCheckedChange={(v: boolean | 'indeterminate') => setIntermediate(v === true)}
+            />
+            {t('upload_dialog.intermediate', { defaultValue: 'Intermediate' })}
           </label>
         </div>
       </div>

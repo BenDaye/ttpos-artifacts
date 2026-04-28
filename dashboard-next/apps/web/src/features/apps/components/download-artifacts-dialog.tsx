@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Badge } from '@/shared/components/ui/badge'
-import { Button, buttonVariants } from '@/shared/components/ui/button'
+import { Button } from '@/shared/components/ui/button'
 import {
   Dialog,
   DialogBody,
@@ -14,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/shared/components/ui/dialog'
-import { cn } from '@/shared/lib/utils'
+import { appsApi } from '../api'
 
 interface Props {
   open: boolean
@@ -33,16 +33,36 @@ export function DownloadArtifactsDialog({
 }: Props) {
   const { t } = useTranslation(['apps', 'common'])
   const [copied, setCopied] = useState<string | null>(null)
+  const [resolving, setResolving] = useState<string | null>(null)
 
   const onCopy = async (link: string) => {
     try {
-      await navigator.clipboard.writeText(link)
+      setResolving(link)
+      const resolvedLink = await appsApi.resolveDownloadUrl(link)
+      await navigator.clipboard.writeText(resolvedLink)
       setCopied(link)
       toast.success(t('download_dialog.copied', { defaultValue: 'URL copied' }))
       setTimeout(() => setCopied(prev => (prev === link ? null : prev)), 1500)
     }
     catch {
       toast.error(t('download_dialog.copy_failed', { defaultValue: 'Could not copy URL' }))
+    }
+    finally {
+      setResolving(null)
+    }
+  }
+
+  const onDownload = async (link: string) => {
+    try {
+      setResolving(link)
+      const resolvedLink = await appsApi.resolveDownloadUrl(link)
+      window.open(resolvedLink, '_blank', 'noreferrer')
+    }
+    catch {
+      toast.error(t('download_dialog.resolve_failed', { defaultValue: 'Could not prepare download URL' }))
+    }
+    finally {
+      setResolving(null)
     }
   }
 
@@ -94,6 +114,7 @@ export function DownloadArtifactsDialog({
                           variant="outline"
                           size="sm"
                           className="h-7 px-2.5 text-xs"
+                          disabled={resolving === a.link}
                           onClick={() => onCopy(a.link)}
                         >
                           {copied === a.link
@@ -101,16 +122,15 @@ export function DownloadArtifactsDialog({
                             : <Copy className="size-3" />}
                           {t('download_dialog.copy_url', { defaultValue: 'Copy URL' })}
                         </Button>
-                        <a
-                          href={a.link}
-                          target="_blank"
-                          rel="noreferrer"
-                          download
-                          className={cn(buttonVariants({ size: 'sm' }), 'h-7 px-2.5 text-xs')}
+                        <Button
+                          size="sm"
+                          className="h-7 px-2.5 text-xs"
+                          disabled={resolving === a.link}
+                          onClick={() => onDownload(a.link)}
                         >
                           <Download className="size-3" />
                           {t('actions.download', { defaultValue: 'Download' })}
-                        </a>
+                        </Button>
                       </div>
                     </li>
                   ))}

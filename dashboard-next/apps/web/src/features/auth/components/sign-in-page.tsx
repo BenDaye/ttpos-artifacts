@@ -31,6 +31,28 @@ const schema = z.object({
 })
 type Values = z.infer<typeof schema>
 
+function getSafeRedirectTarget(): string {
+  if (typeof window === 'undefined') {
+    return '/applications'
+  }
+
+  const redirectParam = new URLSearchParams(window.location.search).get('redirect')
+  if (!redirectParam) {
+    return '/applications'
+  }
+
+  try {
+    const url = new URL(redirectParam, window.location.origin)
+    if (url.origin !== window.location.origin) {
+      return '/applications'
+    }
+    return `${url.pathname}${url.search}${url.hash}`
+  }
+  catch {
+    return '/applications'
+  }
+}
+
 export function SignInPage() {
   const { t } = useTranslation('auth')
   const navigate = useNavigate()
@@ -44,7 +66,13 @@ export function SignInPage() {
     try {
       await mutation.mutateAsync(values)
       toast.success(t('signin.success', { defaultValue: 'Signed in' }))
-      void navigate({ to: '/applications' })
+      const redirectTarget = getSafeRedirectTarget()
+      if (redirectTarget === '/applications') {
+        void navigate({ to: '/applications' })
+      }
+      else {
+        window.location.assign(redirectTarget)
+      }
     }
     catch (err) {
       const message = err instanceof Error ? err.message : t('signin.error', { defaultValue: 'Sign-in failed' })

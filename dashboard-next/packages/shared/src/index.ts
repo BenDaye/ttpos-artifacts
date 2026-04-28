@@ -21,6 +21,7 @@ export const API_PROXY_PREFIXES = [
   '/upload',
   '/artifact',
   '/token',
+  '/download',
   '/login',
   '/signup',
 ] as const
@@ -69,9 +70,24 @@ export interface Channel {
   Updated_at: string
 }
 
+export type UpdaterType
+  = | 'manual'
+    | 'squirrel_darwin'
+    | 'squirrel_windows'
+    | 'sparkle'
+    | 'electron-builder'
+    | 'tauri'
+    | (string & {})
+
+export interface Updater {
+  type: UpdaterType
+  default?: boolean
+}
+
 export interface Platform {
   ID: string
   PlatformName: string
+  Updaters?: Updater[]
   Updated_at: string
 }
 

@@ -1,4 +1,4 @@
-import type { Platform } from '@ttpos/shared'
+import type { Platform, Updater } from '@ttpos/shared'
 import { http } from '@/shared/lib/http'
 
 interface PlatformListResponse {
@@ -7,7 +7,7 @@ interface PlatformListResponse {
 
 export interface PlatformPayload {
   platform: string
-  updaters?: string[]
+  updaters: Updater[]
 }
 
 export const platformsApi = {

@@ -11,7 +11,7 @@ interface TokenListResponse {
 
 export interface CreateTokenPayload {
   name: string
-  allowed_apps?: string[]
+  allowed_apps: string[]
   expires_at?: string
 }
 
@@ -66,6 +66,6 @@ export const settingsApi = {
     return http.post<CreateTokenResponse>('/token/create', payload)
   },
   revokeToken(id: string) {
-    return http.delete('/token/delete', { query: { id } })
+    return http.delete('/token/delete', { body: { id } })
   },
 }

@@ -6,7 +6,10 @@
   "delete_description": "Versions tied to this platform will lose their platform reference.",
   "form": {
     "name": "Platform name",
-    "description": "Use a lowercase identifier such as android, ios, macos."
+    "description": "Use a lowercase identifier such as android, ios, macos.",
+    "updaters": "Updaters",
+    "default_updater": "Default",
+    "set_default": "Use as default updater"
   },
   "empty": {
     "title": "No platforms yet",
