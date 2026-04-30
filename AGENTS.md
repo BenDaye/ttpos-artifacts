@@ -1,0 +1,88 @@
+# TTPOS Artifacts 协作指南
+
+本文件是仓库根级工作入口，只保留会影响每次任务判断的稳定规则。具体实现、接口、部署细节以源码、`README.md`、`docs/`、脚本和当前命令输出为准；不要把可从代码中查到的长目录树或流程细则复制到这里。
+
+## 工作原则
+
+- 默认用中文与用户沟通；文档、代码注释、提交信息、PR 标题和描述也默认中文。
+- 对外可见内容不得写入具体协作工具、模型名称、内部执行过程或临时调试细节，除非用户明确要求。
+- 先读后写：改动前确认当前分支、脏工作树、相关文件和既有实现；不要覆盖用户已有改动。
+- 不运行破坏性 Git 命令；需要提交时使用 Conventional Commit，格式为 `<type>: <中文描述>`。
+- 不创建非必要说明文件。临时产物放 `tmp/`，任务状态、计划和验收记录优先放 `docs/task/`、`docs/plan/` 或既有文档。
+- 功能、缺陷、重构和跨模块计划按 PMA 三阶段执行：investigate -> proposal -> implement；明确的文档整理或单文件配置收敛可按用户要求直接处理。
+- 开发任务使用 `/pma`：先调查，再 proposal，获批后实现，并同步 `docs/task/*.md`。后端用 `/pma-bun`，前端用 `/pma-web`，代码评审用 `/pma-cr`，复杂编排按需用 `/bkd`。
+- 不创建非必要说明文件。临时产物放 `tmp/`。
+
+## 工具使用
+
+- 简单检索优先 `rg` / `rg --files`，再读源码和脚本确认事实。
+- 第三方库、工具行为或外部最佳实践需要确认时，按需使用 context7、exa 或可用的网页/官方文档；缺少某个工具时说明后用可用来源补足。
+- 跨调用链、影响面或符号关系不清时，按需使用 code-review-graph 和 Serena；code-review-graph 优先从最小上下文开始。
+- 单文件文档、配置或小范围文案整理不需要强行调用 MCP。
+
+## UI
+
+- 交互组件使用成熟 headless UI；不要手写 focus trap、scroll lock、ARIA、键盘导航。
+- 设计系统以 `DESIGN.md` 为准；若 `DESIGN.md` 与 pma-web 默认审美、base-nova 示例或局部组件习惯冲突，视觉决策优先服从 `DESIGN.md`。
+- 所有颜色、字号、间距、圆角、阴影等视觉值来自根目录 [`DESIGN.md`](DESIGN.md)，通过 Tailwind CSS v4 `@theme` 接入；禁止新增 hex 字面量和 arbitrary value。
+
+## 仓库地图
+
+- `dashboard-next/`：生产 Dashboard，Bun workspace，React 19、Vite、TanStack Router/Query、Tailwind v4、Base UI/shadcn/ui。
+- `server/`：FaynoSync Go API，负责版本、应用、上传、下载、认证、遥测和 TUF 相关服务。
+- `dashboard/`：旧版 Dashboard，只作为回滚锚点；除明确要求的回滚热修外不要添加新功能。
+- `.github/workflows/`：TTPOS Flutter 多平台构建与 FaynoSync 分发流程。
+- `deploy/`：Docker Compose 与反向代理部署配置。
+- `docs/`：changelog、PMA plan/task 和项目决策记录。
+
+## 常用命令
+
+在对应子目录执行命令，优先跑和改动范围匹配的聚焦 gate；跨模块、发布、安全、认证、上传下载、CI/CD 或数据契约改动再升级到全量验证。
+
+### Dashboard
+
+```bash
+cd dashboard-next
+bun install --frozen-lockfile
+bun dev
+bun run typecheck
+bun run lint
+bun run lint:fix
+bun run test
+bun run test:e2e
+bun run build
+```
+
+### Server
+
+```bash
+cd server
+go test ./...
+go build -o faynoSync .
+```
+
+### Deploy
+
+```bash
+cd deploy
+docker compose up -d
+docker compose build
+```
+
+## 关键边界
+
+- Dashboard 新功能和修复遵循 `features/<domain>/{api.ts,hooks.ts,components/}`、共享 UI、React Query hooks 和既有 i18n 模式。
+- `routeTree.gen.ts` 是生成文件，不手改；路由、localStorage key、公共 API 路径和现有认证行为属于兼容契约。
+- 前后端 API 以源码为准。新增或修改 API 时同步 server、dashboard 调用、共享类型、测试和文案。
+- TUF 前端入口当前保持禁用；相关脚本和保留代码只在用户明确要求时恢复或调整。
+- 工作流保持矩阵 `fail-fast: false`、`should_run` 判断、`dev/test/prod` 环境映射、macOS YAML anchor 关系和 SCP 路径/URL 选项同步。
+- Dashboard Docker 镜像依赖运行时 `VITE_API_URL` 注入；调整构建或 nginx 时确认该机制仍有效。
+- 旧版 `dashboard/` 不承载新需求；需要参考行为时只读对照，避免把旧实现重新扩散到生产路径。
+
+## 验证与交付
+
+- 文档-only 改动至少运行 `git diff --check`，并用 `git diff --name-only` 确认没有越界。
+- Dashboard 代码改动优先跑对应 `typecheck`、`lint`、`test`；UI 或流程改动补充 e2e 或浏览器验证。
+- Server 改动优先跑 `go test ./...`；上传、下载、认证、TUF、存储和迁移相关改动需要更聚焦的回归证据。
+- Workflow 或部署改动要检查语法、分支/环境映射、secret 名称和分发路径；无法本地完整运行时说明验证缺口。
+- 提交或 PR 前汇总实际运行过的命令和结果；不能运行的 gate 要说明原因和剩余风险。
