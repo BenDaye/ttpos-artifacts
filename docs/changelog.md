@@ -1,5 +1,18 @@
 # 变更日志
 
+## 2026-05-01 18:26 [BUG-006]
+
+修正 dashboard-next version card 与 Add artifact 细节：
+
+- Version header 改为 `channel chip + version + status chip`，channel 位于 version 左侧
+- Published chip 改用 primary token 实色，Draft 保持 muted neutral token，状态颜色明确区分
+- Artifacts 不再用 chip 表现 platform / architecture，改为 `platform / architecture` 文本标题 + 文件名副标题
+- Artifact 文件名在 `package` 只有 `.png` / `.md` 等扩展名时，从下载 link 的 key 中回退解析真实文件名
+- Add artifact 移除 changelog 字段，不再允许在追加 artifact 时顺带修改版本 changelog
+- Add artifact select 隐藏浏览器默认 arrow，改用 DESIGN spacing token 定位的 lucide chevron
+
+Quality gates passed for dashboard-next: static token scans, typecheck, lint (existing warnings only), production build, focused Playwright e2e 37/37, and visual screenshots for version card / Add artifact dialog.
+
 ## 2026-05-01 17:55 [BUG-005]
 
 重设 dashboard-next version card 视觉层级：

@@ -279,6 +279,7 @@ test.describe('Responsive layout', () => {
     await expect(page.getByText(longVersion)).toBeVisible()
     await expect(page.getByRole('button', { name: /^Download\s*\(\d+\)$/ })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Add artifact' })).toBeVisible()
+    await expect(page.getByText(/android-enterprise-production\s*\/\s*arm64-super-long-architecture-label/)).toBeVisible()
     await expect(page.getByText('cashier-super-long-artifact-name-for-enterprise-production.apk')).toBeVisible()
     await expectNoDocumentOverflow(page)
   })

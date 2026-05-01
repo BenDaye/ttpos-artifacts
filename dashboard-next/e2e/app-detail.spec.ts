@@ -14,8 +14,19 @@ test.describe('App detail — version management', () => {
     // Version string + channel badge.
     await expect(page.getByText('1.0.0').first()).toBeVisible()
     await expect(page.getByText('stable', { exact: true }).first()).toBeVisible()
+    await expect(page.getByTestId('version-status-badge')).toBeVisible()
     // Header summary count.
     await expect(page.getByText(/version\(s\)/i)).toBeVisible()
+
+    const positions = await page.evaluate(() => {
+      const channel = document.querySelector('[data-testid="version-channel-chip"]')?.getBoundingClientRect()
+      const title = document.querySelector('[data-testid="version-title"]')?.getBoundingClientRect()
+      return channel && title
+        ? { channelRight: channel.right, titleLeft: title.left }
+        : null
+    })
+    expect(positions).not.toBeNull()
+    expect(positions!.channelRight).toBeLessThanOrEqual(positions!.titleLeft)
   })
 
   test('back link returns to /applications', async ({ page }) => {
@@ -100,7 +111,7 @@ test.describe('App detail — version management', () => {
     await expect(dialog.getByText('Platform', { exact: true })).toBeVisible()
     await expect(dialog.getByText('Architecture', { exact: true })).toBeVisible()
     await expect(dialog.getByText('Artifacts', { exact: true })).toBeVisible()
-    await expect(dialog.getByText(/Changelog\s*\(\s*optional\s*\)/i)).toBeVisible()
+    await expect(dialog.getByText('Changelog', { exact: true })).not.toBeVisible()
     await dialog.locator('select').nth(0).selectOption('android')
     await expect(dialog.getByText('Updater', { exact: true })).toBeVisible()
     await dialog.locator('select').nth(1).selectOption('tauri')

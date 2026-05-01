@@ -13,3 +13,4 @@
 | [x] | PLAN-009 | Dashboard Next 响应式视觉回归修复 | BUG-003 |
 | [x] | PLAN-010 | Dashboard Next 版本卡片网格密度收敛 | BUG-004 |
 | [x] | PLAN-011 | Dashboard Next 版本卡片视觉层级重设 | BUG-005 |
+| [x] | PLAN-012 | Dashboard Next 版本卡片与 Add artifact 细节修正 | BUG-006 |

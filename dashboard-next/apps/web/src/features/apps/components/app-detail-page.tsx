@@ -232,6 +232,39 @@ interface VersionRowProps {
   onDeleteArtifact: (artifact: ArtifactEntry) => void
 }
 
+function isExtensionOnly(value: string): boolean {
+  return /^\.[a-z0-9]+$/i.test(value.trim())
+}
+
+function getArtifactFileName(artifact: ArtifactEntry): string {
+  const packageName = artifact.package?.trim()
+  if (packageName && !isExtensionOnly(packageName)) {
+    return packageName
+  }
+
+  try {
+    const url = new URL(artifact.link, 'http://local')
+    const key = url.searchParams.get('key') ?? artifact.link
+    const decoded = decodeURIComponent(key)
+    const fileName = decoded.split('/').filter(Boolean).at(-1)
+    if (fileName && !isExtensionOnly(fileName)) {
+      return fileName
+    }
+  }
+  catch {
+    const fileName = artifact.link.split('/').filter(Boolean).at(-1)
+    if (fileName && !isExtensionOnly(fileName)) {
+      return fileName
+    }
+  }
+
+  if (packageName && isExtensionOnly(packageName)) {
+    return `${packageName.slice(1).toUpperCase()} artifact`
+  }
+
+  return 'Artifact file'
+}
+
 function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowProps) {
   const { t } = useTranslation(['apps', 'common'])
   const [showChangelog, setShowChangelog] = useState(false)
@@ -262,19 +295,36 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
         <CardContent className="flex h-full min-w-0 flex-col gap-md p-lg">
           <div className="flex min-w-0 items-start justify-between gap-md">
             <div className="min-w-0 flex-1 space-y-sm">
-              <p className="break-all font-display text-lg font-semibold">{version.Version}</p>
-              <div className="flex max-w-full flex-wrap items-center gap-xs">
-                {version.Channel && <Badge variant="secondary" className="min-w-0 max-w-full truncate">{version.Channel}</Badge>}
+              <div className="flex min-w-0 flex-wrap items-center gap-sm">
+                {version.Channel && (
+                  <Badge
+                    variant="secondary"
+                    className="min-w-0 max-w-full shrink-0 truncate"
+                    data-testid="version-channel-chip"
+                  >
+                    {version.Channel}
+                  </Badge>
+                )}
+                <p className="min-w-0 break-all font-display text-lg font-semibold" data-testid="version-title">
+                  {version.Version}
+                </p>
                 {version.Published
-                  ? <Badge variant="success" data-testid="version-status-badge">{t('board.published', { defaultValue: 'Published' })}</Badge>
+                  ? (
+                      <Badge variant="default" className="shrink-0" data-testid="version-status-badge">
+                        {t('board.published', { defaultValue: 'Published' })}
+                      </Badge>
+                    )
                   : (
                       <Badge
                         variant="warning"
+                        className="shrink-0"
                         data-testid="version-draft-ribbon"
                       >
                         {t('badge.draft', { defaultValue: 'Draft' })}
                       </Badge>
                     )}
+              </div>
+              <div className="flex max-w-full flex-wrap items-center gap-xs">
                 {version.Critical && <Badge variant="destructive">{t('badge.critical', { defaultValue: 'Critical' })}</Badge>}
                 {version.Intermediate && <Badge variant="outline">{t('badge.intermediate', { defaultValue: 'Intermediate' })}</Badge>}
               </div>
@@ -388,12 +438,17 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
                       className="flex min-w-0 flex-col gap-sm border-t border-border py-sm sm:flex-row sm:items-center sm:justify-between"
                     >
                       <div className="min-w-0 flex-1 space-y-xs">
-                        <div className="flex min-w-0 flex-wrap items-center gap-xs">
-                          <Badge variant="outline" className="min-w-0 max-w-full truncate">{a.platform || '—'}</Badge>
-                          <Badge variant="outline" className="min-w-0 max-w-full truncate">{a.arch || '—'}</Badge>
-                        </div>
+                        <p className="min-w-0 break-words text-base font-semibold text-foreground">
+                          {a.platform || t('detail.unknown_platform', { defaultValue: 'Unknown platform' })}
+                          <span className="text-muted-foreground">
+                            {' '}
+                            /
+                            {' '}
+                          </span>
+                          {a.arch || t('detail.unknown_architecture', { defaultValue: 'Unknown architecture' })}
+                        </p>
                         <p className="min-w-0 break-all font-mono text-sm text-muted-foreground">
-                          {a.package || a.link.split('/').pop()}
+                          {getArtifactFileName(a)}
                         </p>
                       </div>
                       <div className="flex shrink-0 flex-wrap items-center gap-xs">
