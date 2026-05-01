@@ -15,6 +15,11 @@
     "close": "关闭",
     "copied": "已复制"
   },
+  "file_input": {
+    "choose_one": "选择文件",
+    "choose_many": "选择文件",
+    "empty": "未选择文件"
+  },
   "states": {
     "loading": "加载中…",
     "empty": "暂无内容",

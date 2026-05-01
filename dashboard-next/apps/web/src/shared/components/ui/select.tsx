@@ -38,20 +38,22 @@ export function SelectContent({
   ...props
 }: ComponentPropsWithoutRef<typeof BaseSelect.Popup> & { children: ReactNode }) {
   return (
-    <BaseSelect.Positioner sideOffset={4}>
-      <BaseSelect.Popup
-        className={cn(
-          'select-popup-available select-popup-width z-50 overflow-y-auto rounded-md border bg-popover p-xs text-popover-foreground shadow-none outline-hidden',
-          'data-starting:opacity-0 data-starting:scale-95',
-          'data-ending:opacity-0 data-ending:scale-95',
-          'transition-all duration-100',
-          className,
-        )}
-        {...props}
-      >
-        {children}
-      </BaseSelect.Popup>
-    </BaseSelect.Positioner>
+    <BaseSelect.Portal>
+      <BaseSelect.Positioner sideOffset={4} className="z-[60]">
+        <BaseSelect.Popup
+          className={cn(
+            'select-popup-available select-popup-width overflow-y-auto rounded-md border bg-popover p-xs text-popover-foreground shadow-none outline-hidden',
+            'data-starting:opacity-0 data-starting:scale-95',
+            'data-ending:opacity-0 data-ending:scale-95',
+            'transition-all duration-100',
+            className,
+          )}
+          {...props}
+        >
+          {children}
+        </BaseSelect.Popup>
+      </BaseSelect.Positioner>
+    </BaseSelect.Portal>
   )
 }
 
@@ -89,6 +91,10 @@ interface SelectFieldBaseProps {
   onValueChange: (value: string) => void
   options: SelectFieldOption[]
   placeholder?: ReactNode
+  // Render an explicit "no selection" option at the top of the popup so the user
+  // can clear a previous choice. Off by default — required fields shouldn't allow
+  // clearing back to an invalid empty state from inside the popup.
+  clearable?: boolean
   disabled?: boolean
   required?: boolean
   name?: string
@@ -107,6 +113,7 @@ export function SelectField({
   onValueChange,
   options,
   placeholder = '—',
+  clearable = false,
   disabled,
   required,
   name,
@@ -138,9 +145,11 @@ export function SelectField({
           </SelectValue>
         </SelectTrigger>
         <SelectContent className={contentClassName}>
-          <SelectItem value="">
-            {placeholder}
-          </SelectItem>
+          {clearable && (
+            <SelectItem value="">
+              {placeholder}
+            </SelectItem>
+          )}
           {options.map(option => (
             <SelectItem key={option.value} value={option.value} disabled={option.disabled}>
               {option.label}

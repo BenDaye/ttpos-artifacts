@@ -16,3 +16,4 @@
 | [x] | PLAN-012 | Dashboard Next 版本卡片与 Add artifact 细节修正 | BUG-006 |
 | [x] | PLAN-013 | Dashboard Next 版本状态与选择器视觉收敛 | BUG-007 |
 | [x] | PLAN-014 | 收敛 Permission Matrix 类型强转 | QUAL-002 |
+| [x] | PLAN-015 | Upload version 对话框选择器与文件输入回归修复 | BUG-008 |

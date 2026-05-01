@@ -10,7 +10,9 @@ export function Checkbox({
   return (
     <BaseCheckbox.Root
       className={cn(
-        'peer size-4 shrink-0 rounded-sm border border-input shadow-none focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 data-checked:border-primary data-checked:bg-primary data-checked:text-primary-foreground',
+        // rounded-xs (5px) keeps the checkbox visually square; rounded-sm (8px)
+        // on a 16px box renders as a perfect circle and gets confused with a radio.
+        'peer size-4 shrink-0 rounded-xs border border-input shadow-none focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 data-checked:border-primary data-checked:bg-primary data-checked:text-primary-foreground',
         className,
       )}
       {...props}

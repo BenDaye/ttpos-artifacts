@@ -6,6 +6,7 @@ import { useArchitecturesQuery } from '@/features/architectures/hooks'
 import { usePlatformsQuery } from '@/features/platforms/hooks'
 import { getDefaultUpdaterType, getUpdaterLabel, normalizeUpdaters } from '@/features/platforms/updaters'
 import { EntityFormDialog } from '@/shared/components/common/entity-form-dialog'
+import { FileInput } from '@/shared/components/ui/file-input'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
 import { SelectField } from '@/shared/components/ui/select'
@@ -156,22 +157,18 @@ export function AddArtifactDialog({ open, onOpenChange, version }: Props) {
       </div>
       <div className="mt-3 space-y-2">
         <Label>{t('upload_dialog.files', { defaultValue: 'Artifacts' })}</Label>
-        <input
-          type="file"
+        <FileInput
           multiple
-          onChange={(e) => {
-            const list = e.target.files
-            setFiles(list ? Array.from(list) : [])
+          files={files}
+          onChange={setFiles}
+          buttonLabel={t('common:file_input.choose_many', { defaultValue: 'Choose files' })}
+          emptyLabel={t('common:file_input.empty', { defaultValue: 'No file chosen' })}
+          summary={(selected) => {
+            if (selected.length === 1)
+              return selected[0]?.name ?? ''
+            return `${selected.length} ${t('upload_dialog.file_count', { defaultValue: 'file(s) selected' })}`
           }}
-          className="block w-full text-sm text-muted-foreground file:mr-3 file:rounded-md file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-secondary-foreground hover:file:bg-secondary/80"
         />
-        {files.length > 0 && (
-          <p className="text-xs text-muted-foreground">
-            {files.length}
-            {' '}
-            {t('upload_dialog.file_count', { defaultValue: 'file(s) selected' })}
-          </p>
-        )}
       </div>
       <p className="mt-3 text-xs text-muted-foreground">
         {t('add_artifact.context', {

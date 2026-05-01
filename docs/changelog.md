@@ -1,5 +1,16 @@
 # 变更日志
 
+## 2026-05-01 19:35 [BUG-008]
+
+修复 dashboard-next Upload version 对话框的 selector 与文件输入回归：
+
+- `select.tsx` 用 `<BaseSelect.Portal>` 包 Positioner，popup 通过 portal 脱离 `DialogContent` 的 `-translate-x-1/2 -translate-y-1/2` transform 包围；之前 transform 父级让内部 `position: fixed` Positioner 相对 transform 框定位，弹层完全飘出 dialog
+- `select.tsx` `SelectField` 增加 `clearable` prop（默认 false），不再无条件在 dropdown 顶部塞 `<SelectItem value="">` 空值项；当前所有调用点都是 required，自动失去会让 form 校验失败的"空选项"
+- `checkbox.tsx` 圆角从 `rounded-sm` (8px) 改为 `rounded-xs` (5px)：本项目 `--radius-sm = 8px` 与 16px Checkbox 半径相等导致视觉退化为圆，与 radio 难以区分；改 5px 让 Checkbox 视觉保持方形
+- 新增 `shared/components/ui/file-input.tsx`：隐藏 `sr-only <input type="file">` + 可见 `Button` 触发；upload-version / add-artifact / app-form 三个 dialog 的 native file input 全部切换。`common.json` 新增 `file_input.choose_one / choose_many / empty` i18n 词条（中英）；按钮文案不再随浏览器 locale 显示 "选择文件 / 未选择任何文件"
+
+Quality gates passed for dashboard-next: `bun run typecheck`, `bun run test` 12/12, `bun run build`, `bun run lint`（0 errors，46 既存 warnings、无新增），focused upload / add-artifact Playwright e2e 5/5，full Playwright e2e 80/80。
+
 ## 2026-05-01 19:25 [QUAL-002]
 
 收敛 dashboard-next Permission Matrix 类型强转：

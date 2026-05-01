@@ -15,6 +15,11 @@
     "close": "Close",
     "copied": "Copied"
   },
+  "file_input": {
+    "choose_one": "Choose file",
+    "choose_many": "Choose files",
+    "empty": "No file chosen"
+  },
   "states": {
     "loading": "Loading…",
     "empty": "Nothing here yet.",

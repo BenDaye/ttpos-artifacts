@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { EntityFormDialog } from '@/shared/components/common/entity-form-dialog'
 import { Checkbox } from '@/shared/components/ui/checkbox'
+import { FileInput } from '@/shared/components/ui/file-input'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
 import { Textarea } from '@/shared/components/ui/textarea'
@@ -103,15 +104,15 @@ export function AppFormDialog({ open, onOpenChange, app }: Props) {
         </div>
         <div className="space-y-2">
           <Label htmlFor="app-logo">{t('form.logo', { defaultValue: 'Logo (optional)' })}</Label>
-          <input
+          <FileInput
             id="app-logo"
-            type="file"
             accept="image/*"
-            onChange={(e) => {
-              const file = e.target.files?.[0]
-              setLogo(file ?? null)
+            files={logo ? [logo] : []}
+            onChange={(next) => {
+              setLogo(next[0] ?? null)
             }}
-            className="block w-full text-sm text-muted-foreground file:mr-3 file:rounded-md file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-secondary-foreground hover:file:bg-secondary/80"
+            buttonLabel={t('common:file_input.choose_one', { defaultValue: 'Choose file' })}
+            emptyLabel={t('common:file_input.empty', { defaultValue: 'No file chosen' })}
           />
         </div>
         {!editing && (
