@@ -7,6 +7,7 @@ import { EntityFormDialog } from '@/shared/components/common/entity-form-dialog'
 import { Checkbox } from '@/shared/components/ui/checkbox'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
+import { SelectField } from '@/shared/components/ui/select'
 import { Textarea } from '@/shared/components/ui/textarea'
 import { useUpdateVersionMutation } from '../hooks'
 
@@ -69,8 +70,6 @@ export function VersionEditDialog({ open, onOpenChange, version }: Props) {
     }
   }
 
-  const inputClass = 'flex h-11 w-full rounded-pill border border-input bg-transparent px-5 py-3 text-base shadow-none focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60'
-
   return (
     <EntityFormDialog
       open={open}
@@ -104,19 +103,13 @@ export function VersionEditDialog({ open, onOpenChange, version }: Props) {
               {t('edit_version_immutable_hint', { defaultValue: 'Read-only after creation' })}
             </span>
           </Label>
-          <select
-            className={inputClass}
+          <SelectField
+            aria-label={t('upload_dialog.channel', { defaultValue: 'Channel' })}
             value={channel}
-            onChange={e => setChannel(e.target.value)}
+            onValueChange={setChannel}
             disabled
-          >
-            <option value="">—</option>
-            {channels.data?.map(c => (
-              <option key={c.ID} value={c.ChannelName}>
-                {c.ChannelName}
-              </option>
-            ))}
-          </select>
+            options={(channels.data ?? []).map(c => ({ value: c.ChannelName, label: c.ChannelName }))}
+          />
         </div>
         <div className="flex items-center gap-4 self-end pb-2 sm:col-span-2">
           <label className="flex items-center gap-2 text-sm">

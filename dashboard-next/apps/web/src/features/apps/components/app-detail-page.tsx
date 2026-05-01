@@ -13,6 +13,7 @@ import { Button, buttonVariants } from '@/shared/components/ui/button'
 import { Card, CardContent } from '@/shared/components/ui/card'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 import { formatDateTime } from '@/shared/lib/format'
+import { cn } from '@/shared/lib/utils'
 import { appsApi } from '../api'
 import {
   useAppVersionsQuery,
@@ -265,6 +266,14 @@ function getArtifactFileName(artifact: ArtifactEntry): string {
   return 'Artifact file'
 }
 
+function getVersionTone(version: AppVersion): 'critical' | 'published' | 'draft' {
+  if (version.Critical)
+    return 'critical'
+  if (version.Published)
+    return 'published'
+  return 'draft'
+}
+
 function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowProps) {
   const { t } = useTranslation(['apps', 'common'])
   const [showChangelog, setShowChangelog] = useState(false)
@@ -274,6 +283,18 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
   const artifacts = version.Artifacts ?? []
   const changelog = version.Changelog ?? []
   const updatedAt = formatDateTime(version.Updated_at)
+  const tone = getVersionTone(version)
+  const statusParts = [
+    version.Critical ? t('badge.critical', { defaultValue: 'Critical' }) : null,
+    version.Published
+      ? t('board.published', { defaultValue: 'Published' })
+      : t('badge.draft', { defaultValue: 'Draft' }),
+    version.Intermediate ? t('badge.intermediate', { defaultValue: 'Intermediate' }) : null,
+  ].filter(Boolean)
+  const statusSummary = [
+    statusParts.join(' / '),
+    updatedAt,
+  ].filter(Boolean).join(' · ')
 
   const onDownload = async (link: string) => {
     try {
@@ -292,44 +313,36 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
   return (
     <li data-testid="version-card">
       <Card className="h-full overflow-hidden">
-        <CardContent className="flex h-full min-w-0 flex-col gap-md p-lg">
+        <CardContent className="flex h-full min-w-0 flex-col gap-md px-lg pb-lg pt-xl">
           <div className="flex min-w-0 items-start justify-between gap-md">
             <div className="min-w-0 flex-1 space-y-sm">
-              <div className="flex min-w-0 flex-wrap items-center gap-sm">
+              <div className="flex min-w-0 flex-wrap items-baseline gap-sm">
+                <p
+                  className={cn(
+                    'min-w-0 break-all font-display text-lg font-semibold',
+                    tone === 'critical' && 'text-destructive',
+                    tone === 'published' && 'text-primary',
+                    tone === 'draft' && 'text-foreground',
+                  )}
+                  data-testid="version-title"
+                  data-version-tone={tone}
+                >
+                  {version.Version}
+                </p>
                 {version.Channel && (
                   <Badge
                     variant="secondary"
-                    className="min-w-0 max-w-full shrink-0 truncate"
+                    className="min-w-0 max-w-full shrink-0 truncate uppercase"
                     data-testid="version-channel-chip"
                   >
-                    {version.Channel}
+                    {version.Channel.toUpperCase()}
                   </Badge>
                 )}
-                <p className="min-w-0 break-all font-display text-lg font-semibold" data-testid="version-title">
-                  {version.Version}
+              </div>
+              {statusSummary && (
+                <p className="text-sm text-muted-foreground" data-testid="version-status-text">
+                  {statusSummary}
                 </p>
-                {version.Published
-                  ? (
-                      <Badge variant="default" className="shrink-0" data-testid="version-status-badge">
-                        {t('board.published', { defaultValue: 'Published' })}
-                      </Badge>
-                    )
-                  : (
-                      <Badge
-                        variant="warning"
-                        className="shrink-0"
-                        data-testid="version-draft-ribbon"
-                      >
-                        {t('badge.draft', { defaultValue: 'Draft' })}
-                      </Badge>
-                    )}
-              </div>
-              <div className="flex max-w-full flex-wrap items-center gap-xs">
-                {version.Critical && <Badge variant="destructive">{t('badge.critical', { defaultValue: 'Critical' })}</Badge>}
-                {version.Intermediate && <Badge variant="outline">{t('badge.intermediate', { defaultValue: 'Intermediate' })}</Badge>}
-              </div>
-              {updatedAt && (
-                <p className="text-sm text-muted-foreground">{updatedAt}</p>
               )}
             </div>
             <div className="flex shrink-0 items-center gap-xxs">

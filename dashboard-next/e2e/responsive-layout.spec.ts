@@ -275,8 +275,10 @@ test.describe('Responsive layout', () => {
 
     await page.goto('/applications/TTPOS-Cashier')
 
-    await expect(page.getByTestId('version-draft-ribbon')).toBeVisible()
+    await expect(page.getByTestId('version-title')).toHaveAttribute('data-version-tone', 'critical')
+    await expect(page.getByTestId('version-status-text')).toContainText(/Critical\s*\/\s*Draft\s*\/\s*Intermediate/)
     await expect(page.getByText(longVersion)).toBeVisible()
+    await expect(page.getByTestId('version-channel-chip')).toHaveText('ENTERPRISE-PRODUCTION-LONG-CHANNEL-NAME')
     await expect(page.getByRole('button', { name: /^Download\s*\(\d+\)$/ })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Add artifact' })).toBeVisible()
     await expect(page.getByText(/android-enterprise-production\s*\/\s*arm64-super-long-architecture-label/)).toBeVisible()

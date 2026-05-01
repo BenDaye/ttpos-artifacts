@@ -1,5 +1,18 @@
 # 变更日志
 
+## 2026-05-01 19:03 [BUG-007]
+
+修正 dashboard-next version 状态表达与 selector 视觉回归：
+
+- Version card 顶部留白改用 `pt-xl`，解决顶部 padding 不足的问题
+- Version header 改为 `version + uppercase channel`，channel 固定在 version 右侧并允许换行
+- Draft / Published / Critical 不再用状态 badge 承担主视觉，改由 version text 颜色表达：Critical 使用 `text-destructive`，Published 使用 `text-primary`，Draft 使用默认 `text-foreground`；Intermediate 作为辅助状态文本，不覆盖颜色优先级
+- 新增共享 `SelectField`，Upload version / Edit version / Add artifact 全部迁移到同一 selector 实现
+- Base UI selector option 行改为固定 indicator 槽 + 文本列，trigger 与 option 的文本和 icon 对齐；select popup 留在 Dialog DOM 内，避免被 dialog 层级拦截
+- 更新 e2e 覆盖 channel 右侧/uppercase、状态颜色优先级、selector 对齐、长 version mobile 可读性和全量回归
+
+Quality gates passed for dashboard-next: static token scan, typecheck, lint (existing warnings only), unit tests 10/10, production build, focused app-detail Playwright e2e 10/10, responsive Playwright e2e 27/27, and full Playwright e2e 80/80.
+
 ## 2026-05-01 18:26 [BUG-006]
 
 修正 dashboard-next version card 与 Add artifact 细节：

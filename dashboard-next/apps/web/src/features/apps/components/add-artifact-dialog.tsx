@@ -1,5 +1,4 @@
 import type { AppVersion } from '@ttpos/shared'
-import { ChevronDown } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -9,6 +8,7 @@ import { getDefaultUpdaterType, getUpdaterLabel, normalizeUpdaters } from '@/fea
 import { EntityFormDialog } from '@/shared/components/common/entity-form-dialog'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
+import { SelectField } from '@/shared/components/ui/select'
 import { useUpdateVersionMutation } from '../hooks'
 
 interface Props {
@@ -92,9 +92,6 @@ export function AddArtifactDialog({ open, onOpenChange, version }: Props) {
     }
   }
 
-  const inputClass = 'flex h-11 w-full rounded-pill border border-input bg-transparent px-5 py-3 text-base shadow-none focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring'
-  const selectClass = `${inputClass} appearance-none pr-xl`
-
   return (
     <EntityFormDialog
       open={open}
@@ -113,43 +110,28 @@ export function AddArtifactDialog({ open, onOpenChange, version }: Props) {
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-2">
           <Label>{t('upload_dialog.platform', { defaultValue: 'Platform' })}</Label>
-          <div className="relative">
-            <select
-              className={selectClass}
-              value={platform}
-              onChange={e => setPlatform(e.target.value)}
-            >
-              <option value="">—</option>
-              {platforms.data?.map(p => (
-                <option key={p.ID} value={p.PlatformName}>
-                  {p.PlatformName}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-sm top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          </div>
+          <SelectField
+            aria-label={t('upload_dialog.platform', { defaultValue: 'Platform' })}
+            value={platform}
+            onValueChange={setPlatform}
+            options={(platforms.data ?? []).map(p => ({ value: p.PlatformName, label: p.PlatformName }))}
+          />
         </div>
         {availableUpdaters.length > 1 && (
           <div className="space-y-2">
             <Label>{t('upload_dialog.updater', { defaultValue: 'Updater' })}</Label>
-            <div className="relative">
-              <select
-                className={selectClass}
-                value={updater}
-                onChange={(event) => {
-                  setUpdater(event.target.value)
-                  setSignature('')
-                }}
-              >
-                {availableUpdaters.map(item => (
-                  <option key={item.type} value={item.type}>
-                    {getUpdaterLabel(item.type)}
-                    {item.default ? ` (${t('upload_dialog.default_updater', { defaultValue: 'default' })})` : ''}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-sm top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            </div>
+            <SelectField
+              aria-label={t('upload_dialog.updater', { defaultValue: 'Updater' })}
+              value={updater}
+              onValueChange={(next) => {
+                setUpdater(next)
+                setSignature('')
+              }}
+              options={availableUpdaters.map(item => ({
+                value: item.type,
+                label: `${getUpdaterLabel(item.type)}${item.default ? ` (${t('upload_dialog.default_updater', { defaultValue: 'default' })})` : ''}`,
+              }))}
+            />
           </div>
         )}
         {updater === 'tauri' && (
@@ -164,17 +146,12 @@ export function AddArtifactDialog({ open, onOpenChange, version }: Props) {
         )}
         <div className="space-y-2">
           <Label>{t('upload_dialog.arch', { defaultValue: 'Architecture' })}</Label>
-          <div className="relative">
-            <select className={selectClass} value={arch} onChange={e => setArch(e.target.value)}>
-              <option value="">—</option>
-              {archs.data?.map(a => (
-                <option key={a.ID} value={a.ArchID}>
-                  {a.ArchID}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-sm top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          </div>
+          <SelectField
+            aria-label={t('upload_dialog.arch', { defaultValue: 'Architecture' })}
+            value={arch}
+            onValueChange={setArch}
+            options={(archs.data ?? []).map(a => ({ value: a.ArchID, label: a.ArchID }))}
+          />
         </div>
       </div>
       <div className="mt-3 space-y-2">

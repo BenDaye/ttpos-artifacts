@@ -366,4 +366,8 @@ body {
   .select-popup-available {
     max-height: var(--available-height);
   }
+
+  .select-popup-width {
+    min-width: var(--anchor-width);
+  }
 }

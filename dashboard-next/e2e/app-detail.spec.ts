@@ -1,5 +1,11 @@
+import type { Locator, Page } from '@playwright/test'
 import { Buffer } from 'node:buffer'
 import { expect, authedTest as test } from './_fixtures/auth.fixture'
+
+async function chooseSelectOption(page: Page, scope: Locator, name: string | RegExp, option: string | RegExp) {
+  await scope.getByRole('combobox', { name }).click()
+  await page.getByRole('option', { name: option, exact: typeof option === 'string' }).click()
+}
 
 test.describe('App detail — version management', () => {
   test.beforeEach(async ({ page }) => {
@@ -10,11 +16,11 @@ test.describe('App detail — version management', () => {
     await expect(page.getByRole('heading', { level: 1, name: 'TTPOS-Cashier' })).toBeVisible()
   })
 
-  test('renders version row with metadata badges', async ({ page }) => {
-    // Version string + channel badge.
+  test('renders version row with state-colored title and channel on the right', async ({ page }) => {
     await expect(page.getByText('1.0.0').first()).toBeVisible()
-    await expect(page.getByText('stable', { exact: true }).first()).toBeVisible()
-    await expect(page.getByTestId('version-status-badge')).toBeVisible()
+    await expect(page.getByTestId('version-channel-chip').first()).toHaveText('STABLE')
+    await expect(page.getByTestId('version-title').first()).toHaveAttribute('data-version-tone', 'published')
+    await expect(page.getByTestId('version-status-text').first()).toContainText('Published')
     // Header summary count.
     await expect(page.getByText(/version\(s\)/i)).toBeVisible()
 
@@ -22,11 +28,11 @@ test.describe('App detail — version management', () => {
       const channel = document.querySelector('[data-testid="version-channel-chip"]')?.getBoundingClientRect()
       const title = document.querySelector('[data-testid="version-title"]')?.getBoundingClientRect()
       return channel && title
-        ? { channelRight: channel.right, titleLeft: title.left }
+        ? { titleRight: title.right, channelLeft: channel.left }
         : null
     })
     expect(positions).not.toBeNull()
-    expect(positions!.channelRight).toBeLessThanOrEqual(positions!.titleLeft)
+    expect(positions!.titleRight).toBeLessThanOrEqual(positions!.channelLeft)
   })
 
   test('back link returns to /applications', async ({ page }) => {
@@ -90,9 +96,9 @@ test.describe('App detail — version management', () => {
 
     const dialog = page.getByRole('dialog', { name: 'Upload new version' })
     await dialog.getByPlaceholder('1.2.3').fill('1.1.0')
-    await dialog.locator('select').nth(0).selectOption('stable')
-    await dialog.locator('select').nth(2).selectOption('arm64')
-    await dialog.locator('select').nth(1).selectOption('android')
+    await chooseSelectOption(page, dialog, 'Channel', 'stable')
+    await chooseSelectOption(page, dialog, 'Architecture', 'arm64')
+    await chooseSelectOption(page, dialog, 'Platform', 'android')
     await dialog.locator('input[type="file"]').setInputFiles({
       name: 'cashier-1.1.0.apk',
       mimeType: 'application/octet-stream',
@@ -112,9 +118,25 @@ test.describe('App detail — version management', () => {
     await expect(dialog.getByText('Architecture', { exact: true })).toBeVisible()
     await expect(dialog.getByText('Artifacts', { exact: true })).toBeVisible()
     await expect(dialog.getByText('Changelog', { exact: true })).not.toBeVisible()
-    await dialog.locator('select').nth(0).selectOption('android')
+    const platformSelector = dialog.getByRole('combobox', { name: 'Platform' })
+    const selectorMetrics = await platformSelector.evaluate((element) => {
+      const text = element.querySelector('[data-testid="select-value-text"]')?.getBoundingClientRect()
+      const icon = element.querySelector('[data-testid="select-chevron"]')?.getBoundingClientRect()
+      const box = element.getBoundingClientRect()
+      return text && icon
+        ? {
+            centerDelta: Math.abs((text.top + text.height / 2) - (icon.top + icon.height / 2)),
+            iconRightGap: box.right - icon.right,
+          }
+        : null
+    })
+    expect(selectorMetrics).not.toBeNull()
+    expect(selectorMetrics!.centerDelta).toBeLessThanOrEqual(2)
+    expect(selectorMetrics!.iconRightGap).toBeGreaterThan(0)
+
+    await chooseSelectOption(page, dialog, 'Platform', 'android')
     await expect(dialog.getByText('Updater', { exact: true })).toBeVisible()
-    await dialog.locator('select').nth(1).selectOption('tauri')
+    await chooseSelectOption(page, dialog, 'Updater', 'Tauri')
     await expect(dialog.getByText('Signature', { exact: true })).toBeVisible()
     // App + channel context line is auto-filled from the version row.
     await expect(dialog.getByText(/App:\s*TTPOS-Cashier.*Channel:\s*stable/)).toBeVisible()
@@ -127,8 +149,8 @@ test.describe('App detail — version management', () => {
     await page.getByRole('button', { name: 'Add artifact' }).click()
 
     const dialog = page.getByRole('dialog', { name: /Add artifact to 1\.0\.0/ })
-    await dialog.locator('select').nth(0).selectOption('android')
-    await dialog.locator('select').nth(2).selectOption('arm64')
+    await chooseSelectOption(page, dialog, 'Platform', 'android')
+    await chooseSelectOption(page, dialog, 'Architecture', 'arm64')
     await dialog.locator('input[type="file"]').setInputFiles({
       name: 'cashier-1.0.0-arm64.apk',
       mimeType: 'application/octet-stream',
