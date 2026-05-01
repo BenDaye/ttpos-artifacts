@@ -1,5 +1,18 @@
 # 变更日志
 
+## 2026-05-01 06:04 [BUG-003]
+
+修复 dashboard-next 响应式视觉回归：
+
+- EmptyState 增加 token 化 readable 内容容器，`No versions yet`、`No API tokens` 等描述不再被压成窄列
+- 应用详情 version cards 改为按屏幕宽度 1/2/3/4 列排列，单个 version 不再在超宽屏占满整行
+- Draft version card 增加卡片级顶部 badge，同时保留 inline 状态 badge
+- ToggleGroup 默认 selected 状态改为 primary token 高亮，LayoutSwitcher 和 Statistics range 共享一致反馈
+- Statistics range label 增加 default fallback，避免翻译未命中时显示 key
+- 响应式 Playwright 用例扩展到 27 条，覆盖空状态 readable 宽度、tokens 空状态、Statistics 高亮、version grid 和 Draft badge
+
+Quality gates passed for dashboard-next: static token scans, typecheck, lint (existing warnings only), unit tests, production build, responsive Playwright e2e 27/27, and full Playwright e2e 80/80.
+
 ## 2026-05-01 05:03 [BUG-002]
 
 优化 dashboard-next 窄屏交互细节：

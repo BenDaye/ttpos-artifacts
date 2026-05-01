@@ -34,12 +34,51 @@ async function mockVersions(page: Page, versions: unknown[], total = versions.le
     route.fulfill({ status: 200, json: { items: versions, total, page: 1, limit: 50 } }))
 }
 
+async function mockTokens(page: Page, tokens: unknown[]) {
+  await page.unroute('**/token/list')
+  await page.route('**/token/list', route =>
+    route.fulfill({ status: 200, json: { tokens } }))
+}
+
 async function expectNoDocumentOverflow(page: Page) {
   await page.waitForLoadState('networkidle')
   await expect.poll(async () => page.evaluate(() => {
     const root = document.documentElement
     return Math.ceil(root.scrollWidth - root.clientWidth)
   })).toBeLessThanOrEqual(1)
+}
+
+async function expectReadableEmptyStateDescription(page: Page, text: string, minWidth: number) {
+  const locator = page.getByText(text, { exact: true })
+  await expect(locator).toBeVisible()
+  const body = locator.locator('xpath=ancestor::*[contains(@class, "dashboard-empty-state-body")][1]')
+  await expect(body).toBeVisible()
+  await expect.poll(async () => {
+    const box = await body.boundingBox()
+    return Math.round(box?.width ?? 0)
+  }).toBeGreaterThanOrEqual(minWidth)
+  const lineCount = await locator.evaluate((element) => {
+    const style = window.getComputedStyle(element)
+    const lineHeight = Number.parseFloat(style.lineHeight)
+    return Math.ceil(element.getBoundingClientRect().height / lineHeight)
+  })
+  expect(lineCount).toBeLessThanOrEqual(3)
+}
+
+function versionFixture(index: number, overrides: Record<string, unknown> = {}) {
+  return {
+    ID: `responsive-version-${index}`,
+    AppName: 'TTPOS-Cashier',
+    Version: `1.${index}.0`,
+    Channel: index % 2 === 0 ? 'stable' : 'beta',
+    Published: index % 2 === 0,
+    Critical: false,
+    Intermediate: false,
+    Artifacts: [],
+    Changelog: [],
+    Updated_at: '2026-05-01T00:00:00Z',
+    ...overrides,
+  }
 }
 
 test.describe('Responsive layout', () => {
@@ -110,8 +149,19 @@ test.describe('Responsive layout', () => {
     await page.goto('/applications/TTPOS-Cashier')
 
     await expect(page.getByRole('heading', { name: 'No versions yet' })).toBeVisible()
-    await expect(page.getByText('Upload your first artifact to get started.')).toBeVisible()
+    await expectReadableEmptyStateDescription(page, 'Upload your first artifact to get started.', 220)
     await expect(page.getByRole('button', { name: 'Upload version' }).last()).toBeVisible()
+    await expectNoDocumentOverflow(page)
+  })
+
+  test('keeps the empty API tokens state readable on mobile', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 900 })
+    await mockTokens(page, [])
+
+    await page.goto('/settings/tokens')
+
+    await expect(page.getByRole('heading', { name: 'No API tokens' })).toBeVisible()
+    await expectReadableEmptyStateDescription(page, 'Create one for CI uploads.', 220)
     await expectNoDocumentOverflow(page)
   })
 
@@ -149,12 +199,61 @@ test.describe('Responsive layout', () => {
     expect(selectedBackground).not.toBe(inactiveBackground)
   })
 
+  test('makes the active statistics range visually distinct', async ({ page }) => {
+    await page.setViewportSize({ width: 1024, height: 900 })
+    await page.goto('/statistics')
+
+    const today = page.getByRole('button', { name: 'Today' })
+    const week = page.getByRole('button', { name: 'Last 7 days' })
+
+    await expect(week).toHaveAttribute('data-pressed', 'true')
+    await today.click()
+    await expect(today).toHaveAttribute('data-pressed', 'true')
+    await expect(week).toHaveAttribute('data-pressed', 'false')
+
+    const selectedBackground = await today.evaluate(el => getComputedStyle(el).backgroundColor)
+    const inactiveBackground = await week.evaluate(el => getComputedStyle(el).backgroundColor)
+    const selectedColor = await today.evaluate(el => getComputedStyle(el).color)
+    const inactiveColor = await week.evaluate(el => getComputedStyle(el).color)
+    expect(selectedBackground).not.toBe(inactiveBackground)
+    expect(selectedColor).not.toBe(inactiveColor)
+  })
+
+  const gridCases = [
+    { width: 375, expectedColumns: 1 },
+    { width: 1024, expectedColumns: 2 },
+    { width: 1440, expectedColumns: 3 },
+    { width: 1920, expectedColumns: 4 },
+  ] as const
+
+  for (const { width, expectedColumns } of gridCases) {
+    test(`lays out version cards in ${expectedColumns} column(s) at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 })
+      await mockVersions(page, Array.from({ length: 4 }, (_, index) => versionFixture(index + 1)), 4)
+
+      await page.goto('/applications/TTPOS-Cashier')
+
+      const cards = page.getByTestId('version-card')
+      await expect(cards).toHaveCount(4)
+
+      const firstRowCount = await cards.evaluateAll((elements) => {
+        const boxes = elements.map((element) => {
+          const rect = element.getBoundingClientRect()
+          return { y: Math.round(rect.y), width: Math.round(rect.width) }
+        })
+        const firstY = boxes[0]?.y ?? 0
+        return boxes.filter(box => Math.abs(box.y - firstY) <= 2).length
+      })
+      expect(firstRowCount).toBe(expectedColumns)
+      await expectNoDocumentOverflow(page)
+    })
+  }
+
   test('keeps long version rows multi-line and readable on mobile', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 900 })
     const longVersion = '2026.05.01-internal-canary-super-long-version-label-build-1234567890'
-    await mockVersions(page, [{
+    await mockVersions(page, [versionFixture(1, {
       ID: 'long-version',
-      AppName: 'TTPOS-Cashier',
       Version: longVersion,
       Channel: 'enterprise-production-long-channel-name',
       Published: false,
@@ -172,11 +271,11 @@ test.describe('Responsive layout', () => {
       Changelog: [
         { Version: longVersion, Changes: 'Long release fixture', Date: '2026-05-01' },
       ],
-      Updated_at: '2026-05-01T00:00:00Z',
-    }])
+    })])
 
     await page.goto('/applications/TTPOS-Cashier')
 
+    await expect(page.getByTestId('version-draft-ribbon')).toBeVisible()
     await expect(page.getByText(longVersion)).toBeVisible()
     await expect(page.getByRole('button', { name: /^Download\s*\(\d+\)$/ })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Add artifact' })).toBeVisible()

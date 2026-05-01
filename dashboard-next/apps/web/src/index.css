@@ -294,6 +294,10 @@ body {
     max-width: calc(var(--spacing-section) * 6);
   }
 
+  .dashboard-empty-state-body {
+    max-width: min(100%, calc(var(--spacing-section) * 7));
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .dashboard-sidebar {
       transition: none;

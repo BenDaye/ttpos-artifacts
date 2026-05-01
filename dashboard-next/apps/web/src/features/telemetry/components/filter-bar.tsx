@@ -32,6 +32,11 @@ export const EMPTY_TELEMETRY_FILTERS: TelemetryFilters = {
 }
 
 const RANGES: TelemetryRange[] = ['today', 'week', 'month']
+const RANGE_LABELS: Record<TelemetryRange, string> = {
+  today: 'Today',
+  week: 'Last 7 days',
+  month: 'Last 30 days',
+}
 
 interface Props {
   value: TelemetryFilters
@@ -64,7 +69,7 @@ export function TelemetryFilterBar({ value, onChange }: Props) {
             data-pressed={r === value.range}
             onClick={() => onChange({ ...value, range: r })}
           >
-            {t(`range.${r}`)}
+            {t(`range.${r}`, { defaultValue: RANGE_LABELS[r] })}
           </ToggleGroupItem>
         ))}
       </ToggleGroup>

@@ -170,7 +170,7 @@ export function AppDetailPage({ appName }: { appName: string }) {
       )}
 
       {versions.length > 0 && (
-        <ul className="grid min-w-0 gap-3">
+        <ul className="grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {versions.map(v => (
             <VersionRow
               key={v.ID}
@@ -257,10 +257,19 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
   }
 
   return (
-    <li>
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+    <li data-testid="version-card">
+      <Card className={version.Published ? 'relative h-full overflow-hidden' : 'relative h-full overflow-hidden border-primary'}>
+        {!version.Published && (
+          <Badge
+            variant="default"
+            className="absolute right-sm top-sm z-10"
+            data-testid="version-draft-ribbon"
+          >
+            {t('badge.draft', { defaultValue: 'Draft' })}
+          </Badge>
+        )}
+        <CardContent className={version.Published ? 'flex h-full min-w-0 flex-col p-4' : 'flex h-full min-w-0 flex-col p-4 pt-xl'}>
+          <div className="flex min-w-0 flex-col gap-3">
             <div className="min-w-0 flex-1 space-y-2">
               <div className="min-w-0">
                 <p className="break-all text-sm font-semibold">{version.Version}</p>
@@ -277,42 +286,49 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
                 <p className="mt-1 text-xs text-muted-foreground">{updatedAt}</p>
               )}
             </div>
-            <div className="flex max-w-full flex-wrap items-center gap-1 lg:justify-end">
+            <div className="flex max-w-full flex-wrap items-center gap-1">
               {changelog.length > 0 && (
                 <Button
                   variant="outline"
                   size="sm"
+                  className="min-w-0 max-w-full"
                   onClick={() => setShowChangelog(true)}
                 >
                   <BookOpen className="size-3.5" />
-                  {t('changelog')}
-                  {' '}
-                  (
-                  {changelog.length}
-                  )
+                  <span className="min-w-0 truncate">
+                    {t('changelog')}
+                    {' '}
+                    (
+                    {changelog.length}
+                    )
+                  </span>
                 </Button>
               )}
               {artifacts.length > 0 && (
                 <Button
                   variant="outline"
                   size="sm"
+                  className="min-w-0 max-w-full"
                   onClick={() => setShowDownloads(true)}
                 >
                   <Download className="size-3.5" />
-                  {t('actions.download')}
-                  {' '}
-                  (
-                  {artifacts.length}
-                  )
+                  <span className="min-w-0 truncate">
+                    {t('actions.download')}
+                    {' '}
+                    (
+                    {artifacts.length}
+                    )
+                  </span>
                 </Button>
               )}
               <Button
                 variant="outline"
                 size="sm"
+                className="min-w-0 max-w-full"
                 onClick={() => setShowAddArtifact(true)}
               >
                 <FilePlus className="size-3.5" />
-                {t('add_artifact.button', { defaultValue: 'Add artifact' })}
+                <span className="min-w-0 truncate">{t('add_artifact.button', { defaultValue: 'Add artifact' })}</span>
               </Button>
               <Button variant="ghost" size="icon" aria-label={t('common:actions.edit')} onClick={onEdit}>
                 <Pencil className="size-4" />
@@ -358,25 +374,25 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
                   {artifacts.map(a => (
                     <div
                       key={a.link}
-                      className="flex min-w-0 flex-col gap-2 rounded-md border border-border bg-muted/20 px-3 py-2 sm:flex-row sm:items-center sm:justify-between"
+                      className="flex min-w-0 flex-col gap-2 rounded-md border border-border bg-muted/20 px-3 py-2"
                     >
                       <div className="flex min-w-0 flex-wrap items-center gap-2 text-xs">
                         <Badge variant="outline" className="max-w-full truncate">{a.platform || '—'}</Badge>
                         <Badge variant="outline" className="max-w-full truncate">{a.arch || '—'}</Badge>
-                        <span className="min-w-0 truncate font-mono text-muted-foreground">
+                        <span className="min-w-0 break-words font-mono text-muted-foreground">
                           {a.package || a.link.split('/').pop()}
                         </span>
                       </div>
-                      <div className="flex shrink-0 flex-wrap items-center gap-1 sm:justify-end">
+                      <div className="flex shrink-0 flex-wrap items-center gap-1">
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-7 px-2.5 text-xs"
+                          className="h-7 min-w-0 max-w-full px-2.5 text-xs"
                           disabled={downloading === a.link}
                           onClick={() => onDownload(a.link)}
                         >
                           <Download className="size-3" />
-                          {t('actions.download', { defaultValue: 'Download' })}
+                          <span className="min-w-0 truncate">{t('actions.download', { defaultValue: 'Download' })}</span>
                         </Button>
                         <Button
                           variant="ghost"

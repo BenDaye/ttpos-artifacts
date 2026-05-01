@@ -23,7 +23,6 @@ export function LayoutSwitcher() {
           aria-pressed={layout === value}
           data-pressed={layout === value}
           aria-label={t(labelKey)}
-          className="data-pressed:bg-primary data-pressed:text-primary-foreground data-pressed:hover:bg-apple-primary-focus data-pressed:hover:text-primary-foreground"
           onClick={() => setLayout(value)}
         >
           <Icon className="size-4" />
