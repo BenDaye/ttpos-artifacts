@@ -59,6 +59,17 @@ export function coerceAllowedValuesToIds(
   return allowed.map(value => idByLabel.get(value) ?? value)
 }
 
+// Extracts boolean-valued fields so a permission group (which mixes booleans with
+// `Allowed: string[]`) can be rendered as a flag map without a type cast.
+export function pickBoolFields(group: object): Record<string, boolean> {
+  const out: Record<string, boolean> = {}
+  for (const [key, value] of Object.entries(group)) {
+    if (typeof value === 'boolean')
+      out[key] = value
+  }
+  return out
+}
+
 export function PermissionMatrix({ value, onChange, appItems }: Props) {
   const { t } = useTranslation('settings')
   const channels = useChannelsQuery()
@@ -96,7 +107,7 @@ export function PermissionMatrix({ value, onChange, appItems }: Props) {
           ['Upload', t('permissions.flags.upload', { defaultValue: 'Upload' })],
           ['Download', t('permissions.flags.download', { defaultValue: 'Download' })],
         ]}
-        flagValues={value.Apps as unknown as Record<string, boolean>}
+        flagValues={pickBoolFields(value.Apps)}
         onFlag={(flag, v) => setGroup('Apps', { [flag]: v } as Partial<TeamUserPermissions['Apps']>)}
         allowedTitle={t('permissions.allowed_apps', { defaultValue: 'Allowed apps (empty = all)' })}
         allowedItems={appItems}
@@ -110,7 +121,7 @@ export function PermissionMatrix({ value, onChange, appItems }: Props) {
           ['Edit', t('permissions.flags.edit')],
           ['Delete', t('permissions.flags.delete')],
         ]}
-        flagValues={value.Channels as unknown as Record<string, boolean>}
+        flagValues={pickBoolFields(value.Channels)}
         onFlag={(flag, v) => setGroup('Channels', { [flag]: v })}
         allowedTitle={t('permissions.allowed_channels', { defaultValue: 'Allowed channels (empty = all)' })}
         allowedItems={channelItems}
@@ -124,7 +135,7 @@ export function PermissionMatrix({ value, onChange, appItems }: Props) {
           ['Edit', t('permissions.flags.edit')],
           ['Delete', t('permissions.flags.delete')],
         ]}
-        flagValues={value.Platforms as unknown as Record<string, boolean>}
+        flagValues={pickBoolFields(value.Platforms)}
         onFlag={(flag, v) => setGroup('Platforms', { [flag]: v })}
         allowedTitle={t('permissions.allowed_platforms', { defaultValue: 'Allowed platforms (empty = all)' })}
         allowedItems={platformItems}
@@ -138,7 +149,7 @@ export function PermissionMatrix({ value, onChange, appItems }: Props) {
           ['Edit', t('permissions.flags.edit')],
           ['Delete', t('permissions.flags.delete')],
         ]}
-        flagValues={value.Archs as unknown as Record<string, boolean>}
+        flagValues={pickBoolFields(value.Archs)}
         onFlag={(flag, v) => setGroup('Archs', { [flag]: v })}
         allowedTitle={t('permissions.allowed_archs', { defaultValue: 'Allowed architectures (empty = all)' })}
         allowedItems={archItems}

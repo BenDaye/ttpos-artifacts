@@ -1,5 +1,15 @@
 # 变更日志
 
+## 2026-05-01 19:25 [QUAL-002]
+
+收敛 dashboard-next Permission Matrix 类型强转：
+
+- `permission-matrix.tsx` 引入 `pickBoolFields(group: object)`，仅提取布尔字段返回 `Record<string, boolean>`
+- Apps / Channels / Platforms / Archs 4 组渲染从 `value.<Group> as unknown as Record<string, boolean>` 改为 `pickBoolFields(value.<Group>)`，消除全部强转
+- 单测新增两项：`Allowed: string[]` 等非布尔字段会被丢弃；后端把布尔字段误序列化为 null/undefined 时也被丢弃，避免静默落入 falsy
+
+Quality gates passed for dashboard-next: `bun run typecheck`, `bun run test` 12/12（新增 2 项），`bun run lint`（0 errors，46 既存 warnings、无新增）。
+
 ## 2026-05-01 19:03 [BUG-007]
 
 修正 dashboard-next version 状态表达与 selector 视觉回归：
