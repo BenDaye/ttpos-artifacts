@@ -170,7 +170,7 @@ export function AppDetailPage({ appName }: { appName: string }) {
       )}
 
       {versions.length > 0 && (
-        <ul className="grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+        <ul className="grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-3">
           {versions.map(v => (
             <VersionRow
               key={v.ID}

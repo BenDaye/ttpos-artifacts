@@ -11,3 +11,4 @@
 | [x] | PLAN-007 | Dashboard Next 响应式布局溢出修复 | BUG-001 |
 | [x] | PLAN-008 | Dashboard Next 窄屏交互细节优化 | BUG-002 |
 | [x] | PLAN-009 | Dashboard Next 响应式视觉回归修复 | BUG-003 |
+| [x] | PLAN-010 | Dashboard Next 版本卡片网格密度收敛 | BUG-004 |

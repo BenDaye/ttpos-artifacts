@@ -1,11 +1,20 @@
 # 变更日志
 
+## 2026-05-01 17:30 [BUG-004]
+
+收敛 dashboard-next version card 网格密度：
+
+- 应用详情 version cards 保持移动端 1 列、中屏 2 列、宽屏最多 3 列，不再在超宽屏压缩到 4 列
+- 响应式 Playwright grid case 更新为 1920px 仍最多 3 列，继续验证无 document overflow
+
+Quality gates passed for dashboard-next: focused responsive Playwright e2e, typecheck, production build, static token scans, and `git diff --check`.
+
 ## 2026-05-01 06:04 [BUG-003]
 
 修复 dashboard-next 响应式视觉回归：
 
 - EmptyState 增加 token 化 readable 内容容器，`No versions yet`、`No API tokens` 等描述不再被压成窄列
-- 应用详情 version cards 改为按屏幕宽度 1/2/3/4 列排列，单个 version 不再在超宽屏占满整行
+- 应用详情 version cards 改为按屏幕宽度响应式排列，单个 version 不再在超宽屏占满整行
 - Draft version card 增加卡片级顶部 badge，同时保留 inline 状态 badge
 - ToggleGroup 默认 selected 状态改为 primary token 高亮，LayoutSwitcher 和 Statistics range 共享一致反馈
 - Statistics range label 增加 default fallback，避免翻译未命中时显示 key
