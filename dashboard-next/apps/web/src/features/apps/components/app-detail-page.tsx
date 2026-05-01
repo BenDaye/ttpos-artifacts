@@ -114,7 +114,7 @@ export function AppDetailPage({ appName }: { appName: string }) {
   const total = versionsQuery.data?.total ?? allVersions.length
 
   return (
-    <div>
+    <div className="min-w-0 max-w-full">
       <PageHeader
         title={appName}
         description={
@@ -123,7 +123,7 @@ export function AppDetailPage({ appName }: { appName: string }) {
             : t('detail.description')
         }
         actions={(
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
             <Link to="/applications" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
               <ArrowLeft className="size-4" />
               {t('detail.back')}
@@ -170,7 +170,7 @@ export function AppDetailPage({ appName }: { appName: string }) {
       )}
 
       {versions.length > 0 && (
-        <ul className="grid gap-3">
+        <ul className="grid min-w-0 gap-3">
           {versions.map(v => (
             <VersionRow
               key={v.ID}
@@ -260,11 +260,11 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
     <li>
       <Card>
         <CardContent className="p-4">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="min-w-0">
+          <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-sm font-semibold">{version.Version}</span>
-                {version.Channel && <Badge variant="secondary">{version.Channel}</Badge>}
+                <span className="min-w-0 break-all text-sm font-semibold">{version.Version}</span>
+                {version.Channel && <Badge variant="secondary" className="max-w-full truncate">{version.Channel}</Badge>}
                 {version.Critical && <Badge variant="destructive">{t('badge.critical', { defaultValue: 'Critical' })}</Badge>}
                 {version.Intermediate && <Badge variant="outline">{t('badge.intermediate', { defaultValue: 'Intermediate' })}</Badge>}
                 {!version.Published && <Badge variant="warning">{t('badge.draft', { defaultValue: 'Draft' })}</Badge>}
@@ -273,7 +273,7 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
                 <p className="mt-1 text-xs text-muted-foreground">{updatedAt}</p>
               )}
             </div>
-            <div className="flex flex-wrap items-center gap-1">
+            <div className="flex max-w-full flex-wrap items-center justify-end gap-1">
               {changelog.length > 0 && (
                 <Button
                   variant="outline"
@@ -357,13 +357,13 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
                       className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border bg-muted/20 px-3 py-2"
                     >
                       <div className="flex min-w-0 flex-wrap items-center gap-2 text-xs">
-                        <Badge variant="outline">{a.platform || '—'}</Badge>
-                        <Badge variant="outline">{a.arch || '—'}</Badge>
-                        <span className="truncate font-mono text-muted-foreground">
+                        <Badge variant="outline" className="max-w-full truncate">{a.platform || '—'}</Badge>
+                        <Badge variant="outline" className="max-w-full truncate">{a.arch || '—'}</Badge>
+                        <span className="min-w-0 truncate font-mono text-muted-foreground">
                           {a.package || a.link.split('/').pop()}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1">
+                      <div className="flex shrink-0 items-center gap-1">
                         <Button
                           variant="outline"
                           size="sm"

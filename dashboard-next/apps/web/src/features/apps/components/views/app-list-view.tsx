@@ -8,7 +8,7 @@ import { formatDateTime } from '@/shared/lib/format'
 export function AppListView({ apps, onSelect, onEdit, onDelete }: AppViewProps) {
   const { t } = useTranslation(['apps', 'common'])
   return (
-    <Card className="overflow-hidden">
+    <Card className="max-w-full overflow-hidden">
       <div role="table" className="divide-y divide-border">
         <div role="row" className="app-list-header-grid hidden bg-muted/30 px-4 py-2 text-xs font-medium text-muted-foreground sm:grid sm:gap-3">
           <div>{t('list.name', { defaultValue: 'Name' })}</div>
@@ -28,7 +28,7 @@ export function AppListView({ apps, onSelect, onEdit, onDelete }: AppViewProps) 
                 onSelect(app)
               }
             }}
-            className="app-list-row-grid grid cursor-pointer gap-3 px-4 py-3 transition-colors hover:bg-accent/50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring sm:items-center"
+            className="app-list-row-grid grid min-w-0 cursor-pointer gap-3 px-4 py-3 transition-colors hover:bg-accent/50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring sm:items-center"
           >
             <div className="flex min-w-0 items-center gap-3">
               <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
@@ -40,7 +40,7 @@ export function AppListView({ apps, onSelect, onEdit, onDelete }: AppViewProps) 
             </div>
             <div className="hidden truncate text-xs text-muted-foreground sm:block">{app.Description || '—'}</div>
             <div className="hidden text-xs text-muted-foreground sm:block">{formatDateTime(app.Updated_at) || '—'}</div>
-            <div className="flex items-center justify-end gap-1">
+            <div className="flex shrink-0 items-center justify-end gap-1">
               <Button
                 variant="ghost"
                 size="icon"

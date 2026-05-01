@@ -9,7 +9,7 @@ export function ToggleGroup({
   return (
     <BaseToggleGroup
       className={cn(
-        'inline-flex items-center gap-0.5 rounded-pill border border-input bg-background p-0.5',
+        'inline-flex max-w-full flex-wrap items-center gap-0.5 rounded-pill border border-input bg-background p-0.5',
         className,
       )}
       {...props}
@@ -25,7 +25,7 @@ export function ToggleGroupItem({
     <button
       type="button"
       className={cn(
-        'inline-flex h-8 items-center justify-center gap-2 rounded-pill px-3 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring data-pressed:bg-accent data-pressed:text-accent-foreground',
+        'inline-flex h-8 min-w-0 items-center justify-center gap-2 rounded-pill px-3 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring data-pressed:bg-accent data-pressed:text-accent-foreground',
         className,
       )}
       {...props}

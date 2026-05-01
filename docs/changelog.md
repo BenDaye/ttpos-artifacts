@@ -1,5 +1,17 @@
 # 变更日志
 
+## 2026-05-01 03:51 [BUG-001]
+
+修复 dashboard-next 响应式布局溢出：
+
+- 将移动端主导航改为 overlay drawer + backdrop，避免 sidebar 在小屏继续占用主内容 flex 宽度；桌面端 sticky sidebar 与折叠偏好保持不变
+- 为 AppShell、PageHeader、Apps card/list/board、应用详情过滤器、Statistics filters/charts、Settings panels 和 taxonomy 页面补齐收缩边界、局部滚动和换行策略
+- board 视图保留横向浏览，但滚动被限制在 board 区域内部，不再把 document 撑宽
+- 调整移动端导航过渡为 transform/width 受控过渡，并支持 reduced motion
+- 新增响应式 Playwright 用例，覆盖 320/375/768/1024 宽度下 `/applications` card/board、应用详情、`/statistics`、`/settings` 的 document overflow 回归
+
+Quality gates passed for dashboard-next: static token scans, typecheck, lint (existing warnings only), unit tests, production build, responsive Playwright e2e 17/17, and full Playwright e2e 70/70.
+
 ## 2026-04-30 21:00 [REFACTOR-004]
 
 收敛 dashboard-next 设计令牌与视觉值来源：

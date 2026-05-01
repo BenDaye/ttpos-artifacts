@@ -6,6 +6,7 @@ import { EmptyState } from '@/shared/components/empty-state'
 import { PageHeader } from '@/shared/components/page-header'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { Skeleton } from '@/shared/components/ui/skeleton'
+import { cn } from '@/shared/lib/utils'
 import { useTelemetryQuery } from '../hooks'
 import { EMPTY_TELEMETRY_FILTERS, TelemetryFilterBar } from './filter-bar'
 
@@ -37,7 +38,7 @@ export function StatisticsPage() {
   })
 
   return (
-    <div>
+    <div className="min-w-0 max-w-full">
       <PageHeader
         title={t('common:nav.statistics')}
         description={t('description', { defaultValue: 'Adoption and download metrics across releases.' })}
@@ -45,7 +46,7 @@ export function StatisticsPage() {
       <TelemetryFilterBar value={filters} onChange={setFilters} />
 
       {telemetry.isPending && (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid min-w-0 gap-4 md:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-24 rounded-lg" />
           ))}
@@ -62,7 +63,7 @@ export function StatisticsPage() {
       {telemetry.isSuccess && (
         <>
           <SummaryGrid summary={telemetry.data.summary} />
-          <div className="mt-6 grid gap-4 lg:grid-cols-2">
+          <div className="mt-6 grid min-w-0 gap-4 lg:grid-cols-2">
             <DailyTrendCard
               title={t('charts.daily', { defaultValue: 'Activity over time' })}
               data={telemetry.data.daily_stats ?? []}
@@ -104,7 +105,7 @@ function SummaryGrid({ summary }: { summary?: TelemetrySummary }) {
     { label: t('summary.apps', { defaultValue: 'Active apps' }), value: summary.total_active_apps ?? 0 },
   ]
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+    <div className="grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-5">
       {items.map(item => (
         <Card key={item.label}>
           <CardHeader className="pb-2">
@@ -233,11 +234,11 @@ function ChartShell({
   children: React.ReactNode
 }) {
   return (
-    <Card className={className}>
+    <Card className={cn('min-w-0', className)}>
       <CardHeader>
-        <CardTitle className="text-base">{title}</CardTitle>
+        <CardTitle className="break-words text-base">{title}</CardTitle>
       </CardHeader>
-      <CardContent className="h-64 pt-0">{children}</CardContent>
+      <CardContent className="h-64 min-w-0 overflow-hidden pt-0">{children}</CardContent>
     </Card>
   )
 }

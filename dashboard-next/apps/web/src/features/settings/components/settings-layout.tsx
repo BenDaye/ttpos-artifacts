@@ -14,12 +14,12 @@ export function SettingsLayout({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: s => s.location.pathname })
 
   return (
-    <div>
+    <div className="min-w-0 max-w-full">
       <PageHeader
         title={t('title', { defaultValue: 'Settings' })}
         description={t('description', { defaultValue: 'Users, security, and access.' })}
       />
-      <div className="mb-6 flex items-center gap-1 border-b border-border">
+      <div className="mb-6 flex max-w-full items-center gap-1 overflow-x-auto border-b border-border">
         {TABS.map((tab) => {
           const active = tab.match === '/settings'
             ? pathname === '/settings'

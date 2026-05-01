@@ -52,7 +52,7 @@ export function PlatformsPage() {
   }
 
   return (
-    <div>
+    <div className="min-w-0 max-w-full">
       <PageHeader
         title={t('common:nav.platforms')}
         description={t('description')}
@@ -64,8 +64,8 @@ export function PlatformsPage() {
         )}
       />
 
-      <div className="mb-4 flex max-w-sm items-center gap-2">
-        <div className="relative flex-1">
+      <div className="mb-4 flex w-full max-w-sm items-center gap-2">
+        <div className="relative min-w-0 flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={search}
@@ -77,7 +77,7 @@ export function PlatformsPage() {
       </div>
 
       {platformsQuery.isPending && (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-20 rounded-xl" />
           ))}
@@ -106,7 +106,7 @@ export function PlatformsPage() {
       )}
 
       {platformsQuery.isSuccess && filteredPlatforms.length > 0 && (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {filteredPlatforms.map(platform => (
             <Card key={platform.ID}>
               <CardContent className="flex items-center justify-between gap-3 p-4">

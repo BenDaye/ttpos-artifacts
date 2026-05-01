@@ -18,3 +18,4 @@
 | [x] | ENH-001 | 版本卡片增加快速添加构建产物入口 | P2 | completed |
 | [x] | REFACTOR-003 | 修复 Dashboard Next 生产替换阻断项 | P1 | completed |
 | [x] | REFACTOR-004 | 收敛 Dashboard Next 设计令牌 | P1 | completed |
+| [x] | BUG-001 | 修复 Dashboard Next 响应式布局溢出 | P1 | completed |

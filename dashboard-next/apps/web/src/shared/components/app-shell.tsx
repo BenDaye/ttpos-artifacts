@@ -10,7 +10,9 @@ import {
   LogOut,
   Menu,
   Settings,
+  X,
 } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/features/auth/auth-store'
 import { cn } from '@/shared/lib/utils'
@@ -41,44 +43,76 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const toggleSidebar = useUiStore(s => s.toggleSidebar)
   const clearAuth = useAuthStore(s => s.clear)
   const router = useRouter()
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
+
+  useEffect(() => {
+    if (!mobileNavOpen)
+      return
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMobileNavOpen(false)
+      }
+    }
+
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [mobileNavOpen])
 
   const handleLogout = () => {
+    setMobileNavOpen(false)
     clearAuth()
     void router.navigate({ to: '/signin' })
   }
 
   return (
-    <div className="flex min-h-svh bg-background text-foreground">
+    <div className="flex min-h-svh min-w-0 bg-background text-foreground">
+      {mobileNavOpen && (
+        <button
+          type="button"
+          className="fixed inset-0 z-40 bg-sidebar/60 transition-opacity duration-200 md:hidden"
+          aria-label="Close navigation"
+          onClick={() => setMobileNavOpen(false)}
+        />
+      )}
       <aside
         className={cn(
-          'sticky top-0 flex h-svh shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-all duration-200',
-          collapsed ? 'w-14' : 'w-60',
+          'dashboard-sidebar fixed inset-y-0 left-0 z-50 flex h-svh w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:sticky md:top-0 md:z-auto md:translate-x-0',
+          mobileNavOpen ? 'translate-x-0' : '-translate-x-full',
+          collapsed ? 'md:w-14' : 'md:w-60',
         )}
         aria-label="Primary"
       >
         <div
           className={cn(
-            'flex h-14 items-center',
-            collapsed ? 'justify-center px-1' : 'justify-between gap-2 px-3',
+            'flex h-14 items-center justify-between gap-2 px-3',
+            collapsed && 'md:justify-center md:px-1',
           )}
         >
-          {!collapsed && (
-            <span className="truncate text-sm font-semibold tracking-tight">
-              {t('app.name')}
-            </span>
-          )}
+          <span className={cn('truncate text-sm font-semibold tracking-tight', collapsed && 'md:hidden')}>
+            {t('app.name')}
+          </span>
           <Button
             variant="ghost"
             size="icon"
-            className="size-8"
+            className="hidden size-8 md:inline-flex"
             onClick={toggleSidebar}
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             <ChevronLeft className={cn('size-4 transition-transform', collapsed && 'rotate-180')} />
           </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8 md:hidden"
+            onClick={() => setMobileNavOpen(false)}
+            aria-label="Close navigation"
+          >
+            <X className="size-4" />
+          </Button>
         </div>
         <Separator />
-        <nav className={cn('flex-1 overflow-y-auto', collapsed ? 'p-1' : 'p-2')}>
+        <nav className={cn('flex-1 overflow-y-auto p-2', collapsed && 'md:p-1')}>
           <ul className="space-y-1">
             {NAV.map(item => (
               <li key={item.to}>
@@ -86,52 +120,53 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   to={item.to}
                   activeOptions={{ exact: item.to === '/' }}
                   className={cn(
-                    'flex items-center rounded-md py-2 text-sm font-medium text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-                    collapsed ? 'justify-center px-0' : 'gap-2 px-2',
+                    'flex items-center gap-2 rounded-md px-2 py-2 text-sm font-medium text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                    collapsed && 'md:justify-center md:px-0',
                   )}
                   activeProps={{
                     className:
                       'bg-sidebar-accent text-sidebar-accent-foreground',
                   }}
+                  onClick={() => setMobileNavOpen(false)}
                 >
                   <item.icon className="size-4 shrink-0" />
-                  {!collapsed && <span className="truncate">{t(item.labelKey)}</span>}
+                  <span className={cn('truncate', collapsed && 'md:hidden')}>{t(item.labelKey)}</span>
                 </Link>
               </li>
             ))}
           </ul>
         </nav>
         <Separator />
-        <div className={collapsed ? 'p-1' : 'p-2'}>
+        <div className={cn('p-2', collapsed && 'md:p-1')}>
           <Button
             variant="ghost"
-            size={collapsed ? 'icon' : 'sm'}
-            className={cn(collapsed ? 'w-full justify-center' : 'w-full justify-start gap-2')}
+            size="sm"
+            className={cn('w-full justify-start gap-2', collapsed && 'md:justify-center md:px-0')}
             onClick={handleLogout}
             aria-label="Sign out"
           >
             <LogOut className="size-4" />
-            {!collapsed && <span>{t('auth.logout', { defaultValue: 'Sign out' })}</span>}
+            <span className={cn(collapsed && 'md:hidden')}>{t('auth.logout', { defaultValue: 'Sign out' })}</span>
           </Button>
         </div>
       </aside>
 
-      <div className="flex min-h-svh flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur">
+      <div className="flex min-h-svh min-w-0 flex-1 flex-col">
+        <header className="sticky top-0 z-30 flex h-14 min-w-0 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur">
           <Button
             variant="ghost"
             size="icon"
             className="md:hidden"
-            onClick={toggleSidebar}
+            onClick={() => setMobileNavOpen(true)}
             aria-label="Toggle navigation"
           >
             <Menu className="size-4" />
           </Button>
-          <div className="flex-1" />
+          <div className="min-w-0 flex-1" />
           <LanguageSwitcher />
           <ThemeSwitcher />
         </header>
-        <main className="flex-1 p-4 md:p-6">{children}</main>
+        <main className="min-w-0 max-w-full flex-1 overflow-x-hidden p-4 md:p-6">{children}</main>
       </div>
     </div>
   )

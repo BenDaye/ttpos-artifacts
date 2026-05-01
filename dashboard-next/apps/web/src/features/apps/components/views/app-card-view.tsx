@@ -8,7 +8,7 @@ import { formatDateTime } from '@/shared/lib/format'
 export function AppCardView({ apps, onSelect, onEdit, onDelete }: AppViewProps) {
   const { t } = useTranslation(['apps', 'common'])
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {apps.map(app => (
         <Card
           key={app.ID}
@@ -38,7 +38,7 @@ export function AppCardView({ apps, onSelect, onEdit, onDelete }: AppViewProps) 
                   )}
                 </div>
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex shrink-0 items-center gap-1">
                 <Button
                   variant="ghost"
                   size="icon"

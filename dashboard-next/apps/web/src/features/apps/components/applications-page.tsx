@@ -79,12 +79,12 @@ export function ApplicationsPage() {
   }
 
   return (
-    <div>
+    <div className="min-w-0 max-w-full">
       <PageHeader
         title={t('title')}
         description={t('description')}
         actions={(
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
             <LayoutSwitcher />
             <Button variant="outline" onClick={() => setUploading(true)}>
               <Upload className="size-4" />
@@ -98,8 +98,8 @@ export function ApplicationsPage() {
         )}
       />
 
-      <div className="mb-4 flex max-w-sm items-center gap-2">
-        <div className="relative flex-1">
+      <div className="mb-4 flex w-full max-w-sm items-center gap-2">
+        <div className="relative min-w-0 flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={search}
@@ -111,7 +111,7 @@ export function ApplicationsPage() {
       </div>
 
       {appsQuery.isPending && (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-28 rounded-xl" />
           ))}

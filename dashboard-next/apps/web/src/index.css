@@ -276,6 +276,18 @@ body {
     font-family: var(--font-display);
   }
 
+  .dashboard-sidebar {
+    transition-duration: 200ms;
+    transition-property: transform, width;
+    transition-timing-function: ease-out;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dashboard-sidebar {
+      transition: none;
+    }
+  }
+
   .dialog-size-default {
     width: min(92vw, calc(var(--spacing) * 128));
   }

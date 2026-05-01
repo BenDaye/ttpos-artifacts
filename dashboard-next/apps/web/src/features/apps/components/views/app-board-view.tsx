@@ -20,7 +20,7 @@ export function AppBoardView({ apps, onSelect, onEdit, onDelete }: AppViewProps)
   })
 
   return (
-    <div className="flex gap-3 overflow-x-auto pb-2">
+    <div className="flex max-w-full min-w-0 gap-3 overflow-x-auto overscroll-x-contain pb-2">
       {apps.map((app, idx) => {
         const query = versionQueries[idx]
         return (
@@ -56,11 +56,11 @@ function BoardColumn({ app, versions, total, isLoading, isError, onSelect, onEdi
   const { t } = useTranslation(['apps', 'common'])
 
   return (
-    <div className="app-board-column flex shrink-0 flex-col rounded-lg border border-border bg-muted/30">
+    <div className="app-board-column flex max-w-full shrink-0 flex-col rounded-lg border border-border bg-muted/30">
       <button
         type="button"
         onClick={() => onSelect(app)}
-        className="flex items-center gap-2 border-b border-border px-3 py-2 text-left transition-colors hover:bg-accent/50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+        className="flex min-w-0 items-center gap-2 border-b border-border px-3 py-2 text-left transition-colors hover:bg-accent/50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
       >
         <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
           {app.Logo
@@ -73,7 +73,7 @@ function BoardColumn({ app, versions, total, isLoading, isError, onSelect, onEdi
             {t('board.versions_count', { count: total, defaultValue: '{{count}} version(s)' })}
           </span>
         </div>
-        <div className="flex items-center gap-0.5">
+        <div className="flex shrink-0 items-center gap-0.5">
           <Button
             variant="ghost"
             size="icon"
@@ -152,10 +152,10 @@ function VersionItem({ version, onSelect }: VersionItemProps) {
       className="cursor-pointer transition-colors hover:border-foreground/30 hover:bg-accent/50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
     >
       <CardContent className="space-y-1.5 p-2.5">
-        <div className="flex items-center gap-1.5">
-          <span className="truncate text-sm font-medium">{version.Version}</span>
+        <div className="flex min-w-0 items-center gap-1.5">
+          <span className="min-w-0 truncate text-sm font-medium">{version.Version}</span>
           {version.Channel && (
-            <Badge variant="secondary" className="text-micro">{version.Channel}</Badge>
+            <Badge variant="secondary" className="max-w-full truncate text-micro">{version.Channel}</Badge>
           )}
         </div>
         <div className="flex flex-wrap items-center gap-1.5">

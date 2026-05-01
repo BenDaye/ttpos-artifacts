@@ -37,8 +37,8 @@ export function TokensPanel() {
   }
 
   return (
-    <div>
-      <div className="mb-4 flex justify-end">
+    <div className="min-w-0 max-w-full">
+      <div className="mb-4 flex flex-wrap justify-end gap-2">
         <Button onClick={() => setCreating(true)}>
           <Plus className="size-4" />
           {t('tokens.create', { defaultValue: 'Create token' })}
@@ -75,7 +75,7 @@ export function TokensPanel() {
             const expired = expiresAt && !Number.isNaN(expiresAt.getTime()) && expiresAt < new Date()
             return (
               <Card key={token.id}>
-                <CardContent className="flex items-center justify-between gap-3 p-4">
+                <CardContent className="flex min-w-0 flex-wrap items-center justify-between gap-3 p-4">
                   <div className="flex min-w-0 items-center gap-3">
                     <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
                       <Key className="size-4" />
@@ -94,7 +94,7 @@ export function TokensPanel() {
                         )}
                         {token.allowed_apps?.length
                           ? (
-                              <span>
+                              <span className="min-w-0 break-words">
                                 {t('tokens.scope', { defaultValue: 'Scope:' })}
                                 {' '}
                                 {token.allowed_apps.map(id => appNameById.get(id) ?? id).join(', ')}
@@ -130,6 +130,7 @@ export function TokensPanel() {
                   <Button
                     variant="ghost"
                     size="icon"
+                    className="shrink-0"
                     aria-label={t('tokens.revoke', { defaultValue: 'Revoke' })}
                     onClick={() => setRevoking(token.id)}
                   >

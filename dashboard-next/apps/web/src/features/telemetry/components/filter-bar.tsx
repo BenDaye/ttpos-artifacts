@@ -54,7 +54,7 @@ export function TelemetryFilterBar({ value, onChange }: Props) {
   const reset = () => onChange({ ...EMPTY_TELEMETRY_FILTERS, range: value.range })
 
   return (
-    <div className="mb-4 flex flex-wrap items-center gap-2">
+    <div className="mb-4 flex max-w-full min-w-0 flex-wrap items-center gap-2">
       <ToggleGroup>
         {RANGES.map(r => (
           <ToggleGroupItem
@@ -122,9 +122,9 @@ function MultiSelectPopover({ label, options, selected, onChange }: MultiProps) 
     <Popover>
       <PopoverTrigger
         render={(
-          <Button variant="outline" size="sm" className="h-8 gap-1.5">
+          <Button variant="outline" size="sm" className="h-8 max-w-full gap-1.5">
             <Filter className="size-3.5" />
-            {label}
+            <span className="min-w-0 truncate">{label}</span>
             {selected.length > 0 && (
               <Badge variant="secondary" className="px-2 py-0 text-micro">{selected.length}</Badge>
             )}
@@ -137,7 +137,7 @@ function MultiSelectPopover({ label, options, selected, onChange }: MultiProps) 
           : (
               <div className="max-h-60 overflow-auto">
                 {options.map(o => (
-                  <label key={o} className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent">
+                  <label key={o} className="flex min-w-0 cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent">
                     <Checkbox checked={selected.includes(o)} onCheckedChange={() => toggle(o)} />
                     <span className="truncate">{o}</span>
                   </label>

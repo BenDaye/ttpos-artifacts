@@ -45,10 +45,10 @@ export function UsersPanel() {
   })()
 
   return (
-    <div className="space-y-4">
+    <div className="min-w-0 max-w-full space-y-4">
       {me.data && (
         <Card>
-          <CardContent className="flex items-center justify-between gap-3 p-4">
+          <CardContent className="flex min-w-0 flex-wrap items-center justify-between gap-3 p-4">
             <div className="flex min-w-0 items-center gap-3">
               <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
                 <User className="size-5" />
@@ -62,9 +62,9 @@ export function UsersPanel() {
             </div>
             {me.data.is_admin
               ? (
-                  <Button variant="outline" size="sm" onClick={() => setAdminEdit(true)}>
+                  <Button variant="outline" size="sm" className="max-w-full" onClick={() => setAdminEdit(true)}>
                     <KeyRound className="size-4" />
-                    {t('users.change_credentials', { defaultValue: 'Change credentials' })}
+                    <span className="min-w-0 truncate">{t('users.change_credentials', { defaultValue: 'Change credentials' })}</span>
                   </Button>
                 )
               : (
@@ -76,7 +76,7 @@ export function UsersPanel() {
         </Card>
       )}
 
-      <div className="flex items-center justify-between">
+      <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
         <h2 className="text-base font-medium">{t('users.team_title', { defaultValue: 'Team users' })}</h2>
         <Button size="sm" onClick={() => setCreating(true)} disabled={!me.data?.is_admin}>
           <Plus className="size-4" />
@@ -124,7 +124,7 @@ export function UsersPanel() {
         <div className="grid gap-3">
           {usersQuery.data.map(user => (
             <Card key={user.id}>
-              <CardContent className="flex items-center justify-between gap-3 p-4">
+              <CardContent className="flex min-w-0 flex-wrap items-center justify-between gap-3 p-4">
                 <div className="flex min-w-0 items-center gap-3">
                   <Avatar>
                     <AvatarFallback>{user.username.slice(0, 2).toUpperCase()}</AvatarFallback>
@@ -139,7 +139,7 @@ export function UsersPanel() {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex shrink-0 items-center gap-1">
                   <Button variant="ghost" size="icon" aria-label={t('common:actions.edit')} onClick={() => setEditing(user)}>
                     <Pencil className="size-4" />
                   </Button>
