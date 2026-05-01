@@ -15,7 +15,7 @@ export function LayoutSwitcher() {
   const layout = useUiStore(s => s.layout)
   const setLayout = useUiStore(s => s.setLayout)
   return (
-    <ToggleGroup>
+    <ToggleGroup className="shrink-0">
       {ITEMS.map(({ value, icon: Icon, labelKey }) => (
         <ToggleGroupItem
           key={value}
@@ -23,6 +23,7 @@ export function LayoutSwitcher() {
           aria-pressed={layout === value}
           data-pressed={layout === value}
           aria-label={t(labelKey)}
+          className="data-pressed:bg-primary data-pressed:text-primary-foreground data-pressed:hover:bg-apple-primary-focus data-pressed:hover:text-primary-foreground"
           onClick={() => setLayout(value)}
         >
           <Icon className="size-4" />

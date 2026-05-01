@@ -28,6 +28,12 @@ async function mockManyApps(page: Page) {
     route.fulfill({ status: 200, json: { apps: MANY_APPS, total: MANY_APPS.length } }))
 }
 
+async function mockVersions(page: Page, versions: unknown[], total = versions.length) {
+  await page.unroute('**/search?*')
+  await page.route('**/search?*', route =>
+    route.fulfill({ status: 200, json: { items: versions, total, page: 1, limit: 50 } }))
+}
+
 async function expectNoDocumentOverflow(page: Page) {
   await page.waitForLoadState('networkidle')
   await expect.poll(async () => page.evaluate(() => {
@@ -94,6 +100,87 @@ test.describe('Responsive layout', () => {
 
     await expect(page).toHaveURL(/\/statistics$/)
     await expect(page.getByRole('heading', { name: 'Statistics' })).toBeVisible()
+    await expectNoDocumentOverflow(page)
+  })
+
+  test('keeps the empty versions state readable on mobile', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 900 })
+    await mockVersions(page, [], 0)
+
+    await page.goto('/applications/TTPOS-Cashier')
+
+    await expect(page.getByRole('heading', { name: 'No versions yet' })).toBeVisible()
+    await expect(page.getByText('Upload your first artifact to get started.')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Upload version' }).last()).toBeVisible()
+    await expectNoDocumentOverflow(page)
+  })
+
+  test('expands the applications search field on focus', async ({ page }) => {
+    await page.setViewportSize({ width: 1024, height: 900 })
+    await page.goto('/applications')
+    await expect(page.getByRole('heading', { name: 'Applications' })).toBeVisible()
+
+    const searchShell = page.locator('.dashboard-search-shell').first()
+    await expect(searchShell).toBeVisible()
+    const before = await searchShell.boundingBox()
+    await page.getByPlaceholder('Search').focus()
+
+    await expect.poll(async () => {
+      const box = await searchShell.boundingBox()
+      return Math.round(box?.width ?? 0)
+    }).toBeGreaterThan(Math.round((before?.width ?? 0) + 20))
+    await expectNoDocumentOverflow(page)
+  })
+
+  test('makes the active layout switcher item visually distinct', async ({ page }) => {
+    await page.setViewportSize({ width: 1024, height: 900 })
+    await page.goto('/applications')
+
+    const card = page.getByRole('button', { name: 'Card view' })
+    const list = page.getByRole('button', { name: 'List view' })
+
+    await expect(card).toHaveAttribute('data-pressed', 'true')
+    await list.click()
+    await expect(list).toHaveAttribute('data-pressed', 'true')
+    await expect(card).toHaveAttribute('data-pressed', 'false')
+
+    const selectedBackground = await list.evaluate(el => getComputedStyle(el).backgroundColor)
+    const inactiveBackground = await card.evaluate(el => getComputedStyle(el).backgroundColor)
+    expect(selectedBackground).not.toBe(inactiveBackground)
+  })
+
+  test('keeps long version rows multi-line and readable on mobile', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 900 })
+    const longVersion = '2026.05.01-internal-canary-super-long-version-label-build-1234567890'
+    await mockVersions(page, [{
+      ID: 'long-version',
+      AppName: 'TTPOS-Cashier',
+      Version: longVersion,
+      Channel: 'enterprise-production-long-channel-name',
+      Published: false,
+      Critical: true,
+      Intermediate: true,
+      Artifacts: [
+        {
+          ID: 'long-artifact',
+          link: '/download?key=TTPOS-Cashier%2Fenterprise%2Fandroid%2Farm64%2Fcashier-super-long-artifact-name.apk',
+          platform: 'android-enterprise-production',
+          arch: 'arm64-super-long-architecture-label',
+          package: 'cashier-super-long-artifact-name-for-enterprise-production.apk',
+        },
+      ],
+      Changelog: [
+        { Version: longVersion, Changes: 'Long release fixture', Date: '2026-05-01' },
+      ],
+      Updated_at: '2026-05-01T00:00:00Z',
+    }])
+
+    await page.goto('/applications/TTPOS-Cashier')
+
+    await expect(page.getByText(longVersion)).toBeVisible()
+    await expect(page.getByRole('button', { name: /^Download\s*\(\d+\)$/ })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Add artifact' })).toBeVisible()
+    await expect(page.getByText('cashier-super-long-artifact-name-for-enterprise-production.apk')).toBeVisible()
     await expectNoDocumentOverflow(page)
   })
 })

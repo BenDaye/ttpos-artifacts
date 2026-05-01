@@ -282,8 +282,24 @@ body {
     transition-timing-function: ease-out;
   }
 
+  .dashboard-search-shell {
+    max-width: calc(var(--spacing-section) * 4);
+    transition-duration: 200ms;
+    transition-property: max-width;
+    transition-timing-function: ease-out;
+    width: 100%;
+  }
+
+  .dashboard-search-shell:focus-within {
+    max-width: calc(var(--spacing-section) * 6);
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .dashboard-sidebar {
+      transition: none;
+    }
+
+    .dashboard-search-shell {
       transition: none;
     }
   }

@@ -260,20 +260,24 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
     <li>
       <Card>
         <CardContent className="p-4">
-          <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="min-w-0 break-all text-sm font-semibold">{version.Version}</span>
+          <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0 flex-1 space-y-2">
+              <div className="min-w-0">
+                <p className="break-all text-sm font-semibold">{version.Version}</p>
+              </div>
+              <div className="flex max-w-full flex-wrap items-center gap-2">
                 {version.Channel && <Badge variant="secondary" className="max-w-full truncate">{version.Channel}</Badge>}
+                {version.Published
+                  ? <Badge variant="success">{t('board.published', { defaultValue: 'Published' })}</Badge>
+                  : <Badge variant="warning">{t('badge.draft', { defaultValue: 'Draft' })}</Badge>}
                 {version.Critical && <Badge variant="destructive">{t('badge.critical', { defaultValue: 'Critical' })}</Badge>}
                 {version.Intermediate && <Badge variant="outline">{t('badge.intermediate', { defaultValue: 'Intermediate' })}</Badge>}
-                {!version.Published && <Badge variant="warning">{t('badge.draft', { defaultValue: 'Draft' })}</Badge>}
               </div>
               {updatedAt && (
                 <p className="mt-1 text-xs text-muted-foreground">{updatedAt}</p>
               )}
             </div>
-            <div className="flex max-w-full flex-wrap items-center justify-end gap-1">
+            <div className="flex max-w-full flex-wrap items-center gap-1 lg:justify-end">
               {changelog.length > 0 && (
                 <Button
                   variant="outline"
@@ -350,11 +354,11 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
 
           {artifacts.length > 0
             ? (
-                <div className="mt-3 grid gap-1.5">
+                <div className="mt-3 grid min-w-0 gap-1.5">
                   {artifacts.map(a => (
                     <div
                       key={a.link}
-                      className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border bg-muted/20 px-3 py-2"
+                      className="flex min-w-0 flex-col gap-2 rounded-md border border-border bg-muted/20 px-3 py-2 sm:flex-row sm:items-center sm:justify-between"
                     >
                       <div className="flex min-w-0 flex-wrap items-center gap-2 text-xs">
                         <Badge variant="outline" className="max-w-full truncate">{a.platform || '—'}</Badge>
@@ -363,7 +367,7 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
                           {a.package || a.link.split('/').pop()}
                         </span>
                       </div>
-                      <div className="flex shrink-0 items-center gap-1">
+                      <div className="flex shrink-0 flex-wrap items-center gap-1 sm:justify-end">
                         <Button
                           variant="outline"
                           size="sm"

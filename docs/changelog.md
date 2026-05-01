@@ -1,5 +1,17 @@
 # 变更日志
 
+## 2026-05-01 05:03 [BUG-002]
+
+优化 dashboard-next 窄屏交互细节：
+
+- EmptyState 改为窄屏友好的 token 化 padding、可换行标题/描述和 action 容器，避免 `No versions yet` 等提示文案被压缩
+- 应用、渠道、平台、架构搜索框新增 focus-within 展开效果，宽度与过渡由 `DESIGN.md` 已映射 token 驱动
+- LayoutSwitcher 当前项改为 primary token 高亮，保留 `aria-pressed` 状态
+- 应用详情 VersionRow 改为多行分区布局，长版本号、状态 badge、操作按钮和 artifact 信息不再假设单行展示
+- 响应式 Playwright 用例补充空版本、搜索展开、布局高亮和长 version row 回归
+
+Quality gates passed for dashboard-next: static token scans, typecheck, lint (existing warnings only), unit tests, production build, responsive Playwright e2e 21/21, and full Playwright e2e 74/74.
+
 ## 2026-05-01 03:51 [BUG-001]
 
 修复 dashboard-next 响应式布局溢出：

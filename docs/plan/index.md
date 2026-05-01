@@ -9,3 +9,4 @@
 | [x] | PLAN-005 | Dashboard Next 生产替换阻断项修复 | REFACTOR-003 |
 | [x] | PLAN-006 | Dashboard Next 设计令牌收敛 | REFACTOR-004 |
 | [x] | PLAN-007 | Dashboard Next 响应式布局溢出修复 | BUG-001 |
+| [x] | PLAN-008 | Dashboard Next 窄屏交互细节优化 | BUG-002 |
