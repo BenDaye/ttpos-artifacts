@@ -22,3 +22,4 @@
 | [x] | BUG-002 | 优化 Dashboard Next 窄屏交互细节 | P1 | completed |
 | [x] | BUG-003 | 修复 Dashboard Next 响应式视觉回归 | P1 | completed |
 | [x] | BUG-004 | 收敛 Dashboard Next 版本卡片网格密度 | P1 | completed |
+| [x] | BUG-005 | 重设 Dashboard Next 版本卡片视觉层级 | P1 | completed |

@@ -222,7 +222,7 @@ test.describe('Responsive layout', () => {
   const gridCases = [
     { width: 375, expectedColumns: 1 },
     { width: 1024, expectedColumns: 2 },
-    { width: 1440, expectedColumns: 3 },
+    { width: 1440, expectedColumns: 2 },
     { width: 1920, expectedColumns: 3 },
   ] as const
 

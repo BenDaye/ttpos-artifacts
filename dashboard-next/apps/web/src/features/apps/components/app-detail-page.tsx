@@ -170,7 +170,7 @@ export function AppDetailPage({ appName }: { appName: string }) {
       )}
 
       {versions.length > 0 && (
-        <ul className="grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <ul className="grid min-w-0 gap-3 lg:grid-cols-2 2xl:grid-cols-3">
           {versions.map(v => (
             <VersionRow
               key={v.ID}
@@ -258,90 +258,90 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
 
   return (
     <li data-testid="version-card">
-      <Card className={version.Published ? 'relative h-full overflow-hidden' : 'relative h-full overflow-hidden border-primary'}>
-        {!version.Published && (
-          <Badge
-            variant="default"
-            className="absolute right-sm top-sm z-10"
-            data-testid="version-draft-ribbon"
-          >
-            {t('badge.draft', { defaultValue: 'Draft' })}
-          </Badge>
-        )}
-        <CardContent className={version.Published ? 'flex h-full min-w-0 flex-col p-4' : 'flex h-full min-w-0 flex-col p-4 pt-xl'}>
-          <div className="flex min-w-0 flex-col gap-3">
-            <div className="min-w-0 flex-1 space-y-2">
-              <div className="min-w-0">
-                <p className="break-all text-sm font-semibold">{version.Version}</p>
-              </div>
-              <div className="flex max-w-full flex-wrap items-center gap-2">
-                {version.Channel && <Badge variant="secondary" className="max-w-full truncate">{version.Channel}</Badge>}
+      <Card className="h-full overflow-hidden">
+        <CardContent className="flex h-full min-w-0 flex-col gap-md p-lg">
+          <div className="flex min-w-0 items-start justify-between gap-md">
+            <div className="min-w-0 flex-1 space-y-sm">
+              <p className="break-all font-display text-lg font-semibold">{version.Version}</p>
+              <div className="flex max-w-full flex-wrap items-center gap-xs">
+                {version.Channel && <Badge variant="secondary" className="min-w-0 max-w-full truncate">{version.Channel}</Badge>}
                 {version.Published
-                  ? <Badge variant="success">{t('board.published', { defaultValue: 'Published' })}</Badge>
-                  : <Badge variant="warning">{t('badge.draft', { defaultValue: 'Draft' })}</Badge>}
+                  ? <Badge variant="success" data-testid="version-status-badge">{t('board.published', { defaultValue: 'Published' })}</Badge>
+                  : (
+                      <Badge
+                        variant="warning"
+                        data-testid="version-draft-ribbon"
+                      >
+                        {t('badge.draft', { defaultValue: 'Draft' })}
+                      </Badge>
+                    )}
                 {version.Critical && <Badge variant="destructive">{t('badge.critical', { defaultValue: 'Critical' })}</Badge>}
                 {version.Intermediate && <Badge variant="outline">{t('badge.intermediate', { defaultValue: 'Intermediate' })}</Badge>}
               </div>
               {updatedAt && (
-                <p className="mt-1 text-xs text-muted-foreground">{updatedAt}</p>
+                <p className="text-sm text-muted-foreground">{updatedAt}</p>
               )}
             </div>
-            <div className="flex max-w-full flex-wrap items-center gap-1">
-              {changelog.length > 0 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="min-w-0 max-w-full"
-                  onClick={() => setShowChangelog(true)}
-                >
-                  <BookOpen className="size-3.5" />
-                  <span className="min-w-0 truncate">
-                    {t('changelog')}
-                    {' '}
-                    (
-                    {changelog.length}
-                    )
-                  </span>
-                </Button>
-              )}
-              {artifacts.length > 0 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="min-w-0 max-w-full"
-                  onClick={() => setShowDownloads(true)}
-                >
-                  <Download className="size-3.5" />
-                  <span className="min-w-0 truncate">
-                    {t('actions.download')}
-                    {' '}
-                    (
-                    {artifacts.length}
-                    )
-                  </span>
-                </Button>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                className="min-w-0 max-w-full"
-                onClick={() => setShowAddArtifact(true)}
-              >
-                <FilePlus className="size-3.5" />
-                <span className="min-w-0 truncate">{t('add_artifact.button', { defaultValue: 'Add artifact' })}</span>
-              </Button>
-              <Button variant="ghost" size="icon" aria-label={t('common:actions.edit')} onClick={onEdit}>
+            <div className="flex shrink-0 items-center gap-xxs">
+              <Button variant="ghost" size="icon" className="size-xl" aria-label={t('common:actions.edit')} onClick={onEdit}>
                 <Pencil className="size-4" />
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
+                className="size-xl"
                 aria-label={t('common:actions.delete')}
                 onClick={onDelete}
               >
                 <Trash2 className="size-4 text-destructive" />
               </Button>
             </div>
+          </div>
+
+          <div className="flex min-w-0 flex-wrap items-center gap-xs border-t border-border pt-sm">
+            {changelog.length > 0 && (
+              <Button
+                variant="link"
+                size="sm"
+                className="h-auto min-w-0 max-w-full px-xs py-xs text-primary no-underline hover:no-underline"
+                onClick={() => setShowChangelog(true)}
+              >
+                <BookOpen className="size-3.5" />
+                <span className="min-w-0 truncate">
+                  {t('changelog')}
+                  {' '}
+                  (
+                  {changelog.length}
+                  )
+                </span>
+              </Button>
+            )}
+            {artifacts.length > 0 && (
+              <Button
+                variant="link"
+                size="sm"
+                className="h-auto min-w-0 max-w-full px-xs py-xs text-primary no-underline hover:no-underline"
+                onClick={() => setShowDownloads(true)}
+              >
+                <Download className="size-3.5" />
+                <span className="min-w-0 truncate">
+                  {t('actions.download')}
+                  {' '}
+                  (
+                  {artifacts.length}
+                  )
+                </span>
+              </Button>
+            )}
+            <Button
+              variant="link"
+              size="sm"
+              className="h-auto min-w-0 max-w-full px-xs py-xs text-primary no-underline hover:no-underline"
+              onClick={() => setShowAddArtifact(true)}
+            >
+              <FilePlus className="size-3.5" />
+              <span className="min-w-0 truncate">{t('add_artifact.button', { defaultValue: 'Add artifact' })}</span>
+            </Button>
           </div>
 
           <AddArtifactDialog
@@ -370,24 +370,37 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
 
           {artifacts.length > 0
             ? (
-                <div className="mt-3 grid min-w-0 gap-1.5">
+                <div className="grid min-w-0 gap-xs">
+                  <div className="flex min-w-0 items-center justify-between gap-sm text-sm">
+                    <span className="font-semibold text-foreground">
+                      {t('detail.artifacts', { defaultValue: 'Artifacts' })}
+                    </span>
+                    <span className="text-muted-foreground">
+                      {t('detail.artifact_count', {
+                        count: artifacts.length,
+                        defaultValue: '{{count}} file(s)',
+                      })}
+                    </span>
+                  </div>
                   {artifacts.map(a => (
                     <div
                       key={a.link}
-                      className="flex min-w-0 flex-col gap-2 rounded-md border border-border bg-muted/20 px-3 py-2"
+                      className="flex min-w-0 flex-col gap-sm border-t border-border py-sm sm:flex-row sm:items-center sm:justify-between"
                     >
-                      <div className="flex min-w-0 flex-wrap items-center gap-2 text-xs">
-                        <Badge variant="outline" className="max-w-full truncate">{a.platform || '—'}</Badge>
-                        <Badge variant="outline" className="max-w-full truncate">{a.arch || '—'}</Badge>
-                        <span className="min-w-0 break-words font-mono text-muted-foreground">
+                      <div className="min-w-0 flex-1 space-y-xs">
+                        <div className="flex min-w-0 flex-wrap items-center gap-xs">
+                          <Badge variant="outline" className="min-w-0 max-w-full truncate">{a.platform || '—'}</Badge>
+                          <Badge variant="outline" className="min-w-0 max-w-full truncate">{a.arch || '—'}</Badge>
+                        </div>
+                        <p className="min-w-0 break-all font-mono text-sm text-muted-foreground">
                           {a.package || a.link.split('/').pop()}
-                        </span>
+                        </p>
                       </div>
-                      <div className="flex shrink-0 flex-wrap items-center gap-1">
+                      <div className="flex shrink-0 flex-wrap items-center gap-xs">
                         <Button
-                          variant="outline"
+                          variant="link"
                           size="sm"
-                          className="h-7 min-w-0 max-w-full px-2.5 text-xs"
+                          className="h-auto min-w-0 max-w-full px-xs py-xs text-primary no-underline hover:no-underline"
                           disabled={downloading === a.link}
                           onClick={() => onDownload(a.link)}
                         >
@@ -397,7 +410,7 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="size-7"
+                          className="size-xl"
                           aria-label={t('common:actions.delete')}
                           onClick={() => onDeleteArtifact(a)}
                         >
@@ -409,7 +422,7 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
                 </div>
               )
             : (
-                <p className="mt-3 text-xs text-muted-foreground">
+                <p className="border-t border-border pt-sm text-sm text-muted-foreground">
                   {t('detail.no_artifacts', { defaultValue: 'No artifacts attached.' })}
                 </p>
               )}

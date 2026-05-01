@@ -1,5 +1,17 @@
 # 变更日志
 
+## 2026-05-01 17:55 [BUG-005]
+
+重设 dashboard-next version card 视觉层级：
+
+- Version card 改为更克制的 release tile：版本号作为主视觉，Draft 收敛为 metadata chip，移除顶部 Draft 胶囊和 draft 边框强调
+- Changelog / Download / Add artifact 改为 text-link tool row，降低操作按钮对内容的抢占
+- Artifacts 从嵌套子卡片改为分隔列表，platform / arch 保持轻量 chip，文件名和行内下载/删除动作更易扫描
+- Version grid 调整为移动端 1 列、`lg/xl` 2 列、`2xl` 3 列；1280px 卡片宽度从约 323px 提升到约 490px，1440px 约 570px，仍保持 1920px 3 列
+- 本地 Playwright 视觉截图验证 1280、1440、375 viewport 的 document width 均等于 viewport width，无横向溢出
+
+Quality gates passed for dashboard-next: static token scans, typecheck, lint (existing warnings only), unit tests, production build, focused Playwright e2e 37/37, full Playwright e2e 80/80, and `git diff --check`.
+
 ## 2026-05-01 17:30 [BUG-004]
 
 收敛 dashboard-next version card 网格密度：

@@ -12,3 +12,4 @@
 | [x] | PLAN-008 | Dashboard Next 窄屏交互细节优化 | BUG-002 |
 | [x] | PLAN-009 | Dashboard Next 响应式视觉回归修复 | BUG-003 |
 | [x] | PLAN-010 | Dashboard Next 版本卡片网格密度收敛 | BUG-004 |
+| [x] | PLAN-011 | Dashboard Next 版本卡片视觉层级重设 | BUG-005 |
