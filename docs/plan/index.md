@@ -7,3 +7,4 @@
 | [x] | PLAN-003 | Dashboard 按 pma-web 规范重构 | REFACTOR-001 |
 | [x] | PLAN-004 | Dashboard 业务逻辑补完 | REFACTOR-002 |
 | [x] | PLAN-005 | Dashboard Next 生产替换阻断项修复 | REFACTOR-003 |
+| [x] | PLAN-006 | Dashboard Next 设计令牌收敛 | REFACTOR-004 |

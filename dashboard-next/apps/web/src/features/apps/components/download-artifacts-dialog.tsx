@@ -68,7 +68,7 @@ export function DownloadArtifactsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[min(96vw,42rem)]">
+      <DialogContent className="dialog-size-downloads">
         <DialogHeader>
           <DialogTitle>
             {t('download_dialog.title', { defaultValue: 'Download artifacts' })}
@@ -95,7 +95,7 @@ export function DownloadArtifactsDialog({
                 </p>
               )
             : (
-                <ul className="max-h-[60vh] space-y-2 overflow-y-auto pr-1">
+                <ul className="dialog-scroll-area space-y-2 overflow-y-auto pr-1">
                   {artifacts.map(a => (
                     <li
                       key={a.link}

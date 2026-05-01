@@ -15,7 +15,7 @@ export function SelectTrigger({
   return (
     <BaseSelect.Trigger
       className={cn(
-        'flex h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50',
+        'flex h-11 w-full items-center justify-between gap-2 rounded-pill border border-input bg-transparent px-5 py-3 text-base shadow-none transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring data-disabled:cursor-not-allowed data-disabled:opacity-50',
         className,
       )}
       {...props}
@@ -42,9 +42,9 @@ export function SelectContent({
       <BaseSelect.Positioner sideOffset={4}>
         <BaseSelect.Popup
           className={cn(
-            'z-50 max-h-(--available-height) overflow-y-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md outline-hidden',
-            'data-[starting-style]:opacity-0 data-[starting-style]:scale-95',
-            'data-[ending-style]:opacity-0 data-[ending-style]:scale-95',
+            'select-popup-available z-50 overflow-y-auto rounded-md border bg-popover p-xs text-popover-foreground shadow-none outline-hidden',
+            'data-starting:opacity-0 data-starting:scale-95',
+            'data-ending:opacity-0 data-ending:scale-95',
             'transition-all duration-100',
             className,
           )}
@@ -65,7 +65,7 @@ export function SelectItem({
   return (
     <BaseSelect.Item
       className={cn(
-        'relative flex cursor-pointer select-none items-center gap-2 rounded-sm py-1.5 pl-8 pr-2 text-sm outline-hidden transition-colors data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+        'relative flex cursor-pointer select-none items-center gap-2 rounded-sm py-2 pl-8 pr-2 text-sm outline-hidden transition-colors data-highlighted:bg-accent data-highlighted:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50',
         className,
       )}
       {...props}

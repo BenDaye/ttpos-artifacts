@@ -3,17 +3,17 @@ import type { StepStatus, TaskState } from './types'
 export function getStatusColor(status: StepStatus) {
   switch (status) {
     case 'ready':
-      return 'text-blue-500'
+      return 'text-primary'
     case 'in-progress':
-      return 'text-yellow-500'
+      return 'text-muted-foreground'
     case 'success':
-      return 'text-green-500'
+      return 'text-primary'
     case 'error':
-      return 'text-red-500'
+      return 'text-primary'
     case 'waiting':
     case 'disabled':
     default:
-      return 'text-gray-500'
+      return 'text-muted-foreground'
   }
 }
 
@@ -38,12 +38,12 @@ export function getStatusIcon(status: StepStatus) {
 export function getTaskStateColor(state: TaskState) {
   switch (state) {
     case 'SUCCESS':
-      return 'text-green-500'
+      return 'text-primary'
     case 'FAILURE':
-      return 'text-red-500'
+      return 'text-primary'
     case 'PENDING':
-      return 'text-yellow-500'
+      return 'text-muted-foreground'
     default:
-      return 'text-gray-500'
+      return 'text-muted-foreground'
   }
 }

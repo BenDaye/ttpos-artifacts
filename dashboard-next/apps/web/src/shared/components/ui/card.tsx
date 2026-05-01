@@ -5,7 +5,7 @@ export function Card({ className, ...props }: ComponentPropsWithoutRef<'div'>) {
   return (
     <div
       className={cn(
-        'rounded-xl border bg-card text-card-foreground shadow-sm',
+        'rounded-lg border bg-card text-card-foreground shadow-none',
         className,
       )}
       {...props}
@@ -14,11 +14,11 @@ export function Card({ className, ...props }: ComponentPropsWithoutRef<'div'>) {
 }
 
 export function CardHeader({ className, ...props }: ComponentPropsWithoutRef<'div'>) {
-  return <div className={cn('flex flex-col gap-1.5 p-6', className)} {...props} />
+  return <div className={cn('flex flex-col gap-xs p-lg', className)} {...props} />
 }
 
 export function CardTitle({ className, ...props }: ComponentPropsWithoutRef<'div'>) {
-  return <div className={cn('font-semibold leading-none tracking-tight', className)} {...props} />
+  return <div className={cn('text-base font-semibold leading-none', className)} {...props} />
 }
 
 export function CardDescription({ className, ...props }: ComponentPropsWithoutRef<'div'>) {
@@ -26,9 +26,9 @@ export function CardDescription({ className, ...props }: ComponentPropsWithoutRe
 }
 
 export function CardContent({ className, ...props }: ComponentPropsWithoutRef<'div'>) {
-  return <div className={cn('p-6 pt-0', className)} {...props} />
+  return <div className={cn('p-lg pt-0', className)} {...props} />
 }
 
 export function CardFooter({ className, ...props }: ComponentPropsWithoutRef<'div'>) {
-  return <div className={cn('flex items-center p-6 pt-0', className)} {...props} />
+  return <div className={cn('flex items-center p-lg pt-0', className)} {...props} />
 }

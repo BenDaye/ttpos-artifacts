@@ -21,7 +21,7 @@ export function AppCardView({ apps, onSelect, onEdit, onDelete }: AppViewProps) 
               onSelect(app)
             }
           }}
-          className="cursor-pointer transition-colors hover:border-foreground/30 hover:shadow-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+          className="cursor-pointer transition-colors hover:border-foreground/30 hover:bg-accent/50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
         >
           <CardContent className="p-5">
             <div className="flex items-start justify-between gap-3">

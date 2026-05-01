@@ -10,7 +10,7 @@ export function AppListView({ apps, onSelect, onEdit, onDelete }: AppViewProps) 
   return (
     <Card className="overflow-hidden">
       <div role="table" className="divide-y divide-border">
-        <div role="row" className="hidden bg-muted/30 px-4 py-2 text-xs font-medium text-muted-foreground sm:grid sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)_minmax(0,1.5fr)_auto] sm:gap-3">
+        <div role="row" className="app-list-header-grid hidden bg-muted/30 px-4 py-2 text-xs font-medium text-muted-foreground sm:grid sm:gap-3">
           <div>{t('list.name', { defaultValue: 'Name' })}</div>
           <div>{t('list.description', { defaultValue: 'Description' })}</div>
           <div>{t('updated_at')}</div>
@@ -28,7 +28,7 @@ export function AppListView({ apps, onSelect, onEdit, onDelete }: AppViewProps) 
                 onSelect(app)
               }
             }}
-            className="grid cursor-pointer grid-cols-[minmax(0,1fr)_auto] gap-3 px-4 py-3 transition-colors hover:bg-accent/50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)_minmax(0,1.5fr)_auto] sm:items-center"
+            className="app-list-row-grid grid cursor-pointer gap-3 px-4 py-3 transition-colors hover:bg-accent/50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring sm:items-center"
           >
             <div className="flex min-w-0 items-center gap-3">
               <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">

@@ -21,9 +21,9 @@ export function PopoverContent({
       <BasePopover.Positioner sideOffset={sideOffset} align={align}>
         <BasePopover.Popup
           className={cn(
-            'z-50 w-72 rounded-md border bg-popover p-4 text-popover-foreground shadow-md outline-hidden',
-            'data-[starting-style]:opacity-0 data-[starting-style]:scale-95',
-            'data-[ending-style]:opacity-0 data-[ending-style]:scale-95',
+            'z-50 w-72 rounded-md border bg-popover p-md text-popover-foreground shadow-none outline-hidden',
+            'data-starting:opacity-0 data-starting:scale-95',
+            'data-ending:opacity-0 data-ending:scale-95',
             'transition-all duration-100',
             className,
           )}

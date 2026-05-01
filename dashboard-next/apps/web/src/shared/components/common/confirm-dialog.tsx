@@ -37,7 +37,7 @@ export function ConfirmDialog({
   const { t } = useTranslation('common')
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[min(92vw,28rem)]">
+      <DialogContent className="dialog-size-confirm">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>

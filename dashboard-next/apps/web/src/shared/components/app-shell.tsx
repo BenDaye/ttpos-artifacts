@@ -51,7 +51,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-svh bg-background text-foreground">
       <aside
         className={cn(
-          'sticky top-0 flex h-svh shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width] duration-200',
+          'sticky top-0 flex h-svh shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-all duration-200',
           collapsed ? 'w-14' : 'w-60',
         )}
         aria-label="Primary"

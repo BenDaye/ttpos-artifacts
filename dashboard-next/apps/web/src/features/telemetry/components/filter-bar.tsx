@@ -126,7 +126,7 @@ function MultiSelectPopover({ label, options, selected, onChange }: MultiProps) 
             <Filter className="size-3.5" />
             {label}
             {selected.length > 0 && (
-              <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">{selected.length}</Badge>
+              <Badge variant="secondary" className="px-2 py-0 text-micro">{selected.length}</Badge>
             )}
           </Button>
         )}

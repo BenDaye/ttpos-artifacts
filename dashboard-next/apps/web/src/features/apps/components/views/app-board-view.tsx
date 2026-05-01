@@ -56,7 +56,7 @@ function BoardColumn({ app, versions, total, isLoading, isError, onSelect, onEdi
   const { t } = useTranslation(['apps', 'common'])
 
   return (
-    <div className="flex w-[320px] shrink-0 flex-col rounded-lg border border-border bg-muted/30">
+    <div className="app-board-column flex shrink-0 flex-col rounded-lg border border-border bg-muted/30">
       <button
         type="button"
         onClick={() => onSelect(app)}
@@ -69,7 +69,7 @@ function BoardColumn({ app, versions, total, isLoading, isError, onSelect, onEdi
         </div>
         <div className="flex min-w-0 flex-1 flex-col">
           <span className="truncate text-sm font-semibold">{app.AppName}</span>
-          <span className="text-[11px] text-muted-foreground">
+          <span className="text-xs text-muted-foreground">
             {t('board.versions_count', { count: total, defaultValue: '{{count}} version(s)' })}
           </span>
         </div>
@@ -101,7 +101,7 @@ function BoardColumn({ app, versions, total, isLoading, isError, onSelect, onEdi
         </div>
       </button>
 
-      <div className="flex max-h-[calc(100vh-260px)] flex-1 flex-col gap-2 overflow-y-auto p-2">
+      <div className="app-board-scroll-area flex flex-1 flex-col gap-2 overflow-y-auto p-2">
         {isLoading && (
           <>
             <Skeleton className="h-16 rounded-md" />
@@ -149,39 +149,39 @@ function VersionItem({ version, onSelect }: VersionItemProps) {
           onSelect()
         }
       }}
-      className="cursor-pointer transition-colors hover:border-foreground/30 hover:shadow-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+      className="cursor-pointer transition-colors hover:border-foreground/30 hover:bg-accent/50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
     >
       <CardContent className="space-y-1.5 p-2.5">
         <div className="flex items-center gap-1.5">
           <span className="truncate text-sm font-medium">{version.Version}</span>
           {version.Channel && (
-            <Badge variant="secondary" className="text-[10px]">{version.Channel}</Badge>
+            <Badge variant="secondary" className="text-micro">{version.Channel}</Badge>
           )}
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
           <Badge
             variant="outline"
             className={version.Published
-              ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 text-[10px] dark:text-emerald-400'
-              : 'text-[10px] text-muted-foreground'}
+              ? 'border-primary bg-secondary text-primary text-micro'
+              : 'text-micro text-muted-foreground'}
           >
             {version.Published
               ? t('board.published', { defaultValue: 'Published' })
               : t('badge.draft', { defaultValue: 'Draft' })}
           </Badge>
           {version.Critical && (
-            <Badge variant="outline" className="border-destructive/30 bg-destructive/10 text-destructive text-[10px]">
+            <Badge variant="outline" className="border-primary bg-secondary text-primary text-micro">
               {t('badge.critical', { defaultValue: 'Critical' })}
             </Badge>
           )}
           {artifactCount > 0 && (
-            <span className="ml-auto text-[10px] text-muted-foreground">
+            <span className="ml-auto text-micro text-muted-foreground">
               {t('board.artifacts_count', { count: artifactCount, defaultValue: '{{count}} artifact(s)' })}
             </span>
           )}
         </div>
         {changelogText && (
-          <p className="line-clamp-2 text-[11px] text-muted-foreground">{changelogText}</p>
+          <p className="line-clamp-2 text-xs text-muted-foreground">{changelogText}</p>
         )}
       </CardContent>
     </Card>

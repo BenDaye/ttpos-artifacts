@@ -12,8 +12,12 @@ import { EMPTY_TELEMETRY_FILTERS, TelemetryFilterBar } from './filter-bar'
 const tooltipStyle = {
   background: 'var(--popover)',
   borderColor: 'var(--border)',
-  borderRadius: 8,
-  fontSize: 12,
+  borderRadius: 'var(--radius-sm)',
+  fontSize: 'var(--text-fine)',
+} as const
+
+const axisTickStyle = {
+  fontSize: 'var(--text-fine)',
 } as const
 
 interface BucketDatum {
@@ -43,7 +47,7 @@ export function StatisticsPage() {
       {telemetry.isPending && (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-24 rounded-xl" />
+            <Skeleton key={i} className="h-24 rounded-lg" />
           ))}
         </div>
       )}
@@ -135,8 +139,8 @@ function DailyTrendCard({
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 10, right: 8, bottom: 0, left: -20 }}>
           <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
-          <XAxis dataKey="date" tickLine={false} stroke="var(--muted-foreground)" fontSize={11} />
-          <YAxis tickLine={false} stroke="var(--muted-foreground)" fontSize={11} />
+          <XAxis dataKey="date" tickLine={false} stroke="var(--muted-foreground)" tick={axisTickStyle} />
+          <YAxis tickLine={false} stroke="var(--muted-foreground)" tick={axisTickStyle} />
           <Tooltip
             cursor={{ stroke: 'var(--accent)' }}
             contentStyle={tooltipStyle}
@@ -176,10 +180,10 @@ function BucketChartCard({ title, data }: { title: string, data: BucketDatum[] }
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 10, right: 8, bottom: 0, left: -20 }}>
           <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
-          <XAxis dataKey="name" tickLine={false} stroke="var(--muted-foreground)" fontSize={11} />
-          <YAxis tickLine={false} stroke="var(--muted-foreground)" fontSize={11} allowDecimals={false} />
+          <XAxis dataKey="name" tickLine={false} stroke="var(--muted-foreground)" tick={axisTickStyle} />
+          <YAxis tickLine={false} stroke="var(--muted-foreground)" tick={axisTickStyle} allowDecimals={false} />
           <Tooltip cursor={{ fill: 'var(--accent)' }} contentStyle={tooltipStyle} />
-          <Bar dataKey="count" fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="count" fill="var(--chart-1)" />
         </BarChart>
       </ResponsiveContainer>
     </ChartShell>
@@ -209,10 +213,10 @@ function VersionUsageCard({
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 10, right: 8, bottom: 0, left: -20 }}>
           <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
-          <XAxis dataKey="name" tickLine={false} stroke="var(--muted-foreground)" fontSize={11} />
-          <YAxis tickLine={false} stroke="var(--muted-foreground)" fontSize={11} allowDecimals={false} />
+          <XAxis dataKey="name" tickLine={false} stroke="var(--muted-foreground)" tick={axisTickStyle} />
+          <YAxis tickLine={false} stroke="var(--muted-foreground)" tick={axisTickStyle} allowDecimals={false} />
           <Tooltip cursor={{ fill: 'var(--accent)' }} contentStyle={tooltipStyle} />
-          <Bar dataKey="count" fill="var(--chart-2)" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="count" fill="var(--chart-2)" />
         </BarChart>
       </ResponsiveContainer>
     </ChartShell>

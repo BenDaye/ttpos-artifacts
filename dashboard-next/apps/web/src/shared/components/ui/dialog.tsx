@@ -20,17 +20,17 @@ export function DialogContent({
     <BaseDialog.Portal>
       <BaseDialog.Backdrop
         className={cn(
-          'fixed inset-0 z-50 bg-black/60 backdrop-blur-sm',
-          'data-[starting-style]:opacity-0 data-[ending-style]:opacity-0',
+          'fixed inset-0 z-50 bg-apple-surface-black/60 backdrop-blur-sm',
+          'data-starting:opacity-0 data-ending:opacity-0',
           'transition-opacity duration-150',
         )}
       />
       <BaseDialog.Popup
         className={cn(
           'fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2',
-          'w-[min(92vw,32rem)] rounded-xl border border-border bg-card text-card-foreground shadow-xl',
-          'data-[starting-style]:scale-95 data-[starting-style]:opacity-0',
-          'data-[ending-style]:scale-95 data-[ending-style]:opacity-0',
+          'dialog-size-default rounded-lg border border-border bg-card text-card-foreground shadow-none',
+          'data-starting:scale-95 data-starting:opacity-0',
+          'data-ending:scale-95 data-ending:opacity-0',
           'transition-all duration-150',
           className,
         )}
@@ -39,7 +39,7 @@ export function DialogContent({
         {children}
         {!hideCloseButton && (
           <BaseDialog.Close
-            className="absolute right-3 top-3 inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+            className="absolute right-3 top-3 inline-flex size-8 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
             aria-label="Close"
           >
             <X className="size-4" />
@@ -51,14 +51,14 @@ export function DialogContent({
 }
 
 export function DialogHeader({ className, ...props }: ComponentPropsWithoutRef<'div'>) {
-  return <div className={cn('flex flex-col gap-1.5 p-6 pb-2', className)} {...props} />
+  return <div className={cn('flex flex-col gap-xs p-lg pb-xs', className)} {...props} />
 }
 
 export function DialogFooter({ className, ...props }: ComponentPropsWithoutRef<'div'>) {
   return (
     <div
       className={cn(
-        'flex flex-col-reverse gap-2 p-6 pt-0 sm:flex-row sm:justify-end',
+        'flex flex-col-reverse gap-xs p-lg pt-0 sm:flex-row sm:justify-end',
         className,
       )}
       {...props}
@@ -72,7 +72,7 @@ export function DialogTitle({
 }: ComponentPropsWithoutRef<typeof BaseDialog.Title>) {
   return (
     <BaseDialog.Title
-      className={cn('text-lg font-semibold leading-none tracking-tight', className)}
+      className={cn('text-lg font-semibold leading-none', className)}
       {...props}
     />
   )
@@ -91,5 +91,5 @@ export function DialogDescription({
 }
 
 export function DialogBody({ className, ...props }: ComponentPropsWithoutRef<'div'>) {
-  return <div className={cn('px-6 pb-2', className)} {...props} />
+  return <div className={cn('px-lg pb-xs', className)} {...props} />
 }

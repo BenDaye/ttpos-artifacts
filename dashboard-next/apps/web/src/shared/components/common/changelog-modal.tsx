@@ -55,12 +55,12 @@ export function ChangelogModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[min(92vw,40rem)]">
+      <DialogContent className="dialog-size-changelog">
         <DialogHeader>
           <DialogTitle>{title ?? t('changelog', { defaultValue: 'Changelog' })}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
-        <DialogBody className="max-h-[60vh] overflow-y-auto">
+        <DialogBody className="dialog-scroll-area overflow-y-auto">
           {groups.length === 0
             ? (
                 <p className="text-sm text-muted-foreground">

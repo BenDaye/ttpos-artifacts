@@ -81,7 +81,7 @@ export function SignInPage() {
   })
 
   return (
-    <Card className="w-[min(92vw,26rem)]">
+    <Card className="dialog-size-auth">
       <CardHeader className="text-center">
         <CardTitle className="text-2xl">
           {t('signin.title', { defaultValue: 'Welcome back' })}

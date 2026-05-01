@@ -107,7 +107,7 @@ export function UploadVersionDialog({ open, onOpenChange, defaultAppName }: Prop
 
   const errors = form.formState.errors
 
-  const inputClass = 'flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring'
+  const inputClass = 'flex h-11 w-full rounded-pill border border-input bg-transparent px-5 py-3 text-base shadow-none focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring'
 
   return (
     <EntityFormDialog

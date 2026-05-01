@@ -11,7 +11,7 @@ export function TabsList({
   return (
     <BaseTabs.List
       className={cn(
-        'relative inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground',
+        'relative inline-flex h-11 items-center justify-center rounded-pill bg-muted p-xs text-muted-foreground',
         className,
       )}
       {...props}
@@ -26,7 +26,7 @@ export function TabsTrigger({
   return (
     <BaseTabs.Tab
       className={cn(
-        'relative z-10 inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 data-[selected]:text-foreground',
+        'relative z-10 inline-flex items-center justify-center whitespace-nowrap rounded-pill px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 data-selected:text-foreground',
         className,
       )}
       {...props}
@@ -41,7 +41,7 @@ export function TabsIndicator({
   return (
     <BaseTabs.Indicator
       className={cn(
-        'absolute left-(--active-tab-left) top-(--active-tab-top) z-0 h-(--active-tab-height) w-(--active-tab-width) rounded-md bg-background shadow-sm transition-all duration-200',
+        'tabs-indicator absolute z-0 rounded-pill bg-background shadow-none transition-all duration-200',
         className,
       )}
       {...props}

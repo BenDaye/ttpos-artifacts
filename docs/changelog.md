@@ -1,5 +1,17 @@
 # 变更日志
 
+## 2026-04-30 21:00 [REFACTOR-004]
+
+收敛 dashboard-next 设计令牌与视觉值来源：
+
+- 将 `dashboard-next/apps/web/src/index.css` 重建为 Tailwind v4 `@theme` token 层，语义 token 派生自根目录 `DESIGN.md` 的 Apple 色彩、字号、间距、圆角与无常规 UI 阴影策略
+- 移除 `index.html` 硬编码 theme-color hex
+- 收敛共享 UI primitives：Button、Badge、Card、Dialog、Input、Select、Popover、DropdownMenu、Tabs、Switch、Checkbox 等不再使用 arbitrary visual value、调色板状态色或 shadow utility
+- 清理 Apps/Auth/Settings/Statistics/TUF 相关 UI 的 `w-[...]`、`text-[...]`、arbitrary grid、`transition-[...]`、emerald/amber/red/blue/gray 状态色等
+- Recharts tooltip/axis 样式改为 CSS token 驱动，保持统计图行为不变
+
+Quality gates passed for dashboard-next: static token scans, typecheck, lint, unit tests, production build, and 53/53 Playwright e2e. Lint still reports the existing warning set but exits successfully.
+
 ## 2026-04-28 17:16 [REFACTOR-003]
 
 Fixed dashboard-next production replacement blockers from PLAN-005:
