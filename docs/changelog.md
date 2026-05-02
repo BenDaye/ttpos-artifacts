@@ -1,5 +1,15 @@
 # 变更日志
 
+## 2026-05-02 13:02 [BUG-011]
+
+落实 AGENTS.md "TUF 前端入口禁用" 边界，移除 New app 表单残留入口：
+
+- `app-form-dialog.tsx` 移除 `enableTuf` state、useEffect 重置、JSX 上的 "Enable TUF metadata" checkbox 与 mutation 调用里 `tuf: enableTuf` 一行；用户不再能从前端把新 app 创建为 tuf-enabled
+- `CreateAppPayload.tuf?: boolean` API 契约保持（optional 不传 → undefined → 后端走非 TUF 默认路径），方便将来用户决定恢复 TUF 时只需加回前端即可
+- 不动 `features/tuf/**` 任何文件、不动 i18n 词条 `apps.form.tuf`（孤儿词条，按 TUF off-limits 边界保留）
+
+Quality gates passed for dashboard-next: `bun run typecheck`、`bun run test` 12/12、`bun run lint`（0 errors / 45 既存 warnings 无新增；删 enableTuf 连带消掉 1 项 set-state-in-effect warning）、`bun run test:e2e` 79/79。
+
 ## 2026-05-02 12:38 [QUAL-003]
 
 Dashboard UI 文案 brand-neutral 收敛：

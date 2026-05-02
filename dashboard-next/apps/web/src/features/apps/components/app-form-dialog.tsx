@@ -26,7 +26,6 @@ export function AppFormDialog({ open, onOpenChange, app }: Props) {
   const [description, setDescription] = useState('')
   const [logo, setLogo] = useState<File | null>(null)
   const [isPrivate, setIsPrivate] = useState(false)
-  const [enableTuf, setEnableTuf] = useState(false)
 
   useEffect(() => {
     if (open) {
@@ -34,7 +33,6 @@ export function AppFormDialog({ open, onOpenChange, app }: Props) {
       setDescription(app?.Description ?? '')
       setLogo(null)
       setIsPrivate(false)
-      setEnableTuf(false)
     }
   }, [open, app])
 
@@ -58,7 +56,6 @@ export function AppFormDialog({ open, onOpenChange, app }: Props) {
           app: trimmed,
           description: description.trim(),
           private: isPrivate,
-          tuf: enableTuf,
           logo,
         })
       }
@@ -123,13 +120,6 @@ export function AppFormDialog({ open, onOpenChange, app }: Props) {
                 onCheckedChange={(v: boolean | 'indeterminate') => setIsPrivate(v === true)}
               />
               {t('form.private', { defaultValue: 'Private (require auth to download)' })}
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <Checkbox
-                checked={enableTuf}
-                onCheckedChange={(v: boolean | 'indeterminate') => setEnableTuf(v === true)}
-              />
-              {t('form.tuf', { defaultValue: 'Enable TUF metadata' })}
             </label>
           </div>
         )}
