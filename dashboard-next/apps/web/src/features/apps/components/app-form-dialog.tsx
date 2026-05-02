@@ -89,7 +89,7 @@ export function AppFormDialog({ open, onOpenChange, app }: Props) {
             id="app-name"
             value={name}
             onChange={e => setName(e.target.value)}
-            placeholder="ttpos-pos"
+            placeholder="my-app"
             autoFocus
           />
         </div>

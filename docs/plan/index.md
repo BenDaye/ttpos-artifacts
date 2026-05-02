@@ -19,3 +19,4 @@
 | [x] | PLAN-015 | Upload version 对话框选择器与文件输入回归修复 | BUG-008 |
 | [x] | PLAN-016 | Select popup 与 trigger 视觉收敛 + Flag 行溢出修复 | BUG-009 |
 | [x] | PLAN-017 | 锁定 Upload version 的 App name 并移除孤悬的全局上传入口 | BUG-010 |
+| [x] | PLAN-018 | Dashboard UI 文案 brand-neutral 收敛 | QUAL-003 |
