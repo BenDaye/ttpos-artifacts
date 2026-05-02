@@ -173,23 +173,23 @@ export function UploadVersionDialog({ open, onOpenChange, defaultAppName }: Prop
             <Input placeholder="Tauri signature" {...form.register('signature')} />
           </FormBlock>
         )}
-        <div className="flex items-center gap-4 self-end pb-2">
-          <FlagCheckbox
-            label={t('upload_dialog.publish', { defaultValue: 'Publish' })}
-            checked={form.watch('publish')}
-            onChange={v => form.setValue('publish', v)}
-          />
-          <FlagCheckbox
-            label={t('upload_dialog.critical', { defaultValue: 'Critical' })}
-            checked={form.watch('critical')}
-            onChange={v => form.setValue('critical', v)}
-          />
-          <FlagCheckbox
-            label={t('upload_dialog.intermediate', { defaultValue: 'Intermediate' })}
-            checked={form.watch('intermediate')}
-            onChange={v => form.setValue('intermediate', v)}
-          />
-        </div>
+      </div>
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+        <FlagCheckbox
+          label={t('upload_dialog.publish', { defaultValue: 'Publish' })}
+          checked={form.watch('publish')}
+          onChange={v => form.setValue('publish', v)}
+        />
+        <FlagCheckbox
+          label={t('upload_dialog.critical', { defaultValue: 'Critical' })}
+          checked={form.watch('critical')}
+          onChange={v => form.setValue('critical', v)}
+        />
+        <FlagCheckbox
+          label={t('upload_dialog.intermediate', { defaultValue: 'Intermediate' })}
+          checked={form.watch('intermediate')}
+          onChange={v => form.setValue('intermediate', v)}
+        />
       </div>
       <div className="mt-3 space-y-2">
         <Label>{t('upload_dialog.changelog', { defaultValue: 'Changelog' })}</Label>

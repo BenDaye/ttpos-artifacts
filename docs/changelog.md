@@ -1,5 +1,16 @@
 # 变更日志
 
+## 2026-05-02 11:25 [BUG-009]
+
+修复 Select popup 与 trigger 视觉脱节、Upload version dialog Flag 行溢出：
+
+- `select.tsx` 在 `<BaseSelect.Positioner>` 显式 `alignItemWithTrigger={false}`，popup 不再以"当前 item 中心对齐 trigger 中心"展开覆盖 label，而是规规矩矩贴 trigger 下方
+- `select.tsx` `SelectItem` 改 `text-base px-3 py-2`，与 trigger 的 `text-base h-11 px-5` 字号 / padding 节奏协调，从看起来像两组件变成 trigger + 它的下拉
+- `index.css` `.select-popup-width` 从 `min-width: var(--anchor-width)` 改为 `width: var(--anchor-width)`，popup 宽度严格等于 trigger anchor，不再被 popup 内容撑得比 trigger 宽
+- `upload-version-dialog.tsx` 把 Publish / Critical / Intermediate 三个 FlagCheckbox 移出 `grid sm:grid-cols-2`，作为 grid 之后的独立一行 `flex flex-wrap gap-x-4 gap-y-2`；先前三个 flag 横排塞在半宽 cell 里、Intermediate 直接溢出 dialog 右边界
+
+Quality gates passed for dashboard-next: `bun run typecheck`、`bun run test` 12/12、`bun run lint`（0 errors，46 既存 warnings 无新增）、`bun run test:e2e` 80/80。
+
 ## 2026-05-01 19:35 [BUG-008]
 
 修复 dashboard-next Upload version 对话框的 selector 与文件输入回归：

@@ -39,7 +39,13 @@ export function SelectContent({
 }: ComponentPropsWithoutRef<typeof BaseSelect.Popup> & { children: ReactNode }) {
   return (
     <BaseSelect.Portal>
-      <BaseSelect.Positioner sideOffset={4} className="z-[60]">
+      {/*
+        alignItemWithTrigger defaults to true (macOS-native: align selected item to
+        trigger). That makes the popup overflow upward and cover the field label,
+        and breaks visual continuity with the trigger. Forcing false puts the
+        popup squarely below the trigger.
+      */}
+      <BaseSelect.Positioner sideOffset={4} alignItemWithTrigger={false} className="z-[60]">
         <BaseSelect.Popup
           className={cn(
             'select-popup-available select-popup-width overflow-y-auto rounded-md border bg-popover p-xs text-popover-foreground shadow-none outline-hidden',
@@ -65,7 +71,7 @@ export function SelectItem({
   return (
     <BaseSelect.Item
       className={cn(
-        'flex min-w-0 cursor-pointer select-none items-center gap-sm rounded-sm px-sm py-xs text-sm outline-hidden transition-colors data-highlighted:bg-accent data-highlighted:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50',
+        'flex min-w-0 cursor-pointer select-none items-center gap-sm rounded-sm px-3 py-2 text-base outline-hidden transition-colors data-highlighted:bg-accent data-highlighted:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50',
         className,
       )}
       {...props}

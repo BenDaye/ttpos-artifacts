@@ -368,6 +368,6 @@ body {
   }
 
   .select-popup-width {
-    min-width: var(--anchor-width);
+    width: var(--anchor-width);
   }
 }
