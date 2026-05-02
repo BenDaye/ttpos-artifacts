@@ -36,10 +36,10 @@ type Values = z.infer<typeof schema>
 interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
-  defaultAppName?: string
+  appName: string
 }
 
-export function UploadVersionDialog({ open, onOpenChange, defaultAppName }: Props) {
+export function UploadVersionDialog({ open, onOpenChange, appName }: Props) {
   const { t } = useTranslation(['apps', 'common'])
   const upload = useUploadVersionMutation()
   const channels = useChannelsQuery()
@@ -50,7 +50,7 @@ export function UploadVersionDialog({ open, onOpenChange, defaultAppName }: Prop
   const form = useForm<Values>({
     resolver: zodResolver(schema),
     defaultValues: {
-      app_name: defaultAppName ?? '',
+      app_name: appName,
       version: '',
       channel: '',
       platform: '',
@@ -63,6 +63,11 @@ export function UploadVersionDialog({ open, onOpenChange, defaultAppName }: Prop
       signature: '',
     },
   })
+
+  // Keep app_name locked to the caller's appName even if it changes between opens.
+  useEffect(() => {
+    form.setValue('app_name', appName)
+  }, [appName, form])
 
   const selectedPlatformName = form.watch('platform')
   const selectedUpdater = form.watch('updater')
@@ -122,9 +127,15 @@ export function UploadVersionDialog({ open, onOpenChange, defaultAppName }: Prop
       onSubmit={() => handleSubmit()}
     >
       <div className="grid gap-3 sm:grid-cols-2">
-        <FormBlock label={t('upload_dialog.app_name', { defaultValue: 'App name' })} error={errors.app_name?.message}>
-          <Input placeholder="ttpos-pos" {...form.register('app_name')} />
-        </FormBlock>
+        <div className="space-y-2">
+          <Label className="flex items-center justify-between">
+            <span>{t('upload_dialog.app_name', { defaultValue: 'App name' })}</span>
+            <span className="text-xs text-muted-foreground">
+              {t('upload_dialog.app_name_locked', { defaultValue: 'Locked to this app' })}
+            </span>
+          </Label>
+          <Input value={appName} disabled readOnly />
+        </div>
         <FormBlock label={t('upload_dialog.version', { defaultValue: 'Version' })} error={errors.version?.message}>
           <Input placeholder="1.2.3" {...form.register('version')} />
         </FormBlock>

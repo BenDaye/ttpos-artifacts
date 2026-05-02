@@ -62,13 +62,6 @@ test.describe('Applications page', () => {
     await expect(page.getByText('stable', { exact: true }).first()).toBeVisible()
   })
 
-  test('upload version button opens upload dialog', async ({ page }) => {
-    await page.goto('/applications')
-
-    await page.getByRole('button', { name: 'Upload version' }).first().click()
-    await expect(page.getByRole('heading', { name: 'Upload new version' })).toBeVisible()
-  })
-
   test('new app button opens create dialog', async ({ page }) => {
     await page.goto('/applications')
 

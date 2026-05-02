@@ -1,5 +1,16 @@
 # 变更日志
 
+## 2026-05-02 11:40 [BUG-010]
+
+修复 Upload version 对话框允许编辑 App name 的业务漏洞，并移除孤悬的全局上传入口：
+
+- `upload-version-dialog.tsx` 的 App name 字段从可编辑 `<Input {...form.register('app_name')} />` 改为 `<Input value={appName} disabled readOnly />`；prop 从 optional `defaultAppName` 改为必传 `appName`，并在 `useEffect` 中把 prop 同步进 form state；label 行加 hint "Locked to this app"
+- `applications-page.tsx` 顶部的全局 "Upload version" 按钮、`uploading` state、`UploadVersionDialog` 实例与对应的 `Upload` / `UploadVersionDialog` import 全部移除；upload 流程现在只能从 app detail page 触发，从根本上消除"用户在列表页被迫手输 app name"的错位流程
+- `app-detail-page.tsx` 调用 `defaultAppName` → `appName`；`apps.json`（en / zh）新增 `upload_dialog.app_name_locked` 词条
+- `e2e/applications.spec.ts` 删除依赖被移除按钮的 `upload version button opens upload dialog` 用例（同等覆盖已在 `app-detail.spec.ts` 内的 `upload version button opens upload dialog with app pre-filled` 保留）
+
+Quality gates passed for dashboard-next: `bun run typecheck`、`bun run test` 12/12、`bun run lint`（0 errors，46 既存 warnings 无新增）、`bun run test:e2e` 79/79（少 1 项是移除了不再适用的用例）。
+
 ## 2026-05-02 11:25 [BUG-009]
 
 修复 Select popup 与 trigger 视觉脱节、Upload version dialog Flag 行溢出：

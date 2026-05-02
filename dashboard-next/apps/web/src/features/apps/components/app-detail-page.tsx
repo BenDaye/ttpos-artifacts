@@ -190,7 +190,7 @@ export function AppDetailPage({ appName }: { appName: string }) {
         </ul>
       )}
 
-      <UploadVersionDialog open={uploading} onOpenChange={setUploading} defaultAppName={appName} />
+      <UploadVersionDialog open={uploading} onOpenChange={setUploading} appName={appName} />
       <VersionEditDialog
         open={Boolean(editing)}
         onOpenChange={open => !open && setEditing(null)}

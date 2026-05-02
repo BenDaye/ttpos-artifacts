@@ -101,6 +101,7 @@
     "title": "上传新版本",
     "description": "将构建产物绑定到单个版本条目下。",
     "app_name": "应用名",
+    "app_name_locked": "锁定到当前应用",
     "version": "版本号",
     "channel": "渠道",
     "platform": "平台",

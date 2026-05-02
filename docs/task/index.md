@@ -28,3 +28,4 @@
 | [x] | QUAL-002 | 收敛 Permission Matrix 类型强转 | P2 | completed |
 | [x] | BUG-008 | Upload version 对话框选择器与文件输入回归 | P1 | completed |
 | [x] | BUG-009 | Select popup 与 trigger 视觉脱节、Flag 行溢出 dialog | P1 | completed |
+| [x] | BUG-010 | Upload version 不应允许编辑 App name；移除孤悬的全局上传入口 | P1 | completed |

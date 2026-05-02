@@ -1,6 +1,6 @@
 import type { AppSummary } from '@ttpos/shared'
 import { useNavigate } from '@tanstack/react-router'
-import { Boxes, Plus, Search, Upload } from 'lucide-react'
+import { Boxes, Plus, Search } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -14,7 +14,6 @@ import { Skeleton } from '@/shared/components/ui/skeleton'
 import { useUiStore } from '@/shared/stores/ui-store'
 import { useAppsListQuery, useDeleteAppMutation } from '../hooks'
 import { AppFormDialog } from './app-form-dialog'
-import { UploadVersionDialog } from './upload-version-dialog'
 import { AppBoardView } from './views/app-board-view'
 import { AppCardView } from './views/app-card-view'
 import { AppListView } from './views/app-list-view'
@@ -28,7 +27,6 @@ export function ApplicationsPage() {
   const [search, setSearch] = useState('')
   const [creating, setCreating] = useState(false)
   const [editing, setEditing] = useState<AppSummary | null>(null)
-  const [uploading, setUploading] = useState(false)
   const [deleting, setDeleting] = useState<AppSummary | null>(null)
 
   const filtered = (appsQuery.data?.apps ?? []).filter(app =>
@@ -86,10 +84,6 @@ export function ApplicationsPage() {
         actions={(
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <LayoutSwitcher />
-            <Button variant="outline" onClick={() => setUploading(true)}>
-              <Upload className="size-4" />
-              {t('upload', { defaultValue: 'Upload version' })}
-            </Button>
             <Button onClick={() => setCreating(true)}>
               <Plus className="size-4" />
               {t('create', { defaultValue: 'New app' })}
@@ -133,7 +127,6 @@ export function ApplicationsPage() {
         onOpenChange={open => !open && setEditing(null)}
         app={editing}
       />
-      <UploadVersionDialog open={uploading} onOpenChange={setUploading} />
       <ConfirmDialog
         open={Boolean(deleting)}
         onOpenChange={open => !open && setDeleting(null)}

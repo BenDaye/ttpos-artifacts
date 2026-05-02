@@ -101,6 +101,7 @@
     "title": "Upload new version",
     "description": "Bundle artifacts under a single version entry.",
     "app_name": "App name",
+    "app_name_locked": "Locked to this app",
     "version": "Version",
     "channel": "Channel",
     "platform": "Platform",
