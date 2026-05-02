@@ -5,8 +5,7 @@
 Dashboard UI 文案 brand-neutral 收敛：
 
 - `app-form-dialog.tsx` 创建 application 对话框 name 字段 `placeholder` 从 `ttpos-pos` 改为 `my-app`，不再向用户暗示这是 TTPOS 专属工具
-- `tuf/bootstrap-panel.tsx` App name 字段同样收敛（前端入口禁用，但顺手清理避免将来恢复返工）
-- 不动 `@ttpos/shared` 等 monorepo 内部 package 命名（结构性命名重命名需单独立项）；不动 demo seed `TTPOS-Cashier`（客户数据，不是产品 brand）
+- 不动 `@ttpos/shared` 等 monorepo 内部 package 命名（结构性命名重命名需单独立项）；不动 demo seed `TTPOS-Cashier`（客户数据，不是产品 brand）；不动 TUF 任何代码 / 文案（按 AGENTS.md 边界）
 - 在跨 session memory 保存产品定位 feedback（dashboard / server 是通用平台 ZEHub，brand-neutral 准则）
 
 Quality gates passed for dashboard-next: `bun run typecheck`、`bun run test` 12/12、`bun run lint`（0 errors / 46 既存 warnings 无新增）。e2e 无依赖 `ttpos-pos` 字面量。

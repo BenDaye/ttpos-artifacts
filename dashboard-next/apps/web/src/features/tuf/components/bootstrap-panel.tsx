@@ -84,7 +84,7 @@ export function BootstrapPanel() {
             <Input
               value={form.appName}
               onChange={e => setForm(s => ({ ...s, appName: e.target.value }))}
-              placeholder="my-app"
+              placeholder="ttpos-pos"
             />
           </Field>
           <Field label={t('tuf.fields.keyType', { defaultValue: 'Key type' })}>
