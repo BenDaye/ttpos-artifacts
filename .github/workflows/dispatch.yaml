@@ -17,8 +17,5 @@ jobs:
       platform: ${{ github.event.client_payload.platform || 'all' }}
       base_url: ${{ github.event.client_payload.base_url || (github.event.action == 'test-build' && 'https://ttpos-test1.ttpos.com/api/v1') || 'https://api.ttpos.com/api/v1' }}
       base_ws_url: ${{ github.event.client_payload.base_ws_url || (github.event.action == 'test-build' && 'wss://ttpos-test1.ttpos.com/ws') || 'wss://api.ttpos.com/ws' }}
-      updater_url: ${{ github.event.client_payload.updater_url || '' }}
-      updater_owner: ${{ github.event.client_payload.updater_owner || '' }}
-      updater_channel: ${{ github.event.client_payload.updater_channel || '' }}
       faynosync: ${{ github.event.client_payload.faynosync || (github.event.action == 'test-build' && 'force') || 'off' }}
     secrets: inherit
