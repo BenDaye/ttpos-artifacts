@@ -12,6 +12,7 @@ import (
 	"faynoSync/server/handler/token"
 	"faynoSync/server/handler/update"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
@@ -55,7 +56,6 @@ type AppHandler interface {
 	UpdateAdmin(*gin.Context)
 	GetTelemetry(*gin.Context)
 	SquirrelReleases(*gin.Context)
-	PublicLatestDownload(*gin.Context)
 	ShortLatestDownload(*gin.Context)
 	CreateToken(*gin.Context)
 	ListTokens(*gin.Context)
@@ -263,70 +263,67 @@ func (ch *appHandler) SquirrelReleases(c *gin.Context) {
 const publicLatestDefaultChannel = "prod"
 const publicLatestOwner = "ttpos"
 
-type publicLatestPlatformDefault struct {
-	Arch    string
-	Package string
-}
-
-var publicLatestPlatformDefaults = map[string]publicLatestPlatformDefault{
-	"android": {Arch: "arm64", Package: "apk"},
-	"windows": {Arch: "amd64", Package: "exe"},
-	"macos":   {Arch: "arm64", Package: "dmg"},
-}
-
 var shortLatestAppAliases = map[string]string{
-	"pos":     "ttpos",
-	"go":      "ttpos_go",
-	"menu":    "ttpos_menu",
-	"kitchen": "ttpos_kitchen",
-	"shop":    "ttpos_shop",
+	"cashier":   "TTPOS",
+	"assistant": "TTPOS Go",
+	"menu":      "TTPOS Menu",
+	"kitchen":   "TTPOS Kitchen",
+	"shop":      "TTPOS Shop",
 }
 
-var shortLatestPlatformAliases = map[string]string{
-	"a": "android",
-	"w": "windows",
-	"m": "macos",
+type shortLatestTargetDefault struct {
+	Platform string
+	Arch     string
+	Package  string
 }
 
-// PublicLatestDownload exposes a user-facing latest shortcut with prod as the default channel.
-// Routes:
-//
-//	GET /download/latest/:owner/:app_identifier/:platform
-func (ch *appHandler) PublicLatestDownload(c *gin.Context) {
-	platform := c.Param("platform")
-	defaults, ok := publicLatestPlatformDefaults[platform]
-	if !ok {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "unsupported platform for public latest download"})
-		return
-	}
-
-	setLatestDownloadQuery(c, publicLatestDefaultChannel, platform, defaults.Arch, defaults.Package)
-	info.FetchLatestVersionOfApp(c, ch.repository, ch.redisClient, ch.performanceMode)
+var shortLatestTargetDefaults = map[string]shortLatestTargetDefault{
+	"apk": {Platform: "android", Arch: "arm64", Package: "apk"},
+	"exe": {Platform: "windows", Arch: "amd64", Package: "exe"},
+	"dmg": {Platform: "macos", Arch: "arm64", Package: "dmg"},
 }
 
 // ShortLatestDownload exposes compact public aliases for website and QR links.
 //
-//	GET /d/:app/:platform
+//	GET /dl/:target
 func (ch *appHandler) ShortLatestDownload(c *gin.Context) {
-	appIdentifier, ok := shortLatestAppAliases[c.Param("app")]
+	appName, target, ok := resolveShortLatestTarget(c.Param("target"))
 	if !ok {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "unsupported app alias for short latest download"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "unsupported short latest download target"})
 		return
 	}
 
-	platform, ok := shortLatestPlatformAliases[c.Param("platform")]
-	if !ok {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "unsupported platform alias for short latest download"})
-		return
-	}
-
-	c.Redirect(http.StatusFound, "/download/latest/"+publicLatestOwner+"/"+appIdentifier+"/"+platform)
+	setLatestDownloadQueryValues(c, publicLatestOwner, appName, publicLatestDefaultChannel, target.Platform, target.Arch, target.Package)
+	c.Set(info.CacheRedirectHeadersContextKey, true)
+	info.FetchLatestVersionOfApp(c, ch.repository, ch.redisClient, ch.performanceMode)
 }
 
-func setLatestDownloadQuery(c *gin.Context, channel, platform, arch, pkg string) {
+func resolveShortLatestTarget(target string) (string, shortLatestTargetDefault, bool) {
+	normalizedTarget := strings.ToLower(target)
+	dotIndex := strings.LastIndex(normalizedTarget, ".")
+	if dotIndex <= 0 || dotIndex == len(normalizedTarget)-1 {
+		return "", shortLatestTargetDefault{}, false
+	}
+
+	appAlias := normalizedTarget[:dotIndex]
+	extension := normalizedTarget[dotIndex+1:]
+	appName, ok := shortLatestAppAliases[appAlias]
+	if !ok {
+		return "", shortLatestTargetDefault{}, false
+	}
+
+	defaults, ok := shortLatestTargetDefaults[extension]
+	if !ok {
+		return "", shortLatestTargetDefault{}, false
+	}
+
+	return appName, defaults, true
+}
+
+func setLatestDownloadQueryValues(c *gin.Context, owner, appName, channel, platform, arch, pkg string) {
 	q := c.Request.URL.Query()
-	q.Set("owner", c.Param("owner"))
-	q.Set("app_name", c.Param("app_identifier"))
+	q.Set("owner", owner)
+	q.Set("app_name", appName)
 	q.Set("channel", channel)
 	q.Set("platform", platform)
 	q.Set("arch", arch)

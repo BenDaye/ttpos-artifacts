@@ -29,6 +29,15 @@ func TestFetchLatestVersionOfAppRedirectsSinglePackage(t *testing.T) {
 	assert.Equal(t, "https://downloads.example.com/ttpos.apk", w.Header().Get("Location"))
 }
 
+func TestFetchLatestVersionOfAppAddsCacheHeadersForMarkedRedirect(t *testing.T) {
+	w := performLatestRequestWithCacheHeaders(t, latestRepoStub{apps: latestAppFixture()}, "/apps/latest?app_name=TTPOS&channel=prod&platform=android&arch=arm64&package=apk&owner=ttpos")
+
+	assert.Equal(t, http.StatusFound, w.Code)
+	assert.Equal(t, "https://downloads.example.com/ttpos.apk", w.Header().Get("Location"))
+	assert.Equal(t, "public, max-age=300", w.Header().Get("Cloudflare-CDN-Cache-Control"))
+	assert.Equal(t, "no-cache", w.Header().Get("Cache-Control"))
+}
+
 func TestFetchLatestVersionOfAppReturnsJSONWhenMultiplePackagesMatch(t *testing.T) {
 	w := performLatestRequest(t, latestRepoStub{apps: latestAppFixture()}, "/apps/latest?app_name=TTPOS&channel=prod&platform=android&arch=arm64&owner=ttpos")
 
@@ -81,10 +90,22 @@ func TestCreateCacheKeyIncludesOwner(t *testing.T) {
 
 func performLatestRequest(t *testing.T, repo latestRepoStub, target string) *httptest.ResponseRecorder {
 	t.Helper()
+	return performLatestRequestWithOptions(t, repo, target, false)
+}
 
+func performLatestRequestWithCacheHeaders(t *testing.T, repo latestRepoStub, target string) *httptest.ResponseRecorder {
+	t.Helper()
+	return performLatestRequestWithOptions(t, repo, target, true)
+}
+
+func performLatestRequestWithOptions(t *testing.T, repo latestRepoStub, target string, cacheHeaders bool) *httptest.ResponseRecorder {
+	t.Helper()
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
 	router.GET("/apps/latest", func(c *gin.Context) {
+		if cacheHeaders {
+			c.Set(CacheRedirectHeadersContextKey, true)
+		}
 		FetchLatestVersionOfApp(c, repo, nil, false)
 	})
 

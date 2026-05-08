@@ -566,40 +566,21 @@ curl -X GET --location 'http://localhost:9000/apps/latest?app_name=secondapp&cha
 }
 ```
 
-### Latest Path Download Shortcut
-
-This endpoint provides a path-based shortcut for website download buttons, QR codes, and other external links that should open the latest installer directly.
-
-Public download links should use the default-prod shortcut:
-
-`GET /download/latest/<owner>/<app_identifier>/<platform>`
-
-This shortcut always queries the `prod` channel and uses fixed artifact defaults: `android` -> `arm64/apk`, `windows` -> `amd64/exe`, and `macos` -> `arm64/dmg`.
-
-`app_identifier` may be the exact `app_name` or its normalized lowercase snake form. The lightweight normalization lowercases the value, folds consecutive non-letter/digit characters into `_`, and trims leading/trailing `_`; for example, `TTPOS Kitchen` may be requested as `ttpos_kitchen`.
-
-Path segments must still be URL encoded when they contain reserved URL characters, but public links should prefer the snake identifier. When exactly one artifact matches, the endpoint returns `302 Found` with `Location` set to the artifact download URL. When no artifact matches, it returns `404`. If multiple apps under the same owner normalize to the same identifier, it returns `409`.
-
-###### Public Request:
-```
-curl -I --location 'http://localhost:9000/download/latest/admin/ttpos_kitchen/android'
-```
-
 ### Short Latest Download Shortcut
 
-This endpoint provides compact public aliases that redirect to the standard latest download shortcut on the same server.
+This is the only public latest download shortcut. It provides compact resource-style aliases that redirect directly to the latest artifact download URL.
 
-`GET /d/<app_alias>/<platform_alias>`
+`GET /dl/<app_alias>.<package>`
 
-App aliases: `pos -> ttpos`, `go -> ttpos_go`, `menu -> ttpos_menu`, `kitchen -> ttpos_kitchen`, and `shop -> ttpos_shop`.
+App aliases: `cashier -> TTPOS`, `assistant -> TTPOS Go`, `menu -> TTPOS Menu`, `kitchen -> TTPOS Kitchen`, and `shop -> TTPOS Shop`.
 
-Platform aliases: `a -> android`, `w -> windows`, and `m -> macos`.
+Package targets: `apk -> android/arm64/apk`, `exe -> windows/amd64/exe`, and `dmg -> macos/arm64/dmg`.
 
-When the aliases are valid, the endpoint returns `302 Found` with `Location` set to `/download/latest/ttpos/<app_identifier>/<platform>`. Unknown app or platform aliases return `400`.
+When the aliases are valid and exactly one artifact matches, the endpoint returns `302 Found` with `Location` set to the final `/download?key=...` URL. Successful redirects include `Cloudflare-CDN-Cache-Control: public, max-age=300` and `Cache-Control: no-cache`. Unknown aliases return `400`.
 
 ###### Short Request:
 ```
-curl -I --location 'http://localhost:9000/d/pos/m'
+curl -I --location 'http://localhost:9000/dl/cashier.apk'
 ```
 
 ### Update App

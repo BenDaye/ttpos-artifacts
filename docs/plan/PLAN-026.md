@@ -66,6 +66,7 @@
   - `m`: `macos`
 - 未知 app 或 platform alias 返回 400。
 - `server/API.md` 与 `docs/changelog.md` 已同步。
+- 后续 ENH-008 已将短链调整为 `/dl/<app_alias>.<package>`，并直接 302 到最终 `/download?key=...`。
 
 ## 验证记录
 

@@ -25,6 +25,8 @@ type CachedResponse struct {
 	HTTPStatus int         `json:"http_status"`
 }
 
+const CacheRedirectHeadersContextKey = "cache_latest_redirect_headers"
+
 type latestAppRepository interface {
 	FetchLatestVersionOfApp(appName, channel string, ctx context.Context, owner string) ([]*model.SpecificAppWithoutIDs, error)
 }
@@ -348,6 +350,10 @@ func FetchLatestVersionOfApp(c *gin.Context, repository latestAppRepository, rdb
 
 	if urlCount == 1 {
 		logrus.Debugf("Redirecting to the single download URL: %v", singleUrl)
+		if c.GetBool(CacheRedirectHeadersContextKey) {
+			c.Header("Cloudflare-CDN-Cache-Control", "public, max-age=300")
+			c.Header("Cache-Control", "no-cache")
+		}
 		c.Redirect(http.StatusFound, singleUrl)
 		return
 	}

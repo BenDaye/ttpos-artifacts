@@ -1,13 +1,24 @@
 # 变更日志
 
+## 2026-05-09 [ENH-008]
+
+将 latest 短链改为资源型 URL 并直接返回最终下载 302：
+
+- 短链入口从 `/d/<app_alias>/<platform_alias>` 调整为 `/dl/<app_alias>.<package>`，例如 `/dl/cashier.apk`。
+- app alias 固定为 `cashier -> TTPOS`、`assistant -> TTPOS Go`、`menu -> TTPOS Menu`、`kitchen -> TTPOS Kitchen`、`shop -> TTPOS Shop`。
+- package target 固定为 `apk -> android/arm64/apk`、`exe -> windows/amd64/exe`、`dmg -> macos/arm64/dmg`。
+- 短链 handler 复用 latest 查询，成功时直接 302 到最终 `/download?key=...`，不再中转 `/download/latest/...`。
+- server 不再注册 `/download/latest/<owner>/<app_identifier>/<platform>`；公开 latest 下载路由只保留 `/dl/<app_alias>.<package>`。
+- 成功 302 响应增加 `Cloudflare-CDN-Cache-Control: public, max-age=300` 与 `Cache-Control: no-cache`，便于 Cloudflare 缓存短链 redirect，同时避免浏览器长期持有旧 latest。
+
 ## 2026-05-09 [ENH-007]
 
 新增极简 latest 下载短链：
 
-- 新增公开入口 `/d/<app_alias>/<platform_alias>`，同域内 302 到标准 latest URL `/download/latest/ttpos/<app_identifier>/<platform>`。
-- app alias 固定为 `pos -> ttpos`、`go -> ttpos_go`、`menu -> ttpos_menu`、`kitchen -> ttpos_kitchen`、`shop -> ttpos_shop`。
-- platform alias 固定为 `a -> android`、`w -> windows`、`m -> macos`。
-- 未知 app 或 platform alias 返回 400；标准 `/download/latest/*`、`/apps/latest` 和 `/download?key=` 行为不变。
+- 当时新增公开入口 `/d/<app_alias>/<platform_alias>`，同域内 302 到标准 latest URL `/download/latest/ttpos/<app_identifier>/<platform>`；后续 ENH-008 已调整为 `/dl/<app_alias>.<package>` 并直接返回最终 `/download?key=...`。
+- 当时 app alias 固定为 `pos -> ttpos`、`go -> ttpos_go`、`menu -> ttpos_menu`、`kitchen -> ttpos_kitchen`、`shop -> ttpos_shop`；后续 ENH-008 已改为面向产品名的 alias。
+- 当时 platform alias 固定为 `a -> android`、`w -> windows`、`m -> macos`；后续 ENH-008 已改为 package extension target。
+- 未知 app 或 platform alias 返回 400；当时标准 `/download/latest/*`、`/apps/latest` 和 `/download?key=` 行为不变，后续 ENH-008 已移除 `/download/latest/*` 公开 latest route。
 
 ## 2026-05-08 [ENH-006]
 

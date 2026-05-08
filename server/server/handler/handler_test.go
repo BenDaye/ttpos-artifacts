@@ -9,139 +9,82 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestPublicLatestDownloadPlatformDefaults(t *testing.T) {
-	gin.SetMode(gin.TestMode)
-	tests := []struct {
-		name             string
-		target           string
-		expectedPlatform string
-		expectedArch     string
-		expectedPackage  string
-	}{
-		{name: "android", target: "/download/latest/ttpos/ttpos_kitchen/android", expectedPlatform: "android", expectedArch: "arm64", expectedPackage: "apk"},
-		{name: "windows", target: "/download/latest/ttpos/ttpos_kitchen/windows", expectedPlatform: "windows", expectedArch: "amd64", expectedPackage: "exe"},
-		{name: "macos", target: "/download/latest/ttpos/ttpos_kitchen/macos", expectedPlatform: "macos", expectedArch: "arm64", expectedPackage: "dmg"},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			router := gin.New()
-			router.GET("/download/latest/:owner/:app_identifier/:platform", func(c *gin.Context) {
-				platform := c.Param("platform")
-				defaults := publicLatestPlatformDefaults[platform]
-				setLatestDownloadQuery(c, publicLatestDefaultChannel, platform, defaults.Arch, defaults.Package)
-
-				assert.Equal(t, "ttpos", c.Query("owner"))
-				assert.Equal(t, "ttpos_kitchen", c.Query("app_name"))
-				assert.Equal(t, "prod", c.Query("channel"))
-				assert.Equal(t, tt.expectedPlatform, c.Query("platform"))
-				assert.Equal(t, tt.expectedArch, c.Query("arch"))
-				assert.Equal(t, tt.expectedPackage, c.Query("package"))
-
-				c.Status(http.StatusNoContent)
-			})
-
-			req, err := http.NewRequest(http.MethodGet, tt.target, nil)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			w := httptest.NewRecorder()
-			router.ServeHTTP(w, req)
-
-			assert.Equal(t, http.StatusNoContent, w.Code)
-		})
-	}
-}
-
-func TestPublicLatestDownloadFullArtifactPathIsNotRegistered(t *testing.T) {
-	gin.SetMode(gin.TestMode)
-	router := gin.New()
-	handler := &appHandler{}
-	router.GET("/download/latest/:owner/:app_identifier/:platform", handler.PublicLatestDownload)
-
-	req, err := http.NewRequest(http.MethodGet, "/download/latest/ttpos/ttpos_kitchen/linux/amd64/deb", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	w := httptest.NewRecorder()
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusNotFound, w.Code)
-}
-
-func TestPublicLatestDownloadRejectsUnsupportedPlatformShortcut(t *testing.T) {
-	gin.SetMode(gin.TestMode)
-	router := gin.New()
-	handler := &appHandler{}
-	router.GET("/download/latest/:owner/:app_identifier/:platform", handler.PublicLatestDownload)
-
-	req, err := http.NewRequest(http.MethodGet, "/download/latest/ttpos/ttpos_kitchen/linux", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	w := httptest.NewRecorder()
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusBadRequest, w.Code)
-	assert.Contains(t, w.Body.String(), "unsupported platform")
-}
-
-func TestShortLatestDownloadRedirectsAliases(t *testing.T) {
-	gin.SetMode(gin.TestMode)
+func TestResolveShortLatestTarget(t *testing.T) {
 	apps := map[string]string{
-		"pos":     "ttpos",
-		"go":      "ttpos_go",
-		"menu":    "ttpos_menu",
-		"kitchen": "ttpos_kitchen",
-		"shop":    "ttpos_shop",
+		"cashier":   "TTPOS",
+		"assistant": "TTPOS Go",
+		"menu":      "TTPOS Menu",
+		"kitchen":   "TTPOS Kitchen",
+		"shop":      "TTPOS Shop",
 	}
-	platforms := map[string]string{
-		"a": "android",
-		"w": "windows",
-		"m": "macos",
+	targets := map[string]shortLatestTargetDefault{
+		"apk": {Platform: "android", Arch: "arm64", Package: "apk"},
+		"exe": {Platform: "windows", Arch: "amd64", Package: "exe"},
+		"dmg": {Platform: "macos", Arch: "arm64", Package: "dmg"},
 	}
 
-	for appAlias, appIdentifier := range apps {
-		for platformAlias, platform := range platforms {
-			t.Run(appAlias+"_"+platformAlias, func(t *testing.T) {
-				router := gin.New()
-				handler := &appHandler{}
-				router.GET("/d/:app/:platform", handler.ShortLatestDownload)
+	for appAlias, appName := range apps {
+		for extension, expectedTarget := range targets {
+			t.Run(appAlias+"_"+extension, func(t *testing.T) {
+				actualAppName, actualTarget, ok := resolveShortLatestTarget(appAlias + "." + extension)
 
-				req, err := http.NewRequest(http.MethodGet, "/d/"+appAlias+"/"+platformAlias, nil)
-				if err != nil {
-					t.Fatal(err)
-				}
-
-				w := httptest.NewRecorder()
-				router.ServeHTTP(w, req)
-
-				assert.Equal(t, http.StatusFound, w.Code)
-				assert.Equal(t, "/download/latest/ttpos/"+appIdentifier+"/"+platform, w.Header().Get("Location"))
+				assert.True(t, ok)
+				assert.Equal(t, appName, actualAppName)
+				assert.Equal(t, expectedTarget, actualTarget)
 			})
 		}
 	}
 }
 
-func TestShortLatestDownloadRejectsUnsupportedAliases(t *testing.T) {
+func TestShortLatestDownloadSetsLatestQuery(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
+	router.GET("/dl/:target", func(c *gin.Context) {
+		appName, target, ok := resolveShortLatestTarget(c.Param("target"))
+		if !ok {
+			c.Status(http.StatusBadRequest)
+			return
+		}
+
+		setLatestDownloadQueryValues(c, publicLatestOwner, appName, publicLatestDefaultChannel, target.Platform, target.Arch, target.Package)
+
+		assert.Equal(t, "ttpos", c.Query("owner"))
+		assert.Equal(t, "TTPOS", c.Query("app_name"))
+		assert.Equal(t, "prod", c.Query("channel"))
+		assert.Equal(t, "android", c.Query("platform"))
+		assert.Equal(t, "arm64", c.Query("arch"))
+		assert.Equal(t, "apk", c.Query("package"))
+
+		c.Status(http.StatusNoContent)
+	})
+
+	req, err := http.NewRequest(http.MethodGet, "/dl/cashier.apk", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusNoContent, w.Code)
+}
+
+func TestShortLatestDownloadRejectsUnsupportedTargets(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	tests := []struct {
-		name           string
-		target         string
-		expectedReason string
+		name   string
+		target string
 	}{
-		{name: "app", target: "/d/unknown/m", expectedReason: "unsupported app alias"},
-		{name: "platform", target: "/d/pos/x", expectedReason: "unsupported platform alias"},
+		{name: "app", target: "/dl/unknown.apk"},
+		{name: "extension", target: "/dl/cashier.zip"},
+		{name: "missing extension", target: "/dl/cashier"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			router := gin.New()
 			handler := &appHandler{}
-			router.GET("/d/:app/:platform", handler.ShortLatestDownload)
+			router.GET("/dl/:target", handler.ShortLatestDownload)
 
 			req, err := http.NewRequest(http.MethodGet, tt.target, nil)
 			if err != nil {
@@ -152,7 +95,7 @@ func TestShortLatestDownloadRejectsUnsupportedAliases(t *testing.T) {
 			router.ServeHTTP(w, req)
 
 			assert.Equal(t, http.StatusBadRequest, w.Code)
-			assert.Contains(t, w.Body.String(), tt.expectedReason)
+			assert.Contains(t, w.Body.String(), "unsupported short latest download target")
 		})
 	}
 }
