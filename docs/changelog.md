@@ -1,5 +1,14 @@
 # 变更日志
 
+## 2026-05-09 [ENH-007]
+
+新增极简 latest 下载短链：
+
+- 新增公开入口 `/d/<app_alias>/<platform_alias>`，同域内 302 到标准 latest URL `/download/latest/ttpos/<app_identifier>/<platform>`。
+- app alias 固定为 `pos -> ttpos`、`go -> ttpos_go`、`menu -> ttpos_menu`、`kitchen -> ttpos_kitchen`、`shop -> ttpos_shop`。
+- platform alias 固定为 `a -> android`、`w -> windows`、`m -> macos`。
+- 未知 app 或 platform alias 返回 400；标准 `/download/latest/*`、`/apps/latest` 和 `/download?key=` 行为不变。
+
 ## 2026-05-08 [ENH-006]
 
 公开 latest 下载入口收敛为唯一平台级 URL：

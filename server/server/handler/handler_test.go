@@ -88,3 +88,71 @@ func TestPublicLatestDownloadRejectsUnsupportedPlatformShortcut(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	assert.Contains(t, w.Body.String(), "unsupported platform")
 }
+
+func TestShortLatestDownloadRedirectsAliases(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	apps := map[string]string{
+		"pos":     "ttpos",
+		"go":      "ttpos_go",
+		"menu":    "ttpos_menu",
+		"kitchen": "ttpos_kitchen",
+		"shop":    "ttpos_shop",
+	}
+	platforms := map[string]string{
+		"a": "android",
+		"w": "windows",
+		"m": "macos",
+	}
+
+	for appAlias, appIdentifier := range apps {
+		for platformAlias, platform := range platforms {
+			t.Run(appAlias+"_"+platformAlias, func(t *testing.T) {
+				router := gin.New()
+				handler := &appHandler{}
+				router.GET("/d/:app/:platform", handler.ShortLatestDownload)
+
+				req, err := http.NewRequest(http.MethodGet, "/d/"+appAlias+"/"+platformAlias, nil)
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				w := httptest.NewRecorder()
+				router.ServeHTTP(w, req)
+
+				assert.Equal(t, http.StatusFound, w.Code)
+				assert.Equal(t, "/download/latest/ttpos/"+appIdentifier+"/"+platform, w.Header().Get("Location"))
+			})
+		}
+	}
+}
+
+func TestShortLatestDownloadRejectsUnsupportedAliases(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	tests := []struct {
+		name           string
+		target         string
+		expectedReason string
+	}{
+		{name: "app", target: "/d/unknown/m", expectedReason: "unsupported app alias"},
+		{name: "platform", target: "/d/pos/x", expectedReason: "unsupported platform alias"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			router := gin.New()
+			handler := &appHandler{}
+			router.GET("/d/:app/:platform", handler.ShortLatestDownload)
+
+			req, err := http.NewRequest(http.MethodGet, tt.target, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			w := httptest.NewRecorder()
+			router.ServeHTTP(w, req)
+
+			assert.Equal(t, http.StatusBadRequest, w.Code)
+			assert.Contains(t, w.Body.String(), tt.expectedReason)
+		})
+	}
+}

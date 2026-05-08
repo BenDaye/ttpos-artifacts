@@ -585,6 +585,23 @@ Path segments must still be URL encoded when they contain reserved URL character
 curl -I --location 'http://localhost:9000/download/latest/admin/ttpos_kitchen/android'
 ```
 
+### Short Latest Download Shortcut
+
+This endpoint provides compact public aliases that redirect to the standard latest download shortcut on the same server.
+
+`GET /d/<app_alias>/<platform_alias>`
+
+App aliases: `pos -> ttpos`, `go -> ttpos_go`, `menu -> ttpos_menu`, `kitchen -> ttpos_kitchen`, and `shop -> ttpos_shop`.
+
+Platform aliases: `a -> android`, `w -> windows`, and `m -> macos`.
+
+When the aliases are valid, the endpoint returns `302 Found` with `Location` set to `/download/latest/ttpos/<app_identifier>/<platform>`. Unknown app or platform aliases return `400`.
+
+###### Short Request:
+```
+curl -I --location 'http://localhost:9000/d/pos/m'
+```
+
 ### Update App
 
 Update existing specific app.

@@ -56,6 +56,7 @@ type AppHandler interface {
 	GetTelemetry(*gin.Context)
 	SquirrelReleases(*gin.Context)
 	PublicLatestDownload(*gin.Context)
+	ShortLatestDownload(*gin.Context)
 	CreateToken(*gin.Context)
 	ListTokens(*gin.Context)
 	DeleteToken(*gin.Context)
@@ -260,6 +261,7 @@ func (ch *appHandler) SquirrelReleases(c *gin.Context) {
 }
 
 const publicLatestDefaultChannel = "prod"
+const publicLatestOwner = "ttpos"
 
 type publicLatestPlatformDefault struct {
 	Arch    string
@@ -270,6 +272,20 @@ var publicLatestPlatformDefaults = map[string]publicLatestPlatformDefault{
 	"android": {Arch: "arm64", Package: "apk"},
 	"windows": {Arch: "amd64", Package: "exe"},
 	"macos":   {Arch: "arm64", Package: "dmg"},
+}
+
+var shortLatestAppAliases = map[string]string{
+	"pos":     "ttpos",
+	"go":      "ttpos_go",
+	"menu":    "ttpos_menu",
+	"kitchen": "ttpos_kitchen",
+	"shop":    "ttpos_shop",
+}
+
+var shortLatestPlatformAliases = map[string]string{
+	"a": "android",
+	"w": "windows",
+	"m": "macos",
 }
 
 // PublicLatestDownload exposes a user-facing latest shortcut with prod as the default channel.
@@ -286,6 +302,25 @@ func (ch *appHandler) PublicLatestDownload(c *gin.Context) {
 
 	setLatestDownloadQuery(c, publicLatestDefaultChannel, platform, defaults.Arch, defaults.Package)
 	info.FetchLatestVersionOfApp(c, ch.repository, ch.redisClient, ch.performanceMode)
+}
+
+// ShortLatestDownload exposes compact public aliases for website and QR links.
+//
+//	GET /d/:app/:platform
+func (ch *appHandler) ShortLatestDownload(c *gin.Context) {
+	appIdentifier, ok := shortLatestAppAliases[c.Param("app")]
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "unsupported app alias for short latest download"})
+		return
+	}
+
+	platform, ok := shortLatestPlatformAliases[c.Param("platform")]
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "unsupported platform alias for short latest download"})
+		return
+	}
+
+	c.Redirect(http.StatusFound, "/download/latest/"+publicLatestOwner+"/"+appIdentifier+"/"+platform)
 }
 
 func setLatestDownloadQuery(c *gin.Context, channel, platform, arch, pkg string) {

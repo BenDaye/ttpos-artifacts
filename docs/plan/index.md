@@ -27,3 +27,4 @@
 | [x] | PLAN-023 | 公开 latest 下载入口按平台固化 artifact 默认值 | ENH-004 |
 | [x] | PLAN-024 | 移除未投产的 /latest 路由 | ENH-005 |
 | [x] | PLAN-025 | 收敛公开 latest 下载为单一路由 | ENH-006 |
+| [x] | PLAN-026 | 新增极简 latest 下载短链 | ENH-007 |
