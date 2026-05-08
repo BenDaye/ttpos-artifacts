@@ -62,6 +62,34 @@ test.describe('Applications page', () => {
     await expect(page.getByText('stable', { exact: true }).first()).toBeVisible()
   })
 
+  test('board version card opens quick detail dialog without leaving board', async ({ page }) => {
+    await page.goto('/applications')
+
+    await page.getByRole('button', { name: 'Board view' }).click()
+    await page.getByTestId('board-version-card').first().click()
+
+    await expect(page).toHaveURL(/\/applications$/)
+    const dialog = page.getByTestId('version-detail-dialog')
+    await expect(dialog).toBeVisible()
+    await expect(dialog.getByTestId('version-detail-title')).toHaveText('1.0.0')
+    await expect(dialog.getByTestId('version-detail-title')).toHaveAttribute('data-version-tone', 'published')
+    await expect(dialog.getByTestId('version-detail-channel-chip')).toHaveText('STABLE')
+    await expect(dialog.getByTestId('version-detail-status')).toContainText('Published')
+    await expect(dialog.getByText('cashier-1.0.0.apk')).toBeVisible()
+    await expect(dialog.getByRole('button', { name: 'Edit' })).toBeVisible()
+    await expect(dialog.getByRole('button', { name: 'Add artifact' })).toBeVisible()
+
+    await dialog.getByRole('button', { name: 'Edit' }).click()
+    await expect(page.getByRole('heading', { name: 'Edit version' })).toBeVisible()
+    await page.getByRole('button', { name: 'Cancel' }).click()
+    await expect(page.getByRole('heading', { name: 'Edit version' })).not.toBeVisible({ timeout: 5000 })
+
+    await dialog.locator('button[type="button"]:visible', { hasText: /^Close$/ }).first().click()
+    await expect(dialog).not.toBeVisible({ timeout: 5000 })
+    await page.locator('.app-board-column > button').first().click()
+    await expect(page).toHaveURL(/\/applications\/TTPOS-Cashier/)
+  })
+
   test('new app button opens create dialog', async ({ page }) => {
     await page.goto('/applications')
 

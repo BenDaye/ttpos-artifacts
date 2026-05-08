@@ -2,14 +2,17 @@ import type { AppSummary, AppVersion } from '@ttpos/shared'
 import type { AppViewProps } from './types'
 import { useQueries } from '@tanstack/react-query'
 import { Boxes, Pencil, Trash2 } from 'lucide-react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import { Card, CardContent } from '@/shared/components/ui/card'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 import { appsApi } from '../../api'
+import { VersionDetailDialog } from '../version-detail-dialog'
 
 export function AppBoardView({ apps, onSelect, onEdit, onDelete }: AppViewProps) {
+  const [selectedVersion, setSelectedVersion] = useState<AppVersion | null>(null)
   const versionQueries = useQueries({
     queries: apps.map(app => ({
       queryKey: ['app-search', { app_name: app.AppName, page: 1, limit: 100, board: true }],
@@ -20,24 +23,32 @@ export function AppBoardView({ apps, onSelect, onEdit, onDelete }: AppViewProps)
   })
 
   return (
-    <div className="flex h-full max-w-full min-h-0 min-w-0 gap-3 overflow-x-auto overscroll-x-contain pb-2">
-      {apps.map((app, idx) => {
-        const query = versionQueries[idx]
-        return (
-          <BoardColumn
-            key={app.ID}
-            app={app}
-            versions={query?.data?.versions ?? []}
-            total={query?.data?.total ?? 0}
-            isLoading={Boolean(query?.isPending)}
-            isError={Boolean(query?.isError)}
-            onSelect={onSelect}
-            onEdit={onEdit}
-            onDelete={onDelete}
-          />
-        )
-      })}
-    </div>
+    <>
+      <div className="flex h-full max-w-full min-h-0 min-w-0 gap-3 overflow-x-auto overscroll-x-contain pb-2">
+        {apps.map((app, idx) => {
+          const query = versionQueries[idx]
+          return (
+            <BoardColumn
+              key={app.ID}
+              app={app}
+              versions={query?.data?.versions ?? []}
+              total={query?.data?.total ?? 0}
+              isLoading={Boolean(query?.isPending)}
+              isError={Boolean(query?.isError)}
+              onSelect={onSelect}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              onVersionSelect={setSelectedVersion}
+            />
+          )
+        })}
+      </div>
+      <VersionDetailDialog
+        open={Boolean(selectedVersion)}
+        onOpenChange={open => !open && setSelectedVersion(null)}
+        version={selectedVersion}
+      />
+    </>
   )
 }
 
@@ -50,9 +61,10 @@ interface BoardColumnProps {
   onSelect: (app: AppSummary) => void
   onEdit: (app: AppSummary) => void
   onDelete: (app: AppSummary) => void
+  onVersionSelect: (version: AppVersion) => void
 }
 
-function BoardColumn({ app, versions, total, isLoading, isError, onSelect, onEdit, onDelete }: BoardColumnProps) {
+function BoardColumn({ app, versions, total, isLoading, isError, onSelect, onEdit, onDelete, onVersionSelect }: BoardColumnProps) {
   const { t } = useTranslation(['apps', 'common'])
 
   return (
@@ -119,7 +131,7 @@ function BoardColumn({ app, versions, total, isLoading, isError, onSelect, onEdi
           </p>
         )}
         {!isLoading && !isError && versions.length > 0 && versions.map(version => (
-          <VersionItem key={version.ID} version={version} onSelect={() => onSelect(app)} />
+          <VersionItem key={version.ID} version={version} onSelect={() => onVersionSelect(version)} />
         ))}
       </div>
     </div>
@@ -142,6 +154,11 @@ function VersionItem({ version, onSelect }: VersionItemProps) {
     <Card
       role="button"
       tabIndex={0}
+      aria-label={t('board.open_version_details', {
+        version: version.Version,
+        defaultValue: 'Open version {{version}} details',
+      })}
+      data-testid="board-version-card"
       onClick={onSelect}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {

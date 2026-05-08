@@ -30,3 +30,4 @@
 | [x] | PLAN-026 | 新增极简 latest 下载短链 | ENH-007 |
 | [x] | PLAN-028 | 将 latest 短链改为资源型直达 302 | ENH-008 |
 | [x] | PLAN-027 | Dashboard Next App board 单一纵向滚动收敛 | BUG-013 |
+| [x] | PLAN-029 | Dashboard Next App board version 快速详情弹层 | ENH-009 |

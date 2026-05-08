@@ -1,5 +1,15 @@
 # 变更日志
 
+## 2026-05-09 03:17 [ENH-009]
+
+新增 Dashboard Next Applications board 的 version 快速详情弹层：
+
+- board 视图中点击 version card 现在打开 quick detail dialog，不再直接跳转 app detail，保留当前 board 上下文和滚动位置。
+- dialog 沿用 version card 的状态层级：version title、uppercase channel、Critical / Published / Draft / Intermediate 状态摘要。
+- dialog 内展示 changelog 与 artifact 列表，并提供 copy URL、download、edit version、add artifact、delete version / artifact 和进入 app detail 的操作入口。
+- app detail 与 board dialog 共用 version tone 和 artifact 文件名 fallback 规则，避免后续视觉/文件名逻辑分叉。
+- e2e 增加 board version quick detail 回归，覆盖点击 version 不跳页、弹层内容、从弹层打开 edit dialog，以及 column header 仍可跳转 app detail。
+
 ## 2026-05-09 [BUG-013]
 
 修复 Dashboard Next Applications board 双层纵向滚动：
