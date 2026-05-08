@@ -350,10 +350,15 @@ body {
     width: calc(var(--spacing-section) * 4);
   }
 
-  .app-board-scroll-area {
-    max-height: calc(
-      100vh - (var(--spacing-section) + var(--spacing-xxl) + var(--spacing-lg) + var(--spacing-xl) + var(--spacing-md))
-    );
+  .app-board-page {
+    height: calc(100svh - ((var(--spacing) * 14) + (var(--spacing) * 8)));
+    min-height: 0;
+  }
+
+  @media (width >= 48rem) {
+    .app-board-page {
+      height: calc(100svh - ((var(--spacing) * 14) + (var(--spacing) * 12)));
+    }
   }
 
   .tabs-indicator {

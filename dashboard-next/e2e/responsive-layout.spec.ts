@@ -48,6 +48,15 @@ async function expectNoDocumentOverflow(page: Page) {
   })).toBeLessThanOrEqual(1)
 }
 
+async function expectNoDocumentVerticalOverflow(page: Page) {
+  await page.waitForLoadState('networkidle')
+  await expect.poll(async () => page.evaluate(() => {
+    const root = document.documentElement
+    const body = document.body
+    return Math.ceil(Math.max(root.scrollHeight, body.scrollHeight) - root.clientHeight)
+  })).toBeLessThanOrEqual(1)
+}
+
 async function expectReadableEmptyStateDescription(page: Page, text: string, minWidth: number) {
   const locator = page.getByText(text, { exact: true })
   await expect(locator).toBeVisible()
@@ -125,6 +134,29 @@ test.describe('Responsive layout', () => {
       await expectNoDocumentOverflow(page)
     })
   }
+
+  test('keeps long application board version lists inside column scroll areas', async ({ page }) => {
+    await page.setViewportSize({ width: 1024, height: 640 })
+    await mockManyApps(page)
+    await mockVersions(page, Array.from({ length: 18 }, (_, index) => versionFixture(index + 1)), 18)
+
+    await page.goto('/applications')
+    await page.getByRole('button', { name: 'Board view' }).click()
+
+    const scrollArea = page.locator('.app-board-scroll-area').first()
+    await expect(scrollArea).toBeVisible()
+    await expectNoDocumentOverflow(page)
+    await expectNoDocumentVerticalOverflow(page)
+    await expect.poll(async () => scrollArea.evaluate((element) => {
+      return Math.ceil(element.scrollHeight - element.clientHeight)
+    })).toBeGreaterThan(40)
+
+    await scrollArea.evaluate((element) => {
+      element.scrollTop = 120
+    })
+    await expect.poll(async () => scrollArea.evaluate(element => Math.round(element.scrollTop))).toBeGreaterThan(0)
+    await expectNoDocumentVerticalOverflow(page)
+  })
 
   test('uses an overlay drawer for mobile navigation', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 900 })

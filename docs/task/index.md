@@ -39,3 +39,4 @@
 | [x] | ENH-006 | 收敛公开 latest 下载为单一路由 | P1 | completed |
 | [x] | ENH-007 | 新增极简 latest 下载短链 | P1 | completed |
 | [x] | ENH-008 | 将 latest 短链改为资源型直达 302 | P1 | completed |
+| [x] | BUG-013 | 修复 Dashboard Next App board 双层纵向滚动 | P1 | completed |

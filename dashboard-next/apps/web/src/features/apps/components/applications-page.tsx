@@ -11,6 +11,7 @@ import { PageHeader } from '@/shared/components/page-header'
 import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
 import { Skeleton } from '@/shared/components/ui/skeleton'
+import { cn } from '@/shared/lib/utils'
 import { useUiStore } from '@/shared/stores/ui-store'
 import { useAppsListQuery, useDeleteAppMutation } from '../hooks'
 import { AppFormDialog } from './app-form-dialog'
@@ -22,6 +23,7 @@ export function ApplicationsPage() {
   const { t } = useTranslation(['apps', 'common'])
   const navigate = useNavigate()
   const layout = useUiStore(s => s.layout)
+  const isBoardLayout = layout === 'board'
   const appsQuery = useAppsListQuery({ page: 1, limit: 50 })
   const deleteMutation = useDeleteAppMutation()
   const [search, setSearch] = useState('')
@@ -70,17 +72,18 @@ export function ApplicationsPage() {
     if (layout === 'list') {
       return <AppListView apps={filtered} onSelect={goToDetail} onEdit={setEditing} onDelete={setDeleting} />
     }
-    if (layout === 'board') {
+    if (isBoardLayout) {
       return <AppBoardView apps={filtered} onSelect={goToDetail} onEdit={setEditing} onDelete={setDeleting} />
     }
     return <AppCardView apps={filtered} onSelect={goToDetail} onEdit={setEditing} onDelete={setDeleting} />
   }
 
   return (
-    <div className="min-w-0 max-w-full">
+    <div className={cn('min-w-0 max-w-full', isBoardLayout && 'app-board-page flex flex-col')}>
       <PageHeader
         title={t('title')}
         description={t('description')}
+        className={isBoardLayout ? 'shrink-0' : undefined}
         actions={(
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <LayoutSwitcher />
@@ -92,7 +95,7 @@ export function ApplicationsPage() {
         )}
       />
 
-      <div className="dashboard-search-shell mb-4 flex items-center gap-2">
+      <div className={cn('dashboard-search-shell mb-4 flex items-center gap-2', isBoardLayout && 'shrink-0')}>
         <div className="relative min-w-0 flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -119,7 +122,11 @@ export function ApplicationsPage() {
         />
       )}
 
-      {appsQuery.isSuccess && renderView()}
+      {appsQuery.isSuccess && (
+        isBoardLayout
+          ? <div className="min-h-0 flex-1">{renderView()}</div>
+          : renderView()
+      )}
 
       <AppFormDialog open={creating} onOpenChange={setCreating} />
       <AppFormDialog

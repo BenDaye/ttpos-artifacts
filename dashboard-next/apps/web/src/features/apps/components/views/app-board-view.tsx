@@ -20,7 +20,7 @@ export function AppBoardView({ apps, onSelect, onEdit, onDelete }: AppViewProps)
   })
 
   return (
-    <div className="flex max-w-full min-w-0 gap-3 overflow-x-auto overscroll-x-contain pb-2">
+    <div className="flex h-full max-w-full min-h-0 min-w-0 gap-3 overflow-x-auto overscroll-x-contain pb-2">
       {apps.map((app, idx) => {
         const query = versionQueries[idx]
         return (
@@ -56,11 +56,11 @@ function BoardColumn({ app, versions, total, isLoading, isError, onSelect, onEdi
   const { t } = useTranslation(['apps', 'common'])
 
   return (
-    <div className="app-board-column flex max-w-full shrink-0 flex-col rounded-lg border border-border bg-muted/30">
+    <div className="app-board-column flex h-full max-w-full min-h-0 shrink-0 flex-col rounded-lg border border-border bg-muted/30">
       <button
         type="button"
         onClick={() => onSelect(app)}
-        className="flex min-w-0 items-center gap-2 border-b border-border px-3 py-2 text-left transition-colors hover:bg-accent/50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+        className="flex min-w-0 shrink-0 items-center gap-2 border-b border-border px-3 py-2 text-left transition-colors hover:bg-accent/50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
       >
         <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
           {app.Logo
@@ -101,7 +101,7 @@ function BoardColumn({ app, versions, total, isLoading, isError, onSelect, onEdi
         </div>
       </button>
 
-      <div className="app-board-scroll-area flex flex-1 flex-col gap-2 overflow-y-auto p-2">
+      <div className="app-board-scroll-area flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-2">
         {isLoading && (
           <>
             <Skeleton className="h-16 rounded-md" />
