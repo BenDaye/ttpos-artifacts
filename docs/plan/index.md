@@ -21,3 +21,9 @@
 | [x] | PLAN-017 | 锁定 Upload version 的 App name 并移除孤悬的全局上传入口 | BUG-010 |
 | [x] | PLAN-018 | Dashboard UI 文案 brand-neutral 收敛 | QUAL-003 |
 | [x] | PLAN-019 | 移除 New app 表单残留的 Enable TUF metadata 入口 | BUG-011 |
+| [x] | PLAN-020 | 完善 latest 路径式下载入口投产缺口 | BUG-012 |
+| [x] | PLAN-021 | latest 路径支持 snake app identifier | ENH-002 |
+| [x] | PLAN-022 | 新增默认 prod 的公开 latest 下载入口 | ENH-003 |
+| [x] | PLAN-023 | 公开 latest 下载入口按平台固化 artifact 默认值 | ENH-004 |
+| [x] | PLAN-024 | 移除未投产的 /latest 路由 | ENH-005 |
+| [x] | PLAN-025 | 收敛公开 latest 下载为单一路由 | ENH-006 |

@@ -11,6 +11,7 @@ import (
 	"faynoSync/server/handler/team"
 	"faynoSync/server/handler/token"
 	"faynoSync/server/handler/update"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
@@ -54,7 +55,7 @@ type AppHandler interface {
 	UpdateAdmin(*gin.Context)
 	GetTelemetry(*gin.Context)
 	SquirrelReleases(*gin.Context)
-	LatestDownload(*gin.Context)
+	PublicLatestDownload(*gin.Context)
 	CreateToken(*gin.Context)
 	ListTokens(*gin.Context)
 	DeleteToken(*gin.Context)
@@ -258,26 +259,46 @@ func (ch *appHandler) SquirrelReleases(c *gin.Context) {
 	info.FindLatestVersion(c, ch.repository, ch.database, ch.redisClient, ch.performanceMode)
 }
 
-// LatestDownload exposes a path-based shortcut to the latest installer.
+const publicLatestDefaultChannel = "prod"
+
+type publicLatestPlatformDefault struct {
+	Arch    string
+	Package string
+}
+
+var publicLatestPlatformDefaults = map[string]publicLatestPlatformDefault{
+	"android": {Arch: "arm64", Package: "apk"},
+	"windows": {Arch: "amd64", Package: "exe"},
+	"macos":   {Arch: "arm64", Package: "dmg"},
+}
+
+// PublicLatestDownload exposes a user-facing latest shortcut with prod as the default channel.
 // Routes:
-//   GET /latest/:owner/:app_name/:channel/:platform/:arch
-//   GET /latest/:owner/:app_name/:channel/:platform/:arch/:package
-// Path params are mapped onto the query string and the call is delegated to
-// FetchLatestVersionOfApp, which already handles the 302 redirect when a
-// single artifact matches.
-func (ch *appHandler) LatestDownload(c *gin.Context) {
+//
+//	GET /download/latest/:owner/:app_identifier/:platform
+func (ch *appHandler) PublicLatestDownload(c *gin.Context) {
+	platform := c.Param("platform")
+	defaults, ok := publicLatestPlatformDefaults[platform]
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "unsupported platform for public latest download"})
+		return
+	}
+
+	setLatestDownloadQuery(c, publicLatestDefaultChannel, platform, defaults.Arch, defaults.Package)
+	info.FetchLatestVersionOfApp(c, ch.repository, ch.redisClient, ch.performanceMode)
+}
+
+func setLatestDownloadQuery(c *gin.Context, channel, platform, arch, pkg string) {
 	q := c.Request.URL.Query()
 	q.Set("owner", c.Param("owner"))
-	q.Set("app_name", c.Param("app_name"))
-	q.Set("channel", c.Param("channel"))
-	q.Set("platform", c.Param("platform"))
-	q.Set("arch", c.Param("arch"))
-	if pkg := c.Param("package"); pkg != "" {
+	q.Set("app_name", c.Param("app_identifier"))
+	q.Set("channel", channel)
+	q.Set("platform", platform)
+	q.Set("arch", arch)
+	if pkg != "" {
 		q.Set("package", pkg)
 	}
 	c.Request.URL.RawQuery = q.Encode()
-
-	info.FetchLatestVersionOfApp(c, ch.repository, ch.redisClient, ch.performanceMode)
 }
 
 func (ch *appHandler) CreateToken(c *gin.Context) {

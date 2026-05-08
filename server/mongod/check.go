@@ -3,9 +3,12 @@ package mongod
 import (
 	"context"
 	"errors"
-	"faynoSync/server/model"
 	"fmt"
 	"sort"
+	"strings"
+	"unicode"
+
+	"faynoSync/server/model"
 
 	"github.com/hashicorp/go-version"
 	"github.com/sirupsen/logrus"
@@ -13,6 +16,17 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
+
+var (
+	ErrAppNameNotFound        = errors.New("app_name not found in apps_meta collection")
+	ErrAppIdentifierAmbiguous = errors.New("app identifier matches multiple apps in apps_meta collection")
+	ErrChannelNotFound        = errors.New("channel not found in apps_meta collection")
+)
+
+type latestAppMeta struct {
+	ID      primitive.ObjectID `bson:"_id"`
+	AppName string             `bson:"app_name"`
+}
 
 func (c *appRepository) Get(ctx context.Context, limit int64, owner string) ([]*model.SpecificAppWithoutIDs, error) {
 	collection := c.client.Database(c.config.Database).Collection("apps")
@@ -424,10 +438,9 @@ func (c *appRepository) CheckLatestVersion(appName, currentVersion, channelName,
 
 func (c *appRepository) FetchLatestVersionOfApp(appName, channel string, ctx context.Context, owner string) ([]*model.SpecificAppWithoutIDs, error) {
 	metaCollection := c.client.Database(c.config.Database).Collection("apps_meta")
-	metaFilter := bson.D{{Key: "app_name", Value: appName}, {Key: "owner", Value: owner}}
-	err := metaCollection.FindOne(ctx, metaFilter).Decode(&appMeta)
+	appMeta, err := c.resolveLatestAppMeta(ctx, metaCollection, appName, owner)
 	if err != nil {
-		return nil, errors.New("app_name not found in apps_meta collection")
+		return nil, err
 	}
 	var channelMeta struct {
 		ID primitive.ObjectID `bson:"_id"`
@@ -436,7 +449,10 @@ func (c *appRepository) FetchLatestVersionOfApp(appName, channel string, ctx con
 		channelFilter := bson.D{{Key: "channel_name", Value: channel}, {Key: "owner", Value: owner}}
 		err := metaCollection.FindOne(ctx, channelFilter).Decode(&channelMeta)
 		if err != nil {
-			return nil, errors.New("channel not found in apps_meta collection")
+			if !errors.Is(err, mongo.ErrNoDocuments) {
+				return nil, err
+			}
+			return nil, ErrChannelNotFound
 		}
 	}
 	collection := c.client.Database(c.config.Database).Collection("apps")
@@ -462,6 +478,86 @@ func (c *appRepository) FetchLatestVersionOfApp(appName, channel string, ctx con
 	defer cur.Close(ctx)
 
 	return c.processApps(cur, ctx)
+}
+
+func (c *appRepository) resolveLatestAppMeta(ctx context.Context, metaCollection *mongo.Collection, appIdentifier, owner string) (latestAppMeta, error) {
+	var appMeta latestAppMeta
+	metaFilter := bson.D{{Key: "app_name", Value: appIdentifier}, {Key: "owner", Value: owner}}
+	err := metaCollection.FindOne(ctx, metaFilter).Decode(&appMeta)
+	if err == nil {
+		return appMeta, nil
+	}
+	if !errors.Is(err, mongo.ErrNoDocuments) {
+		return latestAppMeta{}, err
+	}
+
+	cur, err := metaCollection.Find(ctx, bson.D{
+		{Key: "owner", Value: owner},
+		{Key: "app_name", Value: bson.M{"$exists": true}},
+	})
+	if err != nil {
+		return latestAppMeta{}, err
+	}
+	defer cur.Close(ctx)
+
+	var candidates []latestAppMeta
+	for cur.Next(ctx) {
+		var candidate latestAppMeta
+		if err := cur.Decode(&candidate); err != nil {
+			return latestAppMeta{}, err
+		}
+		candidates = append(candidates, candidate)
+	}
+	if err := cur.Err(); err != nil {
+		return latestAppMeta{}, err
+	}
+
+	return selectAppMetaByNormalizedIdentifier(candidates, appIdentifier)
+}
+
+func selectAppMetaByNormalizedIdentifier(candidates []latestAppMeta, appIdentifier string) (latestAppMeta, error) {
+	normalizedIdentifier := NormalizeAppIdentifier(appIdentifier)
+	if normalizedIdentifier == "" {
+		return latestAppMeta{}, ErrAppNameNotFound
+	}
+
+	var match latestAppMeta
+	matches := 0
+	for _, candidate := range candidates {
+		if NormalizeAppIdentifier(candidate.AppName) == normalizedIdentifier {
+			match = candidate
+			matches++
+		}
+	}
+
+	switch matches {
+	case 0:
+		return latestAppMeta{}, ErrAppNameNotFound
+	case 1:
+		return match, nil
+	default:
+		return latestAppMeta{}, ErrAppIdentifierAmbiguous
+	}
+}
+
+func NormalizeAppIdentifier(value string) string {
+	var builder strings.Builder
+	lastUnderscore := false
+
+	for _, r := range strings.ToLower(value) {
+		if unicode.IsLetter(r) || unicode.IsDigit(r) {
+			builder.WriteRune(r)
+			lastUnderscore = false
+			continue
+		}
+
+		if builder.Len() > 0 && !lastUnderscore {
+			builder.WriteRune('_')
+			lastUnderscore = true
+		}
+	}
+
+	return strings.Trim(builder.String(), "_")
 }
 
 func (c *appRepository) FetchAppByID(appID primitive.ObjectID, ctx context.Context) ([]*model.SpecificAppWithoutIDs, error) {

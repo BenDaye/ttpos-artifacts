@@ -3,13 +3,16 @@ package info
 import (
 	"context"
 	"encoding/json"
-	db "faynoSync/mongod"
-	"faynoSync/server/utils"
-	"faynoSync/server/utils/updaters"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 	"time"
+
+	db "faynoSync/mongod"
+	"faynoSync/server/model"
+	"faynoSync/server/utils"
+	"faynoSync/server/utils/updaters"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
@@ -22,19 +25,36 @@ type CachedResponse struct {
 	HTTPStatus int         `json:"http_status"`
 }
 
-func CreateCacheKey(params map[string]interface{}) string {
-	baseKey := fmt.Sprintf("app_name=%s&version=%s&channel=%s&platform=%s&arch=%s",
-		params["app_name"], params["version"], params["channel"], params["platform"], params["arch"])
+type latestAppRepository interface {
+	FetchLatestVersionOfApp(appName, channel string, ctx context.Context, owner string) ([]*model.SpecificAppWithoutIDs, error)
+}
 
-	if updater, exists := params["updater"]; exists && updater != "" {
+func CreateCacheKey(params map[string]interface{}) string {
+	baseKey := fmt.Sprintf("owner=%s&app_name=%s&version=%s&channel=%s&platform=%s&arch=%s",
+		cacheParam(params, "owner"),
+		cacheParam(params, "app_name"),
+		cacheParam(params, "version"),
+		cacheParam(params, "channel"),
+		cacheParam(params, "platform"),
+		cacheParam(params, "arch"),
+	)
+
+	if updater := cacheParam(params, "updater"); updater != "" {
 		baseKey += fmt.Sprintf("&updater=%s", updater)
 	}
 
-	if pkg, exists := params["package"]; exists && pkg != "" {
+	if pkg := cacheParam(params, "package"); pkg != "" {
 		baseKey += fmt.Sprintf("&package=%s", pkg)
 	}
 
 	return baseKey
+}
+
+func cacheParam(params map[string]interface{}, key string) string {
+	if value, exists := params[key]; exists && value != nil {
+		return fmt.Sprint(value)
+	}
+	return ""
 }
 
 func cacheResponse(ctx context.Context, rdb *redis.Client, cacheKey string, response interface{}, httpStatus int) {
@@ -216,7 +236,7 @@ func FindLatestVersion(c *gin.Context, repository db.AppRepository, db *mongo.Da
 	c.JSON(httpStatus, response)
 }
 
-func FetchLatestVersionOfApp(c *gin.Context, repository db.AppRepository, rdb *redis.Client, performanceMode bool) {
+func FetchLatestVersionOfApp(c *gin.Context, repository latestAppRepository, rdb *redis.Client, performanceMode bool) {
 	if c.Query("app_name") == "" || c.Query("channel") == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Parameters 'app_name' and 'channel' are required",
@@ -263,7 +283,8 @@ func FetchLatestVersionOfApp(c *gin.Context, repository db.AppRepository, rdb *r
 	checkResult, err := repository.FetchLatestVersionOfApp(params["app_name"].(string), params["channel"].(string), ctx, params["owner"].(string))
 	if err != nil {
 		logrus.Error(err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch latest version"})
+		status, response := latestFetchErrorResponse(err)
+		c.JSON(status, response)
 		return
 	}
 
@@ -338,6 +359,16 @@ func FetchLatestVersionOfApp(c *gin.Context, repository db.AppRepository, rdb *r
 	if performanceMode && rdb != nil {
 		cacheResponse(ctx, rdb, cacheKey, downloadUrls, http.StatusOK)
 	}
+}
+
+func latestFetchErrorResponse(err error) (int, gin.H) {
+	if errors.Is(err, db.ErrAppNameNotFound) || errors.Is(err, db.ErrChannelNotFound) {
+		return http.StatusNotFound, gin.H{"error": "No matching data found for the provided parameters"}
+	}
+	if errors.Is(err, db.ErrAppIdentifierAmbiguous) {
+		return http.StatusConflict, gin.H{"error": "App identifier matches multiple applications"}
+	}
+	return http.StatusInternalServerError, gin.H{"error": "failed to fetch latest version"}
 }
 
 // trackClientTelemetry handles analytics collection for version check requests using Redis Sets

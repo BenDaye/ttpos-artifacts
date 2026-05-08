@@ -43,15 +43,18 @@ jobs:
         id: query
         run: |
           CHANNEL="prod"
+          urlencode() {
+            jq -rn --arg v "$1" '$v|@uri'
+          }
 
           ALL_APPS='[
-            {"app":"pos",       "faynosync_name":"TTPOS",          "cms_title":"Cashier",     "platforms":["android","windows","macos"]},
-            {"app":"kds",       "faynosync_name":"TTPOS Kitchen",  "cms_title":"KDS Kitchen", "platforms":["android","windows","macos"]},
-            {"app":"shop",      "faynosync_name":"TTPOS Shop",     "cms_title":"Shop",        "platforms":["android","windows","macos"]},
-            {"app":"assistant", "faynosync_name":"TTPOS Go",       "cms_title":"Assistant",   "platforms":["android","windows","macos"]},
-            {"app":"tablet",    "faynosync_name":"TTPOS Menu",     "cms_title":"Tablet Menu", "platforms":["android","windows","macos"]},
-            {"app":"qds",       "faynosync_name":"TTPOS Queue",    "cms_title":"Queue",       "platforms":["android"]},
-            {"app":"kiosk",     "faynosync_name":"TTPOS Kiosk",    "cms_title":"Kiosk",       "platforms":["android","windows","macos"]}
+            {"app":"pos",       "faynosync_name":"TTPOS",          "faynosync_identifier":"ttpos",          "cms_title":"Cashier",     "platforms":["android","windows","macos"]},
+            {"app":"kds",       "faynosync_name":"TTPOS Kitchen",  "faynosync_identifier":"ttpos_kitchen",  "cms_title":"KDS Kitchen", "platforms":["android","windows","macos"]},
+            {"app":"shop",      "faynosync_name":"TTPOS Shop",     "faynosync_identifier":"ttpos_shop",     "cms_title":"Shop",        "platforms":["android","windows","macos"]},
+            {"app":"assistant", "faynosync_name":"TTPOS Go",       "faynosync_identifier":"ttpos_go",       "cms_title":"Assistant",   "platforms":["android","windows","macos"]},
+            {"app":"tablet",    "faynosync_name":"TTPOS Menu",     "faynosync_identifier":"ttpos_menu",     "cms_title":"Tablet Menu", "platforms":["android","windows","macos"]},
+            {"app":"qds",       "faynosync_name":"TTPOS Queue",    "faynosync_identifier":"ttpos_queue",    "cms_title":"Queue",       "platforms":["android"]},
+            {"app":"kiosk",     "faynosync_name":"TTPOS Kiosk",    "faynosync_identifier":"ttpos_kiosk",    "cms_title":"Kiosk",       "platforms":["android","windows","macos"]}
           ]'
 
           ALL_PLATFORMS='[
@@ -67,6 +70,7 @@ jobs:
           while IFS= read -r app_row; do
             APP_ID=$(echo "$app_row" | jq -r '.app')
             APP_NAME=$(echo "$app_row" | jq -r '.faynosync_name')
+            APP_IDENTIFIER=$(echo "$app_row" | jq -r '.faynosync_identifier // .faynosync_name')
             CMS_TITLE=$(echo "$app_row" | jq -r '.cms_title')
             APP_PLATS=$(echo "$app_row" | jq -c '.platforms')
 
@@ -75,7 +79,7 @@ jobs:
 
             echo ""
             echo "========================================="
-            echo "查询: ${APP_ID} (${APP_NAME} → ${CMS_TITLE}) 平台: $(echo "$PLATFORMS" | jq -r '[.[].label] | join(", ")')"
+            echo "查询: ${APP_ID} (${APP_IDENTIFIER} / ${APP_NAME} → ${CMS_TITLE}) 平台: $(echo "$PLATFORMS" | jq -r '[.[].label] | join(", ")')"
             echo "========================================="
 
             while IFS= read -r plat_row; do
@@ -87,14 +91,12 @@ jobs:
               echo "  --- ${LABEL} (${PLAT}/${ARCH}/${PKG}) ---"
 
               HEADERS=$(mktemp)
-              DOWNLOAD_URL=$(curl -s -D "$HEADERS" -o /dev/null -w "%{redirect_url}" -G \
-                "${FAYNOSYNC_URL}/apps/latest" \
-                --data-urlencode "app_name=${APP_NAME}" \
-                --data-urlencode "channel=${CHANNEL}" \
-                --data-urlencode "platform=${PLAT}" \
-                --data-urlencode "arch=${ARCH}" \
-                --data-urlencode "package=${PKG}" \
-                --data-urlencode "owner=ttpos")
+              OWNER_SEG=$(urlencode "ttpos")
+              APP_SEG=$(urlencode "$APP_IDENTIFIER")
+              PLAT_SEG=$(urlencode "$PLAT")
+
+              DOWNLOAD_URL=$(curl -s -D "$HEADERS" -o /dev/null -w "%{redirect_url}" \
+                "${FAYNOSYNC_URL}/download/latest/${OWNER_SEG}/${APP_SEG}/${PLAT_SEG}")
 
               HTTP_CODE=$(head -1 "$HEADERS" | grep -oP '\d{3}')
               echo "  HTTP 状态: ${HTTP_CODE}"

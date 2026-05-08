@@ -1,5 +1,60 @@
 # 变更日志
 
+## 2026-05-08 [ENH-006]
+
+公开 latest 下载入口收敛为唯一平台级 URL：
+
+- server 不再注册 `/download/latest/<owner>/<app_identifier>/<platform>/<arch>/<package>`。
+- 当前公开 latest 下载入口只保留 `/download/latest/<owner>/<app_identifier>/<platform>`，内部固定使用 `prod` channel，并按平台注入默认 artifact：`android -> arm64/apk`、`windows -> amd64/exe`、`macos -> arm64/dmg`。
+- `/apps/latest` query API 保留为显式 `channel/platform/arch/package` 查询能力，`/download?key=` 保留为底层文件下载器。
+- 测试与 `server/API.md` 已同步为单一路由语义。
+
+## 2026-05-08 [ENH-005]
+
+移除未投产的 `/latest/*` 路由，收敛 latest 下载语义：
+
+- server 不再注册 `/latest/<owner>/<app_identifier>/<channel>/<platform>/<arch>[:package]`，也移除对应 `LatestDownload` handler。
+- 当前公开 latest 下载入口统一为 `/download/latest/<owner>/<app_identifier>/<platform>`；完整公开入口已在 ENH-006 继续移除。
+- `/apps/latest` query API 保留为内部查询能力，`/download?key=` 保留为底层文件下载器。
+- root route 测试与 `server/API.md` 已移除 `/latest/*` 当前 API 说明。
+
+## 2026-05-08 [ENH-004]
+
+公开 latest 下载入口进一步收敛为平台级 URL：
+
+- 新增 `/download/latest/<owner>/<app_identifier>/<platform>`，内部固定使用 `prod` channel，并按平台注入默认 artifact：`android -> arm64/apk`、`windows -> amd64/exe`、`macos -> arm64/dmg`。
+- 当时保留 `/download/latest/<owner>/<app_identifier>/<platform>/<arch>/<package>` 作为显式兜底入口；后续 ENH-006 已在投产前移除该公开入口。
+- CMS 下载页发布 workflow 改用平台级公开 URL，例如 `/download/latest/ttpos/ttpos_kitchen/android`。
+- 未知平台的短入口返回 400，避免服务端隐式猜测。
+
+## 2026-05-08 [ENH-003]
+
+新增默认 `prod` 的公开 latest 下载入口：
+
+- 新增 `/download/latest/<owner>/<app_identifier>/<platform>/<arch>/<package>`，内部默认按 `prod` channel 查询，适合官网、CMS 和二维码等用户可见下载链接。
+- 保留 `/latest/<owner>/<app_identifier>/<channel>/<platform>/<arch>[:package]` 显式 channel 入口，避免破坏 channel-specific 查询与多 package JSON fallback。
+- CMS 下载页发布 workflow 切到 `/download/latest/...`，公开查询 URL 不再暴露 channel path segment。
+- server 测试补充默认 `prod` query 映射覆盖；`server/API.md` 同步公开入口说明。
+
+## 2026-05-08 [ENH-002]
+
+latest 路径式下载入口支持轻量 snake app identifier：
+
+- `/latest/<owner>/<app_identifier>/<channel>/<platform>/<arch>/<package>` 的 `app_identifier` 现在可使用真实 app name 或 normalized lower_snake 形式，例如 `TTPOS Kitchen` 可写为 `ttpos_kitchen`。
+- repository 保持真实 app name 精确匹配优先，找不到时在同 owner 下按 normalized identifier 解析；若多个 app 归一化后冲突，返回 409 避免静默错配。
+- CMS 下载页发布 workflow 改用显式 snake identifier，不再需要在公开 latest URL 中暴露 `%20`。
+- server 测试补充 normalize、identifier 选择、冲突错误与 snake identifier 结果覆盖；`server/API.md` 同步 public URL 说明。
+
+## 2026-05-08 [BUG-012]
+
+完善 latest 路径式下载入口投产缺口：
+
+- `/apps/latest` 与 `/latest/...` 的 app/channel 未命中语义改为 404，不再把可预期 not found 当成 500。
+- latest/checkVersion Redis cache key 纳入 owner 维度，避免 `PERFORMANCE_MODE=true` 时同名 app 跨 owner 缓存串用；upload/update 缓存失效 pattern 同步到新 key 形态。
+- server 测试补充 `/latest/...` 路径式 302、JSON fallback、404 与 cache key owner 断言。
+- CMS 下载页发布 workflow 改为调用 `/latest/<owner>/<app>/<channel>/<platform>/<arch>/<package>`，并使用 `jq @uri` 编码 path segment。
+- `server/API.md` 补充路径式 latest 下载入口说明。
+
 ## 2026-05-02 13:02 [BUG-011]
 
 落实 AGENTS.md "TUF 前端入口禁用" 边界，移除 New app 表单残留入口：

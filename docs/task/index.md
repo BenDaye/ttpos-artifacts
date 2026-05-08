@@ -31,3 +31,9 @@
 | [x] | BUG-010 | Upload version 不应允许编辑 App name；移除孤悬的全局上传入口 | P1 | completed |
 | [x] | QUAL-003 | Dashboard UI 文案 brand-neutral 收敛（去 ttpos-pos 占位） | P2 | completed |
 | [x] | BUG-011 | 移除 New app 表单残留的 Enable TUF metadata 入口 | P1 | completed |
+| [x] | BUG-012 | 完善 latest 路径式下载入口投产缺口 | P1 | completed |
+| [x] | ENH-002 | latest 路径支持 snake app identifier | P1 | completed |
+| [x] | ENH-003 | 新增默认 prod 的公开 latest 下载入口 | P1 | completed |
+| [x] | ENH-004 | 公开 latest 下载入口按平台固化 artifact 默认值 | P1 | completed |
+| [x] | ENH-005 | 移除未投产的 /latest 路由 | P1 | completed |
+| [x] | ENH-006 | 收敛公开 latest 下载为单一路由 | P1 | completed |

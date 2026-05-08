@@ -19,6 +19,7 @@ import (
 	"faynoSync/mongod"
 	"faynoSync/redisdb"
 	"faynoSync/server/handler"
+	"faynoSync/server/handler/info"
 	"faynoSync/server/model"
 	"faynoSync/server/utils"
 
@@ -4626,6 +4627,9 @@ func TestFetchkLatestVersionOfApp(t *testing.T) {
 	router.GET("/apps/latest", func(c *gin.Context) {
 		handler.FetchLatestVersionOfApp(c)
 	})
+	router.GET("/download/latest/:owner/:app_identifier/:platform", func(c *gin.Context) {
+		handler.PublicLatestDownload(c)
+	})
 	// Define test scenarios.
 	testScenarios := []struct {
 		AppName      string
@@ -4717,7 +4721,47 @@ func TestFetchkLatestVersionOfApp(t *testing.T) {
 			assert.Equal(t, scenario.ExpectedJSON, actual)
 		})
 	}
+
+	t.Run("PublicPlatformRouteRejectsUnsupportedPlatform", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		req, err := http.NewRequest("GET", "/download/latest/admin/testapp/universalPlatform", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.Contains(t, w.Body.String(), "unsupported platform")
+	})
+
+	t.Run("PublicFullArtifactRouteNoLongerRegistered", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		req, err := http.NewRequest("GET", "/download/latest/admin/testapp/universalPlatform/universalArch/dmg", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
+	})
 }
+
+func TestCreateCacheKeyIncludesOwner(t *testing.T) {
+	cacheKey := info.CreateCacheKey(map[string]interface{}{
+		"owner":    "ttpos",
+		"app_name": "TTPOS",
+		"version":  "",
+		"channel":  "prod",
+		"platform": "android",
+		"arch":     "arm64",
+		"package":  "apk",
+	})
+
+	assert.Equal(t, "owner=ttpos&app_name=TTPOS&version=&channel=prod&platform=android&arch=arm64&package=apk", cacheKey)
+}
+
 func TestCheckVersion(t *testing.T) {
 	router := gin.Default()
 	handler := handler.NewAppHandler(client, appDB, mongoDatabase, redisClient, viper.GetBool("PERFORMANCE_MODE"))

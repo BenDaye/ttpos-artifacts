@@ -566,6 +566,25 @@ curl -X GET --location 'http://localhost:9000/apps/latest?app_name=secondapp&cha
 }
 ```
 
+### Latest Path Download Shortcut
+
+This endpoint provides a path-based shortcut for website download buttons, QR codes, and other external links that should open the latest installer directly.
+
+Public download links should use the default-prod shortcut:
+
+`GET /download/latest/<owner>/<app_identifier>/<platform>`
+
+This shortcut always queries the `prod` channel and uses fixed artifact defaults: `android` -> `arm64/apk`, `windows` -> `amd64/exe`, and `macos` -> `arm64/dmg`.
+
+`app_identifier` may be the exact `app_name` or its normalized lowercase snake form. The lightweight normalization lowercases the value, folds consecutive non-letter/digit characters into `_`, and trims leading/trailing `_`; for example, `TTPOS Kitchen` may be requested as `ttpos_kitchen`.
+
+Path segments must still be URL encoded when they contain reserved URL characters, but public links should prefer the snake identifier. When exactly one artifact matches, the endpoint returns `302 Found` with `Location` set to the artifact download URL. When no artifact matches, it returns `404`. If multiple apps under the same owner normalize to the same identifier, it returns `409`.
+
+###### Public Request:
+```
+curl -I --location 'http://localhost:9000/download/latest/admin/ttpos_kitchen/android'
+```
+
 ### Update App
 
 Update existing specific app.

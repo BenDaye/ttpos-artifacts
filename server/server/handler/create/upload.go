@@ -24,22 +24,34 @@ func InvalidateCache(ctx context.Context, params map[string]interface{}, rdb *re
 
 	appName, _ := params["app_name"].(string)
 	channel, _ := params["channel"].(string)
-
-	pattern := fmt.Sprintf("app_name=%s&version=*&channel=%s&platform=*&arch=*",
-		appName, channel)
-	logrus.Debugf("Redis pattern %s will be invalidated.", pattern)
-
-	keys, err := rdb.Keys(ctx, pattern).Result()
-	if err != nil {
-		return fmt.Errorf("failed to fetch keys for invalidation: %w", err)
+	appIdentifiers := []string{appName}
+	normalizedAppName := db.NormalizeAppIdentifier(appName)
+	if normalizedAppName != "" && normalizedAppName != appName {
+		appIdentifiers = append(appIdentifiers, normalizedAppName)
 	}
 
-	if len(keys) == 0 {
+	keysToDelete := make(map[string]struct{})
+	for _, appIdentifier := range appIdentifiers {
+		pattern := fmt.Sprintf("owner=*&app_name=%s&version=*&channel=%s&platform=*&arch=*",
+			appIdentifier, channel)
+		logrus.Debugf("Redis pattern %s will be invalidated.", pattern)
+
+		keys, err := rdb.Keys(ctx, pattern).Result()
+		if err != nil {
+			return fmt.Errorf("failed to fetch keys for invalidation: %w", err)
+		}
+
+		for _, key := range keys {
+			keysToDelete[key] = struct{}{}
+		}
+	}
+
+	if len(keysToDelete) == 0 {
 		logrus.Debug("No keys found to invalidate.")
 		return nil
 	}
 
-	for _, key := range keys {
+	for key := range keysToDelete {
 		logrus.Debugf("Invalidating key: %s", key)
 		if err := rdb.Del(ctx, key).Err(); err != nil {
 			logrus.Errorf("Failed to invalidate key: %s, error: %v", key, err)

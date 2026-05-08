@@ -44,3 +44,4 @@ GET /latest/:owner/:app_name/:channel/:platform/:arch/:package
 - `server/server/server.go` — 注册两条路由
 
 实现验证：`go build ./...` 与 `go vet ./...` 通过。
+- 2026-05-08：该未投产 `/latest/*` 路由已被 ENH-005 移除；当前公开 latest 下载入口统一为 `/download/latest/<owner>/<app_identifier>/<platform>`。
