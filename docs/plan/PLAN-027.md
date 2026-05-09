@@ -51,6 +51,7 @@ Applications page 当前使用普通块级容器承载 header、search 和视图
 - board view slot 使用 `min-h-0 flex-1`，让 board 填充 header/search 之后的剩余高度。
 - `AppBoardView` 外层保留横向滚动并继承完整高度。
 - `BoardColumn` 与内部 version scroll area 使用 `h-full` / `min-h-0` / `flex-1`，版本列表纵向滚动限制在 column 内。
+- `.app-board-scroll-area` 外增加 `py-2` wrapper，上下视觉留白固定在滚动区域边界；scroll area 自身只承担横向内边距和纵向滚动。
 - 移除 `.app-board-scroll-area` 的固定 `100vh` max-height 推导，改为 `.app-board-page` 按 shell header 与 main padding 计算可用 screen 高度。
 - responsive e2e 增加长版本列表断言：document 无纵向滚动，column scroll area 可滚动且 `scrollTop` 生效。
 

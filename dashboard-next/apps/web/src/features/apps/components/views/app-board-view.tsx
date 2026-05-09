@@ -113,26 +113,28 @@ function BoardColumn({ app, versions, total, isLoading, isError, onSelect, onEdi
         </div>
       </button>
 
-      <div className="app-board-scroll-area flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-2">
-        {isLoading && (
-          <>
-            <Skeleton className="h-16 rounded-md" />
-            <Skeleton className="h-16 rounded-md" />
-          </>
-        )}
-        {!isLoading && isError && (
-          <p className="px-1 py-3 text-center text-xs text-destructive">
-            {t('board.versions_error', { defaultValue: 'Failed to load versions' })}
-          </p>
-        )}
-        {!isLoading && !isError && versions.length === 0 && (
-          <p className="px-1 py-3 text-center text-xs text-muted-foreground">
-            {t('board.column_empty', { defaultValue: 'No versions yet' })}
-          </p>
-        )}
-        {!isLoading && !isError && versions.length > 0 && versions.map(version => (
-          <VersionItem key={version.ID} version={version} onSelect={() => onVersionSelect(version)} />
-        ))}
+      <div className="min-h-0 flex-1 py-2">
+        <div className="app-board-scroll-area flex h-full min-h-0 flex-col gap-2 overflow-y-auto px-2">
+          {isLoading && (
+            <>
+              <Skeleton className="h-16 rounded-md" />
+              <Skeleton className="h-16 rounded-md" />
+            </>
+          )}
+          {!isLoading && isError && (
+            <p className="px-1 py-3 text-center text-xs text-destructive">
+              {t('board.versions_error', { defaultValue: 'Failed to load versions' })}
+            </p>
+          )}
+          {!isLoading && !isError && versions.length === 0 && (
+            <p className="px-1 py-3 text-center text-xs text-muted-foreground">
+              {t('board.column_empty', { defaultValue: 'No versions yet' })}
+            </p>
+          )}
+          {!isLoading && !isError && versions.length > 0 && versions.map(version => (
+            <VersionItem key={version.ID} version={version} onSelect={() => onVersionSelect(version)} />
+          ))}
+        </div>
       </div>
     </div>
   )

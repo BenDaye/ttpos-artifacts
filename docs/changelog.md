@@ -16,6 +16,7 @@
 
 - board 布局下的 Applications page 现在按 shell header 与 main padding 计算可用 viewport 高度，并用 flex 高度链让 board 填充 header/search 之后的剩余空间。
 - App board 外层继续负责横向滚动；每个 column 继承 board 高度，版本列表只在 column 内部纵向滚动。
+- `.app-board-scroll-area` 外增加上下 padding wrapper，让滚动区域在 column 内有稳定的视觉边界。
 - 移除 `.app-board-scroll-area` 固定 `100vh` max-height 推导，避免页面级纵向滚动和 column 纵向滚动同时出现。
 - responsive e2e 增加长版本列表回归断言，覆盖 document 不纵向滚动、column scroll area 可滚动和 scrollTop 生效。
 
