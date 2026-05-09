@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test'
+import type { Locator, Page } from '@playwright/test'
 import { expect, authedTest as test } from './_fixtures/auth.fixture'
 
 const RESPONSIVE_WIDTHS = [320, 375, 768, 1024] as const
@@ -72,6 +72,21 @@ async function expectReadableEmptyStateDescription(page: Page, text: string, min
     return Math.ceil(element.getBoundingClientRect().height / lineHeight)
   })
   expect(lineCount).toBeLessThanOrEqual(3)
+}
+
+async function visibleBox(locator: Locator) {
+  await expect(locator).toBeVisible()
+  const box = await locator.boundingBox()
+  if (!box)
+    throw new Error('Expected locator to have a bounding box')
+  return box
+}
+
+async function expectLocalHorizontalScroll(locator: Locator) {
+  await expect(locator).toBeVisible()
+  await expect.poll(async () => locator.evaluate((element) => {
+    return Math.ceil(element.scrollWidth - element.clientWidth)
+  })).toBeGreaterThan(8)
 }
 
 function versionFixture(index: number, overrides: Record<string, unknown> = {}) {
@@ -173,6 +188,64 @@ test.describe('Responsive layout', () => {
     await expect(page.getByRole('heading', { name: 'Statistics' })).toBeVisible()
     await expectNoDocumentOverflow(page)
   })
+
+  for (const width of [320, 375] as const) {
+    test(`keeps application header actions layered on mobile at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 })
+      await mockManyApps(page)
+
+      await page.goto('/applications')
+
+      const actionGroup = page.getByTestId('applications-header-actions')
+      const layoutSwitcher = page.getByTestId('layout-switcher')
+      const newAppButton = page.getByRole('button', { name: 'New app' }).first()
+
+      const actionBox = await visibleBox(actionGroup)
+      const layoutBox = await visibleBox(layoutSwitcher)
+      const buttonBox = await visibleBox(newAppButton)
+
+      expect(Math.round(buttonBox.y)).toBeGreaterThanOrEqual(Math.round(layoutBox.y + layoutBox.height - 1))
+      expect(Math.round(buttonBox.width)).toBeGreaterThanOrEqual(Math.round(actionBox.width - 2))
+      await expectNoDocumentOverflow(page)
+    })
+
+    test(`keeps version filters layered with local scrolling on mobile at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 })
+
+      await page.goto('/applications/TTPOS-Cashier')
+
+      const search = page.getByTestId('version-filter-search')
+      const controls = page.getByTestId('version-filter-controls')
+
+      const searchBox = await visibleBox(search)
+      const controlsBox = await visibleBox(controls)
+
+      expect(Math.round(controlsBox.y)).toBeGreaterThanOrEqual(Math.round(searchBox.y + searchBox.height - 1))
+      expect(Math.round(searchBox.width)).toBeGreaterThanOrEqual(Math.round(controlsBox.width - 2))
+      await expectLocalHorizontalScroll(controls)
+      await expectNoDocumentOverflow(page)
+    })
+
+    test(`keeps statistics filters in a local mobile control strip at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 })
+
+      await page.goto('/statistics')
+
+      const controls = page.getByTestId('telemetry-filter-controls')
+      const rangeGroup = page.getByTestId('telemetry-range-group')
+      const appsFilter = page.getByRole('button', { name: 'Apps' })
+
+      const controlsBox = await visibleBox(controls)
+      const rangeBox = await visibleBox(rangeGroup)
+      const appsBox = await visibleBox(appsFilter)
+
+      expect(Math.round(rangeBox.width)).toBeGreaterThan(180)
+      expect(Math.round(appsBox.width)).toBeGreaterThan(60)
+      expect(Math.round(controlsBox.width)).toBeLessThanOrEqual(width)
+      await expectLocalHorizontalScroll(controls)
+      await expectNoDocumentOverflow(page)
+    })
+  }
 
   test('keeps the empty versions state readable on mobile', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 900 })

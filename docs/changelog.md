@@ -1,5 +1,15 @@
 # 变更日志
 
+## 2026-05-09 11:14 [BUG-014]
+
+修复 Dashboard Next 移动端工具栏控件堆积：
+
+- PageHeader actions 在移动端改为全宽分层布局，Applications 的 `New app` 与 App detail 的 `Upload version` 主操作按钮不再和切换器/返回按钮挤在同一窄行。
+- Applications 搜索框在移动端保持 full width，桌面仍保留既有 focus 扩展反馈。
+- App detail version filter 的搜索框独占第一行，filter chips、Published / Critical toggles 和 Clear 进入局部横向工具条。
+- Statistics range ToggleGroup 和多维 filter popovers 改为局部 control strip，避免自然换行堆积。
+- responsive e2e 增加 320px / 375px 下的控件分层、按钮宽度和局部横向滚动断言。
+
 ## 2026-05-09 03:17 [ENH-009]
 
 新增 Dashboard Next Applications board 的 version 快速详情弹层：

@@ -85,9 +85,9 @@ export function ApplicationsPage() {
         description={t('description')}
         className={isBoardLayout ? 'shrink-0' : undefined}
         actions={(
-          <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <LayoutSwitcher />
-            <Button onClick={() => setCreating(true)}>
+          <div className="grid w-full min-w-0 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center" data-testid="applications-header-actions">
+            <LayoutSwitcher className="justify-self-start" />
+            <Button className="w-full sm:w-auto" onClick={() => setCreating(true)}>
               <Plus className="size-4" />
               {t('create', { defaultValue: 'New app' })}
             </Button>

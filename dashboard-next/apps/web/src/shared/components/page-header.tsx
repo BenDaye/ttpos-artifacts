@@ -17,7 +17,11 @@ export function PageHeader({ title, description, actions, className }: PageHeade
           <p className="mt-1 break-words text-sm text-muted-foreground">{description}</p>
         )}
       </div>
-      {actions && <div className="flex min-w-0 flex-wrap items-center gap-2">{actions}</div>}
+      {actions && (
+        <div className="grid w-full min-w-0 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:justify-end">
+          {actions}
+        </div>
+      )}
     </div>
   )
 }

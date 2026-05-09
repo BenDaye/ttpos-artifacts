@@ -2,6 +2,7 @@ import type { LayoutMode } from '@ttpos/shared'
 import { Columns, LayoutGrid, List as ListIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/components/ui/toggle-group'
+import { cn } from '@/shared/lib/utils'
 import { useUiStore } from '@/shared/stores/ui-store'
 
 const ITEMS: { value: LayoutMode, icon: typeof LayoutGrid, labelKey: string }[] = [
@@ -10,12 +11,12 @@ const ITEMS: { value: LayoutMode, icon: typeof LayoutGrid, labelKey: string }[] 
   { value: 'board', icon: Columns, labelKey: 'layout.board' },
 ]
 
-export function LayoutSwitcher() {
+export function LayoutSwitcher({ className }: { className?: string }) {
   const { t } = useTranslation('common')
   const layout = useUiStore(s => s.layout)
   const setLayout = useUiStore(s => s.setLayout)
   return (
-    <ToggleGroup className="shrink-0">
+    <ToggleGroup className={cn('shrink-0', className)} data-testid="layout-switcher">
       {ITEMS.map(({ value, icon: Icon, labelKey }) => (
         <ToggleGroupItem
           key={value}

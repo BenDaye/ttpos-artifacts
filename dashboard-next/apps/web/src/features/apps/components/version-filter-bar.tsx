@@ -57,8 +57,8 @@ export function VersionFilterBar({ value, onChange }: Props) {
   const reset = () => onChange(EMPTY_VERSION_FILTERS)
 
   return (
-    <div className="mb-4 flex max-w-full min-w-0 flex-wrap items-center gap-2">
-      <div className="relative min-w-0 flex-1 sm:flex-none sm:w-60">
+    <div className="mb-4 grid max-w-full min-w-0 gap-2 sm:flex sm:flex-wrap sm:items-center">
+      <div className="relative min-w-0 w-full sm:w-60 sm:flex-none" data-testid="version-filter-search">
         <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={value.search}
@@ -67,44 +67,46 @@ export function VersionFilterBar({ value, onChange }: Props) {
           className="h-8 pl-8 text-sm"
         />
       </div>
-      <MultiSelectPopover
-        label={t('filter.channels', { defaultValue: 'Channels' })}
-        options={channelOptions}
-        selected={value.channels}
-        onChange={channels => onChange({ ...value, channels })}
-      />
-      <MultiSelectPopover
-        label={t('filter.platforms', { defaultValue: 'Platforms' })}
-        options={platformOptions}
-        selected={value.platforms}
-        onChange={platforms => onChange({ ...value, platforms })}
-      />
-      <MultiSelectPopover
-        label={t('filter.archs', { defaultValue: 'Architectures' })}
-        options={archOptions}
-        selected={value.archs}
-        onChange={archs => onChange({ ...value, archs })}
-      />
-      <ToggleChip
-        label={t('filter.published_only', { defaultValue: 'Published only' })}
-        active={value.publishedOnly}
-        onClick={() => onChange({ ...value, publishedOnly: !value.publishedOnly })}
-      />
-      <ToggleChip
-        label={t('filter.critical_only', { defaultValue: 'Critical only' })}
-        active={value.criticalOnly}
-        onClick={() => onChange({ ...value, criticalOnly: !value.criticalOnly })}
-      />
-      {totalActive > 0 && (
-        <Button variant="ghost" size="sm" onClick={reset}>
-          <X className="size-3.5" />
-          {t('filter.clear', { defaultValue: 'Clear' })}
-          {' '}
-          (
-          {totalActive}
-          )
-        </Button>
-      )}
+      <div className="flex max-w-full min-w-0 gap-2 overflow-x-auto pb-1 sm:contents" data-testid="version-filter-controls">
+        <MultiSelectPopover
+          label={t('filter.channels', { defaultValue: 'Channels' })}
+          options={channelOptions}
+          selected={value.channels}
+          onChange={channels => onChange({ ...value, channels })}
+        />
+        <MultiSelectPopover
+          label={t('filter.platforms', { defaultValue: 'Platforms' })}
+          options={platformOptions}
+          selected={value.platforms}
+          onChange={platforms => onChange({ ...value, platforms })}
+        />
+        <MultiSelectPopover
+          label={t('filter.archs', { defaultValue: 'Architectures' })}
+          options={archOptions}
+          selected={value.archs}
+          onChange={archs => onChange({ ...value, archs })}
+        />
+        <ToggleChip
+          label={t('filter.published_only', { defaultValue: 'Published only' })}
+          active={value.publishedOnly}
+          onClick={() => onChange({ ...value, publishedOnly: !value.publishedOnly })}
+        />
+        <ToggleChip
+          label={t('filter.critical_only', { defaultValue: 'Critical only' })}
+          active={value.criticalOnly}
+          onClick={() => onChange({ ...value, criticalOnly: !value.criticalOnly })}
+        />
+        {totalActive > 0 && (
+          <Button variant="ghost" size="sm" className="shrink-0" onClick={reset}>
+            <X className="size-3.5" />
+            {t('filter.clear', { defaultValue: 'Clear' })}
+            {' '}
+            (
+            {totalActive}
+            )
+          </Button>
+        )}
+      </div>
     </div>
   )
 }
@@ -124,7 +126,7 @@ function MultiSelectPopover({ label, options, selected, onChange }: MultiProps) 
     <Popover>
       <PopoverTrigger
         render={(
-          <Button variant="outline" size="sm" className="h-8 max-w-full gap-1.5">
+          <Button variant="outline" size="sm" className="h-8 max-w-full shrink-0 gap-1.5">
             <Filter className="size-3.5" />
             <span className="min-w-0 truncate">{label}</span>
             {selected.length > 0 && (
@@ -156,7 +158,7 @@ function ToggleChip({ label, active, onClick }: { label: string, active: boolean
     <Button
       variant={active ? 'default' : 'outline'}
       size="sm"
-      className="h-8"
+      className="h-8 shrink-0"
       onClick={onClick}
       aria-pressed={active}
     >

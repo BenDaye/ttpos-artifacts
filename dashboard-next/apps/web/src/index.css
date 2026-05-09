@@ -283,7 +283,7 @@ body {
   }
 
   .dashboard-search-shell {
-    max-width: calc(var(--spacing-section) * 4);
+    max-width: 100%;
     transition-duration: 200ms;
     transition-property: max-width;
     transition-timing-function: ease-out;
@@ -291,7 +291,7 @@ body {
   }
 
   .dashboard-search-shell:focus-within {
-    max-width: calc(var(--spacing-section) * 6);
+    max-width: 100%;
   }
 
   .dashboard-empty-state-body {
@@ -326,6 +326,16 @@ body {
 
   .dialog-size-downloads {
     width: min(96vw, calc(var(--spacing) * 168));
+  }
+
+  @media (min-width: 40rem) {
+    .dashboard-search-shell {
+      max-width: calc(var(--spacing-section) * 4);
+    }
+
+    .dashboard-search-shell:focus-within {
+      max-width: calc(var(--spacing-section) * 6);
+    }
   }
 
   .dialog-scroll-area {

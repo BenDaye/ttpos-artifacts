@@ -59,55 +59,57 @@ export function TelemetryFilterBar({ value, onChange }: Props) {
   const reset = () => onChange({ ...EMPTY_TELEMETRY_FILTERS, range: value.range })
 
   return (
-    <div className="mb-4 flex max-w-full min-w-0 flex-wrap items-center gap-2">
-      <ToggleGroup>
-        {RANGES.map(r => (
-          <ToggleGroupItem
-            key={r}
-            value={r}
-            aria-pressed={r === value.range}
-            data-pressed={r === value.range}
-            onClick={() => onChange({ ...value, range: r })}
-          >
-            {t(`range.${r}`, { defaultValue: RANGE_LABELS[r] })}
-          </ToggleGroupItem>
-        ))}
-      </ToggleGroup>
-      <span className="mx-1 hidden h-6 w-px shrink-0 bg-border sm:block" aria-hidden />
-      <MultiSelectPopover
-        label={t('filter.apps', { defaultValue: 'Apps' })}
-        options={apps.data?.apps.map(a => a.AppName) ?? []}
-        selected={value.apps}
-        onChange={next => onChange({ ...value, apps: next })}
-      />
-      <MultiSelectPopover
-        label={t('filter.channels', { defaultValue: 'Channels' })}
-        options={channels.data?.map(c => c.ChannelName) ?? []}
-        selected={value.channels}
-        onChange={next => onChange({ ...value, channels: next })}
-      />
-      <MultiSelectPopover
-        label={t('filter.platforms', { defaultValue: 'Platforms' })}
-        options={platforms.data?.map(p => p.PlatformName) ?? []}
-        selected={value.platforms}
-        onChange={next => onChange({ ...value, platforms: next })}
-      />
-      <MultiSelectPopover
-        label={t('filter.architectures', { defaultValue: 'Architectures' })}
-        options={archs.data?.map(a => a.ArchID) ?? []}
-        selected={value.architectures}
-        onChange={next => onChange({ ...value, architectures: next })}
-      />
-      {totalActive > 0 && (
-        <Button variant="ghost" size="sm" onClick={reset}>
-          <X className="size-3.5" />
-          {t('filter.clear', { defaultValue: 'Clear' })}
-          {' '}
-          (
-          {totalActive}
-          )
-        </Button>
-      )}
+    <div className="mb-4 grid max-w-full min-w-0 gap-2 sm:flex sm:flex-wrap sm:items-center">
+      <div className="flex max-w-full min-w-0 gap-2 overflow-x-auto pb-1 sm:contents" data-testid="telemetry-filter-controls">
+        <ToggleGroup className="shrink-0 flex-nowrap" data-testid="telemetry-range-group">
+          {RANGES.map(r => (
+            <ToggleGroupItem
+              key={r}
+              value={r}
+              aria-pressed={r === value.range}
+              data-pressed={r === value.range}
+              onClick={() => onChange({ ...value, range: r })}
+            >
+              {t(`range.${r}`, { defaultValue: RANGE_LABELS[r] })}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+        <span className="mx-1 hidden h-6 w-px shrink-0 bg-border sm:block" aria-hidden />
+        <MultiSelectPopover
+          label={t('filter.apps', { defaultValue: 'Apps' })}
+          options={apps.data?.apps.map(a => a.AppName) ?? []}
+          selected={value.apps}
+          onChange={next => onChange({ ...value, apps: next })}
+        />
+        <MultiSelectPopover
+          label={t('filter.channels', { defaultValue: 'Channels' })}
+          options={channels.data?.map(c => c.ChannelName) ?? []}
+          selected={value.channels}
+          onChange={next => onChange({ ...value, channels: next })}
+        />
+        <MultiSelectPopover
+          label={t('filter.platforms', { defaultValue: 'Platforms' })}
+          options={platforms.data?.map(p => p.PlatformName) ?? []}
+          selected={value.platforms}
+          onChange={next => onChange({ ...value, platforms: next })}
+        />
+        <MultiSelectPopover
+          label={t('filter.architectures', { defaultValue: 'Architectures' })}
+          options={archs.data?.map(a => a.ArchID) ?? []}
+          selected={value.architectures}
+          onChange={next => onChange({ ...value, architectures: next })}
+        />
+        {totalActive > 0 && (
+          <Button variant="ghost" size="sm" className="shrink-0" onClick={reset}>
+            <X className="size-3.5" />
+            {t('filter.clear', { defaultValue: 'Clear' })}
+            {' '}
+            (
+            {totalActive}
+            )
+          </Button>
+        )}
+      </div>
     </div>
   )
 }
@@ -127,7 +129,7 @@ function MultiSelectPopover({ label, options, selected, onChange }: MultiProps) 
     <Popover>
       <PopoverTrigger
         render={(
-          <Button variant="outline" size="sm" className="h-8 max-w-full gap-1.5">
+          <Button variant="outline" size="sm" className="h-8 max-w-full shrink-0 gap-1.5">
             <Filter className="size-3.5" />
             <span className="min-w-0 truncate">{label}</span>
             {selected.length > 0 && (

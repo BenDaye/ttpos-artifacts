@@ -125,12 +125,12 @@ export function AppDetailPage({ appName }: { appName: string }) {
             : t('detail.description')
         }
         actions={(
-          <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <Link to="/applications" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
+          <div className="grid w-full min-w-0 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
+            <Link to="/applications" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'w-full sm:w-auto')}>
               <ArrowLeft className="size-4" />
               {t('detail.back')}
             </Link>
-            <Button size="sm" onClick={() => setUploading(true)}>
+            <Button size="sm" className="w-full sm:w-auto" onClick={() => setUploading(true)}>
               <Plus className="size-4" />
               {t('upload', { defaultValue: 'Upload version' })}
             </Button>
