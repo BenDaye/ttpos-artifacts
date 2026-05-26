@@ -91,12 +91,13 @@ jobs:
               echo "  --- ${LABEL} (${PLAT}/${ARCH}/${PKG}) ---"
 
               HEADERS=$(mktemp)
-              OWNER_SEG=$(urlencode "ttpos")
-              APP_SEG=$(urlencode "$APP_IDENTIFIER")
+              APP_NAME_SEG=$(urlencode "$APP_NAME")
               PLAT_SEG=$(urlencode "$PLAT")
+              ARCH_SEG=$(urlencode "$ARCH")
+              PKG_SEG=$(urlencode "$PKG")
 
               DOWNLOAD_URL=$(curl -s -D "$HEADERS" -o /dev/null -w "%{redirect_url}" \
-                "${FAYNOSYNC_URL}/download/latest/${OWNER_SEG}/${APP_SEG}/${PLAT_SEG}")
+                "${FAYNOSYNC_URL}/apps/latest?owner=ttpos&app_name=${APP_NAME_SEG}&channel=${CHANNEL}&platform=${PLAT_SEG}&arch=${ARCH_SEG}&package=${PKG_SEG}")
 
               HTTP_CODE=$(head -1 "$HEADERS" | grep -oP '\d{3}')
               echo "  HTTP 状态: ${HTTP_CODE}"
