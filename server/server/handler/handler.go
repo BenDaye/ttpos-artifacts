@@ -7,12 +7,12 @@ import (
 	"faynoSync/server/handler/delete"
 	"faynoSync/server/handler/download"
 	"faynoSync/server/handler/info"
+	"faynoSync/server/handler/shortlink"
 	"faynoSync/server/handler/sign"
 	"faynoSync/server/handler/team"
 	"faynoSync/server/handler/token"
 	"faynoSync/server/handler/update"
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
@@ -70,10 +70,19 @@ type appHandler struct {
 	performanceMode       bool
 	apiKey                string
 	enablePrivateDownload bool
+	shortLatest           *shortlink.Catalog
 }
 
-func NewAppHandler(client *mongo.Client, repo db.AppRepository, db *mongo.Database, redisClient *redis.Client, performanceMode bool, apiKey string, enablePrivateDownload bool) AppHandler {
-	return &appHandler{client: client, repository: repo, database: db, redisClient: redisClient, performanceMode: performanceMode, apiKey: apiKey, enablePrivateDownload: enablePrivateDownload}
+// NewAppHandler builds the gin app handler. shortLatest is variadic only to stay
+// backward compatible with the many existing callers that predate the short-link
+// catalog; at most one catalog is honored (the first). Passing none — or a nil
+// catalog — leaves the /dl short-download feature disabled.
+func NewAppHandler(client *mongo.Client, repo db.AppRepository, db *mongo.Database, redisClient *redis.Client, performanceMode bool, apiKey string, enablePrivateDownload bool, shortLatest ...*shortlink.Catalog) AppHandler {
+	var catalog *shortlink.Catalog
+	if len(shortLatest) > 0 {
+		catalog = shortLatest[0]
+	}
+	return &appHandler{client: client, repository: repo, database: db, redisClient: redisClient, performanceMode: performanceMode, apiKey: apiKey, enablePrivateDownload: enablePrivateDownload, shortLatest: catalog}
 }
 
 func (ch *appHandler) HealthCheck(c *gin.Context) {
@@ -241,98 +250,58 @@ func (ch *appHandler) GetTelemetry(c *gin.Context) {
 }
 
 func (ch *appHandler) SquirrelReleases(c *gin.Context) {
-	owner := c.Param("owner")
-	app := c.Param("app")
-	channel := c.Param("channel")
-	platform := c.Param("platform")
-	arch := c.Param("arch")
-	version := c.Param("version")
-
-	q := c.Request.URL.Query()
-	q.Set("owner", owner)
-	q.Set("app_name", app)
-	q.Set("channel", channel)
-	q.Set("platform", platform)
-	q.Set("arch", arch)
-	q.Set("version", version)
-	q.Set("updater", "squirrel_windows")
-
-	c.Request.URL.RawQuery = q.Encode()
+	setLatestQuery(c, map[string]string{
+		"owner":    c.Param("owner"),
+		"app_name": c.Param("app"),
+		"channel":  c.Param("channel"),
+		"platform": c.Param("platform"),
+		"arch":     c.Param("arch"),
+		"version":  c.Param("version"),
+		"updater":  "squirrel_windows",
+	})
 
 	info.FindLatestVersion(c, ch.repository, ch.database, ch.redisClient, ch.performanceMode)
 }
 
-const publicLatestDefaultChannel = "prod"
-const publicLatestOwner = "ttpos"
-
-var shortLatestAppAliases = map[string]string{
-	"cashier":   "TTPOS",
-	"assistant": "TTPOS Go",
-	"menu":      "TTPOS Menu",
-	"kitchen":   "TTPOS Kitchen",
-	"shop":      "TTPOS Shop",
-}
-
-type shortLatestTargetDefault struct {
-	Platform string
-	Arch     string
-	Package  string
-}
-
-var shortLatestTargetDefaults = map[string]shortLatestTargetDefault{
-	"apk": {Platform: "android", Arch: "arm64", Package: "apk"},
-	"exe": {Platform: "windows", Arch: "amd64", Package: "exe"},
-	"dmg": {Platform: "macos", Arch: "arm64", Package: "dmg"},
+// setLatestQuery rewrites the request query string from path-derived values so a
+// path-style route can delegate to the query-based info.* latest handlers. It is
+// shared by SquirrelReleases and ShortLatestDownload.
+func setLatestQuery(c *gin.Context, values map[string]string) {
+	q := c.Request.URL.Query()
+	for key, value := range values {
+		q.Set(key, value)
+	}
+	c.Request.URL.RawQuery = q.Encode()
 }
 
 // ShortLatestDownload exposes compact public aliases for website and QR links.
+// The alias / target catalog is loaded from configuration at startup; the route
+// is only registered when a catalog is configured, so a nil catalog here is
+// purely defensive.
 //
 //	GET /dl/:target
 func (ch *appHandler) ShortLatestDownload(c *gin.Context) {
-	appName, target, ok := resolveShortLatestTarget(c.Param("target"))
+	if ch.shortLatest == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "short latest download is not configured"})
+		return
+	}
+
+	appName, target, ok := ch.shortLatest.Resolve(c.Param("target"))
 	if !ok {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "unsupported short latest download target"})
 		return
 	}
 
-	setLatestDownloadQueryValues(c, publicLatestOwner, appName, publicLatestDefaultChannel, target.Platform, target.Arch, target.Package)
+	setLatestQuery(c, map[string]string{
+		"owner":    ch.shortLatest.Owner,
+		"app_name": appName,
+		"channel":  ch.shortLatest.DefaultChannel,
+		"platform": target.Platform,
+		"arch":     target.Arch,
+		"package":  target.Package,
+	})
 	c.Set(info.CacheRedirectHeadersContextKey, true)
 	info.FetchLatestVersionOfApp(c, ch.repository, ch.redisClient, ch.performanceMode)
-}
-
-func resolveShortLatestTarget(target string) (string, shortLatestTargetDefault, bool) {
-	normalizedTarget := strings.ToLower(target)
-	dotIndex := strings.LastIndex(normalizedTarget, ".")
-	if dotIndex <= 0 || dotIndex == len(normalizedTarget)-1 {
-		return "", shortLatestTargetDefault{}, false
-	}
-
-	appAlias := normalizedTarget[:dotIndex]
-	extension := normalizedTarget[dotIndex+1:]
-	appName, ok := shortLatestAppAliases[appAlias]
-	if !ok {
-		return "", shortLatestTargetDefault{}, false
-	}
-
-	defaults, ok := shortLatestTargetDefaults[extension]
-	if !ok {
-		return "", shortLatestTargetDefault{}, false
-	}
-
-	return appName, defaults, true
-}
-
-func setLatestDownloadQueryValues(c *gin.Context, owner, appName, channel, platform, arch, pkg string) {
-	q := c.Request.URL.Query()
-	q.Set("owner", owner)
-	q.Set("app_name", appName)
-	q.Set("channel", channel)
-	q.Set("platform", platform)
-	q.Set("arch", arch)
-	if pkg != "" {
-		q.Set("package", pkg)
-	}
-	c.Request.URL.RawQuery = q.Encode()
 }
 
 func (ch *appHandler) CreateToken(c *gin.Context) {

@@ -9,6 +9,7 @@ import (
 	db "faynoSync/mongod"
 	"faynoSync/redisdb"
 	"faynoSync/server/handler"
+	"faynoSync/server/handler/shortlink"
 	"faynoSync/server/tuf"
 	"faynoSync/server/utils"
 
@@ -68,7 +69,21 @@ func StartServer(config *viper.Viper, flags map[string]interface{}) {
 
 	enablePrivateDownload := config.GetBool("ENABLE_PRIVATE_APP_DOWNLOADING")
 	apiKey := config.GetString("API_KEY")
-	handler := handler.NewAppHandler(client, repo, mongoDatabase, redisClient, config.GetBool("PERFORMANCE_MODE"), apiKey, enablePrivateDownload)
+
+	// Short latest download catalog: feature is enabled only when a config file
+	// path is provided. A configured-but-invalid file is fatal so we never serve
+	// a broken /dl contract.
+	var shortLatestCatalog *shortlink.Catalog
+	if shortLatestConfigPath := config.GetString("SHORT_LATEST_CONFIG"); shortLatestConfigPath != "" {
+		loaded, err := shortlink.Load(shortLatestConfigPath)
+		if err != nil {
+			logrus.Fatalf("Failed to load short latest download config: %v", err)
+		}
+		shortLatestCatalog = loaded
+		logrus.Infof("Short latest download enabled (%d aliases)", len(shortLatestCatalog.Aliases))
+	}
+
+	handler := handler.NewAppHandler(client, repo, mongoDatabase, redisClient, config.GetBool("PERFORMANCE_MODE"), apiKey, enablePrivateDownload, shortLatestCatalog)
 	// Add authentication middleware to required paths
 	authMiddleware := utils.AuthMiddleware(mongoDatabase)
 
@@ -84,7 +99,9 @@ func StartServer(config *viper.Viper, flags map[string]interface{}) {
 
 	router.GET("/checkVersion", handler.FindLatestVersion)
 	router.GET("/apps/latest", handler.FetchLatestVersionOfApp)
-	router.GET("/dl/:target", handler.ShortLatestDownload)
+	if shortLatestCatalog != nil {
+		router.GET("/dl/:target", handler.ShortLatestDownload)
+	}
 	loginLimiter := utils.NewIPRateLimiter(rate.Every(loginRateInterval), loginRateBurst)
 	signupLimiter := utils.NewIPRateLimiter(rate.Every(signupRateInterval), signupRateBurst)
 	router.POST("/signup", utils.RateLimitMiddleware(signupLimiter), handler.SignUp)
