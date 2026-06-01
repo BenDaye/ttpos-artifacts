@@ -22,10 +22,10 @@ type App struct {
 	ID          primitive.ObjectID `bson:"_id" json:"ID"`
 	AppName     string             `bson:"app_name" json:"AppName"`
 	Logo        string             `bson:"logo" json:"Logo"`
-	Private     bool               `bson:"private"` // TODO: 收紧为 json:"-"(改 wire,本批不实施)
+	Private     bool               `bson:"private" json:"-"`
 	Tuf         bool               `bson:"tuf"`
 	Description string             `bson:"description" json:"Description"`
-	Owner       string             `bson:"owner"` // TODO: 收紧为 json:"-"(改 wire,本批不实施)
+	Owner       string             `bson:"owner" json:"-"`
 	Updated_at  primitive.DateTime `bson:"updated_at" json:"Updated_at"`
 }
 
@@ -70,7 +70,7 @@ type SpecificAppWithoutIDs struct {
 type Channel struct {
 	ID          primitive.ObjectID `bson:"_id" json:"ID"`
 	ChannelName string             `bson:"channel_name" json:"ChannelName"`
-	Owner       string             `bson:"owner"` // TODO: 收紧为 json:"-"(改 wire,本批不实施)
+	Owner       string             `bson:"owner" json:"-"`
 	Updated_at  primitive.DateTime `bson:"updated_at" json:"Updated_at"`
 }
 
@@ -78,14 +78,14 @@ type Platform struct {
 	ID           primitive.ObjectID `bson:"_id" json:"ID"`
 	PlatformName string             `bson:"platform_name" json:"PlatformName"`
 	Updaters     []Updater          `bson:"updaters" json:"Updaters"`
-	Owner        string             `bson:"owner"` // TODO: 收紧为 json:"-"(改 wire,本批不实施)
+	Owner        string             `bson:"owner" json:"-"`
 	Updated_at   primitive.DateTime `bson:"updated_at" json:"Updated_at"`
 }
 
 type Arch struct {
 	ID         primitive.ObjectID `bson:"_id" json:"ID"`
 	ArchID     string             `bson:"arch_id" json:"ArchID"`
-	Owner      string             `bson:"owner"` // TODO: 收紧为 json:"-"(改 wire,本批不实施)
+	Owner      string             `bson:"owner" json:"-"`
 	Updated_at primitive.DateTime `bson:"updated_at" json:"Updated_at"`
 }
 
