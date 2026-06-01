@@ -272,6 +272,9 @@ func (c *appRepository) Upload(ctxQuery map[string]interface{}, appLink, extensi
 	metaCollection := c.client.Database(c.config.Database).Collection("apps_meta")
 	var uploadResult interface{}
 	var err error
+	var appMeta, channelMeta, platformMeta, archMeta struct {
+		ID primitive.ObjectID `bson:"_id"`
+	}
 
 	logrus.Debugf("Upload called with owner: %s, app_name: %s, version: %s, visibility: %t",
 		owner, ctxQuery["app_name"].(string), ctxQuery["version"].(string), checkAppVisibility)
@@ -517,17 +520,15 @@ func (c *appRepository) Upload(ctxQuery map[string]interface{}, appLink, extensi
 		logrus.Debugf("Arch Meta: %v", archMeta)
 		uploadResult, err = collection.InsertOne(ctx, filter)
 		if err != nil {
-			logrus.Errorf("Error inserting document: %v", err)
-			return nil, err
-		}
-
-		mongoErr, ok := err.(mongo.WriteException)
-		if ok {
-			for _, writeErr := range mongoErr.WriteErrors {
-				if writeErr.Code == 11000 && strings.Contains(writeErr.Message, "unique_link_to_app_with_specific_version") {
-					return "app with this link already exists", errors.New("app with this link already exists")
+			if mongoErr, ok := err.(mongo.WriteException); ok {
+				for _, writeErr := range mongoErr.WriteErrors {
+					if writeErr.Code == 11000 && strings.Contains(writeErr.Message, "unique_link_to_app_with_specific_version") {
+						return "app with this link already exists", errors.New("app with this link already exists")
+					}
 				}
 			}
+			logrus.Errorf("Error inserting document: %v", err)
+			return nil, err
 		}
 		logrus.Debugf("Document created successfully")
 	}

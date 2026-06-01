@@ -4,14 +4,13 @@ import (
 	"context"
 	"faynoSync/server/utils"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
 
-func DownloadArtifact(c *gin.Context) {
+func DownloadArtifact(c *gin.Context, enablePrivate bool) {
 	_, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
 	defer cancel()
 	urlStr, err := utils.GeneratePresignedURL(c, c.Query("key"), 15*time.Minute)
@@ -21,7 +20,7 @@ func DownloadArtifact(c *gin.Context) {
 		return
 	}
 	logrus.Debugln("Generated download URL: ", urlStr)
-	if os.Getenv("ENABLE_PRIVATE_APP_DOWNLOADING") == "true" {
+	if enablePrivate {
 		c.Redirect(http.StatusFound, urlStr)
 	} else {
 		c.JSON(http.StatusOK, gin.H{"download_url": urlStr})

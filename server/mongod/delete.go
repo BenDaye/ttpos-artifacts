@@ -4,7 +4,6 @@ import (
 	"context"
 	"faynoSync/server/model"
 	"fmt"
-	"log"
 	"strconv"
 	"time"
 
@@ -41,10 +40,16 @@ func (c *appRepository) DeleteSpecificVersionOfApp(id primitive.ObjectID, owner 
 	}
 
 	appName, err := c.FetchAppByID(app.ID, ctx)
+	if err != nil {
+		return nil, 0, "", err
+	}
+	if len(appName) == 0 {
+		return nil, 0, "", fmt.Errorf("no app found with ID %s", app.ID)
+	}
 
 	deleteResult, err := collection.DeleteOne(ctx, filter)
 	if err != nil {
-		logrus.Fatal(err)
+		logrus.Error(err)
 
 		return nil, 0, "", err
 	}
@@ -61,12 +66,16 @@ func (c *appRepository) DeleteSpecificVersionOfApp(id primitive.ObjectID, owner 
 func (c *appRepository) DeleteSpecificArtifactOfApp(id primitive.ObjectID, ctxQuery map[string]interface{}, ctx context.Context, owner string) ([]string, bool, error) {
 	var err error
 	var links []string
+	var appMeta struct {
+		ID primitive.ObjectID `bson:"_id"`
+	}
 	collection := c.client.Database(c.config.Database).Collection("apps")
 	metaCollection := c.client.Database(c.config.Database).Collection("apps_meta")
 
 	err = c.getMeta(ctx, metaCollection, "app_name", ctxQuery["app_name"].(string), &appMeta, owner)
 	if err != nil {
 		logrus.Errorln("Error getting app_id in DeleteSpecificArtifactOfApp:", err)
+		return nil, false, err
 	}
 	existingDoc := collection.FindOne(ctx, bson.D{
 		{Key: "_id", Value: id},
@@ -79,6 +88,7 @@ func (c *appRepository) DeleteSpecificArtifactOfApp(id primitive.ObjectID, ctxQu
 		var appData model.SpecificApp
 		if err := existingDoc.Decode(&appData); err != nil {
 			logrus.Errorln("Error decoding appData in DeleteSpecificArtifactOfApp:", err)
+			return nil, false, err
 		}
 
 		updateFields := bson.D{{Key: "updated_at", Value: time.Now()}}
@@ -105,7 +115,7 @@ func (c *appRepository) DeleteSpecificArtifactOfApp(id primitive.ObjectID, ctxQu
 			bson.D{{Key: "$set", Value: updateFields}},
 		)
 		if err != nil {
-			logrus.Fatal(err)
+			logrus.Error(err)
 
 			return nil, false, err
 		}
@@ -299,7 +309,7 @@ func (c *appRepository) DeleteDocument(collectionName string, id primitive.Objec
 
 	deleteResult, err := collection.DeleteOne(ctx, filter)
 	if err != nil {
-		log.Fatalf("error deleting document with ID %s: %s", id, err.Error())
+		logrus.Errorf("error deleting document with ID %s: %s", id, err.Error())
 		return 0, err
 	}
 

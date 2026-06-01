@@ -76,6 +76,9 @@ func (c *appRepository) GetAppByName(appName string, ctx context.Context, page, 
 		}
 	}
 
+	var appMeta struct {
+		ID primitive.ObjectID `bson:"_id"`
+	}
 	err = metaCollection.FindOne(ctx, metaFilter).Decode(&appMeta)
 	if err != nil {
 		return nil, errors.New("app_name not found in apps_meta collection")
@@ -596,7 +599,7 @@ func (c *appRepository) processApps(cur *mongo.Cursor, ctx context.Context) ([]*
 	for cur.Next(ctx) {
 		var tempApp model.SpecificAppWithoutIDs
 		if err := cur.Decode(&tempApp); err != nil {
-			logrus.Fatal(err)
+			logrus.Error(err)
 			return nil, err
 		}
 		app := &model.SpecificAppWithoutIDs{

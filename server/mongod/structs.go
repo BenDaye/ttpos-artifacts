@@ -46,15 +46,6 @@ type appRepository struct {
 	config *connstring.ConnString
 }
 
-var appMeta struct {
-	ID      primitive.ObjectID `bson:"_id"`
-	AppName string             `bson:"app_name"`
-	Tuf     bool               `bson:"tuf,omitempty"`
-}
-var channelMeta, platformMeta, archMeta struct {
-	ID primitive.ObjectID `bson:"_id"`
-}
-
 func NewAppRepository(config *connstring.ConnString, client *mongo.Client) AppRepository {
 	return &appRepository{config: config, client: client}
 }
