@@ -10,6 +10,7 @@ import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import { Card, CardContent } from '@/shared/components/ui/card'
 import { Skeleton } from '@/shared/components/ui/skeleton'
+import { HttpError } from '@/shared/lib/http'
 import { useDeleteUserMutation, useUsersListQuery, useWhoamiQuery } from '../hooks'
 import { AdminCredentialDialog } from './admin-credential-dialog'
 import { TeamUserFormDialog } from './team-user-form-dialog'
@@ -39,10 +40,7 @@ export function UsersPanel() {
     }
   }
 
-  const adminFallback = (() => {
-    const message = (usersQuery.error as Error | undefined)?.message?.toLowerCase() ?? ''
-    return message.includes('forbidden') || message.includes('permission') || message.includes('admin')
-  })()
+  const adminFallback = usersQuery.error instanceof HttpError && usersQuery.error.status === 403
 
   return (
     <div className="min-w-0 max-w-full space-y-4">

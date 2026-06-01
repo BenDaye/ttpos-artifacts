@@ -6,7 +6,6 @@ import (
 	"faynoSync/server/model"
 	"faynoSync/server/utils"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -14,14 +13,14 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func SignUp(c *gin.Context, database *mongo.Database, client *mongo.Client) {
+func SignUp(c *gin.Context, database *mongo.Database, client *mongo.Client, apiKey string) {
 	var creds model.Credentials
 	if err := c.BindJSON(&creds); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
 		return
 	}
 
-	if creds.SecretKey != os.Getenv("API_KEY") {
+	if creds.SecretKey != apiKey {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "wrong api key"})
 		return
 	}

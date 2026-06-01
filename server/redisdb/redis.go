@@ -2,7 +2,6 @@ package redisdb
 
 import (
 	"context"
-	"os"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -17,9 +16,9 @@ type RedisConfig struct {
 
 var client *redis.Client
 
-func ConnectToRedis(config RedisConfig) *redis.Client {
+func ConnectToRedis(config RedisConfig) (*redis.Client, error) {
 	if client != nil {
-		return client
+		return client, nil
 	}
 
 	options := &redis.Options{
@@ -34,10 +33,10 @@ func ConnectToRedis(config RedisConfig) *redis.Client {
 	defer cancel()
 	_, err := client.Ping(ctx).Result()
 	if err != nil {
-		logrus.Errorln("Failed to connect to Redis:", err)
-		os.Exit(1)
+		client = nil
+		return nil, err
 	}
 
 	logrus.Infoln("Connected to Redis successfully")
-	return client
+	return client, nil
 }

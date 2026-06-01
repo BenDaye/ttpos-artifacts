@@ -5,10 +5,8 @@ import { create } from 'zustand'
 interface UiState {
   sidebarCollapsed: boolean
   layout: LayoutMode
-  search: string
   toggleSidebar: () => void
   setLayout: (layout: LayoutMode) => void
-  setSearch: (search: string) => void
 }
 
 function readLayout(): LayoutMode {
@@ -36,11 +34,9 @@ function persistLayout(layout: LayoutMode) {
 export const useUiStore = create<UiState>(set => ({
   sidebarCollapsed: false,
   layout: readLayout(),
-  search: '',
   toggleSidebar: () => set(state => ({ sidebarCollapsed: !state.sidebarCollapsed })),
   setLayout: (layout) => {
     persistLayout(layout)
     set({ layout })
   },
-  setSearch: search => set({ search }),
 }))

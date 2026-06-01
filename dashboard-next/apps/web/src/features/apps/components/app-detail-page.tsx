@@ -4,7 +4,6 @@ import { ArrowLeft, BookOpen, Boxes, Download, FilePlus, Pencil, Plus, Trash2 } 
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { ChangelogModal } from '@/shared/components/common/changelog-modal'
 import { ConfirmDialog } from '@/shared/components/common/confirm-dialog'
 import { EmptyState } from '@/shared/components/empty-state'
 import { PageHeader } from '@/shared/components/page-header'
@@ -21,6 +20,7 @@ import {
   useDeleteVersionMutation,
 } from '../hooks'
 import { AddArtifactDialog } from './add-artifact-dialog'
+import { ChangelogModal } from './changelog-modal'
 import { DownloadArtifactsDialog } from './download-artifacts-dialog'
 import { UploadVersionDialog } from './upload-version-dialog'
 import { VersionEditDialog } from './version-edit-dialog'

@@ -9,13 +9,14 @@ import { Button } from '@/shared/components/ui/button'
 import { Card, CardContent } from '@/shared/components/ui/card'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 import { appsApi } from '../../api'
+import { SEARCH_KEY } from '../../hooks'
 import { VersionDetailDialog } from '../version-detail-dialog'
 
 export function AppBoardView({ apps, onSelect, onEdit, onDelete }: AppViewProps) {
   const [selectedVersion, setSelectedVersion] = useState<AppVersion | null>(null)
   const versionQueries = useQueries({
     queries: apps.map(app => ({
-      queryKey: ['app-search', { app_name: app.AppName, page: 1, limit: 100, board: true }],
+      queryKey: [SEARCH_KEY, { app_name: app.AppName, page: 1, limit: 100, board: true }],
       queryFn: () => appsApi.search({ app_name: app.AppName, page: 1, limit: 100 }),
       enabled: Boolean(app.AppName),
       staleTime: 30_000,

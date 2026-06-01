@@ -63,15 +63,17 @@ type AppHandler interface {
 }
 
 type appHandler struct {
-	client          *mongo.Client
-	repository      db.AppRepository
-	database        *mongo.Database
-	redisClient     *redis.Client
-	performanceMode bool
+	client                *mongo.Client
+	repository            db.AppRepository
+	database              *mongo.Database
+	redisClient           *redis.Client
+	performanceMode       bool
+	apiKey                string
+	enablePrivateDownload bool
 }
 
-func NewAppHandler(client *mongo.Client, repo db.AppRepository, db *mongo.Database, redisClient *redis.Client, performanceMode bool) AppHandler {
-	return &appHandler{client: client, repository: repo, database: db, redisClient: redisClient, performanceMode: performanceMode}
+func NewAppHandler(client *mongo.Client, repo db.AppRepository, db *mongo.Database, redisClient *redis.Client, performanceMode bool, apiKey string, enablePrivateDownload bool) AppHandler {
+	return &appHandler{client: client, repository: repo, database: db, redisClient: redisClient, performanceMode: performanceMode, apiKey: apiKey, enablePrivateDownload: enablePrivateDownload}
 }
 
 func (ch *appHandler) HealthCheck(c *gin.Context) {
@@ -153,7 +155,7 @@ func (ch *appHandler) Login(c *gin.Context) {
 
 func (ch *appHandler) SignUp(c *gin.Context) {
 	// Call the SignUp function from the sign package
-	sign.SignUp(c, ch.database, ch.client)
+	sign.SignUp(c, ch.database, ch.client, ch.apiKey)
 }
 
 func (ch *appHandler) DeleteApp(c *gin.Context) {
@@ -207,7 +209,7 @@ func (ch *appHandler) DeleteSpecificArtifactOfApp(c *gin.Context) {
 
 func (ch *appHandler) DownloadArtifact(c *gin.Context) {
 	// Call the DownloadArtifact function from the download package
-	download.DownloadArtifact(c)
+	download.DownloadArtifact(c, ch.enablePrivateDownload)
 }
 
 func (ch *appHandler) CreateTeamUser(c *gin.Context) {

@@ -19,14 +19,14 @@ type Artifact struct {
 }
 
 type App struct {
-	ID          primitive.ObjectID `bson:"_id"`
-	AppName     string             `bson:"app_name"`
-	Logo        string             `bson:"logo"`
-	Private     bool               `bson:"private"`
+	ID          primitive.ObjectID `bson:"_id" json:"ID"`
+	AppName     string             `bson:"app_name" json:"AppName"`
+	Logo        string             `bson:"logo" json:"Logo"`
+	Private     bool               `bson:"private"` // TODO: 收紧为 json:"-"(改 wire,本批不实施)
 	Tuf         bool               `bson:"tuf"`
-	Description string             `bson:"description"`
-	Owner       string             `bson:"owner"`
-	Updated_at  primitive.DateTime `bson:"updated_at"`
+	Description string             `bson:"description" json:"Description"`
+	Owner       string             `bson:"owner"` // TODO: 收紧为 json:"-"(改 wire,本批不实施)
+	Updated_at  primitive.DateTime `bson:"updated_at" json:"Updated_at"`
 }
 
 type SpecificApp struct {
@@ -68,25 +68,25 @@ type SpecificAppWithoutIDs struct {
 }
 
 type Channel struct {
-	ID          primitive.ObjectID `bson:"_id"`
-	ChannelName string             `bson:"channel_name"`
-	Owner       string             `bson:"owner"`
-	Updated_at  primitive.DateTime `bson:"updated_at"`
+	ID          primitive.ObjectID `bson:"_id" json:"ID"`
+	ChannelName string             `bson:"channel_name" json:"ChannelName"`
+	Owner       string             `bson:"owner"` // TODO: 收紧为 json:"-"(改 wire,本批不实施)
+	Updated_at  primitive.DateTime `bson:"updated_at" json:"Updated_at"`
 }
 
 type Platform struct {
-	ID           primitive.ObjectID `bson:"_id"`
-	PlatformName string             `bson:"platform_name"`
-	Updaters     []Updater          `bson:"updaters"`
-	Owner        string             `bson:"owner"`
-	Updated_at   primitive.DateTime `bson:"updated_at"`
+	ID           primitive.ObjectID `bson:"_id" json:"ID"`
+	PlatformName string             `bson:"platform_name" json:"PlatformName"`
+	Updaters     []Updater          `bson:"updaters" json:"Updaters"`
+	Owner        string             `bson:"owner"` // TODO: 收紧为 json:"-"(改 wire,本批不实施)
+	Updated_at   primitive.DateTime `bson:"updated_at" json:"Updated_at"`
 }
 
 type Arch struct {
-	ID         primitive.ObjectID `bson:"_id"`
-	ArchID     string             `bson:"arch_id"`
-	Owner      string             `bson:"owner"`
-	Updated_at primitive.DateTime `bson:"updated_at"`
+	ID         primitive.ObjectID `bson:"_id" json:"ID"`
+	ArchID     string             `bson:"arch_id" json:"ArchID"`
+	Owner      string             `bson:"owner"` // TODO: 收紧为 json:"-"(改 wire,本批不实施)
+	Updated_at primitive.DateTime `bson:"updated_at" json:"Updated_at"`
 }
 
 type Changelog struct {
@@ -167,31 +167,31 @@ type APITokenResponse struct {
 
 type Permissions struct {
 	Apps struct {
-		Create   bool     `bson:"create"`
-		Delete   bool     `bson:"delete"`
-		Edit     bool     `bson:"edit"`
-		Download bool     `bson:"download"`
-		Upload   bool     `bson:"upload"`
-		Allowed  []string `bson:"allowed,omitempty"` // List of app IDs this user can access
-	} `bson:"apps"`
+		Create   bool     `bson:"create" json:"Create"`
+		Delete   bool     `bson:"delete" json:"Delete"`
+		Edit     bool     `bson:"edit" json:"Edit"`
+		Download bool     `bson:"download" json:"Download"`
+		Upload   bool     `bson:"upload" json:"Upload"`
+		Allowed  []string `bson:"allowed,omitempty" json:"Allowed"` // List of app IDs this user can access
+	} `bson:"apps" json:"Apps"`
 	Channels struct {
-		Create  bool     `bson:"create"`
-		Delete  bool     `bson:"delete"`
-		Edit    bool     `bson:"edit"`
-		Allowed []string `bson:"allowed,omitempty"` // List of channel IDs this user can access
-	} `bson:"channels"`
+		Create  bool     `bson:"create" json:"Create"`
+		Delete  bool     `bson:"delete" json:"Delete"`
+		Edit    bool     `bson:"edit" json:"Edit"`
+		Allowed []string `bson:"allowed,omitempty" json:"Allowed"` // List of channel IDs this user can access
+	} `bson:"channels" json:"Channels"`
 	Platforms struct {
-		Create  bool     `bson:"create"`
-		Delete  bool     `bson:"delete"`
-		Edit    bool     `bson:"edit"`
-		Allowed []string `bson:"allowed,omitempty"` // List of platform IDs this user can access
-	} `bson:"platforms"`
+		Create  bool     `bson:"create" json:"Create"`
+		Delete  bool     `bson:"delete" json:"Delete"`
+		Edit    bool     `bson:"edit" json:"Edit"`
+		Allowed []string `bson:"allowed,omitempty" json:"Allowed"` // List of platform IDs this user can access
+	} `bson:"platforms" json:"Platforms"`
 	Archs struct {
-		Create  bool     `bson:"create"`
-		Delete  bool     `bson:"delete"`
-		Edit    bool     `bson:"edit"`
-		Allowed []string `bson:"allowed,omitempty"` // List of arch IDs this user can access
-	} `bson:"archs"`
+		Create  bool     `bson:"create" json:"Create"`
+		Delete  bool     `bson:"delete" json:"Delete"`
+		Edit    bool     `bson:"edit" json:"Edit"`
+		Allowed []string `bson:"allowed,omitempty" json:"Allowed"` // List of arch IDs this user can access
+	} `bson:"archs" json:"Archs"`
 }
 
 type Updater struct {

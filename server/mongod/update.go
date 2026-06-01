@@ -220,6 +220,9 @@ func (c *appRepository) UpdateSpecificApp(objID primitive.ObjectID, owner string
 	collection := c.client.Database(c.config.Database).Collection("apps")
 	metaCollection := c.client.Database(c.config.Database).Collection("apps_meta")
 	var err error
+	var appMeta, channelMeta, platformMeta, archMeta struct {
+		ID primitive.ObjectID `bson:"_id"`
+	}
 
 	logrus.Debugf("UpdateSpecificApp called with owner: %s, app_name: %s, version: %s",
 		owner, ctxQuery["app_name"].(string), ctxQuery["version"].(string))

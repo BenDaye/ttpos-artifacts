@@ -1,5 +1,6 @@
 import type { Updater, UpdaterType } from '@ttpos/shared'
 import { Apple, Laptop, MonitorCog, PackageCheck, Radio, Sparkles, Star, Wrench } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import { Checkbox } from '@/shared/components/ui/checkbox'
@@ -21,6 +22,7 @@ const ICONS: Record<string, typeof Wrench> = {
 }
 
 export function UpdaterSelector({ value, onChange }: Props) {
+  const { t } = useTranslation('platforms')
   const updaters = normalizeUpdaters(value)
   const selected = new Set(updaters.map(updater => updater.type))
   const defaultType = getDefaultUpdaterType(updaters)
@@ -46,11 +48,12 @@ export function UpdaterSelector({ value, onChange }: Props) {
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-medium">Updaters</p>
-          <p className="text-xs text-muted-foreground">Select supported updater protocols for this platform.</p>
+          <p className="text-sm font-medium">{t('form.updaters', { defaultValue: 'Updaters' })}</p>
+          <p className="text-xs text-muted-foreground">{t('updaters.subtitle', { defaultValue: 'Select supported updater protocols for this platform.' })}</p>
         </div>
         <Badge variant="outline" className="shrink-0">
-          Default:
+          {t('form.default_updater', { defaultValue: 'Default' })}
+          :
           {' '}
           {defaultType}
         </Badge>
@@ -60,6 +63,8 @@ export function UpdaterSelector({ value, onChange }: Props) {
           const Icon = ICONS[option.type] ?? Radio
           const isSelected = selected.has(option.type)
           const isDefault = defaultType === option.type
+          const label = t(`updaters.options.${option.type}.label`, { defaultValue: option.label })
+          const description = t(`updaters.options.${option.type}.description`, { defaultValue: option.description })
           return (
             <div
               key={option.type}
@@ -73,21 +78,21 @@ export function UpdaterSelector({ value, onChange }: Props) {
                   checked={isSelected}
                   disabled={option.type === 'manual'}
                   onCheckedChange={(checked: boolean | 'indeterminate') => toggle(option.type, checked === true)}
-                  aria-label={option.label}
+                  aria-label={label}
                   className="mt-0.5"
                 />
                 <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <p className="truncate text-sm font-medium">{option.label}</p>
+                    <p className="truncate text-sm font-medium">{label}</p>
                     {isDefault && (
                       <Badge variant="secondary" className="gap-1">
                         <Star className="size-3" />
-                        Default
+                        {t('form.default_updater', { defaultValue: 'Default' })}
                       </Badge>
                     )}
                   </div>
-                  <p className="mt-1 text-xs text-muted-foreground">{option.description}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{description}</p>
                   {isSelected && !isDefault && (
                     <Button
                       type="button"
@@ -97,7 +102,7 @@ export function UpdaterSelector({ value, onChange }: Props) {
                       onClick={() => setDefault(option.type)}
                     >
                       <Star className="size-3" />
-                      Set default
+                      {t('form.set_default', { defaultValue: 'Use as default updater' })}
                     </Button>
                   )}
                 </div>

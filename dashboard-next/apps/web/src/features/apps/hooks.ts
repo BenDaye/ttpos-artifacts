@@ -11,7 +11,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { appsApi } from './api'
 
 const APPS_KEY = 'apps'
-const SEARCH_KEY = 'app-search'
+export const SEARCH_KEY = 'app-search'
 
 export function useAppsListQuery(params: AppListParams = {}) {
   return useQuery({

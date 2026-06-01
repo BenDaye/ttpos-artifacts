@@ -15,13 +15,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func AuthMiddleware(databases ...*mongo.Database) gin.HandlerFunc {
+func AuthMiddleware(database *mongo.Database) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var database *mongo.Database
-		if len(databases) > 0 {
-			database = databases[0]
-		}
-
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing authorization header"})
@@ -76,12 +71,6 @@ func AuthMiddleware(databases ...*mongo.Database) gin.HandlerFunc {
 				errMsg = "invalid or expired token"
 			}
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": errMsg})
-			return
-		}
-
-		if database == nil {
-			logrus.Warn("API token received but AuthMiddleware initialized without database")
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired token"})
 			return
 		}
 

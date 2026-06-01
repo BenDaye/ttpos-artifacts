@@ -2,7 +2,7 @@ package server
 
 import (
 	"context"
-	"os"
+	"net/http"
 	"strings"
 	"time"
 
@@ -19,6 +19,15 @@ import (
 	"golang.org/x/time/rate"
 )
 
+const (
+	maxMultipartMemoryBytes = 100 << 20
+	defaultServerPort       = "9000"
+	loginRateInterval       = 6 * time.Second
+	loginRateBurst          = 10
+	signupRateInterval      = 20 * time.Second
+	signupRateBurst         = 3
+)
+
 func StartServer(config *viper.Viper, flags map[string]interface{}) {
 	jwtSecret := config.GetString("JWT_SECRET")
 	if jwtSecret == "" || len(jwtSecret) < 32 {
@@ -28,7 +37,7 @@ func StartServer(config *viper.Viper, flags map[string]interface{}) {
 	mongoUrl := config.GetString("MONGODB_URL")
 
 	router := gin.Default()
-	router.MaxMultipartMemory = 100 << 20
+	router.MaxMultipartMemory = maxMultipartMemoryBytes
 
 	client, configDB := db.ConnectToDatabase(mongoUrl, flags)
 
@@ -50,12 +59,16 @@ func StartServer(config *viper.Viper, flags map[string]interface{}) {
 			Password: config.GetString("REDIS_PASSWORD"),
 			DB:       config.GetInt("REDIS_DB"),
 		}
-		redisClient = redisdb.ConnectToRedis(redisConfig)
+		var err error
+		redisClient, err = redisdb.ConnectToRedis(redisConfig)
+		if err != nil {
+			logrus.Fatalf("Failed to connect to Redis: %v", err)
+		}
 	}
 
-	handler := handler.NewAppHandler(client, repo, mongoDatabase, redisClient, config.GetBool("PERFORMANCE_MODE"))
-	os.Setenv("API_KEY", config.GetString("API_KEY"))
-	os.Setenv("ENABLE_PRIVATE_APP_DOWNLOADING", config.GetString("ENABLE_PRIVATE_APP_DOWNLOADING"))
+	enablePrivateDownload := config.GetBool("ENABLE_PRIVATE_APP_DOWNLOADING")
+	apiKey := config.GetString("API_KEY")
+	handler := handler.NewAppHandler(client, repo, mongoDatabase, redisClient, config.GetBool("PERFORMANCE_MODE"), apiKey, enablePrivateDownload)
 	// Add authentication middleware to required paths
 	authMiddleware := utils.AuthMiddleware(mongoDatabase)
 
@@ -72,12 +85,12 @@ func StartServer(config *viper.Viper, flags map[string]interface{}) {
 	router.GET("/checkVersion", handler.FindLatestVersion)
 	router.GET("/apps/latest", handler.FetchLatestVersionOfApp)
 	router.GET("/dl/:target", handler.ShortLatestDownload)
-	loginLimiter := utils.NewIPRateLimiter(rate.Every(6*time.Second), 10)
-	signupLimiter := utils.NewIPRateLimiter(rate.Every(20*time.Second), 3)
+	loginLimiter := utils.NewIPRateLimiter(rate.Every(loginRateInterval), loginRateBurst)
+	signupLimiter := utils.NewIPRateLimiter(rate.Every(signupRateInterval), signupRateBurst)
 	router.POST("/signup", utils.RateLimitMiddleware(signupLimiter), handler.SignUp)
 	router.POST("/login", utils.RateLimitMiddleware(loginLimiter), handler.Login)
 
-	if config.GetBool("ENABLE_PRIVATE_APP_DOWNLOADING") {
+	if enablePrivateDownload {
 		router.GET("/download", handler.DownloadArtifact)
 		router.Use(authMiddleware)
 	} else {
@@ -140,7 +153,7 @@ func StartServer(config *viper.Viper, flags map[string]interface{}) {
 	// get the port from the configuration file
 	port := config.GetString("PORT")
 	if port == "" {
-		port = "9000"
+		port = defaultServerPort
 	}
 	router.Run(":" + port)
 }
@@ -165,7 +178,7 @@ func corsMiddleware(allowedOrigins []string) gin.HandlerFunc {
 		}
 
 		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
+			c.AbortWithStatus(http.StatusNoContent)
 			return
 		}
 
@@ -176,7 +189,7 @@ func corsMiddleware(allowedOrigins []string) gin.HandlerFunc {
 func telemetryMiddleware(config *viper.Viper) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if !config.GetBool("ENABLE_TELEMETRY") {
-			c.JSON(403, gin.H{
+			c.JSON(http.StatusForbidden, gin.H{
 				"error": "Telemetry is not enabled on this instance",
 			})
 			c.Abort()

@@ -11,6 +11,35 @@
     "default_updater": "Default",
     "set_default": "Use as default updater"
   },
+  "updaters": {
+    "subtitle": "Select supported updater protocols for this platform.",
+    "options": {
+      "manual": {
+        "label": "Manual",
+        "description": "Generic artifact download flow"
+      },
+      "squirrel_darwin": {
+        "label": "Squirrel Darwin",
+        "description": "Squirrel update metadata for macOS"
+      },
+      "squirrel_windows": {
+        "label": "Squirrel Windows",
+        "description": "Squirrel update metadata for Windows"
+      },
+      "sparkle": {
+        "label": "Sparkle",
+        "description": "Sparkle appcast-compatible artifacts"
+      },
+      "electron-builder": {
+        "label": "Electron Builder",
+        "description": "Electron Builder update channels"
+      },
+      "tauri": {
+        "label": "Tauri",
+        "description": "Tauri signed update manifest"
+      }
+    }
+  },
   "empty": {
     "title": "No platforms yet",
     "description": "Add platforms so artifacts can be classified."
