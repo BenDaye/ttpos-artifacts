@@ -68,7 +68,3 @@ export function getDefaultUpdaterType(source?: UpdaterSource): string {
 export function getUpdaterLabel(type: string): string {
   return UPDATER_OPTIONS.find(option => option.type === type)?.label ?? type
 }
-
-export function isTauriUpdater(updater?: string): boolean {
-  return updater === 'tauri'
-}

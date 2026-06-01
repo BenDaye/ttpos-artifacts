@@ -11,6 +11,35 @@
     "default_updater": "默认",
     "set_default": "设为默认更新器"
   },
+  "updaters": {
+    "subtitle": "选择此平台支持的更新器协议。",
+    "options": {
+      "manual": {
+        "label": "Manual",
+        "description": "通用构建产物下载流程"
+      },
+      "squirrel_darwin": {
+        "label": "Squirrel Darwin",
+        "description": "适用于 macOS 的 Squirrel 更新元数据"
+      },
+      "squirrel_windows": {
+        "label": "Squirrel Windows",
+        "description": "适用于 Windows 的 Squirrel 更新元数据"
+      },
+      "sparkle": {
+        "label": "Sparkle",
+        "description": "兼容 Sparkle appcast 的构建产物"
+      },
+      "electron-builder": {
+        "label": "Electron Builder",
+        "description": "Electron Builder 更新通道"
+      },
+      "tauri": {
+        "label": "Tauri",
+        "description": "Tauri 签名更新清单"
+      }
+    }
+  },
   "empty": {
     "title": "暂无平台",
     "description": "添加平台后可对构建产物进行分类。"

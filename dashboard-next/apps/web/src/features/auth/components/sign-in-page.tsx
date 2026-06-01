@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Link, useNavigate } from '@tanstack/react-router'
+import { getRouteApi, Link, useNavigate } from '@tanstack/react-router'
 import { Loader2, LockKeyhole, User } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
@@ -25,19 +25,16 @@ import {
 } from '@/shared/components/ui/form'
 import { Input } from '@/shared/components/ui/input'
 
+const routeApi = getRouteApi('/_public/signin')
+
 const schema = z.object({
   username: z.string().min(1, 'Required'),
   password: z.string().min(1, 'Required'),
 })
 type Values = z.infer<typeof schema>
 
-function getSafeRedirectTarget(): string {
-  if (typeof window === 'undefined') {
-    return '/applications'
-  }
-
-  const redirectParam = new URLSearchParams(window.location.search).get('redirect')
-  if (!redirectParam) {
+function getSafeRedirectTarget(redirectParam: string | undefined): string {
+  if (typeof window === 'undefined' || !redirectParam) {
     return '/applications'
   }
 
@@ -56,6 +53,7 @@ function getSafeRedirectTarget(): string {
 export function SignInPage() {
   const { t } = useTranslation('auth')
   const navigate = useNavigate()
+  const { redirect } = routeApi.useSearch()
   const mutation = useLoginMutation()
   const form = useForm<Values>({
     resolver: zodResolver(schema),
@@ -66,12 +64,12 @@ export function SignInPage() {
     try {
       await mutation.mutateAsync(values)
       toast.success(t('signin.success', { defaultValue: 'Signed in' }))
-      const redirectTarget = getSafeRedirectTarget()
+      const redirectTarget = getSafeRedirectTarget(redirect)
       if (redirectTarget === '/applications') {
         void navigate({ to: '/applications' })
       }
       else {
-        window.location.assign(redirectTarget)
+        void navigate({ href: redirectTarget })
       }
     }
     catch (err) {
