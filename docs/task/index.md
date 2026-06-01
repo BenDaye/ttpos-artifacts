@@ -42,3 +42,4 @@
 | [x] | BUG-013 | 修复 Dashboard Next App board 双层纵向滚动 | P1 | completed |
 | [x] | ENH-009 | Dashboard Next App board version 快速详情弹层 | P1 | completed |
 | [x] | BUG-014 | 修复 Dashboard Next 移动端工具栏控件堆积 | P1 | completed |
+| [ ] | SEC-007 | 收紧 App/meta 的 Owner 与 Private 字段 API 响应暴露 | P2 | pending |
