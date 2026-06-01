@@ -41,26 +41,26 @@ func assertKeys(t *testing.T, name string, got, want []string) {
 }
 
 func TestAppJSONContract(t *testing.T) {
-	// Private/Tuf/Owner 仍按默认 key 输出(本批刻意不收紧),固化现状。
+	// Owner/Private 已由 SEC-007 收紧为 json:"-",不再进 wire;Tuf 仍按默认 key 输出。
 	assertKeys(t, "App", topLevelKeys(t, App{}),
-		[]string{"ID", "AppName", "Logo", "Private", "Tuf", "Description", "Owner", "Updated_at"})
+		[]string{"ID", "AppName", "Logo", "Tuf", "Description", "Updated_at"})
 }
 
 func TestChannelJSONContract(t *testing.T) {
 	assertKeys(t, "Channel", topLevelKeys(t, Channel{}),
-		[]string{"ID", "ChannelName", "Owner", "Updated_at"})
+		[]string{"ID", "ChannelName", "Updated_at"})
 }
 
 func TestPlatformJSONContract(t *testing.T) {
 	// Updaters 不加 omitempty:nil 时仍输出 "Updaters":null,与现状一致。
 	assertKeys(t, "Platform", topLevelKeys(t, Platform{}),
-		[]string{"ID", "PlatformName", "Updaters", "Owner", "Updated_at"})
+		[]string{"ID", "PlatformName", "Updaters", "Updated_at"})
 }
 
 func TestArchJSONContract(t *testing.T) {
 	// 关键:json key 必须是 Go 字段名 ArchID,而非 bson 的 arch_id。
 	assertKeys(t, "Arch", topLevelKeys(t, Arch{}),
-		[]string{"ID", "ArchID", "Owner", "Updated_at"})
+		[]string{"ID", "ArchID", "Updated_at"})
 }
 
 func TestPermissionsJSONContract(t *testing.T) {
