@@ -6687,11 +6687,9 @@ func TestListAppsUsingTeamUser(t *testing.T) {
 	expected := []AppInfo{
 		{
 			AppName: "testapp",
-			Owner:   "admin",
 		},
 		{
 			AppName: "teamapp",
-			Owner:   "admin",
 		},
 	}
 	var actual AppResponse
@@ -6705,7 +6703,7 @@ func TestListAppsUsingTeamUser(t *testing.T) {
 		logrus.Infoln("expectedApp.AppName", expectedApp.AppName)
 		logrus.Infoln("actual.Apps[i].AppName", actual.Apps[i].AppName)
 		assert.Equal(t, expectedApp.AppName, actual.Apps[i].AppName)
-		assert.Equal(t, expectedApp.Owner, actual.Apps[i].Owner)
+		assert.Empty(t, actual.Apps[i].Owner, "Owner 不应出现在 API 响应中 (SEC-007)")
 	}
 }
 
@@ -6829,11 +6827,9 @@ func TestListChannelsUsingTeamUser(t *testing.T) {
 	expected := []ChannelInfo{
 		{
 			ChannelName: "stable",
-			Owner:       "admin",
 		},
 		{
 			ChannelName: "teamchannel",
-			Owner:       "admin",
 		},
 	}
 	var actual ChannelResponse
@@ -6845,7 +6841,7 @@ func TestListChannelsUsingTeamUser(t *testing.T) {
 	// Compare the relevant fields (ChannelName) for each item in the response.
 	for i, expectedChannel := range expected {
 		assert.Equal(t, expectedChannel.ChannelName, actual.Channels[i].ChannelName)
-		assert.Equal(t, expectedChannel.Owner, actual.Channels[i].Owner)
+		assert.Empty(t, actual.Channels[i].Owner, "Owner 不应出现在 API 响应中 (SEC-007)")
 	}
 }
 
@@ -6969,11 +6965,9 @@ func TestListPlatformsUsingTeamUser(t *testing.T) {
 	expected := []PlatformInfo{
 		{
 			PlatformName: "universalPlatform",
-			Owner:        "admin",
 		},
 		{
 			PlatformName: "teamplatform",
-			Owner:        "admin",
 		},
 	}
 	var actual PlatformResponse
@@ -6985,7 +6979,7 @@ func TestListPlatformsUsingTeamUser(t *testing.T) {
 	// Compare the relevant fields (ChannelName) for each item in the response.
 	for i, expectedPlatform := range expected {
 		assert.Equal(t, expectedPlatform.PlatformName, actual.Platforms[i].PlatformName)
-		assert.Equal(t, expectedPlatform.Owner, actual.Platforms[i].Owner)
+		assert.Empty(t, actual.Platforms[i].Owner, "Owner 不应出现在 API 响应中 (SEC-007)")
 	}
 }
 
@@ -7109,11 +7103,9 @@ func TestListArchsUsingTeamUser(t *testing.T) {
 	expected := []ArchInfo{
 		{
 			ArchID: "universalArch",
-			Owner:  "admin",
 		},
 		{
 			ArchID: "teamarch",
-			Owner:  "admin",
 		},
 	}
 	var actual ArchResponse
@@ -7125,7 +7117,7 @@ func TestListArchsUsingTeamUser(t *testing.T) {
 	// Compare the relevant fields (ChannelName) for each item in the response.
 	for i, expectedArch := range expected {
 		assert.Equal(t, expectedArch.ArchID, actual.Archs[i].ArchID)
-		assert.Equal(t, expectedArch.Owner, actual.Archs[i].Owner)
+		assert.Empty(t, actual.Archs[i].Owner, "Owner 不应出现在 API 响应中 (SEC-007)")
 	}
 }
 
