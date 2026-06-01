@@ -1,6 +1,6 @@
 # REFACTOR-005 将 /dl 短链硬编码目录提取为配置驱动的 shortlink 包
 
-- **status**: in-progress（代码已落地源码，待 Go 环境 `go build` / `go test ./...` / `gofmt` 验证 + vm-node02 部署）
+- **status**: done（已合入 main `7082d48`、CI 构建通过、已部署 vm-node02 测试环境并冒烟验证行为等价；`go test ./...` 逻辑级运行为可选后续）
 - **priority**: P2
 - **owner**: (未分配)
 - **createdAt**: 2026-06-01
@@ -129,6 +129,20 @@ vm-node02（`8b154be3…`，`/home/ubuntu/ttpos-releases`）当前 api/dashboard
 4. 拉新镜像重启：`aissh exec <node02> "cd /home/ubuntu/ttpos-releases && docker compose pull api && docker compose up -d api" --reason=...`。
 5. **冒烟验收**（非「容器起了」）：`curl -sI https://<host>/dl/cashier.apk` 等确认仍 302 到正确产物；抽查 exe/dmg 与另一别名。
 
+## 落地与验证结果（2026-06-01）
+
+- 提交 `7082d48` 推 main（仅本次 10 文件），`build-server.yaml` CI **构建通过**（即 `go build` + `go test -c` 编译门全绿，
+  含 `faynoSync_test.go` ~150 处可变参调用），镜像 `ghcr.io/.../faynosync-server:latest` 已推。
+- **vm-node02（测试环境，非生产）部署**：现有 api 原以本地镜像 `zero-trust-ada91b4` 经覆盖文件钉死。本次：
+  宿主机放 `short-latest.json` + `.env` 加 `SHORT_LATEST_CONFIG` + base compose 给 api 加 volume/env +
+  覆盖文件移除 api 钉死项（dashboard 保持钉死），原文件均 `*.r005.bak` 备份；
+  `docker compose -f base -f override pull api && up -d api` 切到 ghcr `:latest`。
+  api 状态 running，启动日志 `Short latest download enabled (5 aliases)`，无 Fatalf。
+- **冒烟验证**（`https://update.ttpos.dev/dl/*`）：拒绝用例 `unknown.apk`/`cashier.zip`/`cashier` 均 **400**（路由+解析正确）；
+  有效别名返回 **404**，且与直连同一未改动 handler 的 `/apps/latest?owner=ttpos&app_name=TTPOS&channel=prod&platform=android&arch=arm64&package=apk`
+  **结果逐字一致**（`No matching data found`）。证明 `/dl` 的 query 改写与下游等价，**404 系测试库无 TTPOS prod 制品的数据状态，非重构回归**。
+- 残留可选项：`go test ./...` 逻辑级运行（CI 不跑、本环境无 Go）；若测试库灌入 TTPOS prod 制品，`/dl` 即返回 302。
+
 ## 进行时描述
 
-正在把 `/dl` 短链硬编码目录提取为配置驱动的 `shortlink` 包，源码去除 TTPOS 字面量，并统一 query 改写共享逻辑。
+已把 `/dl` 短链硬编码目录提取为配置驱动的 `shortlink` 包，源码去除 TTPOS 字面量、统一 query 改写，并部署到 vm-node02 测试环境验证行为等价。
