@@ -69,6 +69,22 @@ docker compose up -d
 docker compose build
 ```
 
+### 发版 (dashboard-next)
+
+dashboard-next 打包推镜像**只在打 `dashboard-next-v*` tag 时触发**；push 到 main/release 只跑质量门、不打包（`build` job 被 `if: startsWith(github.ref,'refs/tags/dashboard-next-v')` 跳过）。
+
+```bash
+cd dashboard-next
+bun run version:patch          # 或 version:minor / version:major：bump 两处 package.json + 归档 CHANGELOG
+git add -A && git commit -m "chore: 发布 dashboard-next v<version>"
+git push origin main
+git tag dashboard-next-v<version> && git push origin dashboard-next-v<version>
+```
+
+- tag 名必须是 `dashboard-next-v<version>`，与 CI `type=match` 闭环；CI 据此推 ghcr 镜像 `:<version>` + `:latest` + `:<short-sha>`，并经 `GIT_COMMIT` build-arg 把 commit 注入镜像（侧边栏底部展示自身版本号）。
+- `scripts/bump-version.ts` 只改文件并打印建议的 commit/tag 命令，不自动提交、不自动打标签。
+- vm-node02 部署拉 `:latest`，故 `:latest` 只在发版（打 tag）时更新，不再随 push main 变化。
+
 ## 关键边界
 
 - Dashboard 新功能和修复遵循 `features/<domain>/{api.ts,hooks.ts,components/}`、共享 UI、React Query hooks 和既有 i18n 模式。
