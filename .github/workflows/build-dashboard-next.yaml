@@ -4,6 +4,10 @@ on:
   workflow_dispatch:
   push:
     branches: [main, release]
+    # 仅匹配 bump-version.ts 打出的版本 tag；paths 对 tag 推送不生效（GitHub 官方行为），
+    # 故 tag 必触发打包，分支推送仍受下方 paths 约束、行为不变。
+    tags:
+      - "dashboard-next-v*"
     paths:
       - "dashboard-next/apps/web/src/**"
       - "dashboard-next/apps/web/public/**"
@@ -76,6 +80,9 @@ jobs:
 
   build:
     needs: [quality-gates]
+    # 仅在打了 dashboard-next-v* tag 时才打包推镜像；分支推送只跑质量门。
+    # 手动 workflow_dispatch 若选择 tag ref 也会打包，选分支则只验证。
+    if: startsWith(github.ref, 'refs/tags/dashboard-next-v')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -89,7 +96,7 @@ jobs:
           echo "========================================="
           echo "Dashboard-next 构建信息"
           echo "========================================="
-          echo "分支: ${{ github.ref_name }}"
+          echo "Ref: ${{ github.ref_name }}"
           echo "触发: ${{ github.event_name }}"
           echo "镜像: ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.IMAGE_NAME }}"
           echo "========================================="
@@ -118,10 +125,11 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.IMAGE_NAME }}
+          # 从 dashboard-next-v0.2.0 提取版本号 0.2.0；release tag 同时更新 latest，并附 commit sha。
           tags: |
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/release' || github.ref == 'refs/heads/main' }}
+            type=match,pattern=dashboard-next-v(.*),group=1
+            type=raw,value=latest
             type=sha,prefix=,format=short
-            type=ref,event=branch
 
       - name: 构建并推送 Docker 镜像
         uses: docker/build-push-action@v6
@@ -131,6 +139,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            GIT_COMMIT=${{ steps.git_info.outputs.COMMIT_SHA }}
           cache-from: type=gha
           cache-to: type=gha,mode=max,ignore-error=true
           platforms: linux/amd64

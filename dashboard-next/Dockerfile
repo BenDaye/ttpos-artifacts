@@ -17,6 +17,12 @@ COPY apps apps
 
 # Build-time placeholder — replaced at container start by docker-entrypoint.sh
 ENV VITE_API_URL=__VITE_API_URL_PLACEHOLDER__
+
+# 版本元数据：.git 不在构建上下文、镜像也无 git，故 git short hash 由 CI 经 build-arg 注入；
+# APP_VERSION 由 vite 读 apps/web/package.json，BUILD_TIME 在容器内构建时生成。
+# 放在 install 层之后，避免每次构建都使依赖缓存层失效。
+ARG GIT_COMMIT=unknown
+ENV GIT_COMMIT=$GIT_COMMIT
 RUN bun run --filter @ttpos/web build
 
 # ---- Stage 2: Serve ----

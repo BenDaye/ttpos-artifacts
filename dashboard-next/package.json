@@ -16,7 +16,10 @@
     "test": "bun --filter '*' test",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "version:patch": "bun run scripts/bump-version.ts patch",
+    "version:minor": "bun run scripts/bump-version.ts minor",
+    "version:major": "bun run scripts/bump-version.ts major"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^8.2.0",

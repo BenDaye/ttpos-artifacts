@@ -47,5 +47,8 @@
     "label": "语言",
     "en": "English",
     "zh": "简体中文"
+  },
+  "version": {
+    "aria": "应用版本"
   }
 }

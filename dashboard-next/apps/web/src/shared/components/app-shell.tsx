@@ -17,6 +17,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/features/auth/auth-store'
 import { cn } from '@/shared/lib/utils'
 import { useUiStore } from '@/shared/stores/ui-store'
+import { AppVersionBadge } from './app-version-badge'
 import { LanguageSwitcher } from './language-switcher'
 import { ThemeSwitcher } from './theme-switcher'
 import { Button } from './ui/button'
@@ -149,6 +150,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span className={cn(collapsed && 'md:hidden')}>{t('auth.logout', { defaultValue: 'Sign out' })}</span>
           </Button>
         </div>
+        <AppVersionBadge collapsed={collapsed} />
       </aside>
 
       <div className="flex min-h-svh min-w-0 flex-1 flex-col">
