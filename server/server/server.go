@@ -127,24 +127,28 @@ func StartServer(config *viper.Viper, flags map[string]interface{}) {
 	// Channel routes
 	router.POST("/channel/create", utils.CheckPermission(utils.PermissionCreate, utils.ResourceChannels, mongoDatabase), handler.CreateChannel)
 	router.GET("/channel/list", handler.ListChannels)
+	router.POST("/channel/reorder", utils.CheckPermission(utils.PermissionEdit, utils.ResourceChannels, mongoDatabase), handler.ReorderChannels)
 	router.DELETE("/channel/delete", utils.CheckPermission(utils.PermissionDelete, utils.ResourceChannels, mongoDatabase), handler.DeleteChannel)
 	router.POST("/channel/update", utils.CheckPermission(utils.PermissionEdit, utils.ResourceChannels, mongoDatabase), handler.UpdateChannel)
 
 	// Platform routes
 	router.POST("/platform/create", utils.CheckPermission(utils.PermissionCreate, utils.ResourcePlatforms, mongoDatabase), handler.CreatePlatform)
 	router.GET("/platform/list", handler.ListPlatforms)
+	router.POST("/platform/reorder", utils.CheckPermission(utils.PermissionEdit, utils.ResourcePlatforms, mongoDatabase), handler.ReorderPlatforms)
 	router.DELETE("/platform/delete", utils.CheckPermission(utils.PermissionDelete, utils.ResourcePlatforms, mongoDatabase), handler.DeletePlatform)
 	router.POST("/platform/update", utils.CheckPermission(utils.PermissionEdit, utils.ResourcePlatforms, mongoDatabase), handler.UpdatePlatform)
 
 	// Arch routes
 	router.POST("/arch/create", utils.CheckPermission(utils.PermissionCreate, utils.ResourceArchs, mongoDatabase), handler.CreateArch)
 	router.GET("/arch/list", handler.ListArchs)
+	router.POST("/arch/reorder", utils.CheckPermission(utils.PermissionEdit, utils.ResourceArchs, mongoDatabase), handler.ReorderArchs)
 	router.DELETE("/arch/delete", utils.CheckPermission(utils.PermissionDelete, utils.ResourceArchs, mongoDatabase), handler.DeleteArch)
 	router.POST("/arch/update", utils.CheckPermission(utils.PermissionEdit, utils.ResourceArchs, mongoDatabase), handler.UpdateArch)
 
 	// App management routes
 	router.POST("/app/create", utils.CheckPermission(utils.PermissionCreate, utils.ResourceApps, mongoDatabase), handler.CreateApp)
 	router.GET("/app/list", handler.ListApps)
+	router.POST("/app/reorder", utils.CheckPermission(utils.PermissionEdit, utils.ResourceApps, mongoDatabase), handler.ReorderApps)
 	router.DELETE("/app/delete", utils.CheckPermission(utils.PermissionDelete, utils.ResourceApps, mongoDatabase), handler.DeleteApp)
 	router.POST("/artifact/delete", utils.CheckPermission(utils.PermissionDelete, utils.ResourceApps, mongoDatabase), handler.DeleteSpecificArtifactOfApp)
 

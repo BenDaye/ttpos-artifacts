@@ -39,6 +39,9 @@ type AppRepository interface {
 	UpdatePlatform(id primitive.ObjectID, platformName string, updaters []model.Updater, owner string, ctx context.Context) (interface{}, error)
 	UpdateArch(id primitive.ObjectID, paramValue string, owner string, ctx context.Context) (interface{}, error)
 	DeleteSpecificArtifactOfApp(id primitive.ObjectID, ctxQuery map[string]interface{}, ctx context.Context, owner string) ([]string, bool, error)
+	// 注意:Reorder* 方法刻意不并入本接口。它们作为具体 *appRepository 的能力存在,
+	// 由 catalog 包的窄接口 metaReorderer 在调用点断言获取。这样其它实现/测试 mock
+	// 无需被动新增方法即可继续满足 AppRepository(见 mongod/reorder.go 与 catalog/reorder.go)。
 }
 
 type appRepository struct {

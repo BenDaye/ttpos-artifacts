@@ -13,7 +13,7 @@ import { Input } from '@/shared/components/ui/input'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 import { cn } from '@/shared/lib/utils'
 import { useUiStore } from '@/shared/stores/ui-store'
-import { useAppsListQuery, useDeleteAppMutation } from '../hooks'
+import { useAppsListQuery, useDeleteAppMutation, useReorderAppsMutation } from '../hooks'
 import { AppFormDialog } from './app-form-dialog'
 import { AppBoardView } from './views/app-board-view'
 import { AppCardView } from './views/app-card-view'
@@ -26,14 +26,30 @@ export function ApplicationsPage() {
   const isBoardLayout = layout === 'board'
   const appsQuery = useAppsListQuery({ page: 1, limit: 50 })
   const deleteMutation = useDeleteAppMutation()
+  const reorderMutation = useReorderAppsMutation()
   const [search, setSearch] = useState('')
   const [creating, setCreating] = useState(false)
   const [editing, setEditing] = useState<AppSummary | null>(null)
   const [deleting, setDeleting] = useState<AppSummary | null>(null)
 
+  // 搜索过滤激活时禁用拖拽，避免在子集上重排破坏完整顺序
+  const isFiltering = search.trim() !== ''
+
   const filtered = (appsQuery.data?.apps ?? []).filter(app =>
     !search || app.AppName.toLowerCase().includes(search.toLowerCase()),
   )
+
+  const onReorder = (ids: string[]) => {
+    reorderMutation.mutate(ids, {
+      onSuccess: () => {
+        toast.success(t('reordered', { defaultValue: 'Order updated' }))
+      },
+      onError: (err) => {
+        const message = err instanceof Error ? err.message : t('common:states.error')
+        toast.error(message)
+      },
+    })
+  }
 
   const goToDetail = (app: AppSummary) => {
     void navigate({ to: '/applications/$appName', params: { appName: app.AppName } })
@@ -70,7 +86,16 @@ export function ApplicationsPage() {
       )
     }
     if (layout === 'list') {
-      return <AppListView apps={filtered} onSelect={goToDetail} onEdit={setEditing} onDelete={setDeleting} />
+      return (
+        <AppListView
+          apps={filtered}
+          onSelect={goToDetail}
+          onEdit={setEditing}
+          onDelete={setDeleting}
+          onReorder={onReorder}
+          canReorder={!isFiltering}
+        />
+      )
     }
     if (isBoardLayout) {
       return <AppBoardView apps={filtered} onSelect={goToDetail} onEdit={setEditing} onDelete={setDeleting} />

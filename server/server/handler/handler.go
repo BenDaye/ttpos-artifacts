@@ -41,6 +41,10 @@ type AppHandler interface {
 	ListArchs(*gin.Context)
 	CreateApp(*gin.Context)
 	ListApps(*gin.Context)
+	ReorderChannels(*gin.Context)
+	ReorderPlatforms(*gin.Context)
+	ReorderArchs(*gin.Context)
+	ReorderApps(*gin.Context)
 	SignUp(*gin.Context)
 	UpdateApp(*gin.Context)
 	UpdateChannel(*gin.Context)
@@ -127,6 +131,26 @@ func (ch *appHandler) ListArchs(c *gin.Context) {
 func (ch *appHandler) ListApps(c *gin.Context) {
 	// Call the ListApps function from the catalog package
 	catalog.ListApps(c, ch.repository)
+}
+
+func (ch *appHandler) ReorderChannels(c *gin.Context) {
+	// Call the ReorderChannels function from the catalog package
+	catalog.ReorderChannels(c, ch.repository)
+}
+
+func (ch *appHandler) ReorderPlatforms(c *gin.Context) {
+	// Call the ReorderPlatforms function from the catalog package
+	catalog.ReorderPlatforms(c, ch.repository)
+}
+
+func (ch *appHandler) ReorderArchs(c *gin.Context) {
+	// Call the ReorderArchs function from the catalog package
+	catalog.ReorderArchs(c, ch.repository)
+}
+
+func (ch *appHandler) ReorderApps(c *gin.Context) {
+	// Call the ReorderApps function from the catalog package
+	catalog.ReorderApps(c, ch.repository)
 }
 func (ch *appHandler) CreateChannel(c *gin.Context) {
 	// Call the CreateChannel function from the create package

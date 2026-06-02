@@ -22,4 +22,7 @@ export const channelsApi = {
   remove(id: string) {
     return http.delete('/channel/delete', { query: { id } })
   },
+  reorder(ids: string[]) {
+    return http.post('/channel/reorder', { ids })
+  },
 }

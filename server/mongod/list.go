@@ -13,6 +13,8 @@ import (
 func (c *appRepository) listItems(ctx context.Context, collectionName string, filter bson.M, owner string, resultSlice interface{}) error {
 	findOptions := options.Find()
 	findOptions.SetLimit(100)
+	// 按持久化 sort 升序排序;_id 作为 tiebreaker,使无 sort 字段的老文档维持创建顺序。
+	findOptions.SetSort(bson.D{{Key: "sort", Value: 1}, {Key: "_id", Value: 1}})
 
 	logrus.Debugf("listItems called for owner: %s, collection: %s", owner, collectionName)
 	logrus.Debugf("Initial filter: %v", filter)

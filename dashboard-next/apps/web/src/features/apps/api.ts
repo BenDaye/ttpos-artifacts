@@ -183,4 +183,8 @@ export const appsApi = {
   async deleteApp(id: string): Promise<unknown> {
     return http.delete('/app/delete', { query: { id } })
   },
+
+  reorder(ids: string[]): Promise<unknown> {
+    return http.post('/app/reorder', { ids })
+  },
 }

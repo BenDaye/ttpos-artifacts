@@ -27,4 +27,7 @@ export const platformsApi = {
   remove(id: string) {
     return http.delete('/platform/delete', { query: { id } })
   },
+  reorder(ids: string[]) {
+    return http.post('/platform/reorder', { ids })
+  },
 }

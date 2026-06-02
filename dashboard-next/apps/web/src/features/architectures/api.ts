@@ -22,4 +22,7 @@ export const architecturesApi = {
   remove(id: string) {
     return http.delete('/arch/delete', { query: { id } })
   },
+  reorder(ids: string[]) {
+    return http.post('/arch/reorder', { ids })
+  },
 }

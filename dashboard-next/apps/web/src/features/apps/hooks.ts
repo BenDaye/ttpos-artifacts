@@ -1,3 +1,4 @@
+import type { AppSummary } from '@ttpos/shared'
 import type {
   AppListParams,
   CreateAppPayload,
@@ -8,6 +9,7 @@ import type {
   UploadVersionPayload,
 } from './api'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { reorderById } from '@/shared/lib/reorder'
 import { appsApi } from './api'
 
 const APPS_KEY = 'apps'
@@ -89,5 +91,33 @@ export function useDeleteAppMutation() {
       void qc.invalidateQueries({ queryKey: [APPS_KEY] })
       void qc.invalidateQueries({ queryKey: [SEARCH_KEY] })
     },
+  })
+}
+
+// apps 列表缓存形如 { apps, total }，且 query key 带分页参数，
+// 因此用 partial key 复数形式批量乐观重排，避免与调用方参数耦合。
+interface AppListData { apps: AppSummary[], total: number }
+
+export function useReorderAppsMutation() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (ids: string[]) => appsApi.reorder(ids),
+    onMutate: async (ids) => {
+      await qc.cancelQueries({ queryKey: [APPS_KEY] })
+      const previous = qc.getQueriesData<AppListData>({ queryKey: [APPS_KEY] })
+      qc.setQueriesData<AppListData>({ queryKey: [APPS_KEY] }, (data) => {
+        if (!data) {
+          return data
+        }
+        return { ...data, apps: reorderById(data.apps, ids, item => item.ID) }
+      })
+      return { previous }
+    },
+    onError: (_err, _ids, context) => {
+      context?.previous?.forEach(([key, data]) => {
+        qc.setQueryData(key, data)
+      })
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: [APPS_KEY] }),
   })
 }

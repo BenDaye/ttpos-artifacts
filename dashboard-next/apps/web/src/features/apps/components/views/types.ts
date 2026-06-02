@@ -5,4 +5,8 @@ export interface AppViewProps {
   onSelect: (app: AppSummary) => void
   onEdit: (app: AppSummary) => void
   onDelete: (app: AppSummary) => void
+  // 拖拽排序回调，仅 list 视图使用；card/board 视图忽略
+  onReorder?: (ids: string[]) => void
+  // 是否允许拖拽排序；搜索过滤激活时为 false
+  canReorder?: boolean
 }

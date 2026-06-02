@@ -35,6 +35,8 @@ export interface AppSummary {
   AppName: string
   Logo: string
   Description: string
+  // 排序权重，后端按该值升序返回；拖拽排序后全量重写
+  Sort: number
   Updated_at: string
 }
 
@@ -67,6 +69,8 @@ export interface ChangelogEntry {
 export interface Channel {
   ID: string
   ChannelName: string
+  // 排序权重，后端按该值升序返回；拖拽排序后全量重写
+  Sort: number
   Updated_at: string
 }
 
@@ -88,12 +92,16 @@ export interface Platform {
   ID: string
   PlatformName: string
   Updaters?: Updater[]
+  // 排序权重，后端按该值升序返回；拖拽排序后全量重写
+  Sort: number
   Updated_at: string
 }
 
 export interface Architecture {
   ID: string
   ArchID: string
+  // 排序权重，后端按该值升序返回；拖拽排序后全量重写
+  Sort: number
   Updated_at: string
 }
 

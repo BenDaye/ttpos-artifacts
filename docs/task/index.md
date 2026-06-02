@@ -44,3 +44,4 @@
 | [x] | BUG-014 | 修复 Dashboard Next 移动端工具栏控件堆积 | P1 | completed |
 | [ ] | SEC-007 | 收紧 App/meta 的 Owner 与 Private 字段 API 响应暴露 | P2 | pending |
 | [x] | REFACTOR-005 | 将 /dl 短链硬编码目录提取为配置驱动的 shortlink 包 | P2 | completed |
+| [x] | ENH-010 | 为元数据模型引入持久化 Sort 排序与 Dashboard 拖拽 | P2 | completed |

@@ -27,6 +27,8 @@ type App struct {
 	Description string             `bson:"description" json:"Description"`
 	Owner       string             `bson:"owner" json:"-"`
 	Updated_at  primitive.DateTime `bson:"updated_at" json:"Updated_at"`
+	// Sort 为 owner 维度内的持久化排序索引,升序;新增字段纯追加,正常对外暴露。
+	Sort int `bson:"sort" json:"Sort"`
 }
 
 type SpecificApp struct {
@@ -72,6 +74,8 @@ type Channel struct {
 	ChannelName string             `bson:"channel_name" json:"ChannelName"`
 	Owner       string             `bson:"owner" json:"-"`
 	Updated_at  primitive.DateTime `bson:"updated_at" json:"Updated_at"`
+	// Sort 为 owner 维度内的持久化排序索引,升序。
+	Sort int `bson:"sort" json:"Sort"`
 }
 
 type Platform struct {
@@ -80,6 +84,8 @@ type Platform struct {
 	Updaters     []Updater          `bson:"updaters" json:"Updaters"`
 	Owner        string             `bson:"owner" json:"-"`
 	Updated_at   primitive.DateTime `bson:"updated_at" json:"Updated_at"`
+	// Sort 为 owner 维度内的持久化排序索引,升序。
+	Sort int `bson:"sort" json:"Sort"`
 }
 
 type Arch struct {
@@ -87,6 +93,8 @@ type Arch struct {
 	ArchID     string             `bson:"arch_id" json:"ArchID"`
 	Owner      string             `bson:"owner" json:"-"`
 	Updated_at primitive.DateTime `bson:"updated_at" json:"Updated_at"`
+	// Sort 为 owner 维度内的持久化排序索引,升序。
+	Sort int `bson:"sort" json:"Sort"`
 }
 
 type Changelog struct {

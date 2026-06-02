@@ -16,6 +16,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -42,6 +43,58 @@ func (c *appRepository) CreateDocument(collectionName string, document bson.D, u
 	}
 
 	return uploadResult.InsertedID, nil
+}
+
+// metaDiscriminatorField 把 keyType 映射到 apps_meta 中区分四类元数据的判别字段名。
+// 纯函数,无 DB 依赖,便于单测。未知 keyType 返回空串。
+func metaDiscriminatorField(keyType string) string {
+	switch keyType {
+	case "channel":
+		return "channel_name"
+	case "platform":
+		return "platform_name"
+	case "arch":
+		return "arch_id"
+	case "app":
+		return "app_name"
+	default:
+		return ""
+	}
+}
+
+// nextSortValue 根据当前 (owner, type) 作用域内已存在的最大 sort 值计算新文档的默认 sort。
+// maxSort 为 nil 表示该作用域内没有任何带 numeric sort 的文档(全为老文档或为空),
+// 此时新值为 0;否则为 max+1。纯函数,便于单测。
+func nextSortValue(maxSort *int) int {
+	if maxSort == nil {
+		return 0
+	}
+	return *maxSort + 1
+}
+
+// maxMetaSort 查询 apps_meta 中给定 (owner, 判别字段) 作用域内 numeric sort 字段的最大值。
+// 通过 sort:{$exists:true} 过滤掉无 sort 字段的老文档,避免把缺失值误判为 0。
+// 无任何带 sort 的文档时返回 (nil, nil)。这是打 mongo 的薄包装层,需在 staging 验证。
+func (c *appRepository) maxMetaSort(ctx context.Context, owner, discriminatorField string) (*int, error) {
+	collection := c.client.Database(c.config.Database).Collection("apps_meta")
+	filter := bson.M{
+		"owner":            owner,
+		discriminatorField: bson.M{"$exists": true},
+		"sort":             bson.M{"$exists": true},
+	}
+	findOptions := options.FindOne().SetSort(bson.D{{Key: "sort", Value: -1}})
+
+	var doc struct {
+		Sort int `bson:"sort"`
+	}
+	err := collection.FindOne(ctx, filter, findOptions).Decode(&doc)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &doc.Sort, nil
 }
 
 // Helper function to check if a string slice contains a value
@@ -72,6 +125,17 @@ func (c *appRepository) createMetaDocument(
 	if err == nil {
 		// User is a team user, set owner to their admin
 		owner = teamUser.Owner
+	}
+
+	// 计算 (owner, type) 作用域内的默认 sort:取该作用域已存在文档的最大 sort,无则 0,否则 max+1。
+	// 必须使用解析后的 owner(team user 已归并到 admin),否则按原始用户名查不到、会让 sort 撞车。
+	if field := metaDiscriminatorField(keyType); field != "" {
+		maxSort, err := c.maxMetaSort(ctx, owner, field)
+		if err != nil {
+			logrus.Errorf("Error computing max sort for %s: %v", keyType, err)
+			return nil, err
+		}
+		document = append(document, bson.E{Key: "sort", Value: nextSortValue(maxSort)})
 	}
 
 	result, err := c.CreateDocument("apps_meta", document, uniqueKey, keyType, owner, ctx)
