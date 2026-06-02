@@ -125,6 +125,10 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.IMAGE_NAME }}
+          # 关闭隐式 latest：type=match 在 tag 事件下会因 flavor.latest=auto（默认）再隐式加一个
+          # latest，与下方显式 type=raw,value=latest 重复。latest=false 关掉隐式，只保留显式一个。
+          flavor: |
+            latest=false
           # 从 dashboard-next-v0.2.0 提取版本号 0.2.0；release tag 同时更新 latest，并附 commit sha。
           tags: |
             type=match,pattern=dashboard-next-v(.*),group=1
