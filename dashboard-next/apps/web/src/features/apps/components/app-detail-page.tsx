@@ -14,7 +14,7 @@ import { Card, CardContent } from '@/shared/components/ui/card'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 import { formatDateTime } from '@/shared/lib/format'
 import { cn } from '@/shared/lib/utils'
-import { appsApi } from '../api'
+import { appsApi, buildDeleteArtifactPayload } from '../api'
 import {
   useAppVersionsQuery,
   useDeleteArtifactMutation,
@@ -32,6 +32,7 @@ interface ArtifactKey {
   versionId: string
   appName: string
   versionStr: string
+  // link 既用于确认弹层显示,也作为稳定标识发给后端删除
   link: string
   package: string
 }
@@ -76,12 +77,12 @@ export function AppDetailPage({ appName }: { appName: string }) {
     if (!deletingArtifact)
       return
     try {
-      await deleteArtifact.mutateAsync({
-        id: deletingArtifact.versionId,
-        app_name: deletingArtifact.appName,
-        version: deletingArtifact.versionStr,
-        artifacts_to_delete: [deletingArtifact.package || deletingArtifact.link],
-      })
+      await deleteArtifact.mutateAsync(buildDeleteArtifactPayload(
+        deletingArtifact.versionId,
+        deletingArtifact.appName,
+        deletingArtifact.versionStr,
+        deletingArtifact.link,
+      ))
       toast.success(t('artifact_deleted', { defaultValue: 'Artifact deleted' }))
       setDeletingArtifact(null)
     }

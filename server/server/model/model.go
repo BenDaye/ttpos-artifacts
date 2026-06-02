@@ -18,6 +18,27 @@ type Artifact struct {
 	TufTaskID *string            `bson:"tuf_task_id,omitempty"`
 }
 
+// PartitionArtifactsByLink 按 Link 精确匹配，把 artifacts 拆成「保留」与「被删的 link」。
+// 用于按稳定标识删除 artifact：与位次无关、对多 link 安全，因此不受 load 与删除之间
+// 数组顺序变化的影响（避免按下标删除时的 TOCTOU 删错）。空 linksToDelete 原样返回。
+func PartitionArtifactsByLink(artifacts []Artifact, linksToDelete []string) (kept []Artifact, deletedLinks []string) {
+	if len(linksToDelete) == 0 {
+		return artifacts, nil
+	}
+	toDelete := make(map[string]bool, len(linksToDelete))
+	for _, link := range linksToDelete {
+		toDelete[link] = true
+	}
+	for _, artifact := range artifacts {
+		if toDelete[artifact.Link] {
+			deletedLinks = append(deletedLinks, artifact.Link)
+		} else {
+			kept = append(kept, artifact)
+		}
+	}
+	return kept, deletedLinks
+}
+
 type App struct {
 	ID          primitive.ObjectID `bson:"_id" json:"ID"`
 	AppName     string             `bson:"app_name" json:"AppName"`
@@ -121,6 +142,7 @@ type UpRequest struct {
 	Arch              string   `json:"arch"`
 	Changelog         string   `json:"changelog"`
 	ArtifactsToDelete []string `json:"artifacts_to_delete"`
+	ArtifactLinks     []string `json:"artifact_links"`
 	Updater           string   `json:"updater"`
 	Signature         string   `json:"signature"`
 }

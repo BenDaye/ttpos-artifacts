@@ -102,6 +102,13 @@ func DeleteSpecificArtifactOfApp(c *gin.Context, repository db.AppRepository, db
 	links, result, err := repository.DeleteSpecificArtifactOfApp(objID, ctxQueryMap, c.Request.Context(), owner)
 	if err != nil {
 		logrus.Error(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete artifact"})
+		return
+	}
+	// 没有匹配到任何 artifact:以非 2xx 暴露失败,避免「没删掉却返回 200」被前端读作成功。
+	if !result || len(links) == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "no matching artifact found to delete"})
+		return
 	}
 	checkAppVisibility, err := utils.CheckPrivate(ctxQueryMap["app_name"].(string), db, c)
 	if err != nil {
@@ -119,7 +126,8 @@ func DeleteSpecificArtifactOfApp(c *gin.Context, repository db.AppRepository, db
 		utils.DeleteFromS3(subLink, c, viper.GetViper(), checkAppVisibility)
 	}
 
-	if result && len(links) > 0 && viper.GetBool("SLACK_ENABLE") && rdb != nil {
+	// 走到这里 result 必为 true 且 links 非空(否则上面已 404 返回),无需再判。
+	if viper.GetBool("SLACK_ENABLE") && rdb != nil {
 		go func() {
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()

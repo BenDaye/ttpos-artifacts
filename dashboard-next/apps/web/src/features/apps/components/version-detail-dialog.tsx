@@ -19,7 +19,7 @@ import {
 } from '@/shared/components/ui/dialog'
 import { formatDateTime } from '@/shared/lib/format'
 import { cn } from '@/shared/lib/utils'
-import { appsApi } from '../api'
+import { appsApi, buildDeleteArtifactPayload } from '../api'
 import { useDeleteArtifactMutation, useDeleteVersionMutation } from '../hooks'
 import { AddArtifactDialog } from './add-artifact-dialog'
 import { VersionEditDialog } from './version-edit-dialog'
@@ -108,12 +108,12 @@ export function VersionDetailDialog({ open, onOpenChange, version }: VersionDeta
     if (!deletingArtifact)
       return
     try {
-      await deleteArtifact.mutateAsync({
-        id: version.ID,
-        app_name: version.AppName,
-        version: version.Version,
-        artifacts_to_delete: [deletingArtifact.package || deletingArtifact.link],
-      })
+      await deleteArtifact.mutateAsync(buildDeleteArtifactPayload(
+        version.ID,
+        version.AppName,
+        version.Version,
+        deletingArtifact.link,
+      ))
       toast.success(t('artifact_deleted', { defaultValue: 'Artifact deleted' }))
       setDeletingArtifact(null)
     }

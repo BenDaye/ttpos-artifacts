@@ -77,6 +77,7 @@ func extractParamsFromPost(c *gin.Context) (map[string]interface{}, error) {
 		"arch":                upReq.Arch,
 		"changelog":           upReq.Changelog,
 		"artifacts_to_delete": upReq.ArtifactsToDelete,
+		"artifact_links":      upReq.ArtifactLinks,
 		"updater":             upReq.Updater,
 		"signature":           upReq.Signature,
 	}, nil

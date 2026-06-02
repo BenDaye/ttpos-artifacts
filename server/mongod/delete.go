@@ -91,20 +91,39 @@ func (c *appRepository) DeleteSpecificArtifactOfApp(id primitive.ObjectID, ctxQu
 			return nil, false, err
 		}
 
-		updateFields := bson.D{{Key: "updated_at", Value: time.Now()}}
 		var deletedLinks []string
+		var newArtifacts []model.Artifact
 
-		if artifactsToDelete, ok := ctxQuery["artifacts_to_delete"].([]string); ok {
+		if artifactLinks, ok := ctxQuery["artifact_links"].([]string); ok && len(artifactLinks) > 0 {
+			// 按稳定标识(link)删除:与位次无关、对多 link 安全,避免 load 与点击之间
+			// 数组顺序变化导致的 TOCTOU 删错。
+			newArtifacts, deletedLinks = model.PartitionArtifactsByLink(appData.Artifacts, artifactLinks)
+		} else if artifactsToDelete, ok := ctxQuery["artifacts_to_delete"].([]string); ok && len(artifactsToDelete) > 0 {
+			// 旧版按位次删除(dashboard 回滚锚点仍在使用)。
+			newArtifacts = appData.Artifacts
 			for _, index := range artifactsToDelete {
-				if idx, err := strconv.Atoi(index); err == nil && idx < len(appData.Artifacts) {
-					deletedLinks = append(deletedLinks, string(appData.Artifacts[idx].Link))
-					appData.Artifacts = append(appData.Artifacts[:idx], appData.Artifacts[idx+1:]...)
-				} else {
+				idx, convErr := strconv.Atoi(index)
+				if convErr != nil || idx < 0 || idx >= len(newArtifacts) {
 					logrus.Errorf("Invalid index in DeleteSpecificArtifactOfApp: %s\n", index)
-					return nil, false, err
+					return nil, false, fmt.Errorf("invalid artifact index: %s", index)
 				}
+				deletedLinks = append(deletedLinks, string(newArtifacts[idx].Link))
+				newArtifacts = append(newArtifacts[:idx], newArtifacts[idx+1:]...)
 			}
-			updateFields = append(updateFields, bson.E{Key: "artifacts", Value: appData.Artifacts})
+		}
+
+		// 没有匹配到任何 artifact:不改文档,返回 false 让 handler 以非 2xx 暴露失败,
+		// 不再无条件返回 true(此前会把「没删成」当成功)。
+		if len(deletedLinks) == 0 {
+			return nil, false, nil
+		}
+
+		if newArtifacts == nil {
+			newArtifacts = []model.Artifact{}
+		}
+		updateFields := bson.D{
+			{Key: "updated_at", Value: time.Now()},
+			{Key: "artifacts", Value: newArtifacts},
 		}
 
 		links = append(links, deletedLinks...)
@@ -120,8 +139,9 @@ func (c *appRepository) DeleteSpecificArtifactOfApp(id primitive.ObjectID, ctxQu
 			return nil, false, err
 		}
 
+		return links, true, nil
 	}
-	return links, true, nil
+	return nil, false, nil
 }
 
 type Document interface{}

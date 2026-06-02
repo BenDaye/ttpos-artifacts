@@ -83,7 +83,24 @@ export interface DeleteArtifactPayload {
   id: string
   app_name: string
   version: string
-  artifacts_to_delete: string[]
+  artifact_links: string[]
+}
+
+// 后端 DeleteSpecificArtifactOfApp 按 artifact 的稳定标识 link 删除:与数组位次无关,
+// 避免 load 与点击删除之间数组顺序变化导致删错文件。发送 artifact.link 即可;
+// 后端无匹配/失败会返回非 2xx,由 http 层抛出、组件 catch 弹错。
+export function buildDeleteArtifactPayload(
+  id: string,
+  appName: string,
+  version: string,
+  artifactLink: string,
+): DeleteArtifactPayload {
+  return {
+    id,
+    app_name: appName,
+    version,
+    artifact_links: [artifactLink],
+  }
 }
 
 function attachData(form: FormData, data: object) {

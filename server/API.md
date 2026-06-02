@@ -1077,7 +1077,7 @@ curl --location 'http://localhost:9000/arch/update' \
 
 ### Delete Artifact
 
-This endpoint allows you to delete artifacts of a specific application by its identifier in array.
+This endpoint allows you to delete one or more artifacts of a specific application version.
 
 `POST /artifact/delete`
 
@@ -1092,22 +1092,29 @@ This endpoint allows you to delete artifacts of a specific application by its id
 
 **version**: Current version of the application.
 
-**artifacts_to_delete**: Array of identifiers of the artifacts to be deleted. Example: ["0", "1"]
+**artifact_links** (preferred): Array of artifact `link` values (the stable identifier returned by `/search`) to delete. Order-independent and not affected by concurrent changes to the artifact list. Example: `["http://localhost:9000/download?key=app-owner/stable/darwin/arm64/app-1.0.0.dmg"]`
+
+**artifacts_to_delete** (legacy): Array of positional indices (as strings) into the version's artifact array. Used only when `artifact_links` is absent. Fragile under concurrent edits; kept for backward compatibility. Example: `["0", "1"]`
+
+If both are present, `artifact_links` takes precedence.
 
 ###### Request:
 ```
 curl -X POST --location 'http://localhost:9000/artifact/delete' \
 --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MjY3NDQ4NDMsInVzZXJuYW1lIjoiYWRtaW4ifQ.eYkCNem24-6rpw8aXo6NIcN6xtU9rqq2_2YYz1nS82Q' \
---form 'data="{\"id\":\"653a5e4f51ce5114611f5abb\", \"app_name\":\"secondapp\", \"version\":\"0.0.1\", \"artifacts_to_delete\":[\"0\"]}"'
+--form 'data="{\"id\":\"653a5e4f51ce5114611f5abb\", \"app_name\":\"secondapp\", \"version\":\"0.0.1\", \"artifact_links\":[\"http://localhost:9000/download?key=secondapp-admin/0.0.1/secondapp-0.0.1.dmg\"]}"'
 ```
 
 ###### Response:
 
+On success (at least one artifact deleted):
 ```
 {
     "deleteSpecificArtifactResult": true
 }
 ```
+
+When no matching artifact is found (nothing deleted), the endpoint returns `404 Not Found` with `{"error": "no matching artifact found to delete"}` instead of a success body, so clients never mistake a no-op for success.
 
 ### Download
 
