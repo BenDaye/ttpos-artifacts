@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -11,6 +12,7 @@ import (
 	"cloud.google.com/go/storage"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 )
 
@@ -132,10 +134,30 @@ func (g *GoogleCloudStorageClient) UploadPublicObject(ctx context.Context, bucke
 	return publicURL, nil
 }
 
+// isObjectNotFound 判断 GCS 删除返回的错误是否为「对象不存在」。
+// 删除应是幂等操作:对象已不在(如换桶后旧桶遗留的孤儿制品)时视为成功,
+// 不让缺失的物理文件阻断 artifact 元数据删除。GCS 在缺失对象时会报错
+// (S3/MinIO 等存储对此是幂等的),错误可能是 storage.ErrObjectNotExist,
+// 也可能被包成带 404 的 *googleapi.Error,这里两种形态都覆盖。
+func isObjectNotFound(err error) bool {
+	if errors.Is(err, storage.ErrObjectNotExist) {
+		return true
+	}
+	var gerr *googleapi.Error
+	if errors.As(err, &gerr) && gerr.Code == 404 {
+		return true
+	}
+	return false
+}
+
 func (g *GoogleCloudStorageClient) DeleteObject(ctx context.Context, bucketName, objectKey string) error {
 	bucket := g.client.Bucket(bucketName)
 	obj := bucket.Object(objectKey)
 	if err := obj.Delete(ctx); err != nil {
+		if isObjectNotFound(err) {
+			logrus.Warnf("GCS: object %q not found in bucket %q, treating delete as success (idempotent)", objectKey, bucketName)
+			return nil
+		}
 		return &StorageError{Message: "failed to delete object from GCS", Err: err}
 	}
 	return nil
