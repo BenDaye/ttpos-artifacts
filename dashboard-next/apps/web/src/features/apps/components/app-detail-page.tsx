@@ -4,6 +4,7 @@ import { ArrowLeft, BookOpen, Boxes, Download, FilePlus, Pencil, Plus, Trash2 } 
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+import { useChannelsQuery } from '@/features/channels/hooks'
 import { ConfirmDialog } from '@/shared/components/common/confirm-dialog'
 import { EmptyState } from '@/shared/components/empty-state'
 import { PageHeader } from '@/shared/components/page-header'
@@ -25,7 +26,7 @@ import { DownloadArtifactsDialog } from './download-artifacts-dialog'
 import { UploadVersionDialog } from './upload-version-dialog'
 import { VersionEditDialog } from './version-edit-dialog'
 import { EMPTY_VERSION_FILTERS, VersionFilterBar } from './version-filter-bar'
-import { getArtifactFileName, getVersionTone } from './version-ui'
+import { getArtifactFileName, getVersionTone, sortVersionsByChannel } from './version-ui'
 
 interface ArtifactKey {
   versionId: string
@@ -49,6 +50,7 @@ export function AppDetailPage({ appName }: { appName: string }) {
     published: filters.publishedOnly || undefined,
     critical: filters.criticalOnly || undefined,
   })
+  const channelsQuery = useChannelsQuery()
   const deleteVersion = useDeleteVersionMutation()
   const deleteArtifact = useDeleteArtifactMutation()
   const [uploading, setUploading] = useState(false)
@@ -90,8 +92,15 @@ export function AppDetailPage({ appName }: { appName: string }) {
   }
 
   const allVersions = versionsQuery.data?.versions ?? []
+  // channel 名 -> 在 channel 列表中的位次（后端已按 {sort:1,_id:1} 排序返回），
+  // 用于同一 version 号内按 channel 列表顺序二级排序。取数组下标而非 c.Sort：
+  // 未拖拽时（Sort 全 0）= 创建序、拖拽后 = dense sort 序，两种状态都与 channel 列表一致。
+  const channelOrder = useMemo(
+    () => new Map((channelsQuery.data ?? []).map((c, i) => [c.ChannelName, i] as const)),
+    [channelsQuery.data],
+  )
   const versions = useMemo(() => {
-    return allVersions.filter((v) => {
+    const filtered = allVersions.filter((v) => {
       if (filters.channels.length > 1 && !filters.channels.includes(v.Channel))
         return false
       if (filters.platforms.length > 1) {
@@ -112,7 +121,8 @@ export function AppDetailPage({ appName }: { appName: string }) {
       }
       return true
     })
-  }, [allVersions, filters])
+    return sortVersionsByChannel(filtered, channelOrder)
+  }, [allVersions, filters, channelOrder])
   const total = versionsQuery.data?.total ?? allVersions.length
 
   return (
