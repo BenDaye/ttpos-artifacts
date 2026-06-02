@@ -239,6 +239,7 @@ export async function setupMockApi(page: Page, overrides: MockOverrides = {}) {
   await page.route('**/app/create', jsonHandler({ success: true }))
   await page.route('**/app/update', jsonHandler({ success: true }))
   await page.route('**/app/delete*', jsonHandler({ success: true }))
+  await page.route('**/app/reorder', jsonHandler({ success: true }))
   await page.route('**/apps/update', (route) => {
     const data = readMultipartData(route)
     const validMetadataUpdate = Boolean(data && typeof data.intermediate === 'boolean')

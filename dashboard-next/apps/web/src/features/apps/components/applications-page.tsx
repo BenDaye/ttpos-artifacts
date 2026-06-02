@@ -98,9 +98,27 @@ export function ApplicationsPage() {
       )
     }
     if (isBoardLayout) {
-      return <AppBoardView apps={filtered} onSelect={goToDetail} onEdit={setEditing} onDelete={setDeleting} />
+      return (
+        <AppBoardView
+          apps={filtered}
+          onSelect={goToDetail}
+          onEdit={setEditing}
+          onDelete={setDeleting}
+          onReorder={onReorder}
+          canReorder={!isFiltering}
+        />
+      )
     }
-    return <AppCardView apps={filtered} onSelect={goToDetail} onEdit={setEditing} onDelete={setDeleting} />
+    return (
+      <AppCardView
+        apps={filtered}
+        onSelect={goToDetail}
+        onEdit={setEditing}
+        onDelete={setDeleting}
+        onReorder={onReorder}
+        canReorder={!isFiltering}
+      />
+    )
   }
 
   return (

@@ -1,19 +1,25 @@
 import type { AppSummary, AppVersion } from '@ttpos/shared'
 import type { AppViewProps } from './types'
+import type { SortableItemRenderProps } from '@/shared/components/common/sortable-list'
+import { horizontalListSortingStrategy } from '@dnd-kit/sortable'
 import { useQueries } from '@tanstack/react-query'
-import { Boxes, Pencil, Trash2 } from 'lucide-react'
+import { Boxes, GripVertical, Pencil, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { SortableList } from '@/shared/components/common/sortable-list'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import { Card, CardContent } from '@/shared/components/ui/card'
 import { Skeleton } from '@/shared/components/ui/skeleton'
+import { cn } from '@/shared/lib/utils'
 import { appsApi } from '../../api'
 import { SEARCH_KEY } from '../../hooks'
 import { VersionDetailDialog } from '../version-detail-dialog'
 
-export function AppBoardView({ apps, onSelect, onEdit, onDelete }: AppViewProps) {
+export function AppBoardView({ apps, onSelect, onEdit, onDelete, onReorder, canReorder = false }: AppViewProps) {
   const [selectedVersion, setSelectedVersion] = useState<AppVersion | null>(null)
+  // 仅当存在重排回调且当前允许时才启用拖拽
+  const reorderEnabled = canReorder && Boolean(onReorder)
   const versionQueries = useQueries({
     queries: apps.map(app => ({
       queryKey: [SEARCH_KEY, { app_name: app.AppName, page: 1, limit: 100, board: true }],
@@ -23,14 +29,26 @@ export function AppBoardView({ apps, onSelect, onEdit, onDelete }: AppViewProps)
     })),
   })
 
+  // 按 app.ID 索引版本查询结果，使拖拽重排后列与其版本数据保持对应，
+  // 不依赖 useQueries 返回数组的 index 顺序。
+  const versionByAppId = new Map(apps.map((app, idx) => [app.ID, versionQueries[idx]]))
+
   return (
     <>
-      <div className="flex h-full max-w-full min-h-0 min-w-0 gap-3 overflow-x-auto overscroll-x-contain pb-2">
-        {apps.map((app, idx) => {
-          const query = versionQueries[idx]
+      <SortableList
+        ids={apps.map(app => app.ID)}
+        onReorder={ids => onReorder?.(ids)}
+        disabled={!reorderEnabled}
+        strategy={horizontalListSortingStrategy}
+        className="flex h-full max-w-full min-h-0 min-w-0 gap-3 overflow-x-auto overscroll-x-contain pb-2"
+        renderItem={(id, sortable) => {
+          const app = apps.find(item => item.ID === id)
+          if (!app) {
+            return null
+          }
+          const query = versionByAppId.get(id)
           return (
             <BoardColumn
-              key={app.ID}
               app={app}
               versions={query?.data?.versions ?? []}
               total={query?.data?.total ?? 0}
@@ -40,10 +58,12 @@ export function AppBoardView({ apps, onSelect, onEdit, onDelete }: AppViewProps)
               onEdit={onEdit}
               onDelete={onDelete}
               onVersionSelect={setSelectedVersion}
+              sortable={sortable}
+              reorderEnabled={reorderEnabled}
             />
           )
-        })}
-      </div>
+        }}
+      />
       <VersionDetailDialog
         open={Boolean(selectedVersion)}
         onOpenChange={open => !open && setSelectedVersion(null)}
@@ -63,39 +83,60 @@ interface BoardColumnProps {
   onEdit: (app: AppSummary) => void
   onDelete: (app: AppSummary) => void
   onVersionSelect: (version: AppVersion) => void
+  sortable?: SortableItemRenderProps
+  reorderEnabled?: boolean
 }
 
-function BoardColumn({ app, versions, total, isLoading, isError, onSelect, onEdit, onDelete, onVersionSelect }: BoardColumnProps) {
+function BoardColumn({ app, versions, total, isLoading, isError, onSelect, onEdit, onDelete, onVersionSelect, sortable, reorderEnabled = false }: BoardColumnProps) {
   const { t } = useTranslation(['apps', 'common'])
 
   return (
-    <div className="app-board-column flex h-full max-w-full min-h-0 shrink-0 flex-col rounded-lg border border-border bg-muted/30">
-      <button
-        type="button"
-        onClick={() => onSelect(app)}
-        className="flex min-w-0 shrink-0 items-center gap-2 border-b border-border px-3 py-2 text-left transition-colors hover:bg-accent/50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
-          {app.Logo
-            ? <img src={app.Logo} alt="" className="size-full rounded-md object-cover" />
-            : <Boxes className="size-4" />}
-        </div>
-        <div className="flex min-w-0 flex-1 flex-col">
-          <span className="truncate text-sm font-semibold">{app.AppName}</span>
-          <span className="text-xs text-muted-foreground">
-            {t('board.versions_count', { count: total, defaultValue: '{{count}} version(s)' })}
-          </span>
-        </div>
+    <div
+      ref={sortable?.setNodeRef}
+      style={sortable?.style}
+      className={cn(
+        'app-board-column flex h-full max-w-full min-h-0 shrink-0 flex-col rounded-lg border border-border bg-muted/30',
+        sortable?.isDragging && 'opacity-50',
+      )}
+    >
+      {/* 列头为非交互容器，内含 grip / 可点击区 / 操作区三个同级节点，
+          避免把 grip 与编辑/删除按钮嵌套进一个 <button>（button-in-button 违规）。 */}
+      <div className="flex min-w-0 shrink-0 items-center gap-2 border-b border-border px-3 py-2">
+        {reorderEnabled && sortable && (
+          <button
+            type="button"
+            aria-label={t('reorder', { defaultValue: 'Drag to reorder' })}
+            className="shrink-0 cursor-grab touch-none text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring active:cursor-grabbing"
+            {...sortable.handleProps}
+          >
+            <GripVertical className="size-4" />
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => onSelect(app)}
+          data-testid="board-column-open"
+          className="flex min-w-0 flex-1 items-center gap-2 rounded-md text-left transition-colors hover:bg-accent/50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
+            {app.Logo
+              ? <img src={app.Logo} alt="" className="size-full rounded-md object-cover" />
+              : <Boxes className="size-4" />}
+          </div>
+          <div className="flex min-w-0 flex-1 flex-col">
+            <span className="truncate text-sm font-semibold">{app.AppName}</span>
+            <span className="text-xs text-muted-foreground">
+              {t('board.versions_count', { count: total, defaultValue: '{{count}} version(s)' })}
+            </span>
+          </div>
+        </button>
         <div className="flex shrink-0 items-center gap-0.5">
           <Button
             variant="ghost"
             size="icon"
             className="size-7"
             aria-label={t('common:actions.edit')}
-            onClick={(e) => {
-              e.stopPropagation()
-              onEdit(app)
-            }}
+            onClick={() => onEdit(app)}
           >
             <Pencil className="size-3.5" />
           </Button>
@@ -104,15 +145,12 @@ function BoardColumn({ app, versions, total, isLoading, isError, onSelect, onEdi
             size="icon"
             className="size-7"
             aria-label={t('common:actions.delete')}
-            onClick={(e) => {
-              e.stopPropagation()
-              onDelete(app)
-            }}
+            onClick={() => onDelete(app)}
           >
             <Trash2 className="size-3.5 text-destructive" />
           </Button>
         </div>
-      </button>
+      </div>
 
       <div className="min-h-0 flex-1 py-2">
         <div className="app-board-scroll-area flex h-full min-h-0 flex-col gap-2 overflow-y-auto px-2">
