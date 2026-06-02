@@ -13,12 +13,18 @@
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-06-02
+
 ### Added
 
 - 侧边栏底部常驻展示 Dashboard 自身版本号，hover 显示完整的版本 · git commit · 构建时间。
 - 构建时经 Vite `define` 注入版本元数据（`__APP_VERSION__` / `__GIT_COMMIT__` / `__BUILD_TIME__`），
   容器构建的 git commit 由 CI 经 `GIT_COMMIT` build-arg 传入。
 - 新增 `version:patch|minor|major` 发布脚本，统一 bump 版本号并归档 changelog。
+
+### Fixed
+
+- 修复删除单个 artifact 的可靠性：改为按 artifact 的稳定标识（下载链接）删除，避免列表加载与点击删除之间发生变化时误删其他文件；删除失败或无匹配时正确提示错误，不再误报删除成功。
 
 ## [0.1.0]
 
