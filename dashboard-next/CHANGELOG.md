@@ -13,6 +13,12 @@
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-06-03
+
+### Changed
+
+- 内部清理全部 eslint 告警（`set-state-in-effect` / `no-array-index-key` / FormControl `cloneElement` 等）：刻意的弹窗 prop-sync 与 shadcn 标准模式以注释抑制，加载骨架改用稳定 key，零功能与行为变化。
+
 ## [0.2.0] - 2026-06-03
 
 ### Added
