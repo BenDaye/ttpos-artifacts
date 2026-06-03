@@ -48,8 +48,8 @@ export function TokensPanel() {
 
       {tokensQuery.isPending && (
         <div className="grid gap-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-16 rounded-xl" />
+          {['sk-1', 'sk-2', 'sk-3'].map(k => (
+            <Skeleton key={k} className="h-16 rounded-xl" />
           ))}
         </div>
       )}

@@ -47,8 +47,8 @@ export function StatisticsPage() {
 
       {telemetry.isPending && (
         <div className="grid min-w-0 gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-24 rounded-lg" />
+          {['sk-1', 'sk-2', 'sk-3', 'sk-4', 'sk-5'].map(k => (
+            <Skeleton key={k} className="h-24 rounded-lg" />
           ))}
         </div>
       )}

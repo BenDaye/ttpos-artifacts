@@ -85,8 +85,8 @@ export function UsersPanel() {
 
       {usersQuery.isPending && (
         <div className="grid gap-3">
-          {Array.from({ length: 2 }).map((_, i) => (
-            <Skeleton key={i} className="h-16 rounded-xl" />
+          {['sk-1', 'sk-2'].map(k => (
+            <Skeleton key={k} className="h-16 rounded-xl" />
           ))}
         </div>
       )}

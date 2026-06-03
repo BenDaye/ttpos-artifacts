@@ -39,6 +39,7 @@ export function VersionEditDialog({ open, onOpenChange, version }: Props) {
   // 同一版本的后台 refetch 会改变对象引用但 id 不变，此时不重新 seed，
   // 避免清空用户正在编辑的输入；仅在打开或切换到不同版本时 seed。
   const seededIdRef = useRef<string | null>(null)
+  /* eslint-disable react/set-state-in-effect -- 按版本 id seed 表单字段,后台 refetch 不覆盖输入,刻意的 prop-sync,非渲染期副作用误用 */
   useEffect(() => {
     if (!open) {
       seededIdRef.current = null
@@ -55,6 +56,7 @@ export function VersionEditDialog({ open, onOpenChange, version }: Props) {
     setIntermediate(Boolean(version.Intermediate))
     setChangelogText(changelogToText(version.Changelog ?? []))
   }, [open, version])
+  /* eslint-enable react/set-state-in-effect */
 
   const onSubmit = async () => {
     if (!version) {

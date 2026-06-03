@@ -24,9 +24,11 @@ export function ArchitectureFormDialog({ open, onOpenChange, architecture }: Pro
   const mutation = editing ? update : create
   const [name, setName] = useState('')
 
+  /* eslint-disable react/set-state-in-effect -- 打开/切换对象时重置表单字段,刻意的 prop-sync,非渲染期副作用误用 */
   useEffect(() => {
     setName(architecture?.ArchID ?? '')
   }, [architecture, open])
+  /* eslint-enable react/set-state-in-effect */
 
   const handleSubmit = async () => {
     const trimmed = name.trim()

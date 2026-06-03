@@ -81,8 +81,8 @@ export function ApplicationsPage() {
       return (
         <Card className="max-w-full overflow-hidden">
           <div className="divide-y divide-border">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-12 rounded-none" />
+            {['sk-1', 'sk-2', 'sk-3', 'sk-4', 'sk-5', 'sk-6'].map(k => (
+              <Skeleton key={k} className="h-12 rounded-none" />
             ))}
           </div>
         </Card>
@@ -91,16 +91,16 @@ export function ApplicationsPage() {
     if (isBoardLayout) {
       return (
         <div className="flex h-full min-h-0 min-w-0 max-w-full gap-3 overflow-x-auto overscroll-x-contain pb-2">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="app-board-column h-full shrink-0 rounded-lg" />
+          {['sk-1', 'sk-2', 'sk-3'].map(k => (
+            <Skeleton key={k} className="app-board-column h-full shrink-0 rounded-lg" />
           ))}
         </div>
       )
     }
     return (
       <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="h-28 rounded-xl" />
+        {['sk-1', 'sk-2', 'sk-3', 'sk-4', 'sk-5', 'sk-6'].map(k => (
+          <Skeleton key={k} className="h-28 rounded-xl" />
         ))}
       </div>
     )

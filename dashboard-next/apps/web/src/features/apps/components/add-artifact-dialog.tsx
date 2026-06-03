@@ -33,6 +33,7 @@ export function AddArtifactDialog({ open, onOpenChange, version }: Props) {
   const selectedPlatform = platforms.data?.find(item => item.PlatformName === platform)
   const availableUpdaters = normalizeUpdaters(selectedPlatform?.Updaters)
 
+  /* eslint-disable react/set-state-in-effect -- 弹窗打开时重置表单字段,刻意的 prop-sync,非渲染期副作用误用 */
   useEffect(() => {
     if (open) {
       setPlatform('')
@@ -42,7 +43,9 @@ export function AddArtifactDialog({ open, onOpenChange, version }: Props) {
       setFiles([])
     }
   }, [open])
+  /* eslint-enable react/set-state-in-effect */
 
+  /* eslint-disable react/set-state-in-effect -- 切换平台时按所选平台默认 updater 同步字段,刻意的 prop-sync,非渲染期副作用误用 */
   useEffect(() => {
     if (!platform) {
       setUpdater('manual')
@@ -52,6 +55,7 @@ export function AddArtifactDialog({ open, onOpenChange, version }: Props) {
     setUpdater(getDefaultUpdaterType(selectedPlatform))
     setSignature('')
   }, [platform, selectedPlatform])
+  /* eslint-enable react/set-state-in-effect */
 
   const onSubmit = async () => {
     if (!version) {

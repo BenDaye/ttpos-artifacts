@@ -31,6 +31,7 @@ export function AppFormDialog({ open, onOpenChange, app }: Props) {
   // 父级编辑态现传入「活」对象，同一应用的后台 refetch 会改变引用但 id 不变，
   // 此时不重新 seed，保留用户正在编辑的输入；仅在打开或切换对象时 seed。
   const seededKeyRef = useRef<string | null>(null)
+  /* eslint-disable react/set-state-in-effect -- 按对象 id seed 表单字段,后台 refetch 不覆盖输入,刻意的 prop-sync,非渲染期副作用误用 */
   useEffect(() => {
     if (!open) {
       seededKeyRef.current = null
@@ -46,6 +47,7 @@ export function AppFormDialog({ open, onOpenChange, app }: Props) {
     setLogo(null)
     setIsPrivate(false)
   }, [open, app])
+  /* eslint-enable react/set-state-in-effect */
 
   const onSubmit = async () => {
     const trimmed = name.trim()

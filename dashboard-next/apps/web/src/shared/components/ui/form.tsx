@@ -101,6 +101,7 @@ interface FormControlProps {
 
 export function FormControl({ children }: FormControlProps) {
   const { error, formItemId, formDescriptionId, formMessageId } = useFormField()
+  /* eslint-disable react/no-children-only, react/no-clone-element -- shadcn FormControl 标准:向单一子元素注入 id/aria-*,无 Radix Slot 的等价写法 */
   const child = Children.only(children) as ReactElement<Record<string, unknown>>
   if (!isValidElement(child)) {
     return child
@@ -112,6 +113,7 @@ export function FormControl({ children }: FormControlProps) {
       : formDescriptionId,
     'aria-invalid': error ? true : undefined,
   })
+  /* eslint-enable react/no-children-only, react/no-clone-element */
 }
 
 export function FormMessage({

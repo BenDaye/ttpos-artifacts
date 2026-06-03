@@ -27,10 +27,12 @@ export function PlatformFormDialog({ open, onOpenChange, platform }: Props) {
   const [name, setName] = useState('')
   const [updaters, setUpdaters] = useState<Updater[]>(() => normalizeUpdaters())
 
+  /* eslint-disable react/set-state-in-effect -- 打开/切换对象时重置表单字段,刻意的 prop-sync,非渲染期副作用误用 */
   useEffect(() => {
     setName(platform?.PlatformName ?? '')
     setUpdaters(normalizeUpdaters(platform?.Updaters))
   }, [platform, open])
+  /* eslint-enable react/set-state-in-effect */
 
   const handleSubmit = async () => {
     const trimmed = name.trim()

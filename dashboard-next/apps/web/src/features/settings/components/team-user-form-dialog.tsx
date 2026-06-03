@@ -44,6 +44,7 @@ export function TeamUserFormDialog({ open, onOpenChange, user }: Props) {
   const [password, setPassword] = useState('')
   const [perms, setPerms] = useState<TeamUserPermissions>(() => makeEmptyPermissions())
 
+  /* eslint-disable react/set-state-in-effect -- 弹窗打开时按对象初始化表单字段,刻意的 prop-sync,非渲染期副作用误用 */
   useEffect(() => {
     if (open) {
       setUsername(user?.username ?? '')
@@ -51,6 +52,7 @@ export function TeamUserFormDialog({ open, onOpenChange, user }: Props) {
       setPerms(user ? normalizePermissions(user.permissions) : makeEmptyPermissions())
     }
   }, [open, user])
+  /* eslint-enable react/set-state-in-effect */
 
   const onSubmit = async () => {
     const u = username.trim()

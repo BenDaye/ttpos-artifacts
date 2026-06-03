@@ -77,6 +77,7 @@ export function ChangelogModal({
                         </Badge>
                       </header>
                       <div className="space-y-3">
+                        {/* eslint-disable react/no-array-index-key -- changelog 条目无稳定唯一标识(Version 组内重复、Date 可空),用 idx 兜底防重复 key,顺序在分组内不变更 */}
                         {group.items.map((item, idx) => (
                           <article
                             key={`${item.Version}-${item.Date}-${idx}`}
@@ -90,6 +91,7 @@ export function ChangelogModal({
                             </div>
                           </article>
                         ))}
+                        {/* eslint-enable react/no-array-index-key */}
                       </div>
                     </section>
                   ))}

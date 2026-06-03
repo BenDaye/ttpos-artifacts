@@ -57,7 +57,9 @@ export function AppDetailPage({ appName }: { appName: string }) {
   const deleteVersion = useDeleteVersionMutation()
   const deleteArtifact = useDeleteArtifactMutation()
 
+  /* eslint-disable react/exhaustive-deps -- allVersions 每渲染从最新查询数据派生(喂 useSelectedEntity),刻意不 memo 化以避免选中 stale */
   const allVersions = versionsQuery.data?.versions ?? []
+  /* eslint-enable react/exhaustive-deps */
   const [uploading, setUploading] = useState(false)
   // 编辑 / 删除目标按稳定 id 从最新版本列表派生「活」对象：
   // mutation 失效查询并 refetch 后弹层显示的目标随之刷新；目标被删时派生为 null，弹层自动关闭。
@@ -158,8 +160,8 @@ export function AppDetailPage({ appName }: { appName: string }) {
 
       {versionsQuery.isPending && (
         <div className="grid gap-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-28 rounded-xl" />
+          {['sk-1', 'sk-2', 'sk-3'].map(k => (
+            <Skeleton key={k} className="h-28 rounded-xl" />
           ))}
         </div>
       )}

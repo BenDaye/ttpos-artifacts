@@ -30,9 +30,10 @@ export function CreateTokenDialog({ open, onOpenChange }: Props) {
   const apps = useAppsListQuery({ page: 1, limit: 200 })
   const [name, setName] = useState('')
   const [expiresDays, setExpiresDays] = useState('')
-  const [allowed, setAllowed] = useState<Set<string>>(new Set())
+  const [allowed, setAllowed] = useState<Set<string>>(() => new Set())
   const [revealed, setRevealed] = useState<string | null>(null)
 
+  /* eslint-disable react/set-state-in-effect -- 弹窗关闭时重置表单字段,刻意的 prop-sync,非渲染期副作用误用 */
   useEffect(() => {
     if (!open) {
       setName('')
@@ -41,6 +42,7 @@ export function CreateTokenDialog({ open, onOpenChange }: Props) {
       setRevealed(null)
     }
   }, [open])
+  /* eslint-enable react/set-state-in-effect */
 
   const onSubmit = async () => {
     const trimmed = name.trim()

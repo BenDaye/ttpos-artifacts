@@ -20,12 +20,14 @@ export function AdminCredentialDialog({ open, onOpenChange, user }: Props) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
 
+  /* eslint-disable react/set-state-in-effect -- 弹窗打开时重置表单字段,刻意的 prop-sync,非渲染期副作用误用 */
   useEffect(() => {
     if (open) {
       setUsername(user?.username ?? '')
       setPassword('')
     }
   }, [open, user])
+  /* eslint-enable react/set-state-in-effect */
 
   const onSubmit = async () => {
     if (!user) {

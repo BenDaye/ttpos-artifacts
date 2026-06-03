@@ -97,8 +97,8 @@ export function ArchitecturesPage() {
 
       {archQuery.isPending && (
         <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-20 rounded-xl" />
+          {['sk-1', 'sk-2', 'sk-3', 'sk-4'].map(k => (
+            <Skeleton key={k} className="h-20 rounded-xl" />
           ))}
         </div>
       )}
