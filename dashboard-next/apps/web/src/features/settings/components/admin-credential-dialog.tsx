@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { EntityFormDialog } from '@/shared/components/common/entity-form-dialog'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
+import { PasswordInput } from '@/shared/components/ui/password-input'
 import { useAdminUpdateMutation } from '../hooks'
 
 interface Props {
@@ -72,9 +73,8 @@ export function AdminCredentialDialog({ open, onOpenChange, user }: Props) {
         </div>
         <div className="space-y-2">
           <Label htmlFor="admin-password">{t('users.new_password', { defaultValue: 'New password' })}</Label>
-          <Input
+          <PasswordInput
             id="admin-password"
-            type="password"
             value={password}
             onChange={e => setPassword(e.target.value)}
             placeholder="••••••••"

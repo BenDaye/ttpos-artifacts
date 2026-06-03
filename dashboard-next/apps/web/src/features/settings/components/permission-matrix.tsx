@@ -197,7 +197,7 @@ function PermissionGroupCard({
       </div>
       {allowedItems.length > 0 && (
         <details className="mt-2">
-          <summary className="cursor-pointer text-xs text-muted-foreground">
+          <summary className="cursor-pointer rounded-sm text-xs text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
             {allowedTitle}
           </summary>
           <div className="mt-2 grid grid-cols-2 gap-1 sm:grid-cols-3">

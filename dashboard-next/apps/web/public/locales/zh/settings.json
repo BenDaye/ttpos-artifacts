@@ -28,7 +28,8 @@
     "forbidden_description": "请使用管理员账号登录后管理团队用户。",
     "created": "用户已创建",
     "updated": "用户已更新",
-    "deleted": "团队用户已删除"
+    "deleted": "团队用户已删除",
+    "no_rights": "无权限"
   },
   "permissions": {
     "apps": "应用",

@@ -128,7 +128,7 @@ export function VersionDetailDialog({ open, onOpenChange, version }: VersionDeta
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="dialog-size-downloads" data-testid="version-detail-dialog">
           <DialogHeader className="gap-sm">
-            <div className="flex min-w-0 flex-wrap items-baseline gap-sm pr-xl">
+            <div className="flex min-w-0 flex-wrap items-baseline gap-sm">
               <DialogTitle
                 className={cn(
                   'min-w-0 break-all font-display text-lg font-semibold leading-tight',

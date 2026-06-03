@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { getRouteApi, Link, useNavigate } from '@tanstack/react-router'
-import { Loader2, LockKeyhole, User } from 'lucide-react'
+import { Loader2, User } from 'lucide-react'
+import { useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -24,14 +25,11 @@ import {
   FormMessage,
 } from '@/shared/components/ui/form'
 import { Input } from '@/shared/components/ui/input'
+import { PasswordInput } from '@/shared/components/ui/password-input'
 
 const routeApi = getRouteApi('/_public/signin')
 
-const schema = z.object({
-  username: z.string().min(1, 'Required'),
-  password: z.string().min(1, 'Required'),
-})
-type Values = z.infer<typeof schema>
+interface Values { username: string, password: string }
 
 function getSafeRedirectTarget(redirectParam: string | undefined): string {
   if (typeof window === 'undefined' || !redirectParam) {
@@ -55,6 +53,12 @@ export function SignInPage() {
   const navigate = useNavigate()
   const { redirect } = routeApi.useSearch()
   const mutation = useLoginMutation()
+
+  const schema = useMemo(() => z.object({
+    username: z.string().min(1, t('validation.username_required', { defaultValue: 'Username is required' })),
+    password: z.string().min(1, t('validation.password_required', { defaultValue: 'Password is required' })),
+  }), [t])
+
   const form = useForm<Values>({
     resolver: zodResolver(schema),
     defaultValues: { username: '', password: '' },
@@ -113,17 +117,12 @@ export function SignInPage() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>{t('fields.password', { defaultValue: 'Password' })}</FormLabel>
-                  <div className="relative">
-                    <LockKeyhole className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                    <FormControl>
-                      <Input
-                        type="password"
-                        className="pl-9"
-                        autoComplete="current-password"
-                        {...field}
-                      />
-                    </FormControl>
-                  </div>
+                  <FormControl>
+                    <PasswordInput
+                      autoComplete="current-password"
+                      {...field}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

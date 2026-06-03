@@ -114,9 +114,14 @@
     "signature": "Signature",
     "signature_required": "Signature is required for Tauri artifacts.",
     "changelog": "Changelog",
+    "changelog_placeholder": "What's new in this build…",
     "files": "Artifacts",
     "no_file": "Please choose at least one file.",
     "file_count": "file(s) selected",
-    "success": "Version uploaded"
+    "success": "Version uploaded",
+    "version_required": "Version is required.",
+    "channel_required": "Channel is required.",
+    "platform_required": "Platform is required.",
+    "arch_required": "Architecture is required."
   }
 }

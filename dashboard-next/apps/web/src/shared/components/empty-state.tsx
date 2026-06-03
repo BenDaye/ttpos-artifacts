@@ -4,6 +4,7 @@ import { cn } from '@/shared/lib/utils'
 
 interface EmptyStateProps {
   icon?: ComponentType<{ className?: string }>
+  iconClassName?: string
   title: ReactNode
   description?: ReactNode
   action?: ReactNode
@@ -12,6 +13,7 @@ interface EmptyStateProps {
 
 export function EmptyState({
   icon: Icon = Inbox,
+  iconClassName,
   title,
   description,
   action,
@@ -25,7 +27,7 @@ export function EmptyState({
       )}
     >
       <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
-        <Icon className="size-6" />
+        <Icon className={cn('size-6', iconClassName)} />
       </div>
       <div className="dashboard-empty-state-body flex min-w-0 w-full flex-col items-center gap-2">
         <h3 className="w-full max-w-full break-words text-base font-medium text-foreground">{title}</h3>

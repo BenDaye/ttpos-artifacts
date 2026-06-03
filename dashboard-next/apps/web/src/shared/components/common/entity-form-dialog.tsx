@@ -37,7 +37,7 @@ export function EntityFormDialog({
 }: EntityFormDialogProps) {
   const { t } = useTranslation('common')
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={next => !loading && onOpenChange(next)}>
       <DialogContent>
         <form
           onSubmit={(e) => {
@@ -50,7 +50,7 @@ export function EntityFormDialog({
             <DialogTitle>{title}</DialogTitle>
             {description && <DialogDescription>{description}</DialogDescription>}
           </DialogHeader>
-          <DialogBody>{children}</DialogBody>
+          <DialogBody className="dialog-scroll-area overflow-y-auto">{children}</DialogBody>
           <DialogFooter>
             <Button
               type="button"

@@ -9,6 +9,7 @@ import { usePlatformsQuery } from '@/features/platforms/hooks'
 import { EntityFormDialog } from '@/shared/components/common/entity-form-dialog'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
+import { PasswordInput } from '@/shared/components/ui/password-input'
 import { useCreateUserMutation, useUpdateUserMutation } from '../hooks'
 import {
   coerceAllowedValuesToIds,
@@ -123,9 +124,8 @@ export function TeamUserFormDialog({ open, onOpenChange, user }: Props) {
                 ? t('users.new_password', { defaultValue: 'New password (leave blank to keep)' })
                 : t('users.password', { defaultValue: 'Password' })}
             </Label>
-            <Input
+            <PasswordInput
               id="user-password"
-              type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
               placeholder={editing ? '••••••••' : ''}

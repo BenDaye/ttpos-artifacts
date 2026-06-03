@@ -4,8 +4,8 @@ import { useTranslation } from 'react-i18next'
 import { Button } from '@/shared/components/ui/button'
 import {
   Dialog,
-  DialogBody,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -36,16 +36,12 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
   const { t } = useTranslation('common')
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={next => !loading && onOpenChange(next)}>
       <DialogContent className="dialog-size-confirm">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
+          {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
-        {description && (
-          <DialogBody>
-            <p className="text-sm text-muted-foreground">{description}</p>
-          </DialogBody>
-        )}
         <DialogFooter>
           <Button
             variant="ghost"

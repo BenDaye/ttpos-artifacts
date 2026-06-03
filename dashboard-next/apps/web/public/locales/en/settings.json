@@ -28,7 +28,8 @@
     "forbidden_description": "Sign in as an admin to manage team users.",
     "created": "User created",
     "updated": "User updated",
-    "deleted": "Team user deleted"
+    "deleted": "Team user deleted",
+    "no_rights": "no rights"
   },
   "permissions": {
     "apps": "Applications",

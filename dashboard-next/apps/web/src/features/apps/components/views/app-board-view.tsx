@@ -64,6 +64,7 @@ export function AppBoardView({ apps, onSelect, onEdit, onDelete, onReorder, canR
               onEdit={onEdit}
               onDelete={onDelete}
               onVersionSelect={version => setSelectedVersionId(version.ID)}
+              selectedVersionId={selectedVersion?.ID}
               sortable={sortable}
               reorderEnabled={reorderEnabled}
             />
@@ -89,11 +90,12 @@ interface BoardColumnProps {
   onEdit: (app: AppSummary) => void
   onDelete: (app: AppSummary) => void
   onVersionSelect: (version: AppVersion) => void
+  selectedVersionId?: string
   sortable?: SortableItemRenderProps
   reorderEnabled?: boolean
 }
 
-function BoardColumn({ app, versions, total, isLoading, isError, onSelect, onEdit, onDelete, onVersionSelect, sortable, reorderEnabled = false }: BoardColumnProps) {
+function BoardColumn({ app, versions, total, isLoading, isError, onSelect, onEdit, onDelete, onVersionSelect, selectedVersionId, sortable, reorderEnabled = false }: BoardColumnProps) {
   const { t } = useTranslation(['apps', 'common'])
 
   return (
@@ -130,7 +132,7 @@ function BoardColumn({ app, versions, total, isLoading, isError, onSelect, onEdi
               : <Boxes className="size-4" />}
           </div>
           <div className="flex min-w-0 flex-1 flex-col">
-            <span className="truncate text-sm font-semibold">{app.AppName}</span>
+            <span className="truncate text-sm font-semibold" title={app.AppName}>{app.AppName}</span>
             <span className="text-xs text-muted-foreground">
               {t('board.versions_count', { count: total, defaultValue: '{{count}} version(s)' })}
             </span>
@@ -159,7 +161,7 @@ function BoardColumn({ app, versions, total, isLoading, isError, onSelect, onEdi
       </div>
 
       <div className="min-h-0 flex-1 py-2">
-        <div className="app-board-scroll-area flex h-full min-h-0 flex-col gap-2 overflow-y-auto px-2">
+        <div className="flex h-full min-h-0 flex-col gap-2 overflow-y-auto px-2">
           {isLoading && (
             <>
               <Skeleton className="h-16 rounded-md" />
@@ -177,7 +179,12 @@ function BoardColumn({ app, versions, total, isLoading, isError, onSelect, onEdi
             </p>
           )}
           {!isLoading && !isError && versions.length > 0 && versions.map(version => (
-            <VersionItem key={version.ID} version={version} onSelect={() => onVersionSelect(version)} />
+            <VersionItem
+              key={version.ID}
+              version={version}
+              isSelected={version.ID === selectedVersionId}
+              onSelect={() => onVersionSelect(version)}
+            />
           ))}
         </div>
       </div>
@@ -187,10 +194,11 @@ function BoardColumn({ app, versions, total, isLoading, isError, onSelect, onEdi
 
 interface VersionItemProps {
   version: AppVersion
+  isSelected?: boolean
   onSelect: () => void
 }
 
-function VersionItem({ version, onSelect }: VersionItemProps) {
+function VersionItem({ version, isSelected = false, onSelect }: VersionItemProps) {
   const { t } = useTranslation(['apps', 'common'])
   const artifactCount = version.Artifacts?.length ?? 0
   const changelogText = Array.isArray(version.Changelog) && version.Changelog.length > 0
@@ -206,6 +214,7 @@ function VersionItem({ version, onSelect }: VersionItemProps) {
         defaultValue: 'Open version {{version}} details',
       })}
       data-testid="board-version-card"
+      aria-current={isSelected ? 'true' : undefined}
       onClick={onSelect}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -213,7 +222,10 @@ function VersionItem({ version, onSelect }: VersionItemProps) {
           onSelect()
         }
       }}
-      className="cursor-pointer transition-colors hover:border-foreground/30 hover:bg-accent/50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+      className={cn(
+        'cursor-pointer transition-colors hover:border-foreground/30 hover:bg-accent/50 active:bg-accent focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring',
+        isSelected && 'border-primary bg-secondary',
+      )}
     >
       <CardContent className="space-y-1.5 p-2.5">
         <div className="flex min-w-0 items-center gap-1.5">

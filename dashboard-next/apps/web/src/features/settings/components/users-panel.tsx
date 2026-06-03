@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/shared/components/common/confirm-dialog'
 import { EmptyState } from '@/shared/components/empty-state'
+import { ErrorState } from '@/shared/components/error-state'
 import { Avatar, AvatarFallback } from '@/shared/components/ui/avatar'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
@@ -98,10 +99,7 @@ export function UsersPanel() {
         />
       )}
       {usersQuery.isError && !adminFallback && (
-        <EmptyState
-          title={t('common:states.error')}
-          description={(usersQuery.error as Error)?.message}
-        />
+        <ErrorState onRetry={() => usersQuery.refetch()} />
       )}
 
       {usersQuery.isSuccess && usersQuery.data.length === 0 && (
@@ -132,7 +130,7 @@ export function UsersPanel() {
                     <div className="mt-1 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
                       <Badge variant="outline">{user.id.slice(0, 8)}</Badge>
                       <span>
-                        {permissionSummary(user.permissions)}
+                        {permissionSummary(user.permissions, t('users.no_rights', { defaultValue: 'no rights' }))}
                       </span>
                     </div>
                   </div>
@@ -184,7 +182,7 @@ export function UsersPanel() {
   )
 }
 
-function permissionSummary(p: TeamUser['permissions']): string {
+function permissionSummary(p: TeamUser['permissions'], noRightsLabel: string): string {
   const parts: string[] = []
   for (const [name, group] of Object.entries(p)) {
     const flags: string[] = []
@@ -207,5 +205,5 @@ function permissionSummary(p: TeamUser['permissions']): string {
       parts.push(`${name}:${flags.join('')}`)
     }
   }
-  return parts.length > 0 ? parts.join(' · ') : 'no rights'
+  return parts.length > 0 ? parts.join(' · ') : noRightsLabel
 }

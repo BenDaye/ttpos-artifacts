@@ -114,9 +114,14 @@
     "signature": "签名",
     "signature_required": "Tauri 构建产物必须填写签名。",
     "changelog": "更新日志",
+    "changelog_placeholder": "这个版本有哪些更新…",
     "files": "构建产物",
     "no_file": "请至少选择一个文件。",
     "file_count": "个文件已选择",
-    "success": "版本上传成功"
+    "success": "版本上传成功",
+    "version_required": "请输入版本号。",
+    "channel_required": "请选择渠道。",
+    "platform_required": "请选择平台。",
+    "arch_required": "请选择架构。"
   }
 }

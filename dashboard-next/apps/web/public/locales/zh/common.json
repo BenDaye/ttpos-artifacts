@@ -13,7 +13,10 @@
     "upload": "上传",
     "refresh": "刷新",
     "close": "关闭",
-    "copied": "已复制"
+    "copied": "已复制",
+    "retry": "重试",
+    "show_password": "显示密码",
+    "hide_password": "隐藏密码"
   },
   "file_input": {
     "choose_one": "选择文件",
@@ -23,7 +26,9 @@
   "states": {
     "loading": "加载中…",
     "empty": "暂无内容",
-    "error": "出现错误"
+    "error": "出现错误",
+    "error_title": "加载失败",
+    "error_description": "加载时出现问题,请重试。"
   },
   "nav": {
     "applications": "应用",

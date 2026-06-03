@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { useChannelsQuery } from '@/features/channels/hooks'
 import { ConfirmDialog } from '@/shared/components/common/confirm-dialog'
 import { EmptyState } from '@/shared/components/empty-state'
+import { ErrorState } from '@/shared/components/error-state'
 import { PageHeader } from '@/shared/components/page-header'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button, buttonVariants } from '@/shared/components/ui/button'
@@ -164,10 +165,7 @@ export function AppDetailPage({ appName }: { appName: string }) {
       )}
 
       {versionsQuery.isError && (
-        <EmptyState
-          title={t('common:states.error')}
-          description={(versionsQuery.error as Error)?.message}
-        />
+        <ErrorState onRetry={() => versionsQuery.refetch()} />
       )}
 
       {versionsQuery.isSuccess && versions.length === 0 && (

@@ -1,6 +1,7 @@
 import type { ComponentPropsWithoutRef, ReactNode } from 'react'
 import { Dialog as BaseDialog } from '@base-ui-components/react/dialog'
 import { X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/shared/lib/utils'
 
 export const Dialog = BaseDialog.Root
@@ -16,6 +17,7 @@ export function DialogContent({
   children: ReactNode
   hideCloseButton?: boolean
 }) {
+  const { t } = useTranslation('common')
   return (
     <BaseDialog.Portal>
       <BaseDialog.Backdrop
@@ -40,7 +42,7 @@ export function DialogContent({
         {!hideCloseButton && (
           <BaseDialog.Close
             className="absolute right-3 top-3 inline-flex size-8 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-            aria-label="Close"
+            aria-label={t('actions.close')}
           >
             <X className="size-4" />
           </BaseDialog.Close>
@@ -51,7 +53,7 @@ export function DialogContent({
 }
 
 export function DialogHeader({ className, ...props }: ComponentPropsWithoutRef<'div'>) {
-  return <div className={cn('flex flex-col gap-xs p-lg pb-xs', className)} {...props} />
+  return <div className={cn('flex flex-col gap-xs p-lg pb-xs pr-xl', className)} {...props} />
 }
 
 export function DialogFooter({ className, ...props }: ComponentPropsWithoutRef<'div'>) {

@@ -13,7 +13,10 @@
     "upload": "Upload",
     "refresh": "Refresh",
     "close": "Close",
-    "copied": "Copied"
+    "copied": "Copied",
+    "retry": "Retry",
+    "show_password": "Show password",
+    "hide_password": "Hide password"
   },
   "file_input": {
     "choose_one": "Choose file",
@@ -23,7 +26,9 @@
   "states": {
     "loading": "Loading…",
     "empty": "Nothing here yet.",
-    "error": "Something went wrong."
+    "error": "Something went wrong.",
+    "error_title": "Failed to load",
+    "error_description": "Something went wrong while loading. Please try again."
   },
   "nav": {
     "applications": "Applications",

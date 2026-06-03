@@ -2,7 +2,7 @@ import type { TelemetrySummary, TelemetryVersions } from '../api'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { EmptyState } from '@/shared/components/empty-state'
+import { ErrorState } from '@/shared/components/error-state'
 import { PageHeader } from '@/shared/components/page-header'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { Skeleton } from '@/shared/components/ui/skeleton'
@@ -54,10 +54,7 @@ export function StatisticsPage() {
       )}
 
       {telemetry.isError && (
-        <EmptyState
-          title={t('common:states.error')}
-          description={(telemetry.error as Error)?.message}
-        />
+        <ErrorState onRetry={() => telemetry.refetch()} />
       )}
 
       {telemetry.isSuccess && (

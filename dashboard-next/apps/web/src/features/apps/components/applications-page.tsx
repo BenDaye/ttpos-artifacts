@@ -6,9 +6,11 @@ import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/shared/components/common/confirm-dialog'
 import { EmptyState } from '@/shared/components/empty-state'
+import { ErrorState } from '@/shared/components/error-state'
 import { LayoutSwitcher } from '@/shared/components/layout-switcher'
 import { PageHeader } from '@/shared/components/page-header'
 import { Button } from '@/shared/components/ui/button'
+import { Card } from '@/shared/components/ui/card'
 import { Input } from '@/shared/components/ui/input'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 import { useSelectedEntity } from '@/shared/hooks/use-selected-entity'
@@ -71,6 +73,37 @@ export function ApplicationsPage() {
       const message = err instanceof Error ? err.message : t('common:states.error')
       toast.error(message)
     }
+  }
+
+  // 加载骨架按当前布局选择匹配形态，外层容器与真实视图一致，避免数据到达时布局位移。
+  const renderSkeleton = () => {
+    if (layout === 'list') {
+      return (
+        <Card className="max-w-full overflow-hidden">
+          <div className="divide-y divide-border">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-12 rounded-none" />
+            ))}
+          </div>
+        </Card>
+      )
+    }
+    if (isBoardLayout) {
+      return (
+        <div className="flex h-full min-h-0 min-w-0 max-w-full gap-3 overflow-x-auto overscroll-x-contain pb-2">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="app-board-column h-full shrink-0 rounded-lg" />
+          ))}
+        </div>
+      )
+    }
+    return (
+      <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Skeleton key={i} className="h-28 rounded-xl" />
+        ))}
+      </div>
+    )
   }
 
   const renderView = () => {
@@ -155,18 +188,13 @@ export function ApplicationsPage() {
       </div>
 
       {appsQuery.isPending && (
-        <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-28 rounded-xl" />
-          ))}
-        </div>
+        isBoardLayout
+          ? <div className="min-h-0 flex-1">{renderSkeleton()}</div>
+          : renderSkeleton()
       )}
 
       {appsQuery.isError && (
-        <EmptyState
-          title={t('common:states.error')}
-          description={(appsQuery.error as Error)?.message}
-        />
+        <ErrorState onRetry={() => appsQuery.refetch()} />
       )}
 
       {appsQuery.isSuccess && (

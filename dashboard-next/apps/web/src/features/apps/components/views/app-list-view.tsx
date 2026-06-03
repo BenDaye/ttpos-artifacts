@@ -19,7 +19,7 @@ export function AppListView({ apps, onSelect, onEdit, onDelete, onReorder, canRe
     <div
       ref={sortable?.setNodeRef}
       style={sortable?.style}
-      role="row"
+      role="button"
       tabIndex={0}
       onClick={() => onSelect(app)}
       onKeyDown={(e) => {
@@ -34,7 +34,7 @@ export function AppListView({ apps, onSelect, onEdit, onDelete, onReorder, canRe
         }
       }}
       className={cn(
-        'app-list-row-grid grid min-w-0 cursor-pointer gap-3 px-4 py-3 transition-colors hover:bg-accent/50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring sm:items-center',
+        'app-list-row-grid grid min-w-0 cursor-pointer gap-3 px-4 py-3 transition-colors hover:bg-accent/50 active:bg-accent focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring sm:items-center',
         sortable?.isDragging && 'bg-accent/50 opacity-50',
       )}
     >
@@ -55,7 +55,7 @@ export function AppListView({ apps, onSelect, onEdit, onDelete, onReorder, canRe
             ? <img src={app.Logo} alt="" className="size-full rounded-md object-cover" />
             : <Boxes className="size-3.5" />}
         </div>
-        <span className="truncate text-sm font-medium">{app.AppName}</span>
+        <span className="truncate text-sm font-medium" title={app.AppName}>{app.AppName}</span>
       </div>
       <div className="hidden truncate text-xs text-muted-foreground sm:block">{app.Description || '—'}</div>
       <div className="hidden text-xs text-muted-foreground sm:block">{formatDateTime(app.Updated_at) || '—'}</div>
@@ -88,8 +88,8 @@ export function AppListView({ apps, onSelect, onEdit, onDelete, onReorder, canRe
 
   return (
     <Card className="max-w-full overflow-hidden">
-      <div role="table" className="divide-y divide-border">
-        <div role="row" className="app-list-header-grid hidden bg-muted/30 px-4 py-2 text-xs font-medium text-muted-foreground sm:grid sm:gap-3">
+      <div className="divide-y divide-border">
+        <div aria-hidden className="app-list-header-grid hidden bg-muted/30 px-4 py-2 text-xs font-medium text-muted-foreground sm:grid sm:gap-3">
           <div>{t('list.name', { defaultValue: 'Name' })}</div>
           <div>{t('list.description', { defaultValue: 'Description' })}</div>
           <div>{t('updated_at')}</div>

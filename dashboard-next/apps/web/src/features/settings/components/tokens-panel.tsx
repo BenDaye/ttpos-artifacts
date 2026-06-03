@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { useAppsListQuery } from '@/features/apps/hooks'
 import { ConfirmDialog } from '@/shared/components/common/confirm-dialog'
 import { EmptyState } from '@/shared/components/empty-state'
+import { ErrorState } from '@/shared/components/error-state'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import { Card, CardContent } from '@/shared/components/ui/card'
@@ -54,10 +55,7 @@ export function TokensPanel() {
       )}
 
       {tokensQuery.isError && (
-        <EmptyState
-          title={t('common:states.error')}
-          description={(tokensQuery.error as Error)?.message}
-        />
+        <ErrorState onRetry={() => tokensQuery.refetch()} />
       )}
 
       {tokensQuery.isSuccess && tokensQuery.data.length === 0 && (
@@ -65,6 +63,12 @@ export function TokensPanel() {
           icon={Key}
           title={t('tokens.empty', { defaultValue: 'No API tokens' })}
           description={t('tokens.empty_description', { defaultValue: 'Create one for CI uploads.' })}
+          action={(
+            <Button onClick={() => setCreating(true)}>
+              <Plus className="size-4" />
+              {t('tokens.create', { defaultValue: 'Create token' })}
+            </Button>
+          )}
         />
       )}
 

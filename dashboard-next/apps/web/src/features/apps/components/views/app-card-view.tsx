@@ -31,7 +31,7 @@ export function AppCardView({ apps, onSelect, onEdit, onDelete, onReorder, canRe
         }
       }}
       className={cn(
-        'cursor-pointer transition-colors hover:border-foreground/30 hover:bg-accent/50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring',
+        'cursor-pointer transition-colors hover:border-foreground/30 hover:bg-accent/50 active:bg-accent focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring',
         sortable?.isDragging && 'opacity-50',
       )}
     >
@@ -55,7 +55,7 @@ export function AppCardView({ apps, onSelect, onEdit, onDelete, onReorder, canRe
                 : <Boxes className="size-5" />}
             </div>
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium">{app.AppName}</p>
+              <p className="truncate text-sm font-medium" title={app.AppName}>{app.AppName}</p>
               {app.Description && (
                 <p className="line-clamp-1 text-xs text-muted-foreground">{app.Description}</p>
               )}

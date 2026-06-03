@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { ConfirmDialog } from '@/shared/components/common/confirm-dialog'
 import { SortableList } from '@/shared/components/common/sortable-list'
 import { EmptyState } from '@/shared/components/empty-state'
+import { ErrorState } from '@/shared/components/error-state'
 import { PageHeader } from '@/shared/components/page-header'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
@@ -99,10 +100,7 @@ export function ChannelsPage() {
       )}
 
       {channelsQuery.isError && (
-        <EmptyState
-          title={t('common:states.error')}
-          description={(channelsQuery.error as Error)?.message}
-        />
+        <ErrorState onRetry={() => channelsQuery.refetch()} />
       )}
 
       {channelsQuery.isSuccess && filteredChannels.length === 0 && (

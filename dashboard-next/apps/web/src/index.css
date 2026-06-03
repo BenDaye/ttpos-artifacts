@@ -108,6 +108,10 @@
   --apple-surface-tile-3: rgb(37 37 39);
   --apple-surface-black: rgb(0 0 0);
   --apple-surface-chip: rgb(210 210 215);
+  /* 语义状态色:仅用于错误/危险态(表单校验、aria-invalid、destructive 操作),
+     非第二品牌强调色;正常交互元素仍统一为 apple-primary 单蓝。 */
+  --apple-status-danger: rgb(193 18 31);
+  --apple-status-danger-on-dark: rgb(255 105 97);
   --radius: var(--radius-lg);
 
   --background: var(--apple-canvas-parchment);
@@ -131,7 +135,7 @@
   --accent: var(--apple-canvas-parchment);
   --accent-foreground: var(--apple-ink);
 
-  --destructive: var(--apple-primary);
+  --destructive: var(--apple-status-danger);
   --destructive-foreground: var(--apple-body-on-dark);
 
   --border: var(--apple-hairline);
@@ -176,7 +180,7 @@
   --accent: var(--apple-surface-tile-2);
   --accent-foreground: var(--apple-body-on-dark);
 
-  --destructive: var(--apple-primary-on-dark);
+  --destructive: var(--apple-status-danger-on-dark);
   --destructive-foreground: var(--apple-surface-black);
 
   --border: var(--apple-surface-tile-2);
@@ -242,6 +246,8 @@
   --color-apple-surface-tile-3: var(--apple-surface-tile-3);
   --color-apple-surface-black: var(--apple-surface-black);
   --color-apple-surface-chip: var(--apple-surface-chip);
+  --color-apple-status-danger: var(--apple-status-danger);
+  --color-apple-status-danger-on-dark: var(--apple-status-danger-on-dark);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);

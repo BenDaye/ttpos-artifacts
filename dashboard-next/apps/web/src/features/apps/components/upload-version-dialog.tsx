@@ -1,5 +1,6 @@
+import type { TFunction } from 'i18next'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -17,21 +18,23 @@ import { SelectField } from '@/shared/components/ui/select'
 import { Textarea } from '@/shared/components/ui/textarea'
 import { useUploadVersionMutation } from '../hooks'
 
-const schema = z.object({
-  app_name: z.string().min(1),
-  version: z.string().min(1),
-  channel: z.string().min(1),
-  platform: z.string().min(1),
-  arch: z.string().min(1),
-  publish: z.boolean(),
-  critical: z.boolean(),
-  intermediate: z.boolean(),
-  changelog: z.string().optional(),
-  updater: z.string().optional(),
-  signature: z.string().optional(),
-})
+function buildSchema(t: TFunction) {
+  return z.object({
+    app_name: z.string().min(1),
+    version: z.string().min(1, t('upload_dialog.version_required', { defaultValue: 'Version is required.' })),
+    channel: z.string().min(1, t('upload_dialog.channel_required', { defaultValue: 'Channel is required.' })),
+    platform: z.string().min(1, t('upload_dialog.platform_required', { defaultValue: 'Platform is required.' })),
+    arch: z.string().min(1, t('upload_dialog.arch_required', { defaultValue: 'Architecture is required.' })),
+    publish: z.boolean(),
+    critical: z.boolean(),
+    intermediate: z.boolean(),
+    changelog: z.string().optional(),
+    updater: z.string().optional(),
+    signature: z.string().optional(),
+  })
+}
 
-type Values = z.infer<typeof schema>
+type Values = z.infer<ReturnType<typeof buildSchema>>
 
 interface Props {
   open: boolean
@@ -47,6 +50,7 @@ export function UploadVersionDialog({ open, onOpenChange, appName }: Props) {
   const archs = useArchitecturesQuery()
   const [files, setFiles] = useState<File[]>([])
 
+  const schema = useMemo(() => buildSchema(t), [t])
   const form = useForm<Values>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -137,7 +141,7 @@ export function UploadVersionDialog({ open, onOpenChange, appName }: Props) {
           <Input value={appName} disabled readOnly />
         </div>
         <FormBlock label={t('upload_dialog.version', { defaultValue: 'Version' })} error={errors.version?.message}>
-          <Input placeholder="1.2.3" {...form.register('version')} />
+          <Input placeholder="1.2.3" autoFocus {...form.register('version')} />
         </FormBlock>
         <FormBlock label={t('upload_dialog.channel', { defaultValue: 'Channel' })} error={errors.channel?.message}>
           <SelectField
@@ -204,7 +208,7 @@ export function UploadVersionDialog({ open, onOpenChange, appName }: Props) {
       </div>
       <div className="mt-3 space-y-2">
         <Label>{t('upload_dialog.changelog', { defaultValue: 'Changelog' })}</Label>
-        <Textarea rows={4} placeholder="What's new in this build…" {...form.register('changelog')} />
+        <Textarea rows={4} placeholder={t('upload_dialog.changelog_placeholder', { defaultValue: 'What\'s new in this build…' })} {...form.register('changelog')} />
       </div>
       <div className="mt-3 space-y-2">
         <Label>{t('upload_dialog.files', { defaultValue: 'Artifacts' })}</Label>

@@ -127,6 +127,7 @@ export function CreateTokenDialog({ open, onOpenChange }: Props) {
                   value={name}
                   onChange={e => setName(e.target.value)}
                   placeholder="github-actions-build"
+                  autoFocus
                 />
               </div>
               <div className="space-y-2">
