@@ -12,7 +12,7 @@ test.describe('Authentication', () => {
     await page.goto('/signin')
 
     await page.getByLabel('Username').fill('admin')
-    await page.getByLabel('Password').fill('password123')
+    await page.getByLabel('Password', { exact: true }).fill('password123')
     await page.getByRole('button', { name: 'Sign in', exact: true }).click()
 
     await expect(page).toHaveURL(/\/applications/)
@@ -23,7 +23,7 @@ test.describe('Authentication', () => {
     await expect(page).toHaveURL(/\/signin.*redirect=/)
 
     await page.getByLabel('Username').fill('admin')
-    await page.getByLabel('Password').fill('password123')
+    await page.getByLabel('Password', { exact: true }).fill('password123')
     await page.getByRole('button', { name: 'Sign in', exact: true }).click()
 
     await expect(page).toHaveURL(/\/platforms$/)
@@ -45,7 +45,7 @@ test.describe('Authentication', () => {
 
     await page.goto('/signin')
     await page.getByLabel('Username').fill('admin')
-    await page.getByLabel('Password').fill('wrongpassword')
+    await page.getByLabel('Password', { exact: true }).fill('wrongpassword')
     await page.getByRole('button', { name: 'Sign in', exact: true }).click()
 
     await expect(page.getByText('Invalid username or password')).toBeVisible()
