@@ -1,5 +1,5 @@
 import type { AppVersion, ChangelogEntry } from '@ttpos/shared'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { useChannelsQuery } from '@/features/channels/hooks'
@@ -35,15 +35,25 @@ export function VersionEditDialog({ open, onOpenChange, version }: Props) {
   const [intermediate, setIntermediate] = useState(false)
   const [changelogText, setChangelogText] = useState('')
 
+  // 记录已 seed 的版本 id：父级现传入「活」对象（按 id 从最新查询派生），
+  // 同一版本的后台 refetch 会改变对象引用但 id 不变，此时不重新 seed，
+  // 避免清空用户正在编辑的输入；仅在打开或切换到不同版本时 seed。
+  const seededIdRef = useRef<string | null>(null)
   useEffect(() => {
-    if (open && version) {
-      setVersionStr(version.Version ?? '')
-      setChannel(version.Channel ?? '')
-      setPublish(Boolean(version.Published))
-      setCritical(Boolean(version.Critical))
-      setIntermediate(Boolean(version.Intermediate))
-      setChangelogText(changelogToText(version.Changelog ?? []))
+    if (!open) {
+      seededIdRef.current = null
+      return
     }
+    if (!version || seededIdRef.current === version.ID) {
+      return
+    }
+    seededIdRef.current = version.ID
+    setVersionStr(version.Version ?? '')
+    setChannel(version.Channel ?? '')
+    setPublish(Boolean(version.Published))
+    setCritical(Boolean(version.Critical))
+    setIntermediate(Boolean(version.Intermediate))
+    setChangelogText(changelogToText(version.Changelog ?? []))
   }, [open, version])
 
   const onSubmit = async () => {

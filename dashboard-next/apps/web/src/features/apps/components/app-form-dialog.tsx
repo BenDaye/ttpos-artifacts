@@ -1,5 +1,5 @@
 import type { AppSummary } from '@ttpos/shared'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { EntityFormDialog } from '@/shared/components/common/entity-form-dialog'
@@ -27,13 +27,24 @@ export function AppFormDialog({ open, onOpenChange, app }: Props) {
   const [logo, setLogo] = useState<File | null>(null)
   const [isPrivate, setIsPrivate] = useState(false)
 
+  // 记录已 seed 的对象标识（编辑态用 app.ID，新建态用固定哨兵）：
+  // 父级编辑态现传入「活」对象，同一应用的后台 refetch 会改变引用但 id 不变，
+  // 此时不重新 seed，保留用户正在编辑的输入；仅在打开或切换对象时 seed。
+  const seededKeyRef = useRef<string | null>(null)
   useEffect(() => {
-    if (open) {
-      setName(app?.AppName ?? '')
-      setDescription(app?.Description ?? '')
-      setLogo(null)
-      setIsPrivate(false)
+    if (!open) {
+      seededKeyRef.current = null
+      return
     }
+    const seedKey = app?.ID ?? '__create__'
+    if (seededKeyRef.current === seedKey) {
+      return
+    }
+    seededKeyRef.current = seedKey
+    setName(app?.AppName ?? '')
+    setDescription(app?.Description ?? '')
+    setLogo(null)
+    setIsPrivate(false)
   }, [open, app])
 
   const onSubmit = async () => {

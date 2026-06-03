@@ -4,20 +4,19 @@ import type { SortableItemRenderProps } from '@/shared/components/common/sortabl
 import { horizontalListSortingStrategy } from '@dnd-kit/sortable'
 import { useQueries } from '@tanstack/react-query'
 import { Boxes, GripVertical, Pencil, Trash2 } from 'lucide-react'
-import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { SortableList } from '@/shared/components/common/sortable-list'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import { Card, CardContent } from '@/shared/components/ui/card'
 import { Skeleton } from '@/shared/components/ui/skeleton'
+import { useSelectedEntity } from '@/shared/hooks/use-selected-entity'
 import { cn } from '@/shared/lib/utils'
 import { appsApi } from '../../api'
 import { SEARCH_KEY } from '../../hooks'
 import { VersionDetailDialog } from '../version-detail-dialog'
 
 export function AppBoardView({ apps, onSelect, onEdit, onDelete, onReorder, canReorder = false }: AppViewProps) {
-  const [selectedVersion, setSelectedVersion] = useState<AppVersion | null>(null)
   // 仅当存在重排回调且当前允许时才启用拖拽
   const reorderEnabled = canReorder && Boolean(onReorder)
   const versionQueries = useQueries({
@@ -28,6 +27,13 @@ export function AppBoardView({ apps, onSelect, onEdit, onDelete, onReorder, canR
       staleTime: 30_000,
     })),
   })
+
+  // 扁平化所有列的版本，按稳定 id 派生「活」版本传给详情弹层：
+  // 弹层内新增 / 删除 artifact 失效查询、refetch 出新版本对象后，
+  // 派生对象随之更新，弹层即时刷新而无需关闭重开（避免快照冻结）。
+  // 跨列扁平查找依赖 version ID 全局唯一（后端实体主键，成立）。
+  const allVersions = versionQueries.flatMap(query => query.data?.versions ?? [])
+  const [selectedVersion, setSelectedVersionId] = useSelectedEntity(allVersions, version => version.ID)
 
   // 按 app.ID 索引版本查询结果，使拖拽重排后列与其版本数据保持对应，
   // 不依赖 useQueries 返回数组的 index 顺序。
@@ -57,7 +63,7 @@ export function AppBoardView({ apps, onSelect, onEdit, onDelete, onReorder, canR
               onSelect={onSelect}
               onEdit={onEdit}
               onDelete={onDelete}
-              onVersionSelect={setSelectedVersion}
+              onVersionSelect={version => setSelectedVersionId(version.ID)}
               sortable={sortable}
               reorderEnabled={reorderEnabled}
             />
@@ -66,7 +72,7 @@ export function AppBoardView({ apps, onSelect, onEdit, onDelete, onReorder, canR
       />
       <VersionDetailDialog
         open={Boolean(selectedVersion)}
-        onOpenChange={open => !open && setSelectedVersion(null)}
+        onOpenChange={open => !open && setSelectedVersionId(null)}
         version={selectedVersion}
       />
     </>

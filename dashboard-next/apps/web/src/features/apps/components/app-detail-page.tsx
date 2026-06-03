@@ -12,6 +12,7 @@ import { Badge } from '@/shared/components/ui/badge'
 import { Button, buttonVariants } from '@/shared/components/ui/button'
 import { Card, CardContent } from '@/shared/components/ui/card'
 import { Skeleton } from '@/shared/components/ui/skeleton'
+import { useSelectedEntity } from '@/shared/hooks/use-selected-entity'
 import { formatDateTime } from '@/shared/lib/format'
 import { cn } from '@/shared/lib/utils'
 import { appsApi, buildDeleteArtifactPayload } from '../api'
@@ -54,9 +55,13 @@ export function AppDetailPage({ appName }: { appName: string }) {
   const channelsQuery = useChannelsQuery()
   const deleteVersion = useDeleteVersionMutation()
   const deleteArtifact = useDeleteArtifactMutation()
+
+  const allVersions = versionsQuery.data?.versions ?? []
   const [uploading, setUploading] = useState(false)
-  const [editing, setEditing] = useState<AppVersion | null>(null)
-  const [deletingVersion, setDeletingVersion] = useState<AppVersion | null>(null)
+  // 编辑 / 删除目标按稳定 id 从最新版本列表派生「活」对象：
+  // mutation 失效查询并 refetch 后弹层显示的目标随之刷新；目标被删时派生为 null，弹层自动关闭。
+  const [editing, setEditingId] = useSelectedEntity(allVersions, version => version.ID)
+  const [deletingVersion, setDeletingVersionId] = useSelectedEntity(allVersions, version => version.ID)
   const [deletingArtifact, setDeletingArtifact] = useState<ArtifactKey | null>(null)
 
   const onDeleteVersion = async () => {
@@ -65,7 +70,7 @@ export function AppDetailPage({ appName }: { appName: string }) {
     try {
       await deleteVersion.mutateAsync(deletingVersion.ID)
       toast.success(t('version_deleted', { defaultValue: 'Version deleted' }))
-      setDeletingVersion(null)
+      setDeletingVersionId(null)
     }
     catch (err) {
       const message = err instanceof Error ? err.message : t('common:states.error')
@@ -92,7 +97,6 @@ export function AppDetailPage({ appName }: { appName: string }) {
     }
   }
 
-  const allVersions = versionsQuery.data?.versions ?? []
   // channel 名 -> 在 channel 列表中的位次（后端已按 {sort:1,_id:1} 排序返回），
   // 用于同一 version 号内按 channel 列表顺序二级排序。取数组下标而非 c.Sort：
   // 未拖拽时（Sort 全 0）= 创建序、拖拽后 = dense sort 序，两种状态都与 channel 列表一致。
@@ -188,8 +192,8 @@ export function AppDetailPage({ appName }: { appName: string }) {
             <VersionRow
               key={v.ID}
               version={v}
-              onEdit={() => setEditing(v)}
-              onDelete={() => setDeletingVersion(v)}
+              onEdit={() => setEditingId(v.ID)}
+              onDelete={() => setDeletingVersionId(v.ID)}
               onDeleteArtifact={artifact => setDeletingArtifact({
                 versionId: v.ID,
                 appName: v.AppName,
@@ -205,12 +209,12 @@ export function AppDetailPage({ appName }: { appName: string }) {
       <UploadVersionDialog open={uploading} onOpenChange={setUploading} appName={appName} />
       <VersionEditDialog
         open={Boolean(editing)}
-        onOpenChange={open => !open && setEditing(null)}
+        onOpenChange={open => !open && setEditingId(null)}
         version={editing}
       />
       <ConfirmDialog
         open={Boolean(deletingVersion)}
-        onOpenChange={open => !open && setDeletingVersion(null)}
+        onOpenChange={open => !open && setDeletingVersionId(null)}
         title={t('delete_version_title', { defaultValue: 'Delete version?' })}
         description={t('delete_version_description', {
           version: deletingVersion?.Version ?? '',

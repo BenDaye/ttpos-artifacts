@@ -11,6 +11,7 @@ import { PageHeader } from '@/shared/components/page-header'
 import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
 import { Skeleton } from '@/shared/components/ui/skeleton'
+import { useSelectedEntity } from '@/shared/hooks/use-selected-entity'
 import { cn } from '@/shared/lib/utils'
 import { useUiStore } from '@/shared/stores/ui-store'
 import { useAppsListQuery, useDeleteAppMutation, useReorderAppsMutation } from '../hooks'
@@ -27,15 +28,18 @@ export function ApplicationsPage() {
   const appsQuery = useAppsListQuery({ page: 1, limit: 50 })
   const deleteMutation = useDeleteAppMutation()
   const reorderMutation = useReorderAppsMutation()
+  const allApps = appsQuery.data?.apps ?? []
   const [search, setSearch] = useState('')
   const [creating, setCreating] = useState(false)
-  const [editing, setEditing] = useState<AppSummary | null>(null)
-  const [deleting, setDeleting] = useState<AppSummary | null>(null)
+  // 编辑 / 删除目标按稳定 id 从完整应用列表派生「活」对象（用完整列表而非过滤后，
+  // 避免改名后落出搜索过滤导致编辑中的目标被置空）；refetch 后弹层目标随之刷新，目标被删时自动关闭。
+  const [editing, setEditingId] = useSelectedEntity(allApps, app => app.ID)
+  const [deleting, setDeletingId] = useSelectedEntity(allApps, app => app.ID)
 
   // 搜索过滤激活时禁用拖拽，避免在子集上重排破坏完整顺序
   const isFiltering = search.trim() !== ''
 
-  const filtered = (appsQuery.data?.apps ?? []).filter(app =>
+  const filtered = allApps.filter(app =>
     !search || app.AppName.toLowerCase().includes(search.toLowerCase()),
   )
 
@@ -61,7 +65,7 @@ export function ApplicationsPage() {
     try {
       await deleteMutation.mutateAsync(deleting.ID)
       toast.success(t('deleted', { defaultValue: 'Application deleted' }))
-      setDeleting(null)
+      setDeletingId(null)
     }
     catch (err) {
       const message = err instanceof Error ? err.message : t('common:states.error')
@@ -90,8 +94,8 @@ export function ApplicationsPage() {
         <AppListView
           apps={filtered}
           onSelect={goToDetail}
-          onEdit={setEditing}
-          onDelete={setDeleting}
+          onEdit={app => setEditingId(app.ID)}
+          onDelete={app => setDeletingId(app.ID)}
           onReorder={onReorder}
           canReorder={!isFiltering}
         />
@@ -102,8 +106,8 @@ export function ApplicationsPage() {
         <AppBoardView
           apps={filtered}
           onSelect={goToDetail}
-          onEdit={setEditing}
-          onDelete={setDeleting}
+          onEdit={app => setEditingId(app.ID)}
+          onDelete={app => setDeletingId(app.ID)}
           onReorder={onReorder}
           canReorder={!isFiltering}
         />
@@ -113,8 +117,8 @@ export function ApplicationsPage() {
       <AppCardView
         apps={filtered}
         onSelect={goToDetail}
-        onEdit={setEditing}
-        onDelete={setDeleting}
+        onEdit={app => setEditingId(app.ID)}
+        onDelete={app => setDeletingId(app.ID)}
         onReorder={onReorder}
         canReorder={!isFiltering}
       />
@@ -174,12 +178,12 @@ export function ApplicationsPage() {
       <AppFormDialog open={creating} onOpenChange={setCreating} />
       <AppFormDialog
         open={Boolean(editing)}
-        onOpenChange={open => !open && setEditing(null)}
+        onOpenChange={open => !open && setEditingId(null)}
         app={editing}
       />
       <ConfirmDialog
         open={Boolean(deleting)}
-        onOpenChange={open => !open && setDeleting(null)}
+        onOpenChange={open => !open && setDeletingId(null)}
         title={t('delete_title', { defaultValue: 'Delete application?' })}
         description={t('delete_description', {
           name: deleting?.AppName ?? '',
