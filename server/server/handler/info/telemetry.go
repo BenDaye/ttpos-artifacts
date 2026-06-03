@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"faynoSync/server/model"
 	"faynoSync/server/utils"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -80,6 +81,51 @@ func init() {
 	telemetryScript = redis.NewScript(telemetryScriptContent)
 }
 
+// resolveTelemetryDateRange converts the range/date query params into a list of
+// YYYY-MM-DD strings. Supported ranges: "today", "week" (last 7 days) and
+// "month" (last 30 days). When range is empty it falls back to the explicit
+// date, or today when no date is provided.
+func resolveTelemetryDateRange(timeRange, dateStr string, now time.Time) ([]string, error) {
+	if timeRange != "" {
+		endDate := now.UTC()
+		var startDate time.Time
+
+		switch timeRange {
+		case "today":
+			startDate = endDate
+		case "week":
+			startDate = endDate.AddDate(0, 0, -7)
+		case "month":
+			startDate = endDate.AddDate(0, 0, -30)
+		default:
+			return nil, fmt.Errorf("Invalid range parameter. Use 'today', 'week' or 'month'")
+		}
+
+		var dateRange []string
+		for d := startDate; !d.After(endDate); d = d.AddDate(0, 0, 1) {
+			dateRange = append(dateRange, d.Format("2006-01-02"))
+		}
+		return dateRange, nil
+	}
+
+	if dateStr == "" {
+		dateStr = now.UTC().Format("2006-01-02")
+	}
+	return []string{dateStr}, nil
+}
+
+// asFloat safely reads a numeric field from a decoded JSON map, returning 0 when
+// the key is absent or not a number. Guards mergeResults against panics if the
+// Lua aggregation ever returns a partial result; a warning is emitted so the
+// degradation (zeroed metrics on a 200 response) stays observable.
+func asFloat(m map[string]interface{}, key string) float64 {
+	if v, ok := m[key].(float64); ok {
+		return v
+	}
+	logrus.Warnf("telemetry: missing or non-numeric field %q in aggregation result; treating as 0", key)
+	return 0
+}
+
 // GetTelemetry handles requests for analytics data
 func GetTelemetry(c *gin.Context, rdb *redis.Client, db *mongo.Database) {
 	if rdb == nil {
@@ -110,36 +156,14 @@ func GetTelemetry(c *gin.Context, rdb *redis.Client, db *mongo.Database) {
 
 	// Get date range parameters
 	dateStr := c.Query("date")
-	timeRange := c.Query("range") // "week" or "month"
+	timeRange := c.Query("range") // "today", "week" or "month"
 
-	var dateRange []string
-	if timeRange != "" {
-		// Calculate date range based on the specified period
-		endDate := time.Now().UTC()
-		var startDate time.Time
-
-		switch timeRange {
-		case "week":
-			startDate = endDate.AddDate(0, 0, -7)
-		case "month":
-			startDate = endDate.AddDate(0, 0, -30)
-		default:
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid range parameter. Use 'week' or 'month'"})
-			return
-		}
-
-		// Generate date range
-		for d := startDate; !d.After(endDate); d = d.AddDate(0, 0, 1) {
-			dateRange = append(dateRange, d.Format("2006-01-02"))
-		}
-		logrus.Debugf("Generated date range for %s: %v", timeRange, dateRange)
-	} else if dateStr == "" {
-		// If no date or range specified, use today
-		dateStr = time.Now().UTC().Format("2006-01-02")
-		dateRange = []string{dateStr}
-	} else {
-		dateRange = []string{dateStr}
+	dateRange, err := resolveTelemetryDateRange(timeRange, dateStr, time.Now())
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
+	logrus.Debugf("Resolved telemetry date range (%s): %v", timeRange, dateRange)
 
 	// Get filter parameters
 	filterApps := strings.Split(c.Query("apps"), ",")
@@ -239,11 +263,11 @@ func mergeResults(response *TelemetryResponse, appResult map[string]interface{})
 	logrus.Debugf("Merging results for app: %v", appResult)
 
 	// Merge summary data
-	response.Summary.TotalRequests += int64(appResult["total_requests"].(float64))
-	response.Summary.UniqueClients += int64(appResult["unique_clients"].(float64))
-	response.Summary.ClientsUsingLatestVersion += int64(appResult["clients_using_latest_version"].(float64))
-	response.Summary.ClientsOutdated += int64(appResult["clients_outdated"].(float64))
-	response.Summary.TotalApps = int(appResult["total_active_apps"].(float64))
+	response.Summary.TotalRequests += int64(asFloat(appResult, "total_requests"))
+	response.Summary.UniqueClients += int64(asFloat(appResult, "unique_clients"))
+	response.Summary.ClientsUsingLatestVersion += int64(asFloat(appResult, "clients_using_latest_version"))
+	response.Summary.ClientsOutdated += int64(asFloat(appResult, "clients_outdated"))
+	response.Summary.TotalApps = int(asFloat(appResult, "total_active_apps"))
 
 	// Merge daily stats
 	if dailyStats, ok := appResult["daily_stats"].([]interface{}); ok {
@@ -251,7 +275,7 @@ func mergeResults(response *TelemetryResponse, appResult map[string]interface{})
 
 		for _, ds := range dailyStats {
 			if dailyStat, ok := ds.(map[string]interface{}); ok {
-				date := dailyStat["date"].(string)
+				date, _ := dailyStat["date"].(string)
 				logrus.Debugf("Processing daily stats for date: %s", date)
 
 				found := false
@@ -260,10 +284,10 @@ func mergeResults(response *TelemetryResponse, appResult map[string]interface{})
 				for i, existing := range response.DailyStats {
 					if existing.Date == date {
 						logrus.Debugf("Found existing entry for date %s, updating values", date)
-						response.DailyStats[i].TotalRequests += int64(dailyStat["total_requests"].(float64))
-						response.DailyStats[i].UniqueClients += int64(dailyStat["unique_clients"].(float64))
-						response.DailyStats[i].ClientsUsingLatestVersion += int64(dailyStat["clients_using_latest_version"].(float64))
-						response.DailyStats[i].ClientsOutdated += int64(dailyStat["clients_outdated"].(float64))
+						response.DailyStats[i].TotalRequests += int64(asFloat(dailyStat, "total_requests"))
+						response.DailyStats[i].UniqueClients += int64(asFloat(dailyStat, "unique_clients"))
+						response.DailyStats[i].ClientsUsingLatestVersion += int64(asFloat(dailyStat, "clients_using_latest_version"))
+						response.DailyStats[i].ClientsOutdated += int64(asFloat(dailyStat, "clients_outdated"))
 						found = true
 						break
 					}
@@ -274,10 +298,10 @@ func mergeResults(response *TelemetryResponse, appResult map[string]interface{})
 					logrus.Debugf("Creating new entry for date %s", date)
 					response.DailyStats = append(response.DailyStats, DailyStats{
 						Date:                      date,
-						TotalRequests:             int64(dailyStat["total_requests"].(float64)),
-						UniqueClients:             int64(dailyStat["unique_clients"].(float64)),
-						ClientsUsingLatestVersion: int64(dailyStat["clients_using_latest_version"].(float64)),
-						ClientsOutdated:           int64(dailyStat["clients_outdated"].(float64)),
+						TotalRequests:             int64(asFloat(dailyStat, "total_requests")),
+						UniqueClients:             int64(asFloat(dailyStat, "unique_clients")),
+						ClientsUsingLatestVersion: int64(asFloat(dailyStat, "clients_using_latest_version")),
+						ClientsOutdated:           int64(asFloat(dailyStat, "clients_outdated")),
 					})
 				}
 			}
@@ -287,7 +311,10 @@ func mergeResults(response *TelemetryResponse, appResult map[string]interface{})
 	}
 
 	// Merge versions data
-	versions := appResult["versions"].(map[string]interface{})
+	versions, _ := appResult["versions"].(map[string]interface{})
+	if versions == nil {
+		versions = map[string]interface{}{}
+	}
 	if knownVersions, ok := versions["known_versions"].([]interface{}); ok {
 		for _, v := range knownVersions {
 			if version, ok := v.(string); ok {
@@ -298,7 +325,7 @@ func mergeResults(response *TelemetryResponse, appResult map[string]interface{})
 		}
 	}
 
-	response.Versions.UsedVersionsCount = int(versions["used_versions_count"].(float64))
+	response.Versions.UsedVersionsCount = int(asFloat(versions, "used_versions_count"))
 
 	// Merge version usage
 	if usage, ok := versions["usage"].([]interface{}); ok {

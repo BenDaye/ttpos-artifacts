@@ -2,6 +2,8 @@ package info
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -146,6 +148,11 @@ func FindLatestVersion(c *gin.Context, repository db.AppRepository, db *mongo.Da
 			if json.Unmarshal([]byte(cachedResponse), &cachedData) == nil {
 				logrus.Debugln("Return cached data: ", cachedData)
 
+				// Record telemetry on cache hits too; otherwise PERFORMANCE_MODE
+				// short-circuits before logStatsToRedis and no stats are ever
+				// recorded after the first uncached request.
+				logStatsToRedis(ctx, rdb, validatedParams, cachedUpdateAvailable(cachedData.Response), resolveDeviceID(c))
+
 				// Handle redirect for cached response
 				if cachedData.HTTPStatus == 302 {
 					if responseMap, ok := cachedData.Response.(map[string]interface{}); ok {
@@ -170,9 +177,10 @@ func FindLatestVersion(c *gin.Context, repository db.AppRepository, db *mongo.Da
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	// Log stats for the request
-	deviceID := c.GetHeader("X-Device-ID")
-	logrus.Debugf("X-Device-ID: %s", deviceID)
+	// Log stats for the request. Falls back to a derived identifier when the
+	// client does not send X-Device-ID, so traffic still aggregates.
+	deviceID := resolveDeviceID(c)
+	logrus.Debugf("resolved device id: %s", deviceID)
 	// Update stats with actual update status
 	logStatsToRedis(ctx, rdb, validatedParams, checkResult.Found, deviceID)
 
@@ -375,6 +383,33 @@ func latestFetchErrorResponse(err error) (int, gin.H) {
 		return http.StatusConflict, gin.H{"error": "App identifier matches multiple applications"}
 	}
 	return http.StatusInternalServerError, gin.H{"error": "failed to fetch latest version"}
+}
+
+// resolveDeviceID returns the client-supplied X-Device-ID header, or a stable
+// pseudonymous identifier derived from the client IP and User-Agent when the
+// header is absent. This lets telemetry aggregate for updater clients that do
+// not send an explicit device id. Only the hash is persisted, never the raw
+// IP/UA; note this is pseudonymisation, not anonymisation — the digest is
+// reversible by brute force over the low-entropy input, so before any public
+// production exposure this should be keyed (HMAC). See docs/task/SEC-008.md.
+func resolveDeviceID(c *gin.Context) string {
+	if id := strings.TrimSpace(c.GetHeader("X-Device-ID")); id != "" {
+		return id
+	}
+	fingerprint := c.ClientIP() + "|" + c.Request.UserAgent()
+	sum := sha256.Sum256([]byte(fingerprint))
+	return "anon-" + hex.EncodeToString(sum[:8])
+}
+
+// cachedUpdateAvailable extracts the update_available flag from a cached
+// response payload so cache hits can still record the latest/outdated split.
+func cachedUpdateAvailable(response interface{}) bool {
+	if m, ok := response.(map[string]interface{}); ok {
+		if v, ok := m["update_available"].(bool); ok {
+			return v
+		}
+	}
+	return false
 }
 
 // trackClientTelemetry handles analytics collection for version check requests using Redis Sets

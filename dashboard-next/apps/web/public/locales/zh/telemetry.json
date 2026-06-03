@@ -25,5 +25,15 @@
     "channels": "按渠道",
     "architectures": "按架构",
     "versions": "热门版本"
+  },
+  "errors": {
+    "disabled": {
+      "title": "遥测未启用",
+      "description": "此实例未开启遥测采集。请在服务端启用后查看统计。"
+    },
+    "unavailable": {
+      "title": "遥测后端不可用",
+      "description": "分析后端暂时不可用,请稍后重试。"
+    }
   }
 }

@@ -25,5 +25,15 @@
     "channels": "By channel",
     "architectures": "By architecture",
     "versions": "Top versions"
+  },
+  "errors": {
+    "disabled": {
+      "title": "Telemetry is disabled",
+      "description": "This instance has telemetry collection turned off. Enable it on the server to see statistics."
+    },
+    "unavailable": {
+      "title": "Telemetry backend unavailable",
+      "description": "The analytics backend is temporarily unavailable. Please try again shortly."
+    }
   }
 }

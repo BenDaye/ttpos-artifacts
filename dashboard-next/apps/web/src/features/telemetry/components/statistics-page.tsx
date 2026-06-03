@@ -6,6 +6,7 @@ import { ErrorState } from '@/shared/components/error-state'
 import { PageHeader } from '@/shared/components/page-header'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card'
 import { Skeleton } from '@/shared/components/ui/skeleton'
+import { HttpError } from '@/shared/lib/http'
 import { cn } from '@/shared/lib/utils'
 import { useTelemetryQuery } from '../hooks'
 import { EMPTY_TELEMETRY_FILTERS, TelemetryFilterBar } from './filter-bar'
@@ -54,7 +55,7 @@ export function StatisticsPage() {
       )}
 
       {telemetry.isError && (
-        <ErrorState onRetry={() => telemetry.refetch()} />
+        <TelemetryErrorState error={telemetry.error} onRetry={() => telemetry.refetch()} />
       )}
 
       {telemetry.isSuccess && (
@@ -87,6 +88,36 @@ export function StatisticsPage() {
       )}
     </div>
   )
+}
+
+function TelemetryErrorState({ error, onRetry }: { error: unknown, onRetry: () => void }) {
+  const { t } = useTranslation('telemetry')
+  const status = error instanceof HttpError ? error.status : undefined
+
+  if (status === 403) {
+    return (
+      <ErrorState
+        title={t('errors.disabled.title', { defaultValue: 'Telemetry is disabled' })}
+        description={t('errors.disabled.description', {
+          defaultValue: 'This instance has telemetry collection turned off. Enable it on the server to see statistics.',
+        })}
+      />
+    )
+  }
+
+  if (status === 503) {
+    return (
+      <ErrorState
+        title={t('errors.unavailable.title', { defaultValue: 'Telemetry backend unavailable' })}
+        description={t('errors.unavailable.description', {
+          defaultValue: 'The analytics backend is temporarily unavailable. Please try again shortly.',
+        })}
+        onRetry={onRetry}
+      />
+    )
+  }
+
+  return <ErrorState onRetry={onRetry} />
 }
 
 function SummaryGrid({ summary }: { summary?: TelemetrySummary }) {
