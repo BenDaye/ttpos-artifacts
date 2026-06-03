@@ -17,7 +17,6 @@ Build workflows for TTPOS Flutter applications.
 | `build-macos.yaml`     | macOS (DMG)          | `macos-latest`   | `workflow_dispatch`                       |
 | `build-web.yaml`       | Web (Docker)         | `ubuntu-22.04`   | `workflow_dispatch`                       |
 | `build-dashboard-next.yaml` | Dashboard (Docker)   | `ubuntu-latest`  | `workflow_dispatch`, push to main/release |
-| `build-dashboard.yaml`      | Dashboard 旧版 (回滚锚点) | `ubuntu-latest`  | `workflow_dispatch`, push to release      |
 | `build-server.yaml`         | Server (Docker)      | `ubuntu-latest`  | `workflow_dispatch`, push to main/release |
 
 ### Required Secrets
@@ -63,7 +62,6 @@ Build workflows for TTPOS Flutter applications.
 ## FaynoSync Dashboard
 
 线上前端为 `dashboard-next/`（React 19 + Vite 8 + TanStack Router + Tailwind v4，Bun workspaces）。
-旧版 `dashboard/`（React 18 + Yarn 4）仅作为回滚锚点保留，不再随主线代码自动构建。
 
 ### CI/CD 构建
 
@@ -73,8 +71,6 @@ Build workflows for TTPOS Flutter applications.
 - **质量门禁**：typecheck → lint → 单元测试 → 生产构建 → Playwright e2e
 - **镜像**：`ghcr.io/<owner>/<repo>/faynosync-dashboard-next`
 - **标签**：`latest`、短 commit SHA、分支名
-
-旧版 `build-dashboard.yaml` 已标记 deprecated，仅保留 `release` 分支与手动触发，用于必要时的回滚镜像构建。
 
 ### Conventional Commits
 

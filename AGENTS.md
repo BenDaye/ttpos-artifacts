@@ -30,7 +30,6 @@
 
 - `dashboard-next/`：生产 Dashboard，Bun workspace，React 19、Vite、TanStack Router/Query、Tailwind v4、Base UI/shadcn/ui。
 - `server/`：FaynoSync Go API，负责版本、应用、上传、下载、认证、遥测和 TUF 相关服务。
-- `dashboard/`：旧版 Dashboard，只作为回滚锚点；除明确要求的回滚热修外不要添加新功能。
 - `.github/workflows/`：TTPOS Flutter 多平台构建与 FaynoSync 分发流程。
 - `deploy/`：Docker Compose 与反向代理部署配置。
 - `docs/`：changelog、PMA plan/task 和项目决策记录。
@@ -93,7 +92,6 @@ git tag dashboard-next-v<version> && git push origin dashboard-next-v<version>
 - TUF 前端入口当前保持禁用；相关脚本和保留代码只在用户明确要求时恢复或调整。
 - 工作流保持矩阵 `fail-fast: false`、`should_run` 判断、`dev/test/prod` 环境映射、macOS YAML anchor 关系和 SCP 路径/URL 选项同步。
 - Dashboard Docker 镜像依赖运行时 `VITE_API_URL` 注入；调整构建或 nginx 时确认该机制仍有效。
-- 旧版 `dashboard/` 不承载新需求；需要参考行为时只读对照，避免把旧实现重新扩散到生产路径。
 
 ## 验证与交付
 
