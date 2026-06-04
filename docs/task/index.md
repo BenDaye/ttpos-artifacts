@@ -46,3 +46,4 @@
 | [x] | REFACTOR-005 | 将 /dl 短链硬编码目录提取为配置驱动的 shortlink 包 | P2 | completed |
 | [x] | ENH-010 | 为元数据模型引入持久化 Sort 排序与 Dashboard 拖拽 | P2 | completed |
 | [x] | ENH-011 | version 列表同版本号内按 channel 持久化 Sort 二级排序 | P2 | completed |
+| [x] | ENH-015 | 把服务封装成只读 MCP server（外置 TS 包装器 @ttpos/mcp） | P2 | completed |
