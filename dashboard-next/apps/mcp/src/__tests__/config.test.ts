@@ -42,4 +42,22 @@ describe('parseConfig', () => {
   it('rejects an invalid base url', () => {
     expect(() => parseConfig({ API_BASE_URL: 'not-a-url' })).toThrow()
   })
+
+  it('treats empty / whitespace env vars as absent (no crash)', () => {
+    const config = parseConfig({
+      API_BASE_URL: 'https://api.example.com',
+      API_TOKEN: '',
+      API_USERNAME: '   ',
+      API_PASSWORD: '',
+      API_TIMEOUT_MS: '',
+    })
+    expect(config.authMode).toBe('none')
+    expect(config.token).toBeUndefined()
+    expect(config.username).toBeUndefined()
+    expect(config.timeoutMs).toBe(15_000)
+  })
+
+  it('rejects a non-numeric timeout', () => {
+    expect(() => parseConfig({ API_BASE_URL: 'https://api.example.com', API_TIMEOUT_MS: 'abc' })).toThrow()
+  })
 })
