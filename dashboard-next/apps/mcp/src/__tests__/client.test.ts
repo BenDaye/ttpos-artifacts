@@ -11,6 +11,7 @@ function makeConfig(authMode: AuthMode, token?: string): RegistryConfig {
     password: 'pass',
     timeoutMs: 1000,
     authMode,
+    transport: 'stdio',
   }
 }
 

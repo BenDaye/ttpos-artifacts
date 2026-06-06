@@ -8,6 +8,8 @@ COPY package.json bun.lock ./
 COPY packages/config/package.json packages/config/
 COPY packages/shared/package.json packages/shared/
 COPY apps/web/package.json apps/web/
+# 工作区新增成员的 manifest 必须齐全，否则 --frozen-lockfile 因 workspace 缺失而失败
+COPY apps/mcp/package.json apps/mcp/
 RUN bun install --frozen-lockfile
 
 # Copy source and build

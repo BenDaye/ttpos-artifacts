@@ -13,3 +13,10 @@ update.ttpos.dev {
 	}
 	reverse_proxy faynosync-api:9000
 }
+
+mcp.ttpos.dev {
+	reverse_proxy faynosync-mcp:3010 {
+		# Streamable HTTP / SSE：禁用响应缓冲，确保事件流实时下发
+		flush_interval -1
+	}
+}

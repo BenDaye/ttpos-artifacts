@@ -1,13 +1,10 @@
 import type { RegistryConfig } from './config'
 import process from 'node:process'
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { RegistryClient } from './client'
 import { parseConfig } from './config'
-import { registerTools } from './tools/register'
-
-const SERVER_NAME = 'release-registry'
-const SERVER_VERSION = '0.1.0'
+import { startHttpServer } from './http'
+import { createServer } from './server'
 
 async function main(): Promise<void> {
   let config: RegistryConfig
@@ -21,9 +18,13 @@ async function main(): Promise<void> {
   }
 
   const client = new RegistryClient(config)
-  const server = new McpServer({ name: SERVER_NAME, version: SERVER_VERSION })
-  registerTools(server, client)
 
+  if (config.transport === 'http') {
+    startHttpServer(config, client)
+    return
+  }
+
+  const server = createServer(client)
   const transport = new StdioServerTransport()
   await server.connect(transport)
   console.error(`[release-registry] MCP server running on stdio (auth mode: ${config.authMode})`)

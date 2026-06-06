@@ -39,6 +39,34 @@ services:
       - faynosync
       - caddy-net
 
+  mcp:
+    image: ghcr.io/bendaye/ttpos-artifacts/faynosync-mcp:latest
+    platform: linux/amd64
+    container_name: faynosync-mcp
+    restart: unless-stopped
+    # 不发布 host 端口：仅经 caddy-net 由 Caddy 反代访问（faynosync-mcp:3010）。
+    environment:
+      - MCP_TRANSPORT=http
+      - MCP_HTTP_HOST=0.0.0.0
+      - MCP_HTTP_PORT=3010
+      # 走 compose 内网直连 API，不出公网
+      - API_BASE_URL=${MCP_API_BASE_URL:-http://api:9000}
+      - MCP_ALLOWED_HOSTS=${MCP_ALLOWED_HOSTS:-mcp.ttpos.dev}
+      - MCP_ALLOWED_ORIGINS=${MCP_ALLOWED_ORIGINS:-}
+    # MCP_HTTP_AUTH_TOKEN（客户端 bearer）与 API_TOKEN（上游 fns_）来自 .env，不入库
+    env_file:
+      - .env
+    depends_on:
+      - api
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3010/healthz >/dev/null 2>&1 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks:
+      - faynosync
+      - caddy-net
+
   db:
     image: mongo:7
     container_name: faynosync-db
