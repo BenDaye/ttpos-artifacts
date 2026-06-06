@@ -60,4 +60,48 @@ describe('parseConfig', () => {
   it('rejects a non-numeric timeout', () => {
     expect(() => parseConfig({ API_BASE_URL: 'https://api.example.com', API_TIMEOUT_MS: 'abc' })).toThrow()
   })
+
+  it('defaults the transport to stdio with no http config', () => {
+    const config = parseConfig({ API_BASE_URL: 'https://api.example.com' })
+    expect(config.transport).toBe('stdio')
+    expect(config.http).toBeUndefined()
+  })
+
+  it('requires MCP_HTTP_AUTH_TOKEN in http mode', () => {
+    expect(() => parseConfig({ API_BASE_URL: 'https://api.example.com', MCP_TRANSPORT: 'http' })).toThrow(/MCP_HTTP_AUTH_TOKEN/)
+    // empty token counts as absent and must also be rejected
+    expect(() => parseConfig({ API_BASE_URL: 'https://api.example.com', MCP_TRANSPORT: 'http', MCP_HTTP_AUTH_TOKEN: '' })).toThrow(/MCP_HTTP_AUTH_TOKEN/)
+  })
+
+  it('parses http config with secure defaults', () => {
+    const config = parseConfig({
+      API_BASE_URL: 'https://api.example.com',
+      MCP_TRANSPORT: 'http',
+      MCP_HTTP_AUTH_TOKEN: 'client-secret',
+    })
+    expect(config.transport).toBe('http')
+    expect(config.http).toEqual({
+      host: '127.0.0.1',
+      port: 3010,
+      authToken: 'client-secret',
+      allowedHosts: [],
+      allowedOrigins: [],
+    })
+  })
+
+  it('parses host, port and comma-separated allowlists', () => {
+    const config = parseConfig({
+      API_BASE_URL: 'https://api.example.com',
+      MCP_TRANSPORT: 'http',
+      MCP_HTTP_AUTH_TOKEN: 'client-secret',
+      MCP_HTTP_HOST: '0.0.0.0',
+      MCP_HTTP_PORT: '8080',
+      MCP_ALLOWED_HOSTS: 'mcp.ttpos.dev, localhost',
+      MCP_ALLOWED_ORIGINS: 'https://app.example',
+    })
+    expect(config.http?.host).toBe('0.0.0.0')
+    expect(config.http?.port).toBe(8080)
+    expect(config.http?.allowedHosts).toEqual(['mcp.ttpos.dev', 'localhost'])
+    expect(config.http?.allowedOrigins).toEqual(['https://app.example'])
+  })
 })
