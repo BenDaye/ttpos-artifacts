@@ -1,13 +1,29 @@
 # @ttpos/mcp — Release Registry MCP Server
 
 A read-only [Model Context Protocol](https://modelcontextprotocol.io) server that wraps the
-release registry REST API. It lets MCP-capable agents (Claude Desktop, Claude Code, etc.)
+release registry REST API, so MCP-capable agents (Claude Desktop, Claude Code, etc.) can
 query applications, versions, channels, platforms, architectures and telemetry through
-standard tool calls over **stdio** (local) or **Streamable HTTP** (remote, the modern SSE
-successor — server→client messages stream over SSE).
+standard tool calls.
 
-This package is a **thin external wrapper**: it talks to a running registry instance over
-HTTP and never embeds or modifies the backend. Only query (read) operations are exposed.
+It is **generic**: one server works against **any** registry instance — the whole interface
+is `API_BASE_URL` + `API_TOKEN`. It is a **thin external wrapper** that talks to a running
+registry over HTTP and never embeds or modifies the backend; only read (GET) operations are
+exposed.
+
+## Which mode? (you don't deploy one per instance)
+
+- **stdio — the default, and the generic path.** Each consumer runs this server locally
+  (spawned by their own MCP client) and passes its own `API_BASE_URL` + `API_TOKEN`. Zero
+  infra, no hosting, per-user credentials — point it at whichever instance you hold a token
+  for. **This is the recommended way to use it.**
+- **Streamable HTTP — optional, remote clients only.** A hosted endpoint for clients that
+  can't spawn a local process (web / managed-agent platforms). You run **at most one** of
+  these — it carries a server-side token, so it is _not_ one-per-instance — and it adds a
+  bearer-auth layer + reverse proxy. See [Deploy](#deploy-docker--compose--caddy).
+
+> Not published to a registry yet, so stdio currently runs from a repo checkout (below).
+> Publishing as an `npx`-runnable package or a compiled binary — which would drop the
+> checkout requirement — is deferred.
 
 ## Tools
 
@@ -106,6 +122,7 @@ Diagnostics are written to stderr; stdout is reserved for the (stdio) MCP protoc
 
 ## Deploy (Docker / Compose / Caddy)
 
+Only needed for the optional **remote** HTTP endpoint (most setups use stdio and skip this).
 The HTTP form ships as a container (`apps/mcp/Dockerfile`, image `faynosync-mcp`, built by
 `.github/workflows/build-mcp.yaml` on a `mcp-v*` tag). `deploy/docker-compose.yml` defines the
 `mcp` service (talks to the API over the internal network at `http://api:9000`), and
