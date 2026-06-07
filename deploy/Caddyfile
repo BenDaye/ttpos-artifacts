@@ -11,12 +11,17 @@ update.ttpos.dev {
 	request_body {
 		max_size 1GB
 	}
-	reverse_proxy faynosync-api:9000
-}
 
-mcp.ttpos.dev {
-	reverse_proxy faynosync-mcp:3010 {
-		# Streamable HTTP / SSE：禁用响应缓冲，确保事件流实时下发
-		flush_interval -1
+	# MCP server（Streamable HTTP）挂在 /mcp 路径下，复用 API 域名、不另起子域名。
+	# handle 保留路径，容器收到 /mcp；flush_interval -1 适配 SSE 流式响应。
+	handle /mcp* {
+		reverse_proxy faynosync-mcp:3010 {
+			flush_interval -1
+		}
+	}
+
+	# 其余路径仍反代到 FaynoSync API。
+	handle {
+		reverse_proxy faynosync-api:9000
 	}
 }
