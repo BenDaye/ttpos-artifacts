@@ -95,7 +95,7 @@ Streamable HTTP — point the client at the URL and send the bearer:
 {
   "mcpServers": {
     "release-registry": {
-      "url": "https://mcp.example.com/mcp",
+      "url": "https://registry.example.com/mcp",
       "headers": { "Authorization": "Bearer <MCP_HTTP_AUTH_TOKEN>" }
     }
   }
@@ -109,7 +109,8 @@ Diagnostics are written to stderr; stdout is reserved for the (stdio) MCP protoc
 The HTTP form ships as a container (`apps/mcp/Dockerfile`, image `faynosync-mcp`, built by
 `.github/workflows/build-mcp.yaml` on a `mcp-v*` tag). `deploy/docker-compose.yml` defines the
 `mcp` service (talks to the API over the internal network at `http://api:9000`), and
-`deploy/Caddyfile` reverse-proxies `mcp.ttpos.dev` with response buffering disabled for SSE.
+`deploy/Caddyfile` exposes it under the existing API domain at `/mcp`
+(`handle /mcp*` → `faynosync-mcp:3010`, buffering disabled for SSE) — no extra subdomain.
 Set `MCP_HTTP_AUTH_TOKEN` and `API_TOKEN` in the host `.env` (see [`deploy/.env.example`](../../../deploy/.env.example)).
 
 ## Develop
