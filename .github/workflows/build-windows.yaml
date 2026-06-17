@@ -79,6 +79,10 @@ jobs:
     env:
       output_path: releases
       FAYNOSYNC_PUBLISH: ${{ inputs.branch == 'new-test' && inputs.env == 'test' }}
+      # MSVC 14.51 (VS18) 把 <experimental/coroutine> 弃用警告升级为硬错误 (STL1011)，
+      # audioplayers_windows / flutter_tts / permission_handler_windows 仍在用该头文件。
+      # 通过 CL 全局注入宏抑制该错误，待上游插件迁移到 C++20 <coroutine> 后可移除。
+      CL: /D_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS
     steps:
       - name: 检查是否需要构建此应用端
         id: check
