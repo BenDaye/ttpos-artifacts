@@ -700,18 +700,29 @@ jobs:
 
       - name: 公证 DMG (可选)
         if: steps.check.outputs.should_run == 'true' && env.APPLE_NOTARIZE == 'true'
-        continue-on-error: true
+        # release 分支: 公证失败让 job 红, 不再静默发出未公证的坏包
+        # 其它分支(test/feature 调试包): 保持宽松, 公证失败不阻断
+        continue-on-error: ${{ inputs.branch != 'release' }}
         shell: bash
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          IS_RELEASE: ${{ inputs.branch == 'release' }}
         run: |
           set +e
+
+          # 记录失败但先不退出, 末尾按是否 release 决定 job 成败
+          NOTARIZE_FAILED=0
+          fail() {
+            echo "::error::$1"
+            NOTARIZE_FAILED=1
+          }
 
           echo "开始公证 DMG..."
           echo "Apple ID: ${APPLE_ID}"
           echo "Team ID: ${APPLE_TEAM_ID}"
+          echo "Release 严格模式: ${IS_RELEASE}"
 
           if [ -z "${APPLE_ID}" ] || [ -z "${APPLE_APP_SPECIFIC_PASSWORD}" ] || [ -z "${APPLE_TEAM_ID}" ]; then
             echo "警告: Apple 公证凭据不完整, 跳过公证"
@@ -721,6 +732,8 @@ jobs:
           echo "正在提交公证请求..."
           xcrun notarytool submit "$DMG_PATH" --wait --apple-id "$APPLE_ID" --password "$APPLE_APP_SPECIFIC_PASSWORD" --team-id "$APPLE_TEAM_ID" > /tmp/notary_output.txt 2>&1
           NOTARIZE_RESULT=$?
+          echo "完整输出:"
+          cat /tmp/notary_output.txt
 
           if [ $NOTARIZE_RESULT -eq 0 ]; then
             NOTARIZE_STATUS=$(grep -i "status:" /tmp/notary_output.txt | tail -1 | awk '{print $NF}')
@@ -734,45 +747,36 @@ jobs:
               if [ $STAPLE_RESULT -eq 0 ]; then
                 echo "已成功钉住公证票据"
               else
-                echo "钉住公证票据失败(退出代码: $STAPLE_RESULT)"
-                echo "应用已公证, 但未钉住票据"
+                fail "钉住公证票据失败(退出代码: $STAPLE_RESULT) — 应用已公证但未钉票, 离线安装会被拦"
               fi
             else
-              echo "公证被拒绝或失败"
-              echo "公证状态: $NOTARIZE_STATUS"
-              echo "完整输出:"
-              cat /tmp/notary_output.txt
+              fail "公证被拒绝或失败, 状态: ${NOTARIZE_STATUS:-未知}"
 
               SUBMISSION_ID=$(grep "id:" /tmp/notary_output.txt | head -1 | awk '{print $2}')
               if [ -n "$SUBMISSION_ID" ]; then
-                echo ""
                 echo "==========================================="
                 echo "查询详细公证日志 (Submission ID: $SUBMISSION_ID)"
                 echo "==========================================="
                 xcrun notarytool log "$SUBMISSION_ID" --apple-id "$APPLE_ID" --password "$APPLE_APP_SPECIFIC_PASSWORD" --team-id "$APPLE_TEAM_ID" || true
                 echo "==========================================="
               fi
-
-              echo ""
-              echo "应用已构建并签名, 但未通过 Apple 公证"
-              echo "未公证的应用仍可运行, 但首次启动时需要用户信任"
             fi
           else
-            echo "公证提交失败(退出代码: $NOTARIZE_RESULT)"
-            echo "完整输出:"
-            cat /tmp/notary_output.txt
-            echo ""
-            echo "这可能是由于："
-            echo "1. App 专用密码无效"
-            echo "2. Apple ID 或 Team ID 错误"
-            echo "3. 网络问题"
-            echo "4. DMG 签名问题"
-            echo ""
-            echo "应用已构建并签名, 但不包含 Apple 公证"
-            echo "未公证的应用仍可运行, 但首次启动时需要用户信任"
+            fail "公证提交失败(退出代码: $NOTARIZE_RESULT) — 常见原因: 开发者协议过期(HTTP 403) / App 专用密码无效 / Apple ID 或 Team ID 错误 / 网络问题 / DMG 签名问题"
           fi
 
           rm -f /tmp/notary_output.txt
+
+          if [ "$NOTARIZE_FAILED" = "1" ]; then
+            if [ "$IS_RELEASE" = "true" ]; then
+              echo "::error::release 分支公证未通过, 构建判定失败(避免静默发出未公证的包)"
+              exit 1
+            fi
+            echo "警告: 公证未通过, 但非 release 分支, 继续(产物为已签名未公证, 首次启动需用户信任)"
+            exit 0
+          fi
+
+          echo "公证流程完成"
 
       # ========== 分发 ==========
 
