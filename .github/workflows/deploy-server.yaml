@@ -1,0 +1,316 @@
+name: "Deploy: Server"
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_ref:
+        description: "Server image ref. Empty uses ghcr.io/<owner>/<repo>/faynosync-server:latest"
+        required: false
+        type: string
+        default: ""
+      compose_dir:
+        description: "Remote Docker Compose directory"
+        required: true
+        type: string
+        default: "/home/ubuntu/ttpos-releases"
+      compose_files:
+        description: "Space-separated compose files relative to compose_dir"
+        required: true
+        type: string
+        default: "docker-compose.yml"
+      service:
+        description: "Compose service to update"
+        required: true
+        type: string
+        default: "api"
+      smoke_url:
+        description: "Public smoke URL. Empty skips HTTP smoke."
+        required: false
+        type: string
+        default: "https://update.ttpos.dev/health"
+      dry_run:
+        description: "Validate remote compose plan without pulling, migrating, or restarting"
+        required: true
+        type: boolean
+        default: true
+
+concurrency:
+  group: deploy-server
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy server image
+    runs-on: ubuntu-latest
+    environment: faynosync-production
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      DEPLOY_HOST: ${{ secrets.FAYNOSYNC_DEPLOY_HOST }}
+      DEPLOY_USER: ${{ secrets.FAYNOSYNC_DEPLOY_USER }}
+      DEPLOY_SSH_KEY: ${{ secrets.FAYNOSYNC_DEPLOY_SSH_KEY }}
+      DEPLOY_KNOWN_HOSTS: ${{ secrets.FAYNOSYNC_DEPLOY_KNOWN_HOSTS }}
+      DEPLOY_PORT: ${{ secrets.FAYNOSYNC_DEPLOY_PORT }}
+
+    steps:
+      - name: Resolve deployment inputs
+        id: inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          image_ref="${{ inputs.image_ref }}"
+          if [ -z "$image_ref" ]; then
+            repository_lc="${GITHUB_REPOSITORY,,}"
+            image_ref="ghcr.io/${repository_lc}/faynosync-server:latest"
+          fi
+
+          compose_dir="${{ inputs.compose_dir }}"
+          compose_files="${{ inputs.compose_files }}"
+          service="${{ inputs.service }}"
+          smoke_url="${{ inputs.smoke_url }}"
+          dry_run="${{ inputs.dry_run }}"
+
+          if [[ "$image_ref$compose_dir$compose_files$service$smoke_url" == *$'\n'* ]] || \
+            [[ "$image_ref$compose_dir$compose_files$service$smoke_url" == *$'\r'* ]]; then
+            echo "::error::inputs cannot contain newlines"
+            exit 1
+          fi
+
+          if [[ ! "$image_ref" =~ ^[A-Za-z0-9._:/@+-]+$ ]]; then
+            echo "::error::image_ref contains unsupported characters"
+            exit 1
+          fi
+
+          if [[ ! "$compose_dir" =~ ^/[A-Za-z0-9._/-]+$ ]] || [[ "$compose_dir" == *..* ]]; then
+            echo "::error::compose_dir must be an absolute safe path"
+            exit 1
+          fi
+
+          if [[ ! "$service" =~ ^[A-Za-z0-9_.-]+$ ]]; then
+            echo "::error::service contains unsupported characters"
+            exit 1
+          fi
+
+          if [ -z "$compose_files" ]; then
+            echo "::error::compose_files cannot be empty"
+            exit 1
+          fi
+
+          for file in $compose_files; do
+            case "$file" in
+              /*|*..*|-*|*\'*|*\"*|*\\*|*';'*|*'`'*|*'$'*|*'|'*|*'&'*)
+                echo "::error::compose_files contains an unsafe path: $file"
+                exit 1
+              ;;
+            esac
+          done
+
+          if [ -n "$smoke_url" ] && [[ ! "$smoke_url" =~ ^https?://[^[:space:]]+$ ]]; then
+            echo "::error::smoke_url must be empty or an HTTP(S) URL without whitespace"
+            exit 1
+          fi
+
+          {
+            echo "image_ref=$image_ref"
+            echo "compose_dir=$compose_dir"
+            echo "compose_files=$compose_files"
+            echo "service=$service"
+            echo "smoke_url=$smoke_url"
+            echo "dry_run=$dry_run"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Check deployment secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=()
+          [ -n "$DEPLOY_HOST" ] || missing+=("FAYNOSYNC_DEPLOY_HOST")
+          [ -n "$DEPLOY_USER" ] || missing+=("FAYNOSYNC_DEPLOY_USER")
+          [ -n "$DEPLOY_SSH_KEY" ] || missing+=("FAYNOSYNC_DEPLOY_SSH_KEY")
+          [ -n "$DEPLOY_KNOWN_HOSTS" ] || missing+=("FAYNOSYNC_DEPLOY_KNOWN_HOSTS")
+
+          if [ "${#missing[@]}" -gt 0 ]; then
+            printf '::error::Missing deployment secrets: %s\n' "${missing[*]}"
+            exit 1
+          fi
+
+      - name: Prepare SSH
+        shell: bash
+        run: |
+          set -euo pipefail
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" | tr -d '\r' > ~/.ssh/faynosync_deploy_key
+          chmod 600 ~/.ssh/faynosync_deploy_key
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Deploy on remote host
+        shell: bash
+        env:
+          IMAGE_REF: ${{ steps.inputs.outputs.image_ref }}
+          COMPOSE_DIR: ${{ steps.inputs.outputs.compose_dir }}
+          COMPOSE_FILES: ${{ steps.inputs.outputs.compose_files }}
+          SERVICE: ${{ steps.inputs.outputs.service }}
+          DRY_RUN: ${{ steps.inputs.outputs.dry_run }}
+        run: |
+          set -euo pipefail
+          deploy_port="${DEPLOY_PORT:-22}"
+
+          remote_env=(
+            "IMAGE_REF=$(printf '%q' "$IMAGE_REF")"
+            "COMPOSE_DIR=$(printf '%q' "$COMPOSE_DIR")"
+            "COMPOSE_FILES=$(printf '%q' "$COMPOSE_FILES")"
+            "SERVICE=$(printf '%q' "$SERVICE")"
+            "DRY_RUN=$(printf '%q' "$DRY_RUN")"
+          )
+
+          ssh \
+            -i ~/.ssh/faynosync_deploy_key \
+            -p "$deploy_port" \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            "$DEPLOY_USER@$DEPLOY_HOST" \
+            "${remote_env[*]} bash -s" <<'REMOTE'
+          set -euo pipefail
+
+          cd "$COMPOSE_DIR"
+
+          compose_args=()
+          for file in $COMPOSE_FILES; do
+            if [ ! -f "$file" ]; then
+              echo "Missing compose file: $COMPOSE_DIR/$file" >&2
+              exit 1
+            fi
+            compose_args+=("-f" "$file")
+          done
+
+          compose() {
+            docker compose "${compose_args[@]}" "$@"
+          }
+
+          echo "Compose directory: $COMPOSE_DIR"
+          echo "Compose files: $COMPOSE_FILES"
+          echo "Service: $SERVICE"
+          echo "Image ref: $IMAGE_REF"
+          echo "Dry run: $DRY_RUN"
+
+          if ! compose config --services | grep -Fx "$SERVICE" >/dev/null; then
+            echo "Compose service not found: $SERVICE" >&2
+            exit 1
+          fi
+
+          mkdir -p .github-deploy
+          override_file=".github-deploy/${SERVICE}-image.override.yml"
+          tmp_override="${override_file}.tmp"
+
+          cat > "$tmp_override" <<YAML
+          services:
+            ${SERVICE}:
+              image: ${IMAGE_REF}
+              command: ["faynoSync", "--migration"]
+          YAML
+          mv "$tmp_override" "$override_file"
+
+          compose_with_override() {
+            docker compose "${compose_args[@]}" -f "$override_file" "$@"
+          }
+
+          echo ""
+          echo "Effective service image:"
+          compose_with_override config | awk -v service="$SERVICE" '
+            $1 == service ":" { in_service = 1 }
+            in_service && $1 == "image:" { print "  " $2; found = 1; exit }
+            in_service && /^[^[:space:]]/ && $1 != service ":" { in_service = 0 }
+            END { if (!found) exit 1 }
+          '
+          echo "Effective service command:"
+          compose_with_override config | awk -v service="$SERVICE" '
+            $1 == service ":" { in_service = 1 }
+            in_service && $1 == "command:" { print "  " substr($0, index($0, $1)); found = 1; exit }
+            in_service && /^[^[:space:]]/ && $1 != service ":" { in_service = 0 }
+            END { if (!found) exit 1 }
+          '
+
+          echo ""
+          echo "Current container:"
+          current_container="$(compose ps -q "$SERVICE" || true)"
+          if [ -n "$current_container" ]; then
+            docker inspect \
+              --format '  id={{.Id}} image={{.Config.Image}} status={{.State.Status}} started={{.State.StartedAt}}' \
+              "$current_container" || true
+          else
+            echo "  none"
+          fi
+
+          if [ "$DRY_RUN" = "true" ]; then
+            echo ""
+            echo "Dry run complete. No image pull, migration, or restart was executed."
+            exit 0
+          fi
+
+          echo ""
+          echo "Pulling image..."
+          compose_with_override pull "$SERVICE"
+
+          echo ""
+          echo "Restarting service with migration-enabled command..."
+          compose_with_override up -d --no-deps "$SERVICE"
+
+          new_container="$(compose_with_override ps -q "$SERVICE")"
+          if [ -z "$new_container" ]; then
+            echo "Service did not produce a running container: $SERVICE" >&2
+            exit 1
+          fi
+
+          for _ in $(seq 1 40); do
+            state="$(docker inspect --format '{{.State.Status}}' "$new_container")"
+            health="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{end}}' "$new_container")"
+
+            if [ "$state" = "running" ] && { [ -z "$health" ] || [ "$health" = "healthy" ]; }; then
+              break
+            fi
+
+            if [ "$state" = "exited" ] || [ "$state" = "dead" ]; then
+              compose_with_override logs --tail=120 "$SERVICE"
+              echo "Service stopped unexpectedly: $state" >&2
+              exit 1
+            fi
+
+            sleep 3
+          done
+
+          state="$(docker inspect --format '{{.State.Status}}' "$new_container")"
+          health="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{end}}' "$new_container")"
+          if [ "$state" != "running" ] || { [ -n "$health" ] && [ "$health" != "healthy" ]; }; then
+            compose_with_override logs --tail=120 "$SERVICE"
+            echo "Service did not become healthy: state=$state health=${health:-none}" >&2
+            exit 1
+          fi
+
+          echo ""
+          echo "Updated container:"
+          docker inspect \
+            --format '  id={{.Id}} image={{.Config.Image}} status={{.State.Status}} started={{.State.StartedAt}}' \
+            "$new_container"
+          docker inspect \
+            --format '  cmd={{json .Config.Cmd}}' \
+            "$new_container"
+
+          echo ""
+          compose_with_override ps "$SERVICE"
+          echo ""
+          compose_with_override logs --tail=80 "$SERVICE"
+          REMOTE
+
+      - name: Public smoke check
+        if: inputs.dry_run == false && steps.inputs.outputs.smoke_url != ''
+        shell: bash
+        env:
+          SMOKE_URL: ${{ steps.inputs.outputs.smoke_url }}
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --max-time 20 "$SMOKE_URL" >/tmp/faynosync-smoke.out
+          echo "Smoke OK: $SMOKE_URL"
