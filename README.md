@@ -18,6 +18,7 @@ Build workflows for TTPOS Flutter applications.
 | `build-web.yaml`       | Web (Docker)         | `ubuntu-22.04`   | `workflow_dispatch`                       |
 | `build-dashboard-next.yaml` | Dashboard (Docker)   | `ubuntu-latest`  | `workflow_dispatch`, push to main/release |
 | `build-server.yaml`         | Server (Docker)      | `ubuntu-latest`  | `workflow_dispatch`, push to main/release |
+| `deploy-server.yaml`        | Server deploy        | `ubuntu-latest`  | `workflow_dispatch`                       |
 
 ### Required Secrets
 
@@ -31,6 +32,14 @@ Build workflows for TTPOS Flutter applications.
 | `SCP_D_HOST` / `SCP_D_USER`                                       | Target server credentials                                   |
 | `SENTRYDSN_POS` / `KDS` / `ASSISTANT` / `TABLET` / `SHOP` / `QDS` | Sentry DSN per application                                  |
 | `FAYNOSYNC_URL` / `FAYNOSYNC_TOKEN`                               | FaynoSync upload credentials; `faynosync=force` requires this credential to have `apps.edit` |
+
+#### FaynoSync Server 部署
+
+| Secret                                                            | Description                                                 |
+| ----------------------------------------------------------------- | ----------------------------------------------------------- |
+| `FAYNOSYNC_DEPLOY_HOST` / `FAYNOSYNC_DEPLOY_USER`                 | FaynoSync compose host SSH target                           |
+| `FAYNOSYNC_DEPLOY_SSH_KEY` / `FAYNOSYNC_DEPLOY_KNOWN_HOSTS`       | SSH private key and pinned host keys for deployment         |
+| `FAYNOSYNC_DEPLOY_PORT`                                           | Optional SSH port; defaults to `22`                         |
 
 #### macOS 签名与公证
 
