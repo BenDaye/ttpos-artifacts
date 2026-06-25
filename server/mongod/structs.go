@@ -18,6 +18,9 @@ type AppRepository interface {
 	GetAppByName(appName string, ctx context.Context, page, limit int64, owner string, filters map[string]interface{}) (*model.PaginatedResponse, error)
 	DeleteSpecificVersionOfApp(id primitive.ObjectID, owner string, ctx context.Context) ([]string, int64, string, error)
 	DeleteChannel(id primitive.ObjectID, owner string, ctx context.Context) (int64, error)
+	CheckUploadAvailable(ctxQuery map[string]interface{}, extension string, owner string, ctx context.Context) error
+	PrepareUpload(ctxQuery map[string]interface{}, extension string, owner string, ctx context.Context) (UploadClaim, error)
+	ReleaseUploadClaim(claim UploadClaim, ctx context.Context) error
 	Upload(ctxQuery map[string]interface{}, appLink, extension string, owner string, ctx context.Context, redisClient *redis.Client, env *viper.Viper, checkAppVisibility bool) (interface{}, error)
 	UpdateSpecificApp(objID primitive.ObjectID, owner string, ctxQuery map[string]interface{}, appLink, extension string, ctx context.Context) (bool, error)
 	CheckLatestVersion(appName, version, channel, platform, arch string, ctx context.Context, owner string) (CheckResult, error)
@@ -42,6 +45,11 @@ type AppRepository interface {
 	// 注意:Reorder* 方法刻意不并入本接口。它们作为具体 *appRepository 的能力存在,
 	// 由 catalog 包的窄接口 metaReorderer 在调用点断言获取。这样其它实现/测试 mock
 	// 无需被动新增方法即可继续满足 AppRepository(见 mongod/reorder.go 与 catalog/reorder.go)。
+}
+
+type UploadClaim struct {
+	ID    string
+	Token string
 }
 
 type appRepository struct {

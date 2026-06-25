@@ -47,6 +47,15 @@ func (m *mockAppRepoForGenerate) DeleteSpecificVersionOfApp(id primitive.ObjectI
 func (m *mockAppRepoForGenerate) DeleteChannel(id primitive.ObjectID, owner string, ctx context.Context) (int64, error) {
 	return 0, nil
 }
+func (m *mockAppRepoForGenerate) CheckUploadAvailable(ctxQuery map[string]interface{}, extension string, owner string, ctx context.Context) error {
+	return nil
+}
+func (m *mockAppRepoForGenerate) PrepareUpload(ctxQuery map[string]interface{}, extension string, owner string, ctx context.Context) (mongod.UploadClaim, error) {
+	return mongod.UploadClaim{}, nil
+}
+func (m *mockAppRepoForGenerate) ReleaseUploadClaim(claim mongod.UploadClaim, ctx context.Context) error {
+	return nil
+}
 func (m *mockAppRepoForGenerate) Upload(ctxQuery map[string]interface{}, appLink, extension string, owner string, ctx context.Context, redisClient *redis.Client, env *viper.Viper, checkAppVisibility bool) (interface{}, error) {
 	return nil, nil
 }

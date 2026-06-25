@@ -21,6 +21,148 @@ import (
 	"golang.org/x/text/language"
 )
 
+const uploadArtifactAlreadyExistsMessage = "app with this name, version, platform, architecture and extension already exists"
+const uploadClaimTTL = 6 * time.Hour
+
+var ErrUploadArtifactAlreadyExists = errors.New(uploadArtifactAlreadyExistsMessage)
+
+func applyUploadedArtifact(appData *model.SpecificApp, artifact model.Artifact, overwrite bool) error {
+	index := artifactTupleIndex(appData.Artifacts, artifact)
+	if index >= 0 {
+		if !overwrite {
+			return ErrUploadArtifactAlreadyExists
+		}
+		appData.Artifacts[index] = artifact
+		return nil
+	}
+
+	appData.Artifacts = append(appData.Artifacts, artifact)
+	return nil
+}
+
+func artifactTupleIndex(artifacts []model.Artifact, artifact model.Artifact) int {
+	for i, existingArtifact := range artifacts {
+		if existingArtifact.Package == artifact.Package && existingArtifact.Arch == artifact.Arch && existingArtifact.Platform == artifact.Platform {
+			return i
+		}
+	}
+	return -1
+}
+
+func buildUploadClaimID(owner string, appID primitive.ObjectID, version string, channelID, platformID, archID primitive.ObjectID, extension string) string {
+	return strings.Join([]string{
+		owner,
+		appID.Hex(),
+		version,
+		channelID.Hex(),
+		platformID.Hex(),
+		archID.Hex(),
+		extension,
+	}, "|")
+}
+
+func uploadClaimConflictError(err error) error {
+	var writeException mongo.WriteException
+	if errors.As(err, &writeException) {
+		for _, writeErr := range writeException.WriteErrors {
+			if writeErr.Code == 11000 {
+				return ErrUploadArtifactAlreadyExists
+			}
+		}
+	}
+	var writeError mongo.WriteError
+	if errors.As(err, &writeError) && writeError.Code == 11000 {
+		return ErrUploadArtifactAlreadyExists
+	}
+	return err
+}
+
+func artifactTupleFilter(artifact model.Artifact) bson.M {
+	return bson.M{
+		"platform": artifact.Platform,
+		"arch":     artifact.Arch,
+		"package":  artifact.Package,
+	}
+}
+
+func artifactArrayFilter(artifact model.Artifact) bson.M {
+	return bson.M{
+		"artifact.platform": artifact.Platform,
+		"artifact.arch":     artifact.Arch,
+		"artifact.package":  artifact.Package,
+	}
+}
+
+func appendArtifactFilter(baseFilter bson.D, artifact model.Artifact) bson.D {
+	return append(baseFilter, bson.E{Key: "artifacts", Value: bson.M{
+		"$not": bson.M{"$elemMatch": artifactTupleFilter(artifact)},
+	}})
+}
+
+func appendArtifactToExistingVersion(ctx context.Context, collection *mongo.Collection, baseFilter bson.D, artifact model.Artifact) (primitive.ObjectID, error) {
+	var appData model.SpecificApp
+	err := collection.FindOneAndUpdate(
+		ctx,
+		appendArtifactFilter(baseFilter, artifact),
+		bson.D{
+			{Key: "$push", Value: bson.D{{Key: "artifacts", Value: artifact}}},
+			{Key: "$set", Value: bson.D{{Key: "updated_at", Value: time.Now()}}},
+		},
+		options.FindOneAndUpdate().SetReturnDocument(options.After),
+	).Decode(&appData)
+	if errors.Is(err, mongo.ErrNoDocuments) {
+		return primitive.NilObjectID, ErrUploadArtifactAlreadyExists
+	}
+	if err != nil {
+		return primitive.NilObjectID, err
+	}
+	return appData.ID, nil
+}
+
+func replaceArtifactInExistingVersion(ctx context.Context, collection *mongo.Collection, baseFilter bson.D, artifact model.Artifact, updateFields bson.D) (primitive.ObjectID, error) {
+	updateFields = append(bson.D{{Key: "artifacts.$[artifact]", Value: artifact}}, updateFields...)
+	var appData model.SpecificApp
+	err := collection.FindOneAndUpdate(
+		ctx,
+		baseFilter,
+		bson.D{{Key: "$set", Value: updateFields}},
+		options.FindOneAndUpdate().
+			SetArrayFilters(options.ArrayFilters{Filters: []interface{}{artifactArrayFilter(artifact)}}).
+			SetReturnDocument(options.After),
+	).Decode(&appData)
+	if errors.Is(err, mongo.ErrNoDocuments) {
+		return primitive.NilObjectID, ErrUploadArtifactAlreadyExists
+	}
+	if err != nil {
+		return primitive.NilObjectID, err
+	}
+	return appData.ID, nil
+}
+
+func (c *appRepository) acquireUploadClaim(ctx context.Context, owner string, appID primitive.ObjectID, version string, channelID, platformID, archID primitive.ObjectID, extension string) (UploadClaim, error) {
+	claimsCollection := c.client.Database(c.config.Database).Collection("upload_claims")
+	now := time.Now()
+	claim := UploadClaim{
+		ID:    buildUploadClaimID(owner, appID, version, channelID, platformID, archID, extension),
+		Token: primitive.NewObjectID().Hex(),
+	}
+	_, _ = claimsCollection.DeleteOne(ctx, bson.M{
+		"_id":        claim.ID,
+		"expires_at": bson.M{"$lt": now},
+	})
+	_, err := claimsCollection.InsertOne(ctx, bson.M{
+		"_id":        claim.ID,
+		"token":      claim.Token,
+		"owner":      owner,
+		"expires_at": now.Add(uploadClaimTTL),
+		"created_at": now,
+	})
+	if err != nil {
+		return UploadClaim{}, uploadClaimConflictError(err)
+	}
+	return claim, nil
+}
+
 func (c *appRepository) CreateDocument(collectionName string, document bson.D, uniqueKey, keyType string, owner string, ctx context.Context) (interface{}, error) {
 	collection := c.client.Database(c.config.Database).Collection(collectionName)
 
@@ -331,6 +473,154 @@ func checkEntityAccess(teamUser model.TeamUser, entityID string, allowedIDs []st
 	return nil
 }
 
+type uploadScope struct {
+	owner      string
+	appID      primitive.ObjectID
+	channelID  primitive.ObjectID
+	platformID primitive.ObjectID
+	archID     primitive.ObjectID
+}
+
+func (c *appRepository) resolveUploadScope(ctxQuery map[string]interface{}, owner string, ctx context.Context) (uploadScope, error) {
+	metaCollection := c.client.Database(c.config.Database).Collection("apps_meta")
+	var appMeta, channelMeta, platformMeta, archMeta struct {
+		ID primitive.ObjectID `bson:"_id"`
+	}
+
+	teamUsersCollection := c.client.Database(c.config.Database).Collection("team_users")
+	var teamUser model.TeamUser
+	err := teamUsersCollection.FindOne(ctx, bson.M{"username": owner}).Decode(&teamUser)
+	if err == nil {
+		if !teamUser.Permissions.Apps.Upload {
+			return uploadScope{}, errors.New("you don't have permission to upload apps")
+		}
+		owner = teamUser.Owner
+	}
+
+	metaFilter := bson.D{
+		{Key: "app_name", Value: ctxQuery["app_name"].(string)},
+		{Key: "owner", Value: owner},
+	}
+	if err := metaCollection.FindOne(ctx, metaFilter).Decode(&appMeta); err != nil {
+		return uploadScope{}, fmt.Errorf("app_name not found in apps_meta collection or you don't have permission to access it")
+	}
+	if teamUser.ID != primitive.NilObjectID {
+		if err := checkEntityAccess(teamUser, appMeta.ID.Hex(), teamUser.Permissions.Apps.Allowed, "app"); err != nil {
+			return uploadScope{}, err
+		}
+	}
+
+	if channelName, ok := ctxQuery["channel"].(string); ok && channelName != "" {
+		channelFilter := bson.D{
+			{Key: "channel_name", Value: channelName},
+			{Key: "owner", Value: owner},
+		}
+		if err := metaCollection.FindOne(ctx, channelFilter).Decode(&channelMeta); err != nil {
+			return uploadScope{}, fmt.Errorf("channel not found in apps_meta collection or you don't have permission to access it")
+		}
+		if err := checkEntityAccess(teamUser, channelMeta.ID.Hex(), teamUser.Permissions.Channels.Allowed, "channel"); err != nil {
+			return uploadScope{}, err
+		}
+	}
+
+	if platformName, ok := ctxQuery["platform"].(string); ok && platformName != "" {
+		platformFilter := bson.D{
+			{Key: "platform_name", Value: platformName},
+			{Key: "owner", Value: owner},
+		}
+		if err := metaCollection.FindOne(ctx, platformFilter).Decode(&platformMeta); err != nil {
+			return uploadScope{}, fmt.Errorf("platform not found in apps_meta collection or you don't have permission to access it")
+		}
+		if err := checkEntityAccess(teamUser, platformMeta.ID.Hex(), teamUser.Permissions.Platforms.Allowed, "platform"); err != nil {
+			return uploadScope{}, err
+		}
+	}
+
+	if archName, ok := ctxQuery["arch"].(string); ok && archName != "" {
+		archFilter := bson.D{
+			{Key: "arch_id", Value: archName},
+			{Key: "owner", Value: owner},
+		}
+		if err := metaCollection.FindOne(ctx, archFilter).Decode(&archMeta); err != nil {
+			return uploadScope{}, fmt.Errorf("arch not found in apps_meta collection or you don't have permission to access it")
+		}
+		if err := checkEntityAccess(teamUser, archMeta.ID.Hex(), teamUser.Permissions.Archs.Allowed, "architecture"); err != nil {
+			return uploadScope{}, err
+		}
+	}
+
+	return uploadScope{
+		owner:      owner,
+		appID:      appMeta.ID,
+		channelID:  channelMeta.ID,
+		platformID: platformMeta.ID,
+		archID:     archMeta.ID,
+	}, nil
+}
+
+func (c *appRepository) checkUploadAvailable(scope uploadScope, version, extension string, overwrite bool, ctx context.Context) error {
+	collection := c.client.Database(c.config.Database).Collection("apps")
+	existingDoc := collection.FindOne(ctx, bson.D{
+		{Key: "app_id", Value: scope.appID},
+		{Key: "version", Value: version},
+		{Key: "channel_id", Value: scope.channelID},
+		{Key: "owner", Value: scope.owner},
+	})
+	if err := existingDoc.Err(); err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil
+		}
+		return err
+	}
+
+	var appData model.SpecificApp
+	if err := existingDoc.Decode(&appData); err != nil {
+		return err
+	}
+
+	if err := applyUploadedArtifact(&appData, model.Artifact{
+		Platform: scope.platformID,
+		Arch:     scope.archID,
+		Package:  extension,
+	}, overwrite); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *appRepository) CheckUploadAvailable(ctxQuery map[string]interface{}, extension string, owner string, ctx context.Context) error {
+	scope, err := c.resolveUploadScope(ctxQuery, owner, ctx)
+	if err != nil {
+		return err
+	}
+	return c.checkUploadAvailable(scope, ctxQuery["version"].(string), extension, utils.GetBoolParam(ctxQuery["overwrite"]), ctx)
+}
+
+func (c *appRepository) PrepareUpload(ctxQuery map[string]interface{}, extension string, owner string, ctx context.Context) (UploadClaim, error) {
+	scope, err := c.resolveUploadScope(ctxQuery, owner, ctx)
+	if err != nil {
+		return UploadClaim{}, err
+	}
+	if err := c.checkUploadAvailable(scope, ctxQuery["version"].(string), extension, utils.GetBoolParam(ctxQuery["overwrite"]), ctx); err != nil {
+		return UploadClaim{}, err
+	}
+
+	return c.acquireUploadClaim(ctx, scope.owner, scope.appID, ctxQuery["version"].(string), scope.channelID, scope.platformID, scope.archID, extension)
+}
+
+func (c *appRepository) ReleaseUploadClaim(claim UploadClaim, ctx context.Context) error {
+	if claim.ID == "" || claim.Token == "" {
+		return nil
+	}
+	claimsCollection := c.client.Database(c.config.Database).Collection("upload_claims")
+	_, err := claimsCollection.DeleteOne(ctx, bson.M{
+		"_id":   claim.ID,
+		"token": claim.Token,
+	})
+	return err
+}
+
 func (c *appRepository) Upload(ctxQuery map[string]interface{}, appLink, extension string, owner string, ctx context.Context, redisClient *redis.Client, env *viper.Viper, checkAppVisibility bool) (interface{}, error) {
 	collection := c.client.Database(c.config.Database).Collection("apps")
 	metaCollection := c.client.Database(c.config.Database).Collection("apps_meta")
@@ -461,14 +751,6 @@ func (c *appRepository) Upload(ctxQuery map[string]interface{}, appLink, extensi
 			return nil, err
 		}
 
-		for _, artifact := range appData.Artifacts {
-			if artifact.Package == extension && artifact.Arch == archMeta.ID && artifact.Platform == platformMeta.ID {
-				msg := "app with this name, version, platform, architecture and extension already exists"
-				logrus.Debugf("Upload function in mongod/create.go: %s", msg)
-				return msg, errors.New(msg)
-			}
-		}
-
 		var hashes map[string]string
 		var length int64
 		if hashesVal, exists := ctxQuery["hashes"]; exists {
@@ -496,20 +778,44 @@ func (c *appRepository) Upload(ctxQuery map[string]interface{}, appLink, extensi
 			newArtifact.Length = length
 		}
 
-		appData.Artifacts = append(appData.Artifacts, newArtifact)
+		baseVersionFilter := bson.D{
+			{Key: "app_id", Value: appMeta.ID},
+			{Key: "version", Value: ctxQuery["version"].(string)},
+			{Key: "channel_id", Value: channelMeta.ID},
+			{Key: "owner", Value: owner},
+		}
+		overwrite := utils.GetBoolParam(ctxQuery["overwrite"])
+		artifactIndex := artifactTupleIndex(appData.Artifacts, newArtifact)
+		if artifactIndex >= 0 && !overwrite {
+			logrus.Debugf("Upload function in mongod/create.go: %s", ErrUploadArtifactAlreadyExists)
+			return uploadArtifactAlreadyExistsMessage, ErrUploadArtifactAlreadyExists
+		}
 		logrus.Debugf("Adding new artifact to existing document")
-		_, err = collection.UpdateOne(
-			ctx,
-			bson.D{{Key: "app_id", Value: appMeta.ID}, {Key: "version", Value: ctxQuery["version"].(string)}, {Key: "channel_id", Value: channelMeta.ID}, {Key: "owner", Value: owner}},
-			bson.D{{Key: "$set", Value: bson.D{{Key: "artifacts", Value: appData.Artifacts}, {Key: "updated_at", Value: time.Now()}}}},
-		)
+
+		if artifactIndex >= 0 {
+			updateFields := bson.D{{Key: "updated_at", Value: time.Now()}}
+			if overwrite {
+				updateFields = append(updateFields,
+					bson.E{Key: "published", Value: utils.GetBoolParam(ctxQuery["publish"])},
+					bson.E{Key: "critical", Value: utils.GetBoolParam(ctxQuery["critical"])},
+					bson.E{Key: "required_intermediate", Value: utils.GetBoolParam(ctxQuery["intermediate"])},
+					bson.E{Key: "changelog", Value: []model.Changelog{{
+						Version: ctxQuery["version"].(string),
+						Changes: ctxQuery["changelog"].(string),
+						Date:    time.Now().Format("2006-01-02"),
+					}}},
+				)
+			}
+			uploadResult, err = replaceArtifactInExistingVersion(ctx, collection, baseVersionFilter, newArtifact, updateFields)
+		} else {
+			uploadResult, err = appendArtifactToExistingVersion(ctx, collection, baseVersionFilter, newArtifact)
+		}
 		if err != nil {
 			logrus.Debugf("Error updating document: %v", err)
 			return nil, err
 		}
 
-		uploadResult = appData.ID
-		logrus.Debugf("Document updated successfully, returning ID: %s", appData.ID.Hex())
+		logrus.Debugf("Document updated successfully")
 	} else {
 		// Handle the case when no document exists
 		logrus.Debugf("Document does not exist, creating new one")
@@ -586,6 +892,19 @@ func (c *appRepository) Upload(ctxQuery map[string]interface{}, appLink, extensi
 		if err != nil {
 			if mongoErr, ok := err.(mongo.WriteException); ok {
 				for _, writeErr := range mongoErr.WriteErrors {
+					if writeErr.Code == 11000 && strings.Contains(writeErr.Message, "unique_app_version_channel_owner") {
+						uploadResult, err = appendArtifactToExistingVersion(ctx, collection, bson.D{
+							{Key: "app_id", Value: appMeta.ID},
+							{Key: "version", Value: ctxQuery["version"].(string)},
+							{Key: "channel_id", Value: channelMeta.ID},
+							{Key: "owner", Value: owner},
+						}, artifact)
+						if err != nil {
+							return nil, err
+						}
+						logrus.Debugf("Document already existed, artifact appended atomically")
+						goto uploadComplete
+					}
 					if writeErr.Code == 11000 && strings.Contains(writeErr.Message, "unique_link_to_app_with_specific_version") {
 						return "app with this link already exists", errors.New("app with this link already exists")
 					}
@@ -597,6 +916,7 @@ func (c *appRepository) Upload(ctxQuery map[string]interface{}, appLink, extensi
 		logrus.Debugf("Document created successfully")
 	}
 
+uploadComplete:
 	switch v := uploadResult.(type) {
 	case *mongo.InsertOneResult:
 		insertedID, ok := v.InsertedID.(primitive.ObjectID)

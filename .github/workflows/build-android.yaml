@@ -42,7 +42,7 @@ on:
         type: string
         default: "wss://api.ttpos.com/ws"
       faynosync:
-        description: "FaynoSync 上传模式 (on=检查版本已存在则跳过, force=强制覆盖)"
+        description: "FaynoSync 上传模式 (on=上传, force=覆盖上传)"
         required: false
         default: "off"
         type: choice
@@ -235,52 +235,44 @@ jobs:
 
           echo "FS_VERSION=${version}" >> $GITHUB_ENV
 
-      - name: 检查 FaynoSync 版本是否已存在
-        if: steps.check.outputs.should_run == 'true' && inputs.faynosync == 'on'
+      - name: FaynoSync 上传预检查
+        if: steps.check.outputs.should_run == 'true' && inputs.faynosync != 'off'
         env:
           FAYNOSYNC_URL: ${{ secrets.FAYNOSYNC_URL }}
+          FAYNOSYNC_TOKEN: ${{ secrets.FAYNOSYNC_TOKEN }}
         run: |
-          if [ -z "$FAYNOSYNC_URL" ]; then
-            echo "::warning::未配置 FAYNOSYNC_URL，跳过 FaynoSync 版本检查"
-            exit 0
-          fi
-
-          APP_NAME="${{ matrix.faynosync_name }}"
           CHANNEL="${{ inputs.env }}"
-          CHECK_VERSION="${{ env.FS_VERSION }}"
-          PLATFORM="android"
-          ARCH="arm64"
-
-          echo "检查 FaynoSync: ${APP_NAME} v${CHECK_VERSION} (${CHANNEL}/${PLATFORM}/${ARCH})"
-
-          RESP=$(curl -s --max-time 10 -G "${FAYNOSYNC_URL}/checkVersion" \
-            --data-urlencode "app_name=${APP_NAME}" \
-            --data-urlencode "version=${CHECK_VERSION}" \
-            --data-urlencode "channel=${CHANNEL}" \
-            --data-urlencode "platform=${PLATFORM}" \
-            --data-urlencode "arch=${ARCH}" \
-            --data-urlencode "owner=ttpos")
-
-          UPDATE=$(echo "$RESP" | jq -r '.update_available // "null"')
-
-          if [ "$UPDATE" = "false" ]; then
-            VERIFY=$(curl -s --max-time 10 -G "${FAYNOSYNC_URL}/checkVersion" \
-              --data-urlencode "app_name=${APP_NAME}" \
-              --data-urlencode "version=0.0.0" \
-              --data-urlencode "channel=${CHANNEL}" \
-              --data-urlencode "platform=${PLATFORM}" \
-              --data-urlencode "arch=${ARCH}" \
-              --data-urlencode "owner=ttpos")
-
-            VERIFY_UPDATE=$(echo "$VERIFY" | jq -r '.update_available // "null"')
-
-            if [ "$VERIFY_UPDATE" = "true" ]; then
-              echo "::error::FaynoSync 已存在 ${APP_NAME} v${CHECK_VERSION} (${CHANNEL}/${PLATFORM}/${ARCH})，跳过构建。如需强制覆盖，请选择 faynosync=force"
-              exit 1
-            fi
+          OVERWRITE=false
+          if [ "${{ inputs.faynosync }}" = "force" ]; then
+            OVERWRITE=true
           fi
 
-          echo "FaynoSync 检查通过，继续构建"
+          if [ -z "$FAYNOSYNC_URL" ] || [ -z "$FAYNOSYNC_TOKEN" ]; then
+            echo "::error::已启用 FaynoSync，但未配置 FAYNOSYNC_URL 或 FAYNOSYNC_TOKEN"
+            exit 1
+          fi
+
+          echo "预检查 FaynoSync: ${{ matrix.faynosync_name }} v${FS_VERSION} (${CHANNEL}/android/arm64/.apk, overwrite=${OVERWRITE})"
+          HTTP_CODE=$(curl -sS -o /tmp/faynosync_preflight.json -w "%{http_code}" -G "${FAYNOSYNC_URL}/upload/check" \
+            -H "Authorization: Bearer ${FAYNOSYNC_TOKEN}" \
+            --data-urlencode "app_name=${{ matrix.faynosync_name }}" \
+            --data-urlencode "version=${FS_VERSION}" \
+            --data-urlencode "channel=${CHANNEL}" \
+            --data-urlencode "platform=android" \
+            --data-urlencode "arch=arm64" \
+            --data-urlencode "package=.apk" \
+            --data-urlencode "overwrite=${OVERWRITE}")
+          RESP=$(cat /tmp/faynosync_preflight.json 2>/dev/null)
+          echo "HTTP ${HTTP_CODE}: ${RESP}"
+          if [ "$HTTP_CODE" = "409" ]; then
+            echo "::error::FaynoSync 已存在 ${{ matrix.faynosync_name }} v${FS_VERSION} (${CHANNEL}/android/arm64/.apk)。如需覆盖请选择 faynosync=force"
+            exit 1
+          fi
+          if [ "$HTTP_CODE" != "204" ]; then
+            echo "::error::FaynoSync 预检查失败 (HTTP ${HTTP_CODE}): ${RESP}"
+            exit 1
+          fi
+          echo "FaynoSync 预检查通过"
 
       - name: Build APK
         if: steps.check.outputs.should_run == 'true'
@@ -316,7 +308,6 @@ jobs:
       - name: 上传到 FaynoSync
         id: faynosync
         if: steps.check.outputs.should_run == 'true' && inputs.faynosync != 'off'
-        continue-on-error: true
         env:
           FAYNOSYNC_URL: ${{ secrets.FAYNOSYNC_URL }}
           FAYNOSYNC_TOKEN: ${{ secrets.FAYNOSYNC_TOKEN }}
@@ -327,39 +318,26 @@ jobs:
             exit 0
           fi
 
-          if [ -z "$FAYNOSYNC_URL" ] || [ -z "$FAYNOSYNC_TOKEN" ]; then
-            echo "未配置 FAYNOSYNC_URL 或 FAYNOSYNC_TOKEN，跳过上传"
-            exit 0
-          fi
-
           CHANNEL="${{ inputs.env }}"
 
-          FS_ENDPOINT="/upload"
+          OVERWRITE_FIELD=""
           if [ "${{ inputs.faynosync }}" = "force" ]; then
-            CHECK_RESP=$(curl -s --max-time 10 -G "${FAYNOSYNC_URL}/checkVersion" \
-              --data-urlencode "app_name=${{ matrix.faynosync_name }}" \
-              --data-urlencode "version=${{ env.FS_VERSION }}" \
-              --data-urlencode "channel=${CHANNEL}" \
-              --data-urlencode "platform=android" \
-              --data-urlencode "arch=arm64" \
-              --data-urlencode "owner=ttpos")
-            CHECK_UPDATE=$(echo "$CHECK_RESP" | jq -r '.update_available // "null"')
-            if [ "$CHECK_UPDATE" = "false" ]; then
-              FS_ENDPOINT="/apps/update"
-              echo "版本已存在，使用 update 覆盖"
-            else
-              echo "版本不存在，使用 upload 新建"
-            fi
+            OVERWRITE_FIELD=',"overwrite":true'
           fi
 
-          echo "上传到 FaynoSync: ${{ matrix.faynosync_name }} v${{ env.FS_VERSION }} (${CHANNEL}/android/arm64)"
-          HTTP_CODE=$(curl -s -o /tmp/faynosync_resp.json -w "%{http_code}" -X POST "${FAYNOSYNC_URL}${FS_ENDPOINT}" \
+          if [ -z "$FAYNOSYNC_URL" ] || [ -z "$FAYNOSYNC_TOKEN" ]; then
+            echo "::error::已启用 FaynoSync，但未配置 FAYNOSYNC_URL 或 FAYNOSYNC_TOKEN"
+            exit 1
+          fi
+
+          echo "上传到 FaynoSync: ${{ matrix.faynosync_name }} v${FS_VERSION} (${CHANNEL}/android/arm64)"
+          HTTP_CODE=$(curl -s -o /tmp/faynosync_resp.json -w "%{http_code}" -X POST "${FAYNOSYNC_URL}/upload" \
             -H "Authorization: Bearer ${FAYNOSYNC_TOKEN}" \
             -F "file=@${FILE_PATH}" \
-            -F "data={\"app_name\":\"${{ matrix.faynosync_name }}\",\"version\":\"${{ env.FS_VERSION }}\",\"channel\":\"${CHANNEL}\",\"publish\":${{ env.FAYNOSYNC_PUBLISH }},\"critical\":false,\"platform\":\"android\",\"arch\":\"arm64\",\"changelog\":\"Build from ${{ inputs.branch }}\"}")
+            -F "data={\"app_name\":\"${{ matrix.faynosync_name }}\",\"version\":\"${FS_VERSION}\",\"channel\":\"${CHANNEL}\",\"publish\":${{ env.FAYNOSYNC_PUBLISH }},\"critical\":false,\"platform\":\"android\",\"arch\":\"arm64\",\"changelog\":\"Build from ${{ inputs.branch }}\"${OVERWRITE_FIELD}}")
           RESP=$(cat /tmp/faynosync_resp.json 2>/dev/null)
           echo "HTTP ${HTTP_CODE}: ${RESP}"
-          if [ "$HTTP_CODE" -ge 400 ]; then
+          if [[ "$HTTP_CODE" != 2* ]]; then
             echo "::error::FaynoSync 上传失败 (HTTP ${HTTP_CODE}): ${RESP}"
             exit 1
           fi

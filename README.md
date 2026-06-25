@@ -30,7 +30,7 @@ Build workflows for TTPOS Flutter applications.
 | `SCP_S_HOST` / `SCP_S_USER` / `SCP_S_RIVATEKEY`                   | Relay server SSH credentials                                |
 | `SCP_D_HOST` / `SCP_D_USER`                                       | Target server credentials                                   |
 | `SENTRYDSN_POS` / `KDS` / `ASSISTANT` / `TABLET` / `SHOP` / `QDS` | Sentry DSN per application                                  |
-| `FAYNOSYNC_URL` / `FAYNOSYNC_TOKEN`                               | FaynoSync upload credentials                                |
+| `FAYNOSYNC_URL` / `FAYNOSYNC_TOKEN`                               | FaynoSync upload credentials; `faynosync=force` requires this credential to have `apps.edit` |
 
 #### macOS 签名与公证
 

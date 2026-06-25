@@ -118,6 +118,7 @@ func StartServer(config *viper.Viper, flags map[string]interface{}) {
 	// App routes
 	// router.GET("/", handler.GetAllApps)
 	router.GET("/whoami", handler.Whoami)
+	router.GET("/upload/check", utils.CheckPermission(utils.PermissionUpload, utils.ResourceApps, mongoDatabase), handler.CheckUploadAvailable)
 	router.POST("/upload", utils.CheckPermission(utils.PermissionUpload, utils.ResourceApps, mongoDatabase), handler.UploadApp)
 	router.POST("/apps/update", utils.CheckPermission(utils.PermissionEdit, utils.ResourceApps, mongoDatabase), handler.UpdateSpecificApp)
 	router.POST("/app/update", utils.CheckPermission(utils.PermissionEdit, utils.ResourceApps, mongoDatabase), handler.UpdateApp)

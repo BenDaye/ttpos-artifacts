@@ -138,6 +138,7 @@ type UpRequest struct {
 	Publish           bool     `json:"publish"`
 	Critical          bool     `json:"critical"`
 	Intermediate      bool     `json:"intermediate"`
+	Overwrite         bool     `json:"overwrite"`
 	Platform          string   `json:"platform"`
 	Arch              string   `json:"arch"`
 	Changelog         string   `json:"changelog"`
