@@ -1,0 +1,15 @@
+[
+  {
+    "createIndexes": "upload_claims",
+    "indexes": [
+      {
+        "key": {
+          "expires_at": 1
+        },
+        "name": "upload_claims_expires_at_ttl",
+        "expireAfterSeconds": 0,
+        "background": true
+      }
+    ]
+  }
+]

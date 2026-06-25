@@ -1,0 +1,6 @@
+[
+  {
+    "dropIndexes": "upload_claims",
+    "index": "upload_claims_expires_at_ttl"
+  }
+]
