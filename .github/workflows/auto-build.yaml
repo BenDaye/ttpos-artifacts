@@ -89,7 +89,7 @@ on:
         type: string
         default: "wss://api.ttpos.com/ws"
       faynosync:
-        description: "FaynoSync 上传模式 (on=检查版本已存在则跳过, force=强制覆盖)"
+        description: "FaynoSync 上传模式 (on=上传, force=覆盖上传)"
         required: false
         default: "force"
         type: choice

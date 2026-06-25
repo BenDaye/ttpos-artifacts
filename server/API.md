@@ -443,9 +443,9 @@ Upload a new version of an app.
 
 `POST /upload`
 
-Optional with `channel`, `publish`, `platform`, `arch` and `changelog`:
+Optional with `channel`, `publish`, `platform`, `arch`, `changelog` and `overwrite`:
 ```
---form 'data="{\"app_name\":\"myapp\",\"version\":\"0.0.1\",\"channel\":\"\",\"publish\":true,\"platform\":\"\",\"arch\":\"\",\"changelog\":\"### Changelog\\n\\n- Added new feature X\\n- Fixed bug Y\"}"'
+--form 'data="{\"app_name\":\"myapp\",\"version\":\"0.0.1\",\"channel\":\"\",\"publish\":true,\"platform\":\"\",\"arch\":\"\",\"changelog\":\"### Changelog\\n\\n- Added new feature X\\n- Fixed bug Y\",\"overwrite\":false}"'
 ```
 ###### Headers
 **Authorization**: Authorization header with jwt token.
@@ -471,6 +471,8 @@ Optional with `channel`, `publish`, `platform`, `arch` and `changelog`:
 
 **changelog**: Changelog is a log of changes on current version. 
 
+**overwrite**: Set `true` to replace an existing artifact with the same app/version/channel/platform/arch/package tuple. The default is `false`; duplicate artifacts return `409 Conflict` without uploading to object storage. Overwrite requires both upload access and `apps.edit` permission; upload-only API tokens cannot overwrite.
+
 **updater**: Set the `updater` type when uploading a version. Possible value: `electron-builder`. All other update types no longer require this parameter during upload.
 
 ###### Request:
@@ -495,6 +497,36 @@ curl --location 'http://localhost:9000/upload' \
    "uploadResult.Uploaded":"6411c7c0ec4ff9a9a9bc18fa"
 }
 ```
+### Check Upload Availability
+
+Checks whether an exact upload tuple can be accepted before building or uploading a file. This endpoint is advisory; `/upload` still enforces the final conflict check.
+
+`GET /upload/check`
+
+###### Query Parameters
+All tuple fields are required.
+
+**app_name**: Name of the app.
+
+**version**: Version to upload.
+
+**channel**: Channel name.
+
+**platform**: Platform name.
+
+**arch**: Architecture name.
+
+**package**: Artifact package extension, for example `.apk`, `.exe`, `.dmg`, or `.txt`.
+
+**overwrite**: Set `true` to check overwrite permission and allow an existing tuple. Requires `apps.edit`.
+
+###### Responses
+
+- `204 No Content`: Upload tuple is available, or overwrite is permitted.
+- `400 Bad Request`: Required tuple fields are missing or invalid.
+- `409 Conflict`: Upload tuple already exists and `overwrite` is not enabled.
+- `403 Forbidden`: Token or user does not have permission for the requested operation.
+
 ### Check Latest Version Again
 
 Check if there is a newer version of a specific app after uploading a new version.

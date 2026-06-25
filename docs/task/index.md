@@ -48,3 +48,4 @@
 | [x] | ENH-011 | version 列表同版本号内按 channel 持久化 Sort 二级排序 | P2 | completed |
 | [x] | ENH-015 | 把服务封装成只读 MCP server（外置 TS 包装器 @ttpos/mcp） | P2 | completed |
 | [x] | ENH-016 | MCP server 增加 Streamable HTTP(SSE)双模并补部署交付物 | P2 | completed |
+| [x] | BUG-015 | 修复 FaynoSync CI 重传覆盖失败 | P1 | completed |

@@ -31,6 +31,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/x/mongo/driver/connstring"
 )
 
@@ -803,6 +804,276 @@ func TestSecondaryAppCreate(t *testing.T) {
 
 var uploadedFirstApp string
 
+func bug015BearerToken(t *testing.T) string {
+	t.Helper()
+
+	token, err := utils.GenerateJWT("admin")
+	assert.NoError(t, err)
+	return "Bearer " + token
+}
+
+func bug015CreateAppMeta(t *testing.T, appName string) primitive.ObjectID {
+	t.Helper()
+
+	for _, meta := range []bson.M{
+		{"owner": "admin", "channel_name": "prod"},
+		{"owner": "admin", "platform_name": "android", "updaters": []model.Updater{{Type: "manual", Default: true}}},
+		{"owner": "admin", "arch_id": "amd64"},
+	} {
+		filter := bson.M{"owner": meta["owner"]}
+		if value, ok := meta["channel_name"]; ok {
+			filter["channel_name"] = value
+		}
+		if value, ok := meta["platform_name"]; ok {
+			filter["platform_name"] = value
+		}
+		if value, ok := meta["arch_id"]; ok {
+			filter["arch_id"] = value
+		}
+		_, err := mongoDatabase.Collection("apps_meta").UpdateOne(
+			context.TODO(),
+			filter,
+			bson.M{"$setOnInsert": meta},
+			options.Update().SetUpsert(true),
+		)
+		assert.NoError(t, err)
+	}
+
+	appID := primitive.NewObjectID()
+	_, err := mongoDatabase.Collection("apps_meta").InsertOne(context.TODO(), bson.M{
+		"_id":      appID,
+		"owner":    "admin",
+		"app_name": appName,
+	})
+	assert.NoError(t, err)
+
+	t.Cleanup(func() {
+		_, cleanupAppsErr := mongoDatabase.Collection("apps").DeleteMany(context.TODO(), bson.M{"app_id": appID, "owner": "admin"})
+		assert.NoError(t, cleanupAppsErr)
+		_, cleanupMetaErr := mongoDatabase.Collection("apps_meta").DeleteMany(context.TODO(), bson.M{"_id": appID})
+		assert.NoError(t, cleanupMetaErr)
+	})
+
+	return appID
+}
+
+func bug015UploadRequest(t *testing.T, appName, version, changelog string, overwrite bool) (*http.Request, string) {
+	t.Helper()
+
+	file, err := os.Open("LICENSE")
+	assert.NoError(t, err)
+	defer file.Close()
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, err := writer.CreateFormFile("file", "LICENSE")
+	assert.NoError(t, err)
+	_, err = io.Copy(part, file)
+	assert.NoError(t, err)
+
+	dataPart, err := writer.CreateFormField("data")
+	assert.NoError(t, err)
+	payload := fmt.Sprintf(`{"app_name":"%s","version":"%s","channel":"prod","platform":"android","arch":"amd64","publish":true,"critical":false,"changelog":"%s","overwrite":%v}`, appName, version, changelog, overwrite)
+	_, err = dataPart.Write([]byte(payload))
+	assert.NoError(t, err)
+	assert.NoError(t, writer.Close())
+
+	req, err := http.NewRequest("POST", "/upload", body)
+	assert.NoError(t, err)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.Header.Set("Authorization", bug015BearerToken(t))
+	return req, payload
+}
+
+func bug015UploadApp(t *testing.T, router *gin.Engine, appName, version, changelog string, overwrite bool) *httptest.ResponseRecorder {
+	t.Helper()
+
+	return bug015UploadAppWithBearer(t, router, appName, version, changelog, overwrite, bug015BearerToken(t))
+}
+
+func bug015UploadAppWithBearer(t *testing.T, router *gin.Engine, appName, version, changelog string, overwrite bool, bearerToken string) *httptest.ResponseRecorder {
+	t.Helper()
+
+	req, _ := bug015UploadRequest(t, appName, version, changelog, overwrite)
+	req.Header.Set("Authorization", bearerToken)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	return w
+}
+
+func bug015UploadRouter() *gin.Engine {
+	router := gin.Default()
+	router.Use(utils.AuthMiddleware(mongoDatabase))
+	appHandler := handler.NewAppHandler(client, appDB, mongoDatabase, redisClient, viper.GetBool("PERFORMANCE_MODE"), apiKey, false)
+	router.GET("/upload/check", utils.CheckPermission(utils.PermissionUpload, utils.ResourceApps, mongoDatabase), func(c *gin.Context) {
+		appHandler.CheckUploadAvailable(c)
+	})
+	router.POST("/upload", func(c *gin.Context) {
+		appHandler.UploadApp(c)
+	})
+	return router
+}
+
+func bug015FetchUploadedApp(t *testing.T, appID primitive.ObjectID, version string) model.SpecificApp {
+	t.Helper()
+
+	var uploaded model.SpecificApp
+	err := mongoDatabase.Collection("apps").FindOne(context.TODO(), bson.M{
+		"app_id":  appID,
+		"version": version,
+		"owner":   "admin",
+	}).Decode(&uploaded)
+	assert.NoError(t, err)
+	return uploaded
+}
+
+func bug015MetaID(t *testing.T, filter bson.M) primitive.ObjectID {
+	t.Helper()
+
+	var meta struct {
+		ID primitive.ObjectID `bson:"_id"`
+	}
+	err := mongoDatabase.Collection("apps_meta").FindOne(context.TODO(), filter).Decode(&meta)
+	assert.NoError(t, err)
+	return meta.ID
+}
+
+func bug015SeedUploadedApp(t *testing.T, appID primitive.ObjectID, version, link, changelog string) primitive.ObjectID {
+	return bug015SeedUploadedAppWithPackage(t, appID, version, link, changelog, "")
+}
+
+func bug015SeedUploadedAppWithPackage(t *testing.T, appID primitive.ObjectID, version, link, changelog, packageExtension string) primitive.ObjectID {
+	t.Helper()
+
+	uploadedID := primitive.NewObjectID()
+	channelID := bug015MetaID(t, bson.M{"owner": "admin", "channel_name": "prod"})
+	platformID := bug015MetaID(t, bson.M{"owner": "admin", "platform_name": "android"})
+	archID := bug015MetaID(t, bson.M{"owner": "admin", "arch_id": "amd64"})
+	_, err := mongoDatabase.Collection("apps").InsertOne(context.TODO(), bson.M{
+		"_id":        uploadedID,
+		"app_id":     appID,
+		"version":    version,
+		"channel_id": channelID,
+		"published":  true,
+		"critical":   false,
+		"artifacts": []model.Artifact{{
+			Link:     link,
+			Platform: platformID,
+			Arch:     archID,
+			Package:  packageExtension,
+		}},
+		"changelog": []model.Changelog{{
+			Version: version,
+			Changes: changelog,
+			Date:    time.Now().Format("2006-01-02"),
+		}},
+		"updated_at": time.Now(),
+		"owner":      "admin",
+	})
+	assert.NoError(t, err)
+	return uploadedID
+}
+
+func bug015CheckUploadAvailability(t *testing.T, router *gin.Engine, appName, version, packageExtension string, overwrite bool) *httptest.ResponseRecorder {
+	t.Helper()
+
+	url := fmt.Sprintf("/upload/check?app_name=%s&version=%s&channel=prod&platform=android&arch=amd64&package=%s&overwrite=%v", appName, version, packageExtension, overwrite)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	assert.NoError(t, err)
+	req.Header.Set("Authorization", bug015BearerToken(t))
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	return w
+}
+
+func TestBUG015DuplicateUploadReturnsConflictBeforeStorageWrite(t *testing.T) {
+	appName := "bug015-duplicate-" + primitive.NewObjectID().Hex()
+	appID := bug015CreateAppMeta(t, appName)
+	bug015SeedUploadedApp(t, appID, "1.0.0", "https://storage.example/old-license", "old changelog")
+
+	env := viper.GetViper()
+	oldStorageDriver := env.GetString("STORAGE_DRIVER")
+	env.Set("STORAGE_DRIVER", "bug015-invalid-storage-driver")
+	t.Cleanup(func() {
+		env.Set("STORAGE_DRIVER", oldStorageDriver)
+	})
+
+	w := bug015UploadApp(t, bug015UploadRouter(), appName, "1.0.0", "duplicate changelog", false)
+
+	assert.Equal(t, http.StatusConflict, w.Code)
+	assert.Equal(t, `{"error":"app with this name, version, platform, architecture and extension already exists"}`, w.Body.String())
+}
+
+func TestBUG015UploadPreflightReturnsConflictForDuplicateArtifact(t *testing.T) {
+	appName := "bug015-preflight-" + primitive.NewObjectID().Hex()
+	appID := bug015CreateAppMeta(t, appName)
+	bug015SeedUploadedAppWithPackage(t, appID, "1.0.0", "https://storage.example/old-apk", "old changelog", ".apk")
+
+	router := bug015UploadRouter()
+	conflict := bug015CheckUploadAvailability(t, router, appName, "1.0.0", ".apk", false)
+	assert.Equal(t, http.StatusConflict, conflict.Code)
+	assert.Equal(t, `{"error":"app with this name, version, platform, architecture and extension already exists"}`, conflict.Body.String())
+
+	overwrite := bug015CheckUploadAvailability(t, router, appName, "1.0.0", ".apk", true)
+	assert.Equal(t, http.StatusNoContent, overwrite.Code)
+}
+
+func TestBUG015OverwriteDuplicateUploadReturnsOKAndUpdatesArtifactMetadata(t *testing.T) {
+	appName := "bug015-overwrite-" + primitive.NewObjectID().Hex()
+	appID := bug015CreateAppMeta(t, appName)
+	uploadedID := bug015SeedUploadedApp(t, appID, "1.0.0", "https://storage.example/old-license", "old changelog")
+
+	w := bug015UploadApp(t, bug015UploadRouter(), appName, "1.0.0", "replacement changelog", true)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, fmt.Sprintf(`{"uploadResult.Uploaded":"%s"}`, uploadedID.Hex()), w.Body.String())
+
+	uploaded := bug015FetchUploadedApp(t, appID, "1.0.0")
+	assert.Len(t, uploaded.Artifacts, 1)
+	assert.NotEqual(t, "https://storage.example/old-license", uploaded.Artifacts[0].Link)
+	assert.NotEmpty(t, uploaded.Artifacts[0].Hashes)
+	assert.Greater(t, uploaded.Artifacts[0].Length, int64(0))
+	assert.Len(t, uploaded.Changelog, 1)
+	assert.Equal(t, "replacement changelog", uploaded.Changelog[0].Changes)
+}
+
+func TestBUG015OverwriteUploadRequiresAppsEditPermission(t *testing.T) {
+	appName := "bug015-overwrite-permission-" + primitive.NewObjectID().Hex()
+	appID := bug015CreateAppMeta(t, appName)
+	bug015SeedUploadedApp(t, appID, "1.0.0", "https://storage.example/old-license", "old changelog")
+
+	channelID := bug015MetaID(t, bson.M{"owner": "admin", "channel_name": "prod"})
+	platformID := bug015MetaID(t, bson.M{"owner": "admin", "platform_name": "android"})
+	archID := bug015MetaID(t, bson.M{"owner": "admin", "arch_id": "amd64"})
+	teamUsername := "bug015-uploader-" + primitive.NewObjectID().Hex()
+	permissions := model.Permissions{}
+	permissions.Apps.Upload = true
+	permissions.Apps.Edit = false
+	permissions.Apps.Allowed = []string{appID.Hex()}
+	permissions.Channels.Allowed = []string{channelID.Hex()}
+	permissions.Platforms.Allowed = []string{platformID.Hex()}
+	permissions.Archs.Allowed = []string{archID.Hex()}
+
+	_, err := mongoDatabase.Collection("team_users").InsertOne(context.TODO(), bson.M{
+		"username":    teamUsername,
+		"owner":       "admin",
+		"permissions": permissions,
+	})
+	assert.NoError(t, err)
+	t.Cleanup(func() {
+		_, cleanupErr := mongoDatabase.Collection("team_users").DeleteOne(context.TODO(), bson.M{"username": teamUsername})
+		assert.NoError(t, cleanupErr)
+	})
+
+	token, err := utils.GenerateJWT(teamUsername)
+	assert.NoError(t, err)
+
+	w := bug015UploadAppWithBearer(t, bug015UploadRouter(), appName, "1.0.0", "replacement changelog", true, "Bearer "+token)
+
+	assert.Equal(t, http.StatusForbidden, w.Code)
+	assert.Equal(t, `{"error":"overwrite requires apps.edit permission"}`, w.Body.String())
+}
+
 func TestUpload(t *testing.T) {
 
 	router := gin.Default()
@@ -943,8 +1214,7 @@ func TestUploadDuplicateApp(t *testing.T) {
 	// Serve the request using the Gin router.
 	router.ServeHTTP(w, req)
 
-	// Check the response status code (expecting 500).
-	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Equal(t, http.StatusConflict, w.Code)
 
 	// Check the response body for the desired error message.
 	expectedErrorMessage := `{"error":"app with this name, version, platform, architecture and extension already exists"}`
@@ -2903,6 +3173,9 @@ func TestTokenMiddlewareFlowForBothTokens(t *testing.T) {
 	router.POST("/test/upload", utils.CheckPermission(utils.PermissionUpload, utils.ResourceApps, mongoDatabase), func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"result": "ok"})
 	})
+	router.POST("/apps/update", utils.CheckPermission(utils.PermissionEdit, utils.ResourceApps, mongoDatabase), func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"result": "ok"})
+	})
 	router.GET("/test/token/list", utils.AdminOnlyMiddleware(mongoDatabase), func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"result": "ok"})
 	})
@@ -2944,6 +3217,21 @@ func TestTokenMiddlewareFlowForBothTokens(t *testing.T) {
 			uploadW := httptest.NewRecorder()
 			router.ServeHTTP(uploadW, uploadReq)
 			assert.Equal(t, http.StatusOK, uploadW.Code)
+
+			updateReq, err := http.NewRequest("POST", "/apps/update", nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			updateReq.Header.Set("Authorization", "Bearer "+tokenCase.token)
+			updateW := httptest.NewRecorder()
+			router.ServeHTTP(updateW, updateReq)
+			assert.Equal(t, http.StatusForbidden, updateW.Code)
+			var updateResponse map[string]interface{}
+			err = json.Unmarshal(updateW.Body.Bytes(), &updateResponse)
+			if err != nil {
+				t.Fatal(err)
+			}
+			assert.Equal(t, "API tokens are restricted to app upload", updateResponse["error"])
 
 			adminOnlyReq, err := http.NewRequest("GET", "/test/token/list", nil)
 			if err != nil {

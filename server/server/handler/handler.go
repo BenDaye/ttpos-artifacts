@@ -27,6 +27,7 @@ type AppHandler interface {
 	DeleteChannel(*gin.Context)
 	DeletePlatform(*gin.Context)
 	DeleteArch(*gin.Context)
+	CheckUploadAvailable(*gin.Context)
 	UploadApp(*gin.Context)
 	UpdateSpecificApp(*gin.Context)
 	HealthCheck(*gin.Context)
@@ -174,6 +175,10 @@ func (ch *appHandler) CreateApp(c *gin.Context) {
 func (ch *appHandler) UploadApp(c *gin.Context) {
 	// Call the UploadApp function from the create package
 	create.UploadApp(c, ch.repository, ch.database, ch.redisClient, ch.performanceMode)
+}
+
+func (ch *appHandler) CheckUploadAvailable(c *gin.Context) {
+	create.CheckUploadAvailable(c, ch.repository, ch.database)
 }
 
 func (ch *appHandler) UpdateSpecificApp(c *gin.Context) {

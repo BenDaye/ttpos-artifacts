@@ -2,11 +2,13 @@ package create
 
 import (
 	"context"
+	"errors"
 	db "faynoSync/mongod"
 	"faynoSync/server/model"
 	"faynoSync/server/utils"
 	"faynoSync/server/utils/updaters"
 	"fmt"
+	"mime/multipart"
 	"net/http"
 	"strings"
 	"time"
@@ -19,6 +21,49 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
+
+type uploadFilePlan struct {
+	file      *multipart.FileHeader
+	link      string
+	extension string
+	hashes    map[string]string
+	length    int64
+	claim     db.UploadClaim
+}
+
+type uploadClaimReleaser interface {
+	ReleaseUploadClaim(claim db.UploadClaim, ctx context.Context) error
+}
+
+func uploadFileExtension(filename string) string {
+	lastDotIndex := strings.LastIndex(filename, ".")
+	if lastDotIndex == -1 {
+		return ""
+	}
+	return filename[lastDotIndex:]
+}
+
+func normalizeUploadPackage(extension string) string {
+	extension = strings.TrimSpace(extension)
+	if extension == "" || strings.HasPrefix(extension, ".") {
+		return extension
+	}
+	return "." + extension
+}
+
+func releaseUploadClaim(repository uploadClaimReleaser, claim db.UploadClaim, _ context.Context) {
+	releaseCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := repository.ReleaseUploadClaim(claim, releaseCtx); err != nil {
+		logrus.Error("failed to release upload claim: ", err)
+	}
+}
+
+func releaseUploadPlans(repository uploadClaimReleaser, uploadPlans []uploadFilePlan, ctx context.Context) {
+	for _, uploadPlan := range uploadPlans {
+		releaseUploadClaim(repository, uploadPlan.claim, ctx)
+	}
+}
 
 func InvalidateCache(ctx context.Context, params map[string]interface{}, rdb *redis.Client) error {
 
@@ -61,7 +106,7 @@ func InvalidateCache(ctx context.Context, params map[string]interface{}, rdb *re
 	return nil
 }
 
-func UploadApp(c *gin.Context, repository db.AppRepository, db *mongo.Database, rdb *redis.Client, performanceMode bool) {
+func UploadApp(c *gin.Context, repository db.AppRepository, database *mongo.Database, rdb *redis.Client, performanceMode bool) {
 	// Debug received request (make sense for using only on localhost)
 	// utils.DumpRequest(c)
 
@@ -73,7 +118,7 @@ func UploadApp(c *gin.Context, repository db.AppRepository, db *mongo.Database, 
 	}
 
 	// Check if the user is a team user
-	teamUsersCollection := db.Collection("team_users")
+	teamUsersCollection := database.Collection("team_users")
 	var teamUser model.TeamUser
 	err = teamUsersCollection.FindOne(c.Request.Context(), bson.M{"username": username}).Decode(&teamUser)
 
@@ -84,7 +129,7 @@ func UploadApp(c *gin.Context, repository db.AppRepository, db *mongo.Database, 
 		owner = teamUser.Owner
 	}
 
-	ctxQueryMap, err := utils.ValidateParams(c, db)
+	ctxQueryMap, err := utils.ValidateParams(c, database)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -100,9 +145,16 @@ func UploadApp(c *gin.Context, repository db.AppRepository, db *mongo.Database, 
 		c.JSON(http.StatusBadRequest, gin.H{"error": "app_name is required"})
 		return
 	}
-	if err := validateAPITokenAppScope(c, db, owner, appName); err != nil {
+	if err := validateAPITokenAppScope(c, database, owner, appName); err != nil {
 		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 		return
+	}
+	if utils.GetBoolParam(ctxQueryMap["overwrite"]) {
+		status, err := validateOverwriteEditPermission(c, database, username)
+		if err != nil {
+			c.JSON(status, gin.H{"error": err.Error()})
+			return
+		}
 	}
 
 	form, err := c.MultipartForm()
@@ -131,16 +183,17 @@ func UploadApp(c *gin.Context, repository db.AppRepository, db *mongo.Database, 
 			return
 		}
 	}
-	checkAppVisibility, err := utils.CheckPrivate(ctxQueryMap["app_name"].(string), db, c)
+	checkAppVisibility, err := utils.CheckPrivate(ctxQueryMap["app_name"].(string), database, c)
 	if err != nil {
 		logrus.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to check private"})
 		return
 	}
-	var links []string
-	var extensions []string
-	var fileHashes []map[string]string
-	var fileLengths []int64
+	var uploadPlans []uploadFilePlan
+	defer func() {
+		releaseUploadPlans(repository, uploadPlans, c.Request.Context())
+	}()
+	seenExtensions := make(map[string]struct{})
 	for _, file := range files {
 		// Calculate hashes and length before uploading to S3
 		hashes, length, err := utils.CalculateFileHashes(file)
@@ -149,32 +202,60 @@ func UploadApp(c *gin.Context, repository db.AppRepository, db *mongo.Database, 
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to calculate file hashes"})
 			return
 		}
-		fileHashes = append(fileHashes, hashes)
-		fileLengths = append(fileLengths, length)
+		extension := uploadFileExtension(file.Filename)
+		if _, exists := seenExtensions[extension]; exists {
+			c.JSON(http.StatusConflict, gin.H{"error": db.ErrUploadArtifactAlreadyExists.Error()})
+			return
+		}
+		seenExtensions[extension] = struct{}{}
 
-		link, ext, err := utils.UploadToS3(ctxQueryMap, owner, file, c, viper.GetViper(), checkAppVisibility)
+		claim, err := repository.PrepareUpload(ctxQueryMap, extension, owner, c.Request.Context())
+		if err != nil {
+			logrus.Error(err)
+			if errors.Is(err, db.ErrUploadArtifactAlreadyExists) {
+				c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			}
+			return
+		}
+
+		uploadPlans = append(uploadPlans, uploadFilePlan{
+			file:      file,
+			extension: extension,
+			hashes:    hashes,
+			length:    length,
+			claim:     claim,
+		})
+	}
+	for i, uploadPlan := range uploadPlans {
+		link, _, err := utils.UploadToS3(ctxQueryMap, owner, uploadPlan.file, c, viper.GetViper(), checkAppVisibility)
 		if err != nil {
 			logrus.Error(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to upload file to S3"})
 			return
 		}
-		links = append(links, link)
-		extensions = append(extensions, ext)
+		uploadPlans[i].link = link
 	}
+
 	var results []interface{}
-	for i, link := range links {
+	for _, uploadPlan := range uploadPlans {
 		// Add hashes and length to ctxQueryMap for this specific file
 		fileCtxQuery := make(map[string]interface{})
 		for k, v := range ctxQueryMap {
 			fileCtxQuery[k] = v
 		}
-		fileCtxQuery["hashes"] = fileHashes[i]
-		fileCtxQuery["length"] = fileLengths[i]
+		fileCtxQuery["hashes"] = uploadPlan.hashes
+		fileCtxQuery["length"] = uploadPlan.length
 
-		result, err := repository.Upload(fileCtxQuery, link, extensions[i], owner, c.Request.Context(), rdb, viper.GetViper(), checkAppVisibility)
+		result, err := repository.Upload(fileCtxQuery, uploadPlan.link, uploadPlan.extension, owner, c.Request.Context(), rdb, viper.GetViper(), checkAppVisibility)
 		if err != nil {
 			logrus.Error(err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			if errors.Is(err, db.ErrUploadArtifactAlreadyExists) {
+				c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			}
 			return
 		}
 		results = append(results, result)
@@ -250,6 +331,109 @@ func UploadApp(c *gin.Context, repository db.AppRepository, db *mongo.Database, 
 	} else {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid result type"})
 	}
+}
+
+func CheckUploadAvailable(c *gin.Context, repository db.AppRepository, database *mongo.Database) {
+	username, err := utils.GetUsernameFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctxQueryMap := map[string]interface{}{
+		"app_name":  strings.TrimSpace(c.Query("app_name")),
+		"version":   strings.TrimSpace(c.Query("version")),
+		"channel":   strings.TrimSpace(c.Query("channel")),
+		"platform":  strings.TrimSpace(c.Query("platform")),
+		"arch":      strings.TrimSpace(c.Query("arch")),
+		"overwrite": strings.TrimSpace(c.Query("overwrite")),
+	}
+	appName, _ := ctxQueryMap["app_name"].(string)
+	if appName == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "app_name is required"})
+		return
+	}
+	if version, _ := ctxQueryMap["version"].(string); version == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "version is required"})
+		return
+	}
+	for _, key := range []string{"channel", "platform", "arch"} {
+		if value, _ := ctxQueryMap[key].(string); value == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": key + " is required"})
+			return
+		}
+	}
+
+	extension := normalizeUploadPackage(c.Query("package"))
+	if extension == "" {
+		extension = normalizeUploadPackage(c.Query("extension"))
+	}
+	if extension == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "package is required"})
+		return
+	}
+
+	owner := username
+	teamUsersCollection := database.Collection("team_users")
+	var teamUser model.TeamUser
+	if err := teamUsersCollection.FindOne(c.Request.Context(), bson.M{"username": username}).Decode(&teamUser); err == nil {
+		owner = teamUser.Owner
+	}
+
+	if err := validateAPITokenAppScope(c, database, owner, appName); err != nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		return
+	}
+	if utils.GetBoolParam(ctxQueryMap["overwrite"]) {
+		status, err := validateOverwriteEditPermission(c, database, username)
+		if err != nil {
+			c.JSON(status, gin.H{"error": err.Error()})
+			return
+		}
+	}
+
+	if err := repository.CheckUploadAvailable(ctxQueryMap, extension, owner, c.Request.Context()); err != nil {
+		if errors.Is(err, db.ErrUploadArtifactAlreadyExists) {
+			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+		} else {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		}
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}
+
+func validateOverwriteEditPermission(c *gin.Context, database *mongo.Database, username string) (int, error) {
+	if isAPIToken, exists := c.Get("is_api_token"); exists {
+		if apiTokenValue, ok := isAPIToken.(bool); ok && apiTokenValue {
+			return http.StatusForbidden, fmt.Errorf("overwrite requires apps.edit permission")
+		}
+	}
+
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	defer cancel()
+	err := database.Collection("admins").FindOne(ctx, bson.M{"username": username}).Err()
+	if err == nil {
+		return 0, nil
+	}
+	if !errors.Is(err, mongo.ErrNoDocuments) {
+		return http.StatusInternalServerError, err
+	}
+
+	var teamUser model.TeamUser
+	err = database.Collection("team_users").FindOne(ctx, bson.M{"username": username}).Decode(&teamUser)
+	if errors.Is(err, mongo.ErrNoDocuments) {
+		return http.StatusForbidden, fmt.Errorf("overwrite requires apps.edit permission")
+	}
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+	if !teamUser.Permissions.Apps.Edit {
+		return http.StatusForbidden, fmt.Errorf("overwrite requires apps.edit permission")
+	}
+
+	return 0, nil
 }
 
 func validateAPITokenAppScope(c *gin.Context, database *mongo.Database, owner, appName string) error {

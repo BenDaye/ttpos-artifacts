@@ -65,6 +65,7 @@ func extractParamsFromPost(c *gin.Context) (map[string]interface{}, error) {
 	publishStr := strconv.FormatBool(upReq.Publish)
 	criticalStr := strconv.FormatBool(upReq.Critical)
 	intermediateStr := strconv.FormatBool(upReq.Intermediate)
+	overwriteStr := strconv.FormatBool(upReq.Overwrite)
 	return map[string]interface{}{
 		"id":                  upReq.Id,
 		"app_name":            upReq.AppName,
@@ -73,6 +74,7 @@ func extractParamsFromPost(c *gin.Context) (map[string]interface{}, error) {
 		"publish":             publishStr,
 		"critical":            criticalStr,
 		"intermediate":        intermediateStr,
+		"overwrite":           overwriteStr,
 		"platform":            upReq.Platform,
 		"arch":                upReq.Arch,
 		"changelog":           upReq.Changelog,
