@@ -793,19 +793,11 @@ func (c *appRepository) Upload(ctxQuery map[string]interface{}, appLink, extensi
 		logrus.Debugf("Adding new artifact to existing document")
 
 		if artifactIndex >= 0 {
+			// overwrite 仅替换该 tuple 的二进制 artifact 本身，不触碰版本级的
+			// published/critical/required_intermediate/changelog。这些字段为同一
+			// version 下所有平台 artifact 共享，由发布动作单独控制；重传单个平台的
+			// 安装包不应顺带重置整个版本的发布状态或覆盖更新日志历史。
 			updateFields := bson.D{{Key: "updated_at", Value: time.Now()}}
-			if overwrite {
-				updateFields = append(updateFields,
-					bson.E{Key: "published", Value: utils.GetBoolParam(ctxQuery["publish"])},
-					bson.E{Key: "critical", Value: utils.GetBoolParam(ctxQuery["critical"])},
-					bson.E{Key: "required_intermediate", Value: utils.GetBoolParam(ctxQuery["intermediate"])},
-					bson.E{Key: "changelog", Value: []model.Changelog{{
-						Version: ctxQuery["version"].(string),
-						Changes: ctxQuery["changelog"].(string),
-						Date:    time.Now().Format("2006-01-02"),
-					}}},
-				)
-			}
 			uploadResult, err = replaceArtifactInExistingVersion(ctx, collection, baseVersionFilter, newArtifact, updateFields)
 		} else {
 			uploadResult, err = appendArtifactToExistingVersion(ctx, collection, baseVersionFilter, newArtifact)

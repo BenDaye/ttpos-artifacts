@@ -471,7 +471,7 @@ Optional with `channel`, `publish`, `platform`, `arch`, `changelog` and `overwri
 
 **changelog**: Changelog is a log of changes on current version. 
 
-**overwrite**: Set `true` to replace an existing artifact with the same app/version/channel/platform/arch/package tuple. The default is `false`; duplicate artifacts return `409 Conflict` without uploading to object storage. Overwrite requires both upload access and `apps.edit` permission; upload-only API tokens cannot overwrite.
+**overwrite**: Set `true` to replace an existing artifact with the same app/version/channel/platform/arch/package tuple. The default is `false`; duplicate artifacts return `409 Conflict` without uploading to object storage. Overwrite requires both upload access and `apps.edit` permission; upload-only API tokens cannot overwrite. Overwrite only replaces the matching artifact binary; the version's `published`, `critical` and `changelog` are shared by all platform artifacts under the same version and are left unchanged—use `/apps/update` to change those.
 
 **updater**: Set the `updater` type when uploading a version. Possible value: `electron-builder`. All other update types no longer require this parameter during upload.
 
