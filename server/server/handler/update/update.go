@@ -6,6 +6,7 @@ import (
 	db "faynoSync/mongod"
 	"faynoSync/server/handler/create"
 	"faynoSync/server/model"
+	"faynoSync/server/ownership"
 	"faynoSync/server/utils"
 	"faynoSync/server/utils/updaters"
 	"net/http"
@@ -27,7 +28,7 @@ func UpdateItem(c *gin.Context, repository db.AppRepository, itemType string) {
 	defer cancel()
 
 	// Get username from JWT token
-	owner, err := utils.GetUsernameFromContext(c)
+	owner, err := ownership.OwnerOrUsername(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
@@ -179,7 +180,7 @@ func UpdateSpecificApp(c *gin.Context, repository db.AppRepository, db *mongo.Da
 	}
 
 	// Get username from JWT token
-	owner, err := utils.GetUsernameFromContext(c)
+	owner, err := ownership.OwnerOrUsername(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return

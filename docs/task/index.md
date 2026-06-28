@@ -50,3 +50,4 @@
 | [x] | ENH-016 | MCP server 增加 Streamable HTTP(SSE)双模并补部署交付物 | P2 | completed |
 | [x] | BUG-015 | 修复 FaynoSync CI 重传覆盖失败 | P1 | completed |
 | [x] | BUG-016 | 删光构建物后版本显示 Unknown platform/architecture | P2 | completed |
+| [ ] | REFACTOR-006 | owner 收敛为部署单例（single-owner mode） | P1 | implemented |

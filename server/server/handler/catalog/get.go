@@ -4,7 +4,7 @@ import (
 	"context"
 	db "faynoSync/mongod"
 	"faynoSync/server/model"
-	"faynoSync/server/utils"
+	"faynoSync/server/ownership"
 	"net/http"
 	"strconv"
 	"time"
@@ -18,7 +18,7 @@ func GetAppByName(c *gin.Context, repository db.AppRepository) {
 	defer cancel()
 
 	// Get username from JWT token
-	owner, err := utils.GetUsernameFromContext(c)
+	owner, err := ownership.OwnerOrUsername(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
@@ -82,7 +82,7 @@ func GetAllApps(c *gin.Context, repository db.AppRepository) {
 	defer cancel()
 
 	// Get username from JWT token
-	owner, err := utils.GetUsernameFromContext(c)
+	owner, err := ownership.OwnerOrUsername(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
