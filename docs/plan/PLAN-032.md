@@ -1,6 +1,6 @@
 # PLAN-032 owner 收敛为部署单例（single-owner mode）
 
-- **status**: implemented（branch `refactor/single-owner-mode`，go build/vet/包测试通过 + 双 reviewer APPROVE；待合并与按时序部署）
+- **status**: deployed（已合并 main #23(merge `adecd5f`)；vm-node02 + prod 均 `:latest` + `.env` `DEPLOYMENT_OWNER=ttpos` mode-on，端到端验证通过）
 - **createdAt**: 2026-06-28
 - **relatedTask**: REFACTOR-006
 
@@ -135,3 +135,4 @@
 - 2026-06-28：实现完成（autopilot Phase 2-4）。新增 `server/server/ownership` 包（`Configure`/`Enabled`/`DeploymentOwner` + `OwnerOrUsername`/`ResolveOwner` 两出口）；收敛 catalog/create/upload×2/delete/update/reorder/telemetry + info 两个公开读共 11 处站点；server.go 启动解析+校验 `DEPLOYMENT_OWNER`（须 ∈ admins，与 SEED_OWNER/短链 owner 一致，否则 Fatalf）。`go build ./...`、`go vet ./...` exit 0；除根 E2E 包（缺 .env/mongo 的环境性 panic，非本改动）外所有包测试通过；ownership 包单测通过。
 - 2026-06-28：两独立 reviewer（security + code）均 **APPROVE**，0 Critical/0 High。已采纳修复：`DEPLOYMENT_OWNER` 校验区分 `mongo.ErrNoDocuments`（指引 bootstrap 顺序）与连接错误；telemetry 的 owner debug 日志补回。bootstrap footgun（首启前误设 → Fatalf）保持 fail-loud（不静默退 mode-off），符合项目纪律。
 - 2026-06-28：遗留 follow-up（非本次范围，见 REFACTOR-006）：`token/*` 的 owner-scope 仍按 caller username 取（既有问题、不回归本次审计路径；prod 下 admin 即 `ttpos`=`DEPLOYMENT_OWNER` 故 token 创建/列举/删除工作正常）；上游依赖 CVE backlog 独立处理。
+- 2026-06-28：合并 main（PR #23、merge `adecd5f`）→ CI 出新 `:latest` server 镜像。**vm-node02 端到端验证**：读覆盖 `owner=GARBAGE`/空 由 404/400 → 302/200（覆盖成 ttpos）；fail-closed 坏 `DEPLOYMENT_OWNER` → `level=fatal`+容器 `Restarting` 拒绝启动；无回归、可秒还原。**prod 两段式部署**：先新代码 mode-off 验行为逐字等价基线 → `.env` 追加 `DEPLOYMENT_OWNER=ttpos` 翻 mode-on，api `Up` 无 fatal、`owner=GARBAGE`/空 → 302 覆盖生效。vm-node02 与 prod 现均 `:latest` + mode-on 一致。**回滚**：删 `.env` 的 `DEPLOYMENT_OWNER` 重建 api（回 mode-off=旧行为，无需镜像降级/数据迁移）。prod/vm-node02 实测零 orphan，未做数据折叠。

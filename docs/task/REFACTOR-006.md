@@ -1,6 +1,6 @@
 # REFACTOR-006 owner 收敛为部署单例（single-owner mode）
 
-- **status**: implemented（branch `refactor/single-owner-mode`，build/vet/测试通过 + 双 reviewer APPROVE；待合并与部署）
+- **status**: deployed（已合并 main #23；vm-node02 + prod 均 mode-on(`DEPLOYMENT_OWNER=ttpos`)，端到端验证通过）
 - **priority**: P1
 - **owner**: (未分配)
 - **createdAt**: 2026-06-28
@@ -32,4 +32,5 @@
 ## 批注
 
 - 2026-06-28：由 superpowers brainstorming 产出设计 PLAN-032；前身"上传端 fail-closed 护栏"方案因会在 owner 逻辑上再堆判断且有死锁风险被取代。
-- 2026-06-28：实现完成于 branch `refactor/single-owner-mode`；go build/vet/包测试通过，security + code 两 reviewer 均 APPROVE（0 Critical/High）。status 转 implemented，待合并与部署。
+- 2026-06-28：实现完成于 branch `refactor/single-owner-mode`；go build/vet/包测试通过，security + code 两 reviewer 均 APPROVE（0 Critical/High）。
+- 2026-06-28：合并 main（PR #23）→ CI 出 `:latest`；vm-node02 端到端验证通过后，prod 两段式部署翻 mode-on（`.env` `DEPLOYMENT_OWNER=ttpos`），api 健康、owner 覆盖生效；vm-node02 与 prod 均 `:latest`+mode-on。回滚=删 `.env` 的 DEPLOYMENT_OWNER 重建。status 转 deployed。
