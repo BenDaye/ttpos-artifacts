@@ -3,6 +3,7 @@ package delete
 import (
 	"context"
 	db "faynoSync/mongod"
+	"faynoSync/server/ownership"
 	"faynoSync/server/utils"
 	"net/http"
 	"strings"
@@ -22,7 +23,7 @@ func DeleteSpecificVersionOfApp(c *gin.Context, repository db.AppRepository, db 
 	env := viper.GetViper()
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
 	defer cancel()
-	owner, err := utils.GetUsernameFromContext(c)
+	owner, err := ownership.OwnerOrUsername(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
@@ -86,7 +87,7 @@ func DeleteSpecificArtifactOfApp(c *gin.Context, repository db.AppRepository, db
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	owner, err := utils.GetUsernameFromContext(c)
+	owner, err := ownership.OwnerOrUsername(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
@@ -204,7 +205,7 @@ func deleteEntity(c *gin.Context, repository db.AppRepository, itemType string) 
 		return
 	}
 
-	owner, err := utils.GetUsernameFromContext(c)
+	owner, err := ownership.OwnerOrUsername(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return

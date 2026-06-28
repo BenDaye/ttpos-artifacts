@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"strings"
 	"time"
@@ -10,6 +11,7 @@ import (
 	"faynoSync/redisdb"
 	"faynoSync/server/handler"
 	"faynoSync/server/handler/shortlink"
+	"faynoSync/server/ownership"
 	"faynoSync/server/tuf"
 	"faynoSync/server/utils"
 
@@ -17,6 +19,8 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/time/rate"
 )
 
@@ -45,9 +49,37 @@ func StartServer(config *viper.Viper, flags map[string]interface{}) {
 	repo := db.NewAppRepository(&configDB, client)
 	mongoDatabase := client.Database(configDB.Database)
 
-	// Run seed if requested via -seed flag
+	// Resolve the deployment-wide single owner before any owner-scoped work.
+	// An explicit DEPLOYMENT_OWNER enables single-owner mode and MUST name an
+	// existing admin: a bad value is fatal so we never boot into a config that
+	// would silently scope data under a non-existent owner (and never leave the
+	// deployment permanently un-writable). SEED_OWNER, when also set, must agree.
+	// When DEPLOYMENT_OWNER is unset the server keeps its legacy multi-tenant
+	// behavior.
+	deploymentOwner := strings.TrimSpace(config.GetString("DEPLOYMENT_OWNER"))
+	if deploymentOwner != "" {
+		ownerCtx, cancelOwner := context.WithTimeout(context.Background(), 30*time.Second)
+		err := mongoDatabase.Collection("admins").FindOne(ownerCtx, bson.M{"username": deploymentOwner}).Err()
+		cancelOwner()
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			logrus.Fatalf("DEPLOYMENT_OWNER %q is not an existing admin account. Bootstrap order: start once without DEPLOYMENT_OWNER, create the admin via /signup, then set DEPLOYMENT_OWNER and restart.", deploymentOwner)
+		} else if err != nil {
+			logrus.Fatalf("failed to verify DEPLOYMENT_OWNER %q against the admins collection: %v", deploymentOwner, err)
+		}
+		if seedOwner := strings.TrimSpace(config.GetString("SEED_OWNER")); seedOwner != "" && seedOwner != deploymentOwner {
+			logrus.Fatalf("DEPLOYMENT_OWNER (%q) and SEED_OWNER (%q) disagree; they must name the same owner", deploymentOwner, seedOwner)
+		}
+	}
+	ownership.Configure(deploymentOwner)
+
+	// Run seed if requested via -seed flag. In single-owner mode the deployment
+	// owner is authoritative; otherwise fall back to SEED_OWNER.
 	if seedFlag, ok := flags["seed"].(bool); ok && seedFlag {
-		db.RunSeed(repo, mongoDatabase, context.Background(), config.GetString("SEED_OWNER"))
+		seedOwner := config.GetString("SEED_OWNER")
+		if deploymentOwner != "" {
+			seedOwner = deploymentOwner
+		}
+		db.RunSeed(repo, mongoDatabase, context.Background(), seedOwner)
 	}
 
 	// Initialize Redis client
@@ -81,6 +113,12 @@ func StartServer(config *viper.Viper, flags map[string]interface{}) {
 		}
 		shortLatestCatalog = loaded
 		logrus.Infof("Short latest download enabled (%d aliases)", len(shortLatestCatalog.Aliases))
+	}
+
+	// In single-owner mode the deployment owner is authoritative for /dl, so a
+	// short-latest catalog that names a different owner is a configuration error.
+	if deploymentOwner != "" && shortLatestCatalog != nil && shortLatestCatalog.Owner != "" && shortLatestCatalog.Owner != deploymentOwner {
+		logrus.Fatalf("DEPLOYMENT_OWNER (%q) disagrees with the short-latest config owner (%q); they must name the same owner", deploymentOwner, shortLatestCatalog.Owner)
 	}
 
 	handler := handler.NewAppHandler(client, repo, mongoDatabase, redisClient, config.GetBool("PERFORMANCE_MODE"), apiKey, enablePrivateDownload, shortLatestCatalog)

@@ -4,7 +4,7 @@ import (
 	"context"
 	db "faynoSync/mongod"
 	"faynoSync/server/model"
-	"faynoSync/server/utils"
+	"faynoSync/server/ownership"
 	"net/http"
 	"time"
 
@@ -16,7 +16,7 @@ func ListChannels(c *gin.Context, repository db.AppRepository) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
 	defer cancel()
 
-	owner, err := utils.GetUsernameFromContext(c)
+	owner, err := ownership.OwnerOrUsername(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
@@ -38,7 +38,7 @@ func ListPlatforms(c *gin.Context, repository db.AppRepository) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
 	defer cancel()
 
-	owner, err := utils.GetUsernameFromContext(c)
+	owner, err := ownership.OwnerOrUsername(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
@@ -60,7 +60,7 @@ func ListArchs(c *gin.Context, repository db.AppRepository) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
 	defer cancel()
 
-	owner, err := utils.GetUsernameFromContext(c)
+	owner, err := ownership.OwnerOrUsername(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
@@ -82,7 +82,7 @@ func ListApps(c *gin.Context, repository db.AppRepository) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
 	defer cancel()
 
-	owner, err := utils.GetUsernameFromContext(c)
+	owner, err := ownership.OwnerOrUsername(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return

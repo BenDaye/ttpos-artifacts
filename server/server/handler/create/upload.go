@@ -5,6 +5,7 @@ import (
 	"errors"
 	db "faynoSync/mongod"
 	"faynoSync/server/model"
+	"faynoSync/server/ownership"
 	"faynoSync/server/utils"
 	"faynoSync/server/utils/updaters"
 	"fmt"
@@ -117,16 +118,13 @@ func UploadApp(c *gin.Context, repository db.AppRepository, database *mongo.Data
 		return
 	}
 
-	// Check if the user is a team user
-	teamUsersCollection := database.Collection("team_users")
-	var teamUser model.TeamUser
-	err = teamUsersCollection.FindOne(c.Request.Context(), bson.M{"username": username}).Decode(&teamUser)
-
-	// Determine the actual owner to use for operations
-	owner := username
-	if err == nil {
-		// User is a team user, use their admin as the owner
-		owner = teamUser.Owner
+	// Resolve the owner namespace this upload writes under. Single-owner mode
+	// collapses it to the deployment owner; otherwise a team member resolves to
+	// their admin's owner.
+	owner, err := ownership.ResolveOwner(c, database)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
 	}
 
 	ctxQueryMap, err := utils.ValidateParams(c, database)
@@ -373,11 +371,10 @@ func CheckUploadAvailable(c *gin.Context, repository db.AppRepository, database 
 		return
 	}
 
-	owner := username
-	teamUsersCollection := database.Collection("team_users")
-	var teamUser model.TeamUser
-	if err := teamUsersCollection.FindOne(c.Request.Context(), bson.M{"username": username}).Decode(&teamUser); err == nil {
-		owner = teamUser.Owner
+	owner, err := ownership.ResolveOwner(c, database)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
 	}
 
 	if err := validateAPITokenAppScope(c, database, owner, appName); err != nil {

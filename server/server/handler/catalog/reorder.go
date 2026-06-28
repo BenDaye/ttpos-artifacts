@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	db "faynoSync/mongod"
-	"faynoSync/server/utils"
+	"faynoSync/server/ownership"
 	"net/http"
 	"time"
 
@@ -54,7 +54,7 @@ func reorderHandler(c *gin.Context, fn func(ctx context.Context, owner string, i
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
 	defer cancel()
 
-	owner, err := utils.GetUsernameFromContext(c)
+	owner, err := ownership.OwnerOrUsername(c)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
