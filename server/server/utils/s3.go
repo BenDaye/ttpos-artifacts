@@ -16,6 +16,10 @@ import (
 	"github.com/spf13/viper"
 )
 
+// getContentType 按文件名后缀推断上传到对象存储时应写入的 Content-Type。
+// 安装包(.apk/.exe 等)必须显式指定:留空会让 GCS/S3 按内容嗅探,而 APK、IPA
+// 本质是 ZIP 容器(魔数 PK\x03\x04),会被嗅探成 application/zip,导致手机/浏览器
+// 当压缩包下载而非可安装包。返回空串表示交由存储后端按默认行为处理。
 func getContentType(fileName string) string {
 	fileName = strings.ToLower(fileName)
 
@@ -23,8 +27,21 @@ func getContentType(fileName string) string {
 		return "text/plain"
 	}
 
-	if strings.HasSuffix(fileName, ".yaml") || strings.HasSuffix(fileName, ".yml") {
+	switch {
+	case strings.HasSuffix(fileName, ".yaml"), strings.HasSuffix(fileName, ".yml"):
 		return "text/yaml"
+	case strings.HasSuffix(fileName, ".apk"):
+		// Android 包安装器依赖此 MIME 判定为可安装包;留空/zip 会被当压缩包。
+		return "application/vnd.android.package-archive"
+	case strings.HasSuffix(fileName, ".exe"),
+		strings.HasSuffix(fileName, ".msi"),
+		strings.HasSuffix(fileName, ".dmg"),
+		strings.HasSuffix(fileName, ".pkg"),
+		strings.HasSuffix(fileName, ".ipa"):
+		// 桌面/iOS 安装包靠扩展名与魔数识别,不依赖 HTTP Content-Type;统一用通用
+		// 二进制类型强制下载、避免被嗅探成 zip。octet-stream 是 nginx/IIS/Apple
+		// 官方 mime.types 对这些后缀的实践取值,比 vendor-specific 值争议更小。
+		return "application/octet-stream"
 	}
 
 	return ""
