@@ -4,7 +4,9 @@ import type { SortableItemRenderProps } from '@/shared/components/common/sortabl
 import { horizontalListSortingStrategy } from '@dnd-kit/sortable'
 import { useQueries } from '@tanstack/react-query'
 import { Boxes, GripVertical, Pencil, Trash2 } from 'lucide-react'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useChannelsQuery } from '@/features/channels/hooks'
 import { SortableList } from '@/shared/components/common/sortable-list'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
@@ -15,6 +17,7 @@ import { cn } from '@/shared/lib/utils'
 import { appsApi } from '../../api'
 import { SEARCH_KEY } from '../../hooks'
 import { VersionDetailDialog } from '../version-detail-dialog'
+import { sortVersionsByChannel } from '../version-ui'
 
 export function AppBoardView({ apps, onSelect, onEdit, onDelete, onReorder, canReorder = false }: AppViewProps) {
   // 仅当存在重排回调且当前允许时才启用拖拽
@@ -27,6 +30,12 @@ export function AppBoardView({ apps, onSelect, onEdit, onDelete, onReorder, canR
       staleTime: 30_000,
     })),
   })
+
+  const channelsQuery = useChannelsQuery()
+  const channelOrder = useMemo(
+    () => new Map((channelsQuery.data ?? []).map((c, i) => [c.ChannelName, i] as const)),
+    [channelsQuery.data],
+  )
 
   // 扁平化所有列的版本，按稳定 id 派生「活」版本传给详情弹层：
   // 弹层内新增 / 删除 artifact 失效查询、refetch 出新版本对象后，
@@ -56,7 +65,7 @@ export function AppBoardView({ apps, onSelect, onEdit, onDelete, onReorder, canR
           return (
             <BoardColumn
               app={app}
-              versions={query?.data?.versions ?? []}
+              versions={sortVersionsByChannel(query?.data?.versions ?? [], channelOrder)}
               total={query?.data?.total ?? 0}
               isLoading={Boolean(query?.isPending)}
               isError={Boolean(query?.isError)}
