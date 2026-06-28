@@ -127,6 +127,18 @@ func (c *appRepository) getBasePipeline() mongo.Pipeline {
 			"changelog":             bson.M{"$first": "$changelog"},
 			"updated_at":            bson.M{"$first": "$updated_at"},
 		}}},
+		// 上面的 $unwind(preserveNullAndEmptyArrays)+$addFields 处理空 artifacts 数组时
+		// 会凭空产生一个空对象 {}（无 link/platform/arch），$group $push 后残留为一条
+		// 幽灵 artifact。删光某版本全部构建物后，该版本在 /search 列表里会显示成
+		// Unknown platform / Unknown architecture。按 link 是否存在过滤掉幽灵空对象，
+		// 让空版本正确返回 artifacts: []。
+		bson.D{{Key: "$addFields", Value: bson.M{
+			"artifacts": bson.M{"$filter": bson.M{
+				"input": "$artifacts",
+				"as":    "artifact",
+				"cond":  bson.M{"$ne": bson.A{bson.M{"$type": "$$artifact.link"}, "missing"}},
+			}},
+		}}},
 		bson.D{{Key: "$addFields", Value: bson.D{
 			{Key: "versions_arr", Value: bson.D{
 				{Key: "$split", Value: bson.A{"$version", "."}},
