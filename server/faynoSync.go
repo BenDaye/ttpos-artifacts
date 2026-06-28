@@ -19,7 +19,7 @@ var (
 func init() {
 	flag.BoolVar(&migration, "migration", false, "Set true to run migrations.")
 	flag.BoolVar(&rollback, "rollback", false, "Set true to rollback migrations.")
-	flag.BoolVar(&seed, "seed", false, "Set true to seed initial data (channels, platforms, architectures, apps).")
+	flag.BoolVar(&seed, "seed", false, "Set true to seed generic metadata (channels, platforms, architectures). Applications are not seeded; create them via the API/dashboard.")
 	flag.StringVar(&logLevel, "loglevel", "info", "log level (debug, info, warn, error, fatal, panic)")
 
 	logrus.New()

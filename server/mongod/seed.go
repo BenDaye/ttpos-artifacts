@@ -11,55 +11,61 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type seedItem struct {
-	Name        string
-	Description string
-}
-
 var seedChannels = []string{"prod", "test", "dev"}
 
 var seedPlatforms = []string{"android", "ios", "windows", "macos"}
 
 var seedArchitectures = []string{"amd64", "arm64"}
 
-var seedApps = []seedItem{
-	{Name: "TTPOS", Description: "POS cashier application"},
-	{Name: "TTPOS Go", Description: "POS assistant application"},
-	{Name: "TTPOS Menu", Description: "Digital menu application"},
-	{Name: "TTPOS Kitchen", Description: "Kitchen display system"},
-	{Name: "TTPOS Kiosk", Description: "Self-service kiosk application"},
-	{Name: "TTPOS Queue", Description: "Queue display system"},
-	{Name: "TTPOS Shop", Description: "Shop management application"},
-}
-
 // resolveOwner determines the actual owner for seed data.
-// Priority: explicit SEED_OWNER > first admin found in the database.
-// Returns empty string if no valid owner can be determined.
+// Priority: explicit SEED_OWNER (must exist) > sole admin auto-detect.
+// It deliberately refuses to guess when SEED_OWNER is unset and more than one
+// admin exists: a non-deterministic "first admin" pick previously seeded a full
+// metadata set under the wrong owner. Returns empty string (caller aborts) on
+// any unresolved case, after logging the specific reason.
 func resolveOwner(database *mongo.Database, ctx context.Context, seedOwner string) string {
 	adminsCol := database.Collection("admins")
 
+	// Explicit owner always wins, but must exist in the admins collection.
 	if seedOwner != "" {
-		// Validate that the specified owner actually exists
-		err := adminsCol.FindOne(ctx, bson.M{"username": seedOwner}).Err()
-		if err == nil {
-			return seedOwner
+		if err := adminsCol.FindOne(ctx, bson.M{"username": seedOwner}).Err(); err != nil {
+			logrus.Errorf("[seed] SEED_OWNER=%q not found in admins collection; aborting", seedOwner)
+			return ""
 		}
-		logrus.Warnf("[seed] SEED_OWNER=%q not found in admins collection", seedOwner)
+		return seedOwner
 	}
 
-	// Auto-detect: pick the first admin user
+	// No explicit owner: only auto-detect when exactly one admin exists.
+	adminFilter := bson.M{"username": bson.M{"$exists": true}}
+	count, err := adminsCol.CountDocuments(ctx, adminFilter)
+	if err != nil {
+		logrus.Errorf("[seed] failed to count admin users: %v", err)
+		return ""
+	}
+	switch {
+	case count == 0:
+		return ""
+	case count > 1:
+		logrus.Errorf("[seed] %d admin users found and SEED_OWNER is unset; refusing to guess. Set SEED_OWNER explicitly.", count)
+		return ""
+	}
+
 	var admin struct {
 		Username string `bson:"username"`
 	}
-	err := adminsCol.FindOne(ctx, bson.M{"username": bson.M{"$exists": true}}).Decode(&admin)
-	if err != nil {
+	if err := adminsCol.FindOne(ctx, adminFilter).Decode(&admin); err != nil {
+		logrus.Errorf("[seed] failed to load the sole admin user: %v", err)
 		return ""
 	}
-	logrus.Infof("[seed] auto-detected admin owner: %s", admin.Username)
+	logrus.Infof("[seed] auto-detected sole admin owner: %s", admin.Username)
 	return admin.Username
 }
 
-// RunSeed populates the database with initial metadata.
+// RunSeed populates the database with generic initial metadata: channels,
+// platforms, and architectures. It deliberately does NOT seed any concrete
+// applications — those are deployment-specific and must be created explicitly
+// (via the API/dashboard) to avoid baking product data into the server and to
+// prevent re-runs from splattering a fixed app catalog across owners.
 // It is idempotent: existing items are skipped without error.
 // The database parameter is used to validate/auto-detect the owner from admins collection.
 func RunSeed(repo AppRepository, database *mongo.Database, ctx context.Context, seedOwner string) {
@@ -67,7 +73,7 @@ func RunSeed(repo AppRepository, database *mongo.Database, ctx context.Context, 
 
 	owner := resolveOwner(database, ctx, seedOwner)
 	if owner == "" {
-		logrus.Errorln("[seed] aborted: no admin user found. Register an admin via /signup first, then run -seed again.")
+		logrus.Errorln("[seed] aborted: could not determine a seed owner (see reason above). Ensure an admin exists via /signup and set SEED_OWNER when multiple admins are present.")
 		return
 	}
 	logrus.Infof("[seed] using owner: %s", owner)
@@ -110,19 +116,6 @@ func RunSeed(repo AppRepository, database *mongo.Database, ctx context.Context, 
 			continue
 		}
 		logrus.Infof("[seed] created architecture: %s", arch)
-	}
-
-	for _, app := range seedApps {
-		_, err := repo.CreateApp(app.Name, "", app.Description, false, false, owner, ctx)
-		if err != nil {
-			if isAlreadyExists(err) {
-				logrus.Infof("[seed] app %q already exists, skipping", app.Name)
-			} else {
-				logrus.Errorf("[seed] failed to create app %q: %v", app.Name, err)
-			}
-			continue
-		}
-		logrus.Infof("[seed] created app: %s", app.Name)
 	}
 
 	logrus.Infoln("=== Data seed complete ===")
