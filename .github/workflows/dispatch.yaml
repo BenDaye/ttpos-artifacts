@@ -15,7 +15,7 @@ jobs:
       env: ${{ github.event.client_payload.env || (github.event.action == 'test-build' && 'test') || 'prod' }}
       package: ${{ github.event.client_payload.package || 'all' }}
       platform: ${{ github.event.client_payload.platform || 'all' }}
-      base_url: ${{ github.event.client_payload.base_url || (github.event.action == 'test-build' && 'https://ttpos-test1.ttpos.com/api/v1') || 'https://api.ttpos.com/api/v1' }}
-      base_ws_url: ${{ github.event.client_payload.base_ws_url || (github.event.action == 'test-build' && 'wss://ttpos-test1.ttpos.com/ws') || 'wss://api.ttpos.com/ws' }}
+      base_url: ${{ github.event.client_payload.base_url || (github.event.action == 'test-build' && 'https://api.ttpos.dev/api/v1') || 'https://api.ttpos.com/api/v1' }}
+      base_ws_url: ${{ github.event.client_payload.base_ws_url || (github.event.action == 'test-build' && 'wss://api.ttpos.dev/ws') || 'wss://api.ttpos.com/ws' }}
       faynosync: ${{ github.event.client_payload.faynosync || (github.event.action == 'test-build' && 'force') || 'off' }}
     secrets: inherit
