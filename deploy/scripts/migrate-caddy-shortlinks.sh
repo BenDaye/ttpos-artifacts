@@ -13,7 +13,8 @@ Options:
   --source <path>             Source Caddyfile with the canonical block.
                               Default: deploy/Caddyfile next to this script.
   --target <path>             Target host Caddyfile. Default: /opt/caddy/Caddyfile
-  --site <hostname>           Site block to migrate. Default: update.ttpos.dev
+  --site <hostname>           Target site block to migrate. Default: update.ttpos.dev
+  --source-site <hostname>    Source site block in --source. Default: --site
   --output <path>             Candidate output path. Default: mktemp path.
   --shortlink-json <path>     Validate the generated /dl map against the
                               legacy short-latest.json catalog.
@@ -47,7 +48,9 @@ Examples:
 
   # Dry-run with the production legacy shortlink catalog and compose service names.
   ./deploy/scripts/migrate-caddy-shortlinks.sh \
-    --target tmp/prod.Caddyfile \
+    --source-site update.ttpos.dev \
+    --target deploy/prod-caddy-base.Caddyfile \
+    --site http://update.ttpos.com \
     --shortlink-json tmp/prod-shortlink-dryrun/short-latest.json \
     --api-upstream api:9000 \
     --dashboard-upstream dashboard:3000 \
@@ -64,6 +67,7 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source_caddyfile="${SOURCE_CADDYFILE:-"${script_dir}/../Caddyfile"}"
 target_caddyfile="${TARGET_CADDYFILE:-/opt/caddy/Caddyfile}"
 site="${CADDY_SITE:-update.ttpos.dev}"
+source_site="${SOURCE_CADDY_SITE:-}"
 output_path=""
 shortlink_json=""
 api_upstream=""
@@ -87,6 +91,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --site)
       site="${2:-}"
+      shift 2
+      ;;
+    --source-site)
+      source_site="${2:-}"
       shift 2
       ;;
     --output)
@@ -142,6 +150,10 @@ done
 [[ -n "$source_caddyfile" ]] || die "--source cannot be empty"
 [[ -n "$target_caddyfile" ]] || die "--target cannot be empty"
 [[ -n "$site" ]] || die "--site cannot be empty"
+if [[ -z "$source_site" ]]; then
+  source_site="$site"
+fi
+[[ -n "$source_site" ]] || die "--source-site cannot be empty"
 command -v python3 >/dev/null 2>&1 || die "python3 is required"
 [[ -f "$source_caddyfile" ]] || die "source Caddyfile not found: $source_caddyfile"
 [[ -f "$target_caddyfile" ]] || die "target Caddyfile not found: $target_caddyfile"
@@ -164,7 +176,7 @@ else
   mkdir -p "$(dirname "$output_path")"
 fi
 
-python3 - "$source_caddyfile" "$target_caddyfile" "$site" "$output_path" "$shortlink_json" "$api_upstream" "$dashboard_upstream" "$mcp_upstream" <<'PY'
+python3 - "$source_caddyfile" "$target_caddyfile" "$source_site" "$site" "$output_path" "$shortlink_json" "$api_upstream" "$dashboard_upstream" "$mcp_upstream" <<'PY'
 from __future__ import annotations
 
 import json
@@ -197,6 +209,15 @@ def find_site_block(text: str, site: str) -> tuple[int, int]:
                 return match.start(), index + 1
 
     raise SystemExit(f"unterminated site block: {site}")
+
+
+def rewrite_site_header(block: str, target_site: str) -> str:
+    return re.sub(
+        r"(?m)^([ \t]*)[^\s{]+\s*\{",
+        lambda match: f"{match.group(1)}{target_site} {{",
+        block,
+        count=1,
+    )
 
 
 def rewrite_upstream(block: str, old: str, new: str) -> str:
@@ -313,14 +334,15 @@ def validate_shortlink_json(block: str, path: str) -> None:
     print(f"shortlink-json: matched {len(actual)} alias/package mappings (owner={owner}, channel={channel})")
 
 
-source_path, target_path, site, output_path, shortlink_json, api_upstream, dashboard_upstream, mcp_upstream = sys.argv[1:]
+source_path, target_path, source_site, target_site, output_path, shortlink_json, api_upstream, dashboard_upstream, mcp_upstream = sys.argv[1:]
 source = Path(source_path).read_text()
 target = Path(target_path).read_text()
 
-source_start, source_end = find_site_block(source, site)
-target_start, target_end = find_site_block(target, site)
+source_start, source_end = find_site_block(source, source_site)
+target_start, target_end = find_site_block(target, target_site)
 source_block = source[source_start:source_end].rstrip()
 
+source_block = rewrite_site_header(source_block, target_site)
 source_block = rewrite_upstream(source_block, "faynosync-api:9000", api_upstream)
 source_block = rewrite_upstream(source_block, "faynosync-dashboard:3000", dashboard_upstream)
 if mcp_upstream == "none":

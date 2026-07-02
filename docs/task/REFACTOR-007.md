@@ -44,34 +44,74 @@
 - 2026-07-02：补充 `server/server/caddy_config_test.go` 契约测试，默认在 `go test ./server/...` 覆盖 15 条 Caddy alias 映射、`/mcp*` -> `/dl/*` -> API fallback 顺序、`/apps/latest` rewrite query、成功 3xx public redirect cache header、失败 4xx/5xx `no-store` header 与未知 alias 400。
 - 2026-07-02：补充 `deploy/scripts/migrate-caddy-shortlinks.sh` 迁移脚本：默认 dry-run，从仓库 canonical `deploy/Caddyfile` 抽取 `update.ttpos.dev` block，替换目标机 Caddyfile 中同名 block，支持容器/本机 Caddy validate；只有显式 `--apply --reload` 才备份、写入并 reload。
 - 2026-07-02：只读检查 prod，当前 prod 仍是 nginx compose，工作目录 `/ttpos-releases`，`SHORT_LATEST_CONFIG=/app/short-latest.json` 来自 `/ttpos-releases/docker/api/short-latest.json`，服务名是 `api` / `dashboard` 而非 staging 的 `faynosync-api` / `faynosync-dashboard`。迁移脚本已补充 `--shortlink-json` 校验和 upstream override；用 prod JSON dry-run 证明 15 条 alias/package 映射匹配，生成的 prod candidate Caddyfile 使用 `api:9000` / `dashboard:3000` 且 validate 通过。未写入 prod、未 reload。
+- 2026-07-02：Ralph 接管 prod B 方案前再次只读核查，发现 prod 没有 Caddy 容器或 `/opt/caddy`，当前只有 nginx 绑定 `0.0.0.0:80`，且 prod 域名是 `*.ttpos.com` 而非 staging 的 `*.ttpos.dev`。因此 prod 不能直接套用旧 `/opt/caddy/Caddyfile` runbook；已补充 `deploy/prod-caddy-base.Caddyfile`、`deploy/docker-compose.prod-caddy.yml`，并让迁移脚本支持 `--source-site update.ttpos.dev --site http://update.ttpos.com`，用于真实 nginx -> Caddy 入口切换。
+- 2026-07-02：prod B 受控切换完成。先用 `CADDY_HTTP_PORT=18080` 在 prod 预检 Caddy，nginx 保持占用 80；预检证明 `/health` 200、`/dl/cashier.apk` 302 到 GCS APK、未知 alias 400 `no-store`、dashboard 200、aitrans upstream 404。随后停 nginx、启动 Caddy 占用 80，origin smoke 全过；公网 Cloudflare smoke 证明 `update.ttpos.com` / `releases.ttpos.com` / `aitrans.ttpos.com` 均经 `Via: 1.1 Caddy`，成功短链 302 被 Cloudflare HIT，未知 alias 连续 BYPASS 且 `no-store`。prod API 镜像未更新，`SHORT_LATEST_CONFIG` / `short-latest.json` 未删除。
 
 ## Prod 迁移脚本
 
-prod 当前仍是 nginx compose；切 Caddy 前，应先准备目标 Caddyfile，再用 prod 的 legacy shortlink JSON dry-run：
+prod 当前仍是 nginx compose，且没有运行中的 Caddy。受控切换时不要手写远程 Caddy block；先在本地或目标机用仓库模板生成候选 Caddyfile：
 
 ```bash
 ./deploy/scripts/migrate-caddy-shortlinks.sh \
-  --target /opt/caddy/Caddyfile \
-  --shortlink-json /ttpos-releases/docker/api/short-latest.json \
-  --api-upstream api:9000 \
-  --dashboard-upstream dashboard:3000 \
-  --mcp-upstream none
-```
-
-确认 candidate、`shortlink-json: matched 15 alias/package mappings`、Caddy validate 结果和 smoke 计划后，再应用：
-
-```bash
-./deploy/scripts/migrate-caddy-shortlinks.sh \
-  --target /opt/caddy/Caddyfile \
+  --source deploy/Caddyfile \
+  --source-site update.ttpos.dev \
+  --target deploy/prod-caddy-base.Caddyfile \
+  --site http://update.ttpos.com \
+  --output tmp/prod-caddy.Caddyfile \
   --shortlink-json /ttpos-releases/docker/api/short-latest.json \
   --api-upstream api:9000 \
   --dashboard-upstream dashboard:3000 \
   --mcp-upstream none \
-  --apply \
-  --reload
+  --validate none
 ```
 
-脚本会先生成 candidate，再 validate；应用时会备份为 `/opt/caddy/Caddyfile.bak-<UTC timestamp>`。若 Caddy 容器名不是 `caddy`，传 `--caddy-container <name>`；若容器内配置路径不是 `/etc/caddy/Caddyfile`，传 `--container-config <path>`。
+确认 `shortlink-json: matched 15 alias/package mappings` 后，用 Caddy validate 校验候选配置；候选配置应使用 `http://update.ttpos.com`，避免在当前 HTTP-only origin 上触发 Caddy 自动 HTTPS/redirect。`deploy/prod-caddy-base.Caddyfile` 只是模板，真正安装到 prod 的文件必须是脚本输出的 candidate。
+
+prod 目标机文件布局：
+
+```bash
+cd /ttpos-releases
+mkdir -p /ttpos-releases/docker/caddy
+cp tmp/prod-caddy.Caddyfile /ttpos-releases/docker/caddy/Caddyfile
+cp deploy/docker-compose.prod-caddy.yml /ttpos-releases/docker-compose.caddy.yml
+docker compose -f /ttpos-releases/docker-compose.caddy.yml config
+docker run --rm \
+  --network ttpos-releases_faynosync-prod \
+  -v /ttpos-releases/docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro \
+  caddy:2.11.4-alpine caddy validate --config /etc/caddy/Caddyfile
+```
+
+先在不影响现网的临时端口预检；此时 nginx 仍然占用 80，公网流量不经过 Caddy：
+
+```bash
+cd /ttpos-releases
+CADDY_HTTP_PORT=18080 docker compose -f docker-compose.caddy.yml up -d
+curl -sS --max-time 10 -o /dev/null -D - -H 'Host: update.ttpos.com' http://127.0.0.1:18080/health
+curl -sS --max-time 10 -o /dev/null -D - -H 'Host: update.ttpos.com' http://127.0.0.1:18080/dl/cashier.apk
+curl -sS --max-time 10 -o /dev/null -D - -H 'Host: update.ttpos.com' http://127.0.0.1:18080/dl/unknown.apk
+CADDY_HTTP_PORT=18080 docker compose -f docker-compose.caddy.yml down
+```
+
+预检失败则只执行上面的 `down`，不要动 nginx。预检通过后再切 80；切换命令保持 nginx 可回滚：
+
+```bash
+cd /ttpos-releases
+docker compose stop nginx
+docker compose -f docker-compose.caddy.yml up -d
+curl -sS --max-time 10 -o /dev/null -D - http://127.0.0.1/health -H 'Host: update.ttpos.com'
+curl -sS --max-time 10 -o /dev/null -D - http://127.0.0.1/dl/cashier.apk -H 'Host: update.ttpos.com'
+curl -sS --max-time 10 -o /dev/null -D - http://127.0.0.1/dl/unknown.apk -H 'Host: update.ttpos.com'
+```
+
+失败回滚：
+
+```bash
+cd /ttpos-releases
+docker compose -f docker-compose.caddy.yml down
+docker compose up -d nginx
+```
+
+本阶段不更新 prod API 镜像、不删除 prod `SHORT_LATEST_CONFIG` 或 `short-latest.json`；API 内的旧 Go `/dl` fallback 保留为回滚安全垫。
 
 ## Host smoke 证据
 
