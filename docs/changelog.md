@@ -1,5 +1,13 @@
 # 变更日志
 
+## 2026-07-02 19:10 [progress]
+
+Ralph 接管 prod B 方案前做 prod 只读拓扑核查，确认 prod 当前没有 Caddy、只有 nginx 绑定 80，且真实入口域名是 `*.ttpos.com`。补充 prod Caddy 受控切换产物：`deploy/prod-caddy-base.Caddyfile`、`deploy/docker-compose.prod-caddy.yml`，并让 `migrate-caddy-shortlinks.sh` 支持 `--source-site`，用于从 staging canonical block 生成 `http://update.ttpos.com` 候选配置；prod runbook 改为先用临时端口预检 Caddy，再停 nginx 切 80，避免在 prod 上手写 Caddy block。
+
+## 2026-07-02 19:24 [progress]
+
+按 prod B 完成 Caddy 入口受控切换：先用 18080 临时端口预检 Caddy，再停 nginx 并启动 `faynosync-prod-caddy` 占用 80。origin 与 Cloudflare smoke 均通过，`/dl/cashier.apk` 302 到 GCS APK 且成功响应可被 Cloudflare HIT，未知 alias 400 `no-store` 且 BYPASS；prod API 镜像和 legacy shortlink JSON 保持不变。
+
 ## 2026-07-02 17:16 [progress]
 
 用 prod 现有 `/ttpos-releases/docker/api/short-latest.json` 做只读 dry-run，发现 prod 仍是 nginx compose 且服务名为 `api` / `dashboard`。迁移脚本补充 `--shortlink-json`、`--api-upstream`、`--dashboard-upstream`、`--mcp-upstream none`，验证 prod JSON 的 15 条 alias/package 映射与 Caddy map 一致，生成的 prod candidate Caddyfile 通过 validate；未写入 prod、未 reload。

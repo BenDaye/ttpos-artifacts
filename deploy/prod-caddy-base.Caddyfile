@@ -1,0 +1,22 @@
+# Production HTTP-only Caddy base for Cloudflare-terminated traffic.
+# The update.ttpos.com block is replaced by deploy/scripts/migrate-caddy-shortlinks.sh
+# before any cutover.
+{
+	auto_https off
+}
+
+http://releases.ttpos.com {
+	reverse_proxy dashboard:3000
+}
+
+http://update.ttpos.com {
+	request_body {
+		max_size 200MB
+	}
+
+	reverse_proxy api:9000
+}
+
+http://aitrans.ttpos.com {
+	reverse_proxy 172.17.0.1:8005
+}
