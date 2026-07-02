@@ -7,12 +7,10 @@ import (
 	"faynoSync/server/handler/delete"
 	"faynoSync/server/handler/download"
 	"faynoSync/server/handler/info"
-	"faynoSync/server/handler/shortlink"
 	"faynoSync/server/handler/sign"
 	"faynoSync/server/handler/team"
 	"faynoSync/server/handler/token"
 	"faynoSync/server/handler/update"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
@@ -61,7 +59,6 @@ type AppHandler interface {
 	UpdateAdmin(*gin.Context)
 	GetTelemetry(*gin.Context)
 	SquirrelReleases(*gin.Context)
-	ShortLatestDownload(*gin.Context)
 	CreateToken(*gin.Context)
 	ListTokens(*gin.Context)
 	DeleteToken(*gin.Context)
@@ -75,19 +72,10 @@ type appHandler struct {
 	performanceMode       bool
 	apiKey                string
 	enablePrivateDownload bool
-	shortLatest           *shortlink.Catalog
 }
 
-// NewAppHandler builds the gin app handler. shortLatest is variadic only to stay
-// backward compatible with the many existing callers that predate the short-link
-// catalog; at most one catalog is honored (the first). Passing none — or a nil
-// catalog — leaves the /dl short-download feature disabled.
-func NewAppHandler(client *mongo.Client, repo db.AppRepository, db *mongo.Database, redisClient *redis.Client, performanceMode bool, apiKey string, enablePrivateDownload bool, shortLatest ...*shortlink.Catalog) AppHandler {
-	var catalog *shortlink.Catalog
-	if len(shortLatest) > 0 {
-		catalog = shortLatest[0]
-	}
-	return &appHandler{client: client, repository: repo, database: db, redisClient: redisClient, performanceMode: performanceMode, apiKey: apiKey, enablePrivateDownload: enablePrivateDownload, shortLatest: catalog}
+func NewAppHandler(client *mongo.Client, repo db.AppRepository, db *mongo.Database, redisClient *redis.Client, performanceMode bool, apiKey string, enablePrivateDownload bool) AppHandler {
+	return &appHandler{client: client, repository: repo, database: db, redisClient: redisClient, performanceMode: performanceMode, apiKey: apiKey, enablePrivateDownload: enablePrivateDownload}
 }
 
 func (ch *appHandler) HealthCheck(c *gin.Context) {
@@ -293,44 +281,13 @@ func (ch *appHandler) SquirrelReleases(c *gin.Context) {
 }
 
 // setLatestQuery rewrites the request query string from path-derived values so a
-// path-style route can delegate to the query-based info.* latest handlers. It is
-// shared by SquirrelReleases and ShortLatestDownload.
+// path-style route can delegate to the query-based info.* latest handlers.
 func setLatestQuery(c *gin.Context, values map[string]string) {
 	q := c.Request.URL.Query()
 	for key, value := range values {
 		q.Set(key, value)
 	}
 	c.Request.URL.RawQuery = q.Encode()
-}
-
-// ShortLatestDownload exposes compact public aliases for website and QR links.
-// The alias / target catalog is loaded from configuration at startup; the route
-// is only registered when a catalog is configured, so a nil catalog here is
-// purely defensive.
-//
-//	GET /dl/:target
-func (ch *appHandler) ShortLatestDownload(c *gin.Context) {
-	if ch.shortLatest == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "short latest download is not configured"})
-		return
-	}
-
-	appName, target, ok := ch.shortLatest.Resolve(c.Param("target"))
-	if !ok {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "unsupported short latest download target"})
-		return
-	}
-
-	setLatestQuery(c, map[string]string{
-		"owner":    ch.shortLatest.Owner,
-		"app_name": appName,
-		"channel":  ch.shortLatest.DefaultChannel,
-		"platform": target.Platform,
-		"arch":     target.Arch,
-		"package":  target.Package,
-	})
-	c.Set(info.CacheRedirectHeadersContextKey, true)
-	info.FetchLatestVersionOfApp(c, ch.repository, ch.redisClient, ch.performanceMode)
 }
 
 func (ch *appHandler) CreateToken(c *gin.Context) {

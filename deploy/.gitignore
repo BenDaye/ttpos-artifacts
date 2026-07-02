@@ -1,4 +1,3 @@
 .env
 gcs-credentials.json
-short-latest.json
 volumes

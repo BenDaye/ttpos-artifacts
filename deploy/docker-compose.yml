@@ -4,13 +4,11 @@ services:
     container_name: faynosync-api
     volumes:
       - ./gcs-credentials.json:/app/credentials.json:ro
-      - ./short-latest.json:/app/short-latest.json:ro
     restart: unless-stopped
     ports:
       - "${API_PORT:-9000}:9000"
     environment:
       - GIN_MODE=release
-      - SHORT_LATEST_CONFIG=/app/short-latest.json
     env_file:
       - .env
     depends_on:

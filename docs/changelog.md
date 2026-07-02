@@ -1,5 +1,21 @@
 # 变更日志
 
+## 2026-07-02 17:16 [progress]
+
+用 prod 现有 `/ttpos-releases/docker/api/short-latest.json` 做只读 dry-run，发现 prod 仍是 nginx compose 且服务名为 `api` / `dashboard`。迁移脚本补充 `--shortlink-json`、`--api-upstream`、`--dashboard-upstream`、`--mcp-upstream none`，验证 prod JSON 的 15 条 alias/package 映射与 Caddy map 一致，生成的 prod candidate Caddyfile 通过 validate；未写入 prod、未 reload。
+
+## 2026-07-02 17:03 [progress]
+
+补充 REFACTOR-007 / PLAN-033 的 prod Caddy 迁移脚本：`deploy/scripts/migrate-caddy-shortlinks.sh` 默认 dry-run，从仓库 canonical `deploy/Caddyfile` 生成目标机候选 Caddyfile 并执行 validate；确认后才可用 `--apply --reload` 备份、写入并 reload，避免生产部署时手写 `/dl/*` Caddy block。
+
+## 2026-07-02 16:33 [progress]
+
+完成 REFACTOR-007 / PLAN-033 的 Phase 2 本地删除：vm-node02 staging Caddy 已接管 `/dl/*` 并通过成功 302 与失败 `no-store` smoke；FaynoSync server 不再注册 Go `/dl` handler，移除 `shortlink` 包、`SHORT_LATEST_CONFIG` 加载、compose `short-latest.json` 挂载与示例配置。
+
+## 2026-07-02 15:51 [progress]
+
+启动 REFACTOR-007 / PLAN-033，将公开 `/dl/*` latest 短链入口从 FaynoSync server 层迁到 Caddy 边缘层。Phase 1 保留 Go `/dl` handler 作为回滚，Caddy 负责已知 alias 到 `/apps/latest` 的 rewrite，保持 `/mcp*` 在短链 route 前、普通 API fallback 在最后，并只对成功 3xx redirect 添加 Cloudflare 缓存头。
+
 ## 2026-05-09 11:14 [BUG-014]
 
 修复 Dashboard Next 移动端工具栏控件堆积：
