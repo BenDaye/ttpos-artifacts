@@ -12,16 +12,60 @@ update.ttpos.dev {
 		max_size 1GB
 	}
 
-	# MCP server（Streamable HTTP）挂在 /mcp 路径下，复用 API 域名、不另起子域名。
-	# handle 保留路径，容器收到 /mcp；flush_interval -1 适配 SSE 流式响应。
-	handle /mcp* {
-		reverse_proxy faynosync-mcp:3010 {
-			flush_interval -1
-		}
+	# /dl 公开短链入口由 Caddy 承载；/apps/latest 仍是 latest artifact 的事实查询源。
+	map {path} {short_latest_app} {short_latest_platform} {short_latest_arch} {short_latest_package} {
+		~(?i)^/dl/cashier\.apk$ ttpos android arm64 apk
+		~(?i)^/dl/cashier\.exe$ ttpos windows amd64 exe
+		~(?i)^/dl/cashier\.dmg$ ttpos macos arm64 dmg
+		~(?i)^/dl/assistant\.apk$ ttpos_go android arm64 apk
+		~(?i)^/dl/assistant\.exe$ ttpos_go windows amd64 exe
+		~(?i)^/dl/assistant\.dmg$ ttpos_go macos arm64 dmg
+		~(?i)^/dl/menu\.apk$ ttpos_menu android arm64 apk
+		~(?i)^/dl/menu\.exe$ ttpos_menu windows amd64 exe
+		~(?i)^/dl/menu\.dmg$ ttpos_menu macos arm64 dmg
+		~(?i)^/dl/kitchen\.apk$ ttpos_kitchen android arm64 apk
+		~(?i)^/dl/kitchen\.exe$ ttpos_kitchen windows amd64 exe
+		~(?i)^/dl/kitchen\.dmg$ ttpos_kitchen macos arm64 dmg
+		~(?i)^/dl/shop\.apk$ ttpos_shop android arm64 apk
+		~(?i)^/dl/shop\.exe$ ttpos_shop windows amd64 exe
+		~(?i)^/dl/shop\.dmg$ ttpos_shop macos arm64 dmg
+		default "" "" "" ""
 	}
 
-	# 其余路径仍反代到 FaynoSync API。
-	handle {
-		reverse_proxy faynosync-api:9000
+	@known_short_latest `{short_latest_app} != ""`
+
+	route {
+		# MCP server（Streamable HTTP）挂在 /mcp 路径下，复用 API 域名、不另起子域名。
+		# handle 保留路径，容器收到 /mcp；flush_interval -1 适配 SSE 流式响应。
+		handle /mcp* {
+			reverse_proxy faynosync-mcp:3010 {
+				flush_interval -1
+			}
+		}
+
+		handle /dl/* {
+			header {
+				Cloudflare-CDN-Cache-Control "no-store"
+				Cache-Control "no-store"
+				match status 4xx 5xx
+			}
+
+			handle @known_short_latest {
+				rewrite * /apps/latest?owner=ttpos&app_name={short_latest_app}&channel=prod&platform={short_latest_platform}&arch={short_latest_arch}&package={short_latest_package}
+				header {
+					Cloudflare-CDN-Cache-Control "public, max-age=300"
+					Cache-Control "no-cache"
+					match status 3xx
+				}
+				reverse_proxy faynosync-api:9000
+			}
+
+			respond "unsupported short latest download target" 400
+		}
+
+		# 其余路径仍反代到 FaynoSync API。
+		handle {
+			reverse_proxy faynosync-api:9000
+		}
 	}
 }

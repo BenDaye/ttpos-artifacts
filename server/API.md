@@ -600,7 +600,7 @@ curl -X GET --location 'http://localhost:9000/apps/latest?app_name=secondapp&cha
 
 ### Short Latest Download Shortcut
 
-This is the only public latest download shortcut. It provides compact resource-style aliases that redirect directly to the latest artifact download URL.
+This is the public latest download shortcut. In production deployment, Caddy owns the public `/dl/*` entry point and rewrites known aliases to `/apps/latest`; FaynoSync still owns the latest artifact lookup and redirects directly to the latest artifact download URL. The Go API no longer registers a `/dl/:target` handler.
 
 `GET /dl/<app_alias>.<package>`
 
@@ -608,11 +608,11 @@ App aliases: `cashier -> TTPOS`, `assistant -> TTPOS Go`, `menu -> TTPOS Menu`, 
 
 Package targets: `apk -> android/arm64/apk`, `exe -> windows/amd64/exe`, and `dmg -> macos/arm64/dmg`.
 
-When the aliases are valid and exactly one artifact matches, the endpoint returns `302 Found` with `Location` set to the final `/download?key=...` URL. Successful redirects include `Cloudflare-CDN-Cache-Control: public, max-age=300` and `Cache-Control: no-cache`. Unknown aliases return `400`.
+When the aliases are valid and exactly one artifact matches, the endpoint returns `302 Found` with `Location` set to the final `/download?key=...` URL. Successful redirects include `Cloudflare-CDN-Cache-Control: public, max-age=300` and `Cache-Control: no-cache`. In production, failed `/dl/*` responses must be `no-store` and must not include public/max-age cache headers.
 
 ###### Short Request:
 ```
-curl -I --location 'http://localhost:9000/dl/cashier.apk'
+curl -I --location 'https://update.ttpos.dev/dl/cashier.apk'
 ```
 
 ### Update App

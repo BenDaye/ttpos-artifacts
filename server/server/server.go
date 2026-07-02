@@ -10,7 +10,6 @@ import (
 	db "faynoSync/mongod"
 	"faynoSync/redisdb"
 	"faynoSync/server/handler"
-	"faynoSync/server/handler/shortlink"
 	"faynoSync/server/ownership"
 	"faynoSync/server/tuf"
 	"faynoSync/server/utils"
@@ -102,26 +101,7 @@ func StartServer(config *viper.Viper, flags map[string]interface{}) {
 	enablePrivateDownload := config.GetBool("ENABLE_PRIVATE_APP_DOWNLOADING")
 	apiKey := config.GetString("API_KEY")
 
-	// Short latest download catalog: feature is enabled only when a config file
-	// path is provided. A configured-but-invalid file is fatal so we never serve
-	// a broken /dl contract.
-	var shortLatestCatalog *shortlink.Catalog
-	if shortLatestConfigPath := config.GetString("SHORT_LATEST_CONFIG"); shortLatestConfigPath != "" {
-		loaded, err := shortlink.Load(shortLatestConfigPath)
-		if err != nil {
-			logrus.Fatalf("Failed to load short latest download config: %v", err)
-		}
-		shortLatestCatalog = loaded
-		logrus.Infof("Short latest download enabled (%d aliases)", len(shortLatestCatalog.Aliases))
-	}
-
-	// In single-owner mode the deployment owner is authoritative for /dl, so a
-	// short-latest catalog that names a different owner is a configuration error.
-	if deploymentOwner != "" && shortLatestCatalog != nil && shortLatestCatalog.Owner != "" && shortLatestCatalog.Owner != deploymentOwner {
-		logrus.Fatalf("DEPLOYMENT_OWNER (%q) disagrees with the short-latest config owner (%q); they must name the same owner", deploymentOwner, shortLatestCatalog.Owner)
-	}
-
-	handler := handler.NewAppHandler(client, repo, mongoDatabase, redisClient, config.GetBool("PERFORMANCE_MODE"), apiKey, enablePrivateDownload, shortLatestCatalog)
+	handler := handler.NewAppHandler(client, repo, mongoDatabase, redisClient, config.GetBool("PERFORMANCE_MODE"), apiKey, enablePrivateDownload)
 	// Add authentication middleware to required paths
 	authMiddleware := utils.AuthMiddleware(mongoDatabase)
 
@@ -137,9 +117,6 @@ func StartServer(config *viper.Viper, flags map[string]interface{}) {
 
 	router.GET("/checkVersion", handler.FindLatestVersion)
 	router.GET("/apps/latest", handler.FetchLatestVersionOfApp)
-	if shortLatestCatalog != nil {
-		router.GET("/dl/:target", handler.ShortLatestDownload)
-	}
 	loginLimiter := utils.NewIPRateLimiter(rate.Every(loginRateInterval), loginRateBurst)
 	signupLimiter := utils.NewIPRateLimiter(rate.Every(signupRateInterval), signupRateBurst)
 	router.POST("/signup", utils.RateLimitMiddleware(signupLimiter), handler.SignUp)

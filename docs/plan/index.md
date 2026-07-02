@@ -34,3 +34,4 @@
 | [x] | PLAN-030 | Dashboard Next 移动端工具栏分层布局收敛 | BUG-014 |
 | [x] | PLAN-031 | FaynoSync CI 重传覆盖语义修复 | BUG-015 |
 | [x] | PLAN-032 | owner 收敛为部署单例（single-owner mode） | REFACTOR-006 |
+| [x] | PLAN-033 | 将 /dl 短链入口迁到 Caddy | REFACTOR-007 |

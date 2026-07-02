@@ -51,3 +51,4 @@
 | [x] | BUG-015 | 修复 FaynoSync CI 重传覆盖失败 | P1 | completed |
 | [x] | BUG-016 | 删光构建物后版本显示 Unknown platform/architecture | P2 | completed |
 | [x] | REFACTOR-006 | owner 收敛为部署单例（single-owner mode） | P1 | deployed |
+| [x] | REFACTOR-007 | 将 /dl 短链入口迁到 Caddy | P1 | completed |
