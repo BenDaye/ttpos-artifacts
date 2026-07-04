@@ -1,6 +1,6 @@
 services:
   api:
-    image: ghcr.io/bendaye/ttpos-artifacts/faynosync-server:latest
+    image: ghcr.io/bendaye/ttpos-artifacts/ttpos-server:latest
     container_name: faynosync-api
     volumes:
       - ./gcs-credentials.json:/app/credentials.json:ro
@@ -21,7 +21,7 @@ services:
       - caddy-net
 
   dashboard:
-    image: ghcr.io/bendaye/ttpos-artifacts/faynosync-dashboard-next:latest
+    image: ghcr.io/bendaye/ttpos-artifacts/ttpos-web:latest
     platform: linux/amd64
     container_name: faynosync-dashboard
     restart: unless-stopped
@@ -38,7 +38,7 @@ services:
       - caddy-net
 
   mcp:
-    image: ghcr.io/bendaye/ttpos-artifacts/faynosync-mcp:latest
+    image: ghcr.io/bendaye/ttpos-artifacts/ttpos-mcp:latest
     platform: linux/amd64
     container_name: faynosync-mcp
     restart: unless-stopped
