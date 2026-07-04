@@ -1,0 +1,19 @@
+# 根构建上下文白名单（web/mcp 镜像共用；server 镜像 context 是 apps/server，不受本文件影响）。
+# last-match-wins：先全排，再放行 workspace 安装/构建所需，末尾排除嵌套产物。
+# 注意：`!apps` 与 `apps/server/*` 两行顺序不可调换——apps/server 只留 manifest
+# 供 bun install --frozen-lockfile 校验 workspace 成员，Go 源码树不进前端镜像。
+*
+!package.json
+!bun.lock
+!tsconfig.json
+!eslint.config.js
+!packages
+!apps
+apps/server/*
+!apps/server/package.json
+**/node_modules
+**/dist
+**/.turbo
+**/playwright-report
+**/test-results
+.git

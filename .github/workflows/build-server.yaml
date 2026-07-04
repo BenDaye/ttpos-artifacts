@@ -4,8 +4,11 @@ on:
   workflow_dispatch:
   push:
     branches: [main, release]
+    # tag 必触发打包（GitHub 对 tag 推送不应用 paths）；分支推送受下方 paths 约束、只跑质量门。
+    tags:
+      - "server-v*"
     paths:
-      - "server/**"
+      - "apps/server/**"
       - ".github/workflows/build-server.yaml"
 
 jobs:
@@ -14,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: server
+        working-directory: apps/server
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
@@ -22,7 +25,7 @@ jobs:
       - name: 安装 Go
         uses: actions/setup-go@v5
         with:
-          go-version-file: server/go.mod
+          go-version-file: apps/server/go.mod
 
       - name: go build
         run: go build ./...
@@ -37,20 +40,22 @@ jobs:
 
   build:
     needs: test
+    # 仅在打了 server-v* tag 时才打包推镜像；分支推送只跑质量门（与 web/mcp 对齐，PLAN-036）。
+    if: startsWith(github.ref, 'refs/tags/server-v')
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
     env:
       REGISTRY: ghcr.io
-      IMAGE_NAME: faynosync-server
+      IMAGE_NAME: ttpos-server
     steps:
       - name: 显示构建信息
         run: |
           echo "========================================="
           echo "Server 构建信息"
           echo "========================================="
-          echo "分支: ${{ github.ref_name }}"
+          echo "Ref: ${{ github.ref_name }}"
           echo "触发: ${{ github.event_name }}"
           echo "镜像: ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.IMAGE_NAME }}"
           echo "========================================="
@@ -79,16 +84,19 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.IMAGE_NAME }}
+          # 关闭隐式 latest，与 build-dashboard/build-mcp 同构：tag 事件下由显式 raw 提供 latest。
+          flavor: |
+            latest=false
           tags: |
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/release' || github.ref == 'refs/heads/main' }}
+            type=match,pattern=server-v(.*),group=1
+            type=raw,value=latest
             type=sha,prefix=,format=short
-            type=ref,event=branch
 
       - name: 构建并推送 Docker 镜像
         uses: docker/build-push-action@v6
         with:
-          context: ./server
-          file: ./server/Dockerfile
+          context: apps/server
+          file: apps/server/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
