@@ -195,3 +195,22 @@ prod 事故后 ops 按旧文档「清 env 重启」→ 焊死后清 env 反而 F
 - 全量 `go build/vet/test` 全绿 + staging fail-closed 启动检查 + 逐环境 `.env` 带 `DEPLOYMENT_OWNER` 人工核对。
 
 **CI 缺口**：`build-server.yaml` 新增的 test job 仅覆盖 build/vet/无依赖单测；全量 `go test ./...`（集成套件）需 Mongo/Redis/S3 服务容器编排，作为后续任务补齐。
+
+## staging E2E 验证记录（2026-07-04，vm-node02，exec-only 全隔离）
+
+CI 构建镜像 `:10a45a1` → vm-node02 丢弃式容器验证，全程不碰运行中的 faynosync-api/db/cache、不碰真 GCS：
+
+- **T1 bootstrap**：空库 + 不设 `DEPLOYMENT_OWNER` → `level=warning "booting in bootstrap mode"`、serving。✅
+- **T2 fail-closed（核心）**：有 admin + 不设 owner → `level=fatal "DEPLOYMENT_OWNER is required..."` + **exit=1 拒绝启动**。✅
+- **T3 normal**：`DEPLOYMENT_OWNER=ttpos` → 过守卫、`Listening and serving`、无 fatal。✅
+- **US-6 SECURITY-04**：client `?owner=GARBAGE` → cache key 解析为 `ttpos`、GARBAGE 计数=0、404 不 500。✅
+
+结论：单 owner 三态守卫 + SECURITY-04 覆盖在真实 CI 镜像 + 真实 mongo 上按设计工作。**单 owner 验证到此充分**（build/vet/单测 + Opus 评审 + staging E2E）。
+
+## 集成套件重塑：另立任务（发现 pre-existing rot）
+
+尝试用丢弃式 mongo+MinIO 跑镜像自带 `faynoSync_tests` 时发现：**套件先前就是红的，与 PLAN-035 无关**——admin 注册测试用密码 `"password"`（纯字母），但 `utils/password.go:25` 的强度校验要求"字母+数字"，signup 返回 400 → 建不出 admin → 后续级联 panic，卡在第一个 signup。`password.go` 与测试密码均不在本次 diff。CI 从不跑集成套件故一直未被发现。
+
+**决策（用户）**：单 owner 已充分验证，集成套件的 pre-existing rot **单独立项修**，14 个 `WithSecondUser` 重塑 + `owner=GARBAGE`/token 回归用例随该任务一并做，不塞进 PLAN-035。
+
+**测试 rig 已清理**：验证末尾一度因 aissh token 瞬时失效未能确认清理（`aissh` 须在项目 cwd 下执行，否则报 config_error）；恢复后已确认删除 `plan035-mongo`/`plan035-minio`/`plan035-net`，staging faynosync-* 服务全程零改动。
