@@ -28,11 +28,7 @@ func UpdateItem(c *gin.Context, repository db.AppRepository, itemType string) {
 	defer cancel()
 
 	// Get username from JWT token
-	owner, err := ownership.OwnerOrUsername(c)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		return
-	}
+	owner := ownership.Owner()
 
 	var result interface{}
 	var resultError error
@@ -180,11 +176,7 @@ func UpdateSpecificApp(c *gin.Context, repository db.AppRepository, db *mongo.Da
 	}
 
 	// Get username from JWT token
-	owner, err := ownership.OwnerOrUsername(c)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		return
-	}
+	owner := ownership.Owner()
 
 	// Convert string to ObjectID
 	objID, err := primitive.ObjectIDFromHex(ctxQueryMap["id"].(string))

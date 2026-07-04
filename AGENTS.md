@@ -90,6 +90,7 @@ git tag dashboard-next-v<version> && git push origin dashboard-next-v<version>
 - `routeTree.gen.ts` 是生成文件，不手改；路由、localStorage key、公共 API 路径和现有认证行为属于兼容契约。
 - 前后端 API 以源码为准。新增或修改 API 时同步 server、dashboard 调用、共享类型、测试和文案。
 - TUF 前端入口当前保持禁用；相关脚本和保留代码只在用户明确要求时恢复或调整。
+- server 是单 owner 部署：多租户已移除，`owner` 命名空间由 `ownership.Owner()` 返回的部署常量决定（`DEPLOYMENT_OWNER`，一旦有 admin 即必填、启动 fail-closed，首启空库豁免）。调用者身份只管 RBAC，永不决定命名空间；`owner` 字段与查询过滤保留不动。详见 PLAN-035。
 - 工作流保持矩阵 `fail-fast: false`、`should_run` 判断、`dev/test/prod` 环境映射、macOS YAML anchor 关系和 SCP 路径/URL 选项同步。
 - Dashboard Docker 镜像依赖运行时 `VITE_API_URL` 注入；调整构建或 nginx 时确认该机制仍有效。
 

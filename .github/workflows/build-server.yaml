@@ -9,7 +9,34 @@ on:
       - ".github/workflows/build-server.yaml"
 
 jobs:
+  test:
+    name: "质量门: go build / vet / unit"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: server/go.mod
+
+      - name: go build
+        run: go build ./...
+
+      - name: go vet
+        run: go vet ./...
+
+      # 无需外部依赖的单元测试。集成套件（faynoSync_test.go）依赖
+      # MongoDB/Redis/S3，需服务容器编排，作为后续任务补齐（见 PLAN-035）。
+      - name: go test (单元)
+        run: go test ./server/ownership/... ./server/utils/...
+
   build:
+    needs: test
     runs-on: ubuntu-latest
     permissions:
       contents: read

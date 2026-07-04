@@ -23,11 +23,7 @@ func DeleteSpecificVersionOfApp(c *gin.Context, repository db.AppRepository, db 
 	env := viper.GetViper()
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
 	defer cancel()
-	owner, err := ownership.OwnerOrUsername(c)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		return
-	}
+	owner := ownership.Owner()
 	// Convert string to ObjectID
 	objID, err := primitive.ObjectIDFromHex(c.Query("id"))
 	if err != nil {
@@ -87,11 +83,7 @@ func DeleteSpecificArtifactOfApp(c *gin.Context, repository db.AppRepository, db
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	owner, err := ownership.OwnerOrUsername(c)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		return
-	}
+	owner := ownership.Owner()
 	// Convert string to ObjectID
 	objID, err := primitive.ObjectIDFromHex(ctxQueryMap["id"].(string))
 	if err != nil {
@@ -205,11 +197,7 @@ func deleteEntity(c *gin.Context, repository db.AppRepository, itemType string) 
 		return
 	}
 
-	owner, err := ownership.OwnerOrUsername(c)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		return
-	}
+	owner := ownership.Owner()
 
 	var result interface{}
 	switch itemType {

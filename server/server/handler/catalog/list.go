@@ -16,11 +16,7 @@ func ListChannels(c *gin.Context, repository db.AppRepository) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
 	defer cancel()
 
-	owner, err := ownership.OwnerOrUsername(c)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		return
-	}
+	owner := ownership.Owner()
 
 	var channelsList []*model.Channel
 
@@ -38,11 +34,7 @@ func ListPlatforms(c *gin.Context, repository db.AppRepository) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
 	defer cancel()
 
-	owner, err := ownership.OwnerOrUsername(c)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		return
-	}
+	owner := ownership.Owner()
 
 	var platformsList []*model.Platform
 
@@ -60,11 +52,7 @@ func ListArchs(c *gin.Context, repository db.AppRepository) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
 	defer cancel()
 
-	owner, err := ownership.OwnerOrUsername(c)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		return
-	}
+	owner := ownership.Owner()
 
 	var archsList []*model.Arch
 
@@ -82,11 +70,7 @@ func ListApps(c *gin.Context, repository db.AppRepository) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
 	defer cancel()
 
-	owner, err := ownership.OwnerOrUsername(c)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		return
-	}
+	owner := ownership.Owner()
 
 	var appsList []*model.App
 
