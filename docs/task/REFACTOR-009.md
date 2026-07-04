@@ -1,6 +1,6 @@
 # REFACTOR-009 仓库顶层 monorepo 化（top-level monorepo migration）
 
-- **status**: implemented (pending merge)
+- **status**: completed
 - **priority**: P1
 - **owner**: Claude
 - **createdAt**: 2026-07-04
@@ -33,6 +33,8 @@
 4. 回滚：compose 改回 `faynosync-*` 旧镜像名（旧镜像/旧 tag 全程保留）；代码层 `git revert` 合并提交。
 
 ## 批注
+
+- 2026-07-04：发布闭环完成。PR #28 合并 main（merge `1e9c2f8`）；tag 演练按序 server-v1.0.0 → web-v0.2.2 → mcp-v0.1.1（mcp 因旧 mcp-v0.1.0 撞 tag 先 bump 0.1.1），三条流水线 quality-gates+build 全绿，CI tag 真实闭环验证缺口补齐；vm-node02 三镜像 pull 硬门通过后切换 compose（备份 docker-compose.yml.bak-plan036），冒烟全过：api /health 200、dashboard 200、mcp healthz ok、公网经 Caddy /health healthy。旧 faynosync-* 镜像与旧 tag 保留作回滚兜底。
 
 - 2026-07-04：实施完成。code-reviewer APPROVE（0 阻塞，1 MINOR 已采纳：AGENTS.md 注明未过滤 turbo 命令需本地 Go）；verifier APPROVE（15 项验收 12 VERIFIED、1 PARTIAL、2 已知缺口）。三镜像 staging 实建成功（web/mcp/server 均 EXIT=0）。
 
