@@ -69,6 +69,12 @@ services:
     image: mongo:7
     container_name: faynosync-db
     restart: unless-stopped
+    # 限制 json-file 日志大小，防止 mongo 日志无限膨胀撑爆磁盘
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME:?MONGO_USERNAME is required}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:?MONGO_PASSWORD is required}
