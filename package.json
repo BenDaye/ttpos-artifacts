@@ -1,7 +1,7 @@
 {
-  "name": "ttpos-dashboard-next",
+  "name": "ttpos-artifacts",
   "type": "module",
-  "version": "0.2.2",
+  "version": "0.0.0",
   "private": true,
   "workspaces": [
     "apps/*",
@@ -10,10 +10,10 @@
   "packageManager": "bun@1.3.13",
   "scripts": {
     "dev": "bun --filter @ttpos/web dev",
-    "build": "bun --filter @ttpos/web build",
     "preview": "bun --filter @ttpos/web preview",
-    "typecheck": "bun --filter '*' typecheck",
-    "test": "bun --filter '*' test",
+    "build": "turbo build",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test:e2e": "playwright test",
@@ -30,6 +30,7 @@
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
+    "turbo": "^2.5.0",
     "typescript": "^6.0.0"
   }
 }

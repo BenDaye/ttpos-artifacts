@@ -1,5 +1,5 @@
 # Release Registry MCP server — Streamable HTTP transport, run by Bun.
-# Build context is the dashboard-next workspace root (../../ from this file).
+# Build context is the repository root (../../ from this file).
 FROM oven/bun:1.3.13-alpine
 
 WORKDIR /app
@@ -10,6 +10,7 @@ COPY packages/config/package.json packages/config/
 COPY packages/shared/package.json packages/shared/
 COPY apps/web/package.json apps/web/
 COPY apps/mcp/package.json apps/mcp/
+COPY apps/server/package.json apps/server/
 RUN bun install --frozen-lockfile --production
 
 # MCP source (runtime imports only the SDK + zod + node builtins).

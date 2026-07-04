@@ -98,7 +98,7 @@ stdio — `claude_desktop_config.json`:
   "mcpServers": {
     "release-registry": {
       "command": "bun",
-      "args": ["run", "/absolute/path/to/dashboard-next/apps/mcp/src/index.ts"],
+      "args": ["run", "/absolute/path/to/ttpos-artifacts/apps/mcp/src/index.ts"],
       "env": { "API_BASE_URL": "https://registry.example.com", "API_TOKEN": "your-token" }
     }
   }

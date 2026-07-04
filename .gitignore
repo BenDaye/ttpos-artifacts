@@ -15,6 +15,11 @@ dist
 dist-ssr
 *.local
 .yarn
+.turbo/
+.cache/
+coverage/
+.env.local
+.env.*.local
 
 # Server (Go)
 *.exe
@@ -24,8 +29,8 @@ dist-ssr
 *.dylib
 *.test
 *.out
-server/faynoSync
-server/faynoSync_tests
+apps/server/faynoSync
+apps/server/faynoSync_tests
 
 # Editor directories and files
 .vscode/*

@@ -48,9 +48,12 @@
 | [x] | ENH-011 | version 列表同版本号内按 channel 持久化 Sort 二级排序 | P2 | completed |
 | [x] | ENH-015 | 把服务封装成只读 MCP server（外置 TS 包装器 @ttpos/mcp） | P2 | completed |
 | [x] | ENH-016 | MCP server 增加 Streamable HTTP(SSE)双模并补部署交付物 | P2 | completed |
+| [ ] | ENH-017 | CI 改用 turbo --affected 替代手写 paths 过滤 | P3 | pending |
+| [ ] | ENH-018 | Docker 构建改用 turbo prune 剪枝上下文 | P3 | pending |
 | [x] | BUG-015 | 修复 FaynoSync CI 重传覆盖失败 | P1 | completed |
 | [x] | BUG-016 | 删光构建物后版本显示 Unknown platform/architecture | P2 | completed |
 | [x] | REFACTOR-006 | owner 收敛为部署单例（single-owner mode） | P1 | deployed |
 | [x] | REFACTOR-007 | 将 /dl 短链入口迁到 Caddy | P1 | completed |
 | [x] | REFACTOR-008 | server 单租户焊死（single-owner lockdown） | P1 | completed |
+| [ ] | REFACTOR-009 | 仓库顶层 monorepo 化（top-level monorepo migration） | P1 | in_progress |
 | [ ] | QUAL-004 | 修复 rotted 集成套件并重塑单 owner 测试 | P2 | pending |

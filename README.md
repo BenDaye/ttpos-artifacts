@@ -16,8 +16,9 @@ Build workflows for TTPOS Flutter applications.
 | `build-android.yaml`   | Android (APK)        | `ubuntu-latest`  | `workflow_dispatch`                       |
 | `build-macos.yaml`     | macOS (DMG)          | `macos-latest`   | `workflow_dispatch`                       |
 | `build-web.yaml`       | Web (Docker)         | `ubuntu-22.04`   | `workflow_dispatch`                       |
-| `build-dashboard-next.yaml` | Dashboard (Docker)   | `ubuntu-latest`  | `workflow_dispatch`, push to main/release |
-| `build-server.yaml`         | Server (Docker)      | `ubuntu-latest`  | `workflow_dispatch`, push to main/release |
+| `build-dashboard.yaml`      | Dashboard (Docker)   | `ubuntu-latest`  | `workflow_dispatch`, push to main/release（质量门）, tag `web-v*`（推镜像） |
+| `build-mcp.yaml`            | MCP (Docker)         | `ubuntu-latest`  | `workflow_dispatch`, push to main/release（质量门）, tag `mcp-v*`（推镜像） |
+| `build-server.yaml`         | Server (Docker)      | `ubuntu-latest`  | `workflow_dispatch`, push to main/release（质量门）, tag `server-v*`（推镜像） |
 
 ### Required Secrets
 
@@ -61,16 +62,16 @@ Build workflows for TTPOS Flutter applications.
 
 ## FaynoSync Dashboard
 
-线上前端为 `dashboard-next/`（React 19 + Vite 8 + TanStack Router + Tailwind v4，Bun workspaces）。
+线上前端为 `apps/web/`（React 19 + Vite 8 + TanStack Router + Tailwind v4；仓库根为 Bun workspace + Turborepo monorepo）。
 
 ### CI/CD 构建
 
-通过 `build-dashboard-next.yaml` 自动构建并推送 Docker 镜像到 **GitHub Container Registry (ghcr.io)**：
+通过 `build-dashboard.yaml` 自动构建并推送 Docker 镜像到 **GitHub Container Registry (ghcr.io)**：
 
-- **触发**：手动触发 (`workflow_dispatch`) 或 push 到 `main`/`release` 分支
+- **触发**：push 到 `main`/`release` 只跑质量门；打 `web-v*` tag 才构建推送镜像
 - **质量门禁**：typecheck → lint → 单元测试 → 生产构建 → Playwright e2e
-- **镜像**：`ghcr.io/<owner>/<repo>/faynosync-dashboard-next`
-- **标签**：`latest`、短 commit SHA、分支名
+- **镜像**：`ghcr.io/<owner>/<repo>/ttpos-web`
+- **标签**：`<version>`、`latest`、短 commit SHA
 
 ### Conventional Commits
 
@@ -82,19 +83,17 @@ Build workflows for TTPOS Flutter applications.
 
 ### Description 📄
 
-This frontend works with the FaynoSync API (included in `server/`), providing seamless service updates.
+This frontend works with the FaynoSync API (included in `apps/server/`), providing seamless service updates.
 
 ### Installing Dependencies 📦
 
 ```bash
-cd dashboard-next
 bun install --frozen-lockfile
 ```
 
 ### Running in Development Mode 🛠️
 
 ```bash
-cd dashboard-next
 bun dev
 ```
 
@@ -103,14 +102,13 @@ Vite 默认监听 `http://localhost:3000`，对应 `apps/web/` 子项目。
 ### Running in Production Mode 🚀
 
 ```bash
-cd dashboard-next
 bun run build      # 生成 apps/web/dist/
 bun run preview    # 本地预览生产产物
 ```
 
 ### Environment Variables ⚙️
 
-`dashboard-next/apps/web/` 支持以下变量（一般通过 `.env.local` 或 Docker 环境注入）：
+`apps/web/` 支持以下变量（一般通过 `.env.local` 或 Docker 环境注入）：
 
 ```
 VITE_API_URL=http://localhost:9000   # FaynoSync API 基址

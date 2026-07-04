@@ -1,17 +1,19 @@
 /**
- * dashboard-next 版本号发布脚本。
+ * per-app 版本号发布脚本（PLAN-036 顶层 monorepo 化后）。
  *
  * 用法：
- *   bun run version:patch          # 0.1.0 -> 0.1.1
- *   bun run version:minor          # 0.1.0 -> 0.2.0
- *   bun run version:major          # 0.1.0 -> 1.0.0
- *   bun run scripts/bump-version.ts 2.3.4   # 显式指定版本号
+ *   bun run version:patch -- --app web      # apps/web 0.2.2 -> 0.2.3
+ *   bun run version:minor -- --app web      # apps/web 0.2.2 -> 0.3.0
+ *   bun run version:major -- --app mcp      # apps/mcp 0.1.0 -> 1.0.0
+ *   bun run scripts/bump-version.ts 2.3.4 --app web   # 显式指定版本号
  *
  * 行为：
- *   1. 以 apps/web/package.json 的 version 为单一事实来源计算新版本号；
- *   2. 同步写回根 package.json 与 apps/web/package.json；
- *   3. 把 CHANGELOG.md 的 [Unreleased] 段归档为 [新版本] - 日期，并留下空的 [Unreleased]；
+ *   1. 以 apps/<app>/package.json 的 version 为单一事实来源计算新版本号（根 package.json 不参与版本，恒为 0.0.0）；
+ *   2. 写回 apps/<app>/package.json；
+ *   3. 把 apps/<app>/CHANGELOG.md 的 [Unreleased] 段归档为 [新版本] - 日期（无 CHANGELOG 时跳过）；
  *   4. 打印建议的 git commit / tag 命令（不自动提交、不自动打标签）。
+ *
+ * server 不纳入本脚本：Go 无 npm 版本语义，发版直接手动打 server-v* tag。
  */
 import { readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
@@ -20,10 +22,13 @@ import { fileURLToPath } from 'node:url'
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url))
 const repoRoot = path.resolve(scriptDir, '..')
-const rootPkgPath = path.join(repoRoot, 'package.json')
-const webPkgPath = path.join(repoRoot, 'apps/web/package.json')
-const changelogPath = path.join(repoRoot, 'CHANGELOG.md')
 
+const APPS = {
+  web: { dir: 'apps/web', tagPrefix: 'web-v', label: 'dashboard web' },
+  mcp: { dir: 'apps/mcp', tagPrefix: 'mcp-v', label: 'mcp server' },
+} as const
+
+type AppName = keyof typeof APPS
 type ReleaseType = 'patch' | 'minor' | 'major'
 
 function readJson(filePath: string): Record<string, unknown> {
@@ -58,7 +63,7 @@ function nextVersion(current: string, release: string): string {
   }
 }
 
-function archiveChangelog(version: string, date: string): boolean {
+function archiveChangelog(changelogPath: string, version: string, date: string): boolean {
   let content: string
   try {
     content = readFileSync(changelogPath, 'utf-8')
@@ -86,34 +91,51 @@ function archiveChangelog(version: string, date: string): boolean {
   return true
 }
 
-function main(): void {
-  const release = process.argv[2]
+function parseArgs(argv: string[]): { release: string, app: AppName } {
+  const args = [...argv]
+  let app: string | undefined
+  const appIdx = args.indexOf('--app')
+  if (appIdx !== -1) {
+    app = args[appIdx + 1]
+    args.splice(appIdx, 2)
+  }
+  const release = args[0]
+
   if (!release) {
     console.error('请提供发布类型：patch | minor | major | x.y.z')
     process.exit(1)
   }
+  if (!app || !(app in APPS)) {
+    console.error(`请用 --app 指定应用：${Object.keys(APPS).join(' | ')}（server 发版直接手动打 server-v* tag）`)
+    process.exit(1)
+  }
+  return { release, app: app as AppName }
+}
 
-  const webPkg = readJson(webPkgPath)
-  const current = String(webPkg.version ?? '')
+function main(): void {
+  const { release, app } = parseArgs(process.argv.slice(2))
+  const { dir, tagPrefix, label } = APPS[app]
+
+  const pkgPath = path.join(repoRoot, dir, 'package.json')
+  const changelogPath = path.join(repoRoot, dir, 'CHANGELOG.md')
+
+  const pkg = readJson(pkgPath)
+  const current = String(pkg.version ?? '')
   const version = nextVersion(current, release)
   const date = new Date().toISOString().slice(0, 10)
 
-  webPkg.version = version
-  writeJson(webPkgPath, webPkg)
+  pkg.version = version
+  writeJson(pkgPath, pkg)
 
-  const rootPkg = readJson(rootPkgPath)
-  rootPkg.version = version
-  writeJson(rootPkgPath, rootPkg)
+  const changelogUpdated = archiveChangelog(changelogPath, version, date)
 
-  const changelogUpdated = archiveChangelog(version, date)
-
-  console.info(`版本号 ${current} -> ${version}`)
-  console.info(`已更新：package.json、apps/web/package.json${changelogUpdated ? '、CHANGELOG.md' : ''}`)
+  console.info(`[${label}] 版本号 ${current} -> ${version}`)
+  console.info(`已更新：${dir}/package.json${changelogUpdated ? `、${dir}/CHANGELOG.md` : ''}`)
   console.info('')
   console.info('下一步（按需手动执行）：')
-  console.info(`  git add package.json apps/web/package.json CHANGELOG.md`)
-  console.info(`  git commit -m "chore: 发布 dashboard-next v${version}"`)
-  console.info(`  git tag dashboard-next-v${version}`)
+  console.info(`  git add ${dir}/package.json${changelogUpdated ? ` ${dir}/CHANGELOG.md` : ''}`)
+  console.info(`  git commit -m "chore: 发布 ${app} v${version}"`)
+  console.info(`  git tag ${tagPrefix}${version}`)
 }
 
 main()

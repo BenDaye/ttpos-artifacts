@@ -1,0 +1,13 @@
+{
+  "name": "@ttpos/server",
+  "version": "0.0.0",
+  "private": true,
+  "//": "薄壳：仅为把 Go 模块挂进 turbo 任务图。test 与 CI 对齐只跑单元包（spec 偏离已记入 REFACTOR-009）；test:integration 需 MongoDB/Redis/S3 服务容器，QUAL-004 容器化后接入 turbo。",
+  "scripts": {
+    "test": "go test ./server/ownership/... ./server/utils/...",
+    "test:integration": "go test ./...",
+    "build": "go build -o faynoSync .",
+    "lint": "go vet ./...",
+    "typecheck": "go vet ./..."
+  }
+}

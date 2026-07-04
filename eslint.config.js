@@ -17,6 +17,13 @@ export default antfu({
     '**/playwright-report/**',
     '**/test-results/**',
     'apps/web/src/app/routeTree.gen.ts',
+    // 顶层化后仓库根还包含非前端资产，保持迁移前的 lint 范围（原 dashboard-next 子树）
+    'apps/server/**',
+    'docs/**',
+    'deploy/**',
+    '.github/**',
+    '.serena/**',
+    '*.md',
   ],
 }, {
   files: ['**/*.{ts,tsx}'],

@@ -1,14 +1,15 @@
 # Changelog
 
-本文件记录 dashboard-next（ZEHub Dashboard）自身的版本变更，遵循
+本文件记录 Dashboard（`apps/web`，ZEHub Dashboard）自身的版本变更，遵循
 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 与
 [语义化版本](https://semver.org/lang/zh-CN/)。
 
-版本号以 `apps/web/package.json` 为单一事实来源，并与根 `package.json` 保持同步；
-发布请使用 `bun run version:patch|minor|major`（见根 `package.json` 脚本），脚本会同步两处版本号、
-归档本文件的 Unreleased 段，并打印建议的 commit / tag 命令（不会自动提交或打标签）。
+版本号以 `apps/web/package.json` 为单一事实来源（根 `package.json` 不参与版本，恒为 0.0.0）；
+发布请使用 `bun run version:patch|minor|major -- --app web`（见根 `package.json` 脚本），脚本会
+bump 版本号、归档本文件的 Unreleased 段，并打印建议的 commit / tag 命令（不会自动提交或打标签），
+发版 tag 为 `web-v<version>`。
 
-> 说明：`docs/changelog.md` 是整个仓库按日期记录的产品级流水账；本文件只聚焦 dashboard-next
+> 说明：`docs/changelog.md` 是整个仓库按日期记录的产品级流水账；本文件只聚焦 Dashboard
 > 自身、由 semver 驱动的版本历史，两者用途不同、并行维护。
 
 ## [Unreleased]
