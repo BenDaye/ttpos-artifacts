@@ -34,6 +34,10 @@
         "vitest": "^4.1.5",
       },
     },
+    "apps/server": {
+      "name": "@ttpos/server",
+      "version": "0.0.0",
+    },
     "apps/web": {
       "name": "@ttpos/web",
       "version": "0.2.2",
@@ -468,6 +472,8 @@
     "@ttpos/config": ["@ttpos/config@workspace:packages/config"],
 
     "@ttpos/mcp": ["@ttpos/mcp@workspace:apps/mcp"],
+
+    "@ttpos/server": ["@ttpos/server@workspace:apps/server"],
 
     "@ttpos/shared": ["@ttpos/shared@workspace:packages/shared"],
 
