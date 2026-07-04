@@ -47,6 +47,15 @@ jobs:
         with:
           bun-version: 1.3.13
 
+      - name: 恢复 Turbo 缓存
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-${{ runner.os }}-${{ github.sha }}
+          # 命中不到精确 key 时回退最近一次缓存，turbo 再按 inputs 增量判定
+          restore-keys: |
+            turbo-${{ runner.os }}-
+
       - name: 安装依赖
         run: bun install --frozen-lockfile
 
