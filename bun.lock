@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "ttpos-dashboard-next",
+      "name": "ttpos-artifacts",
       "devDependencies": {
         "@antfu/eslint-config": "^8.2.0",
         "@eslint-react/eslint-plugin": "^3.0.0",

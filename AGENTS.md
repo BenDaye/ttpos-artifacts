@@ -28,35 +28,38 @@
 
 ## 仓库地图
 
-- `dashboard-next/`：生产 Dashboard，Bun workspace，React 19、Vite、TanStack Router/Query、Tailwind v4、Base UI/shadcn/ui。
-- `server/`：FaynoSync Go API，负责版本、应用、上传、下载、认证、遥测和 TUF 相关服务。
-- `.github/workflows/`：TTPOS Flutter 多平台构建与 FaynoSync 分发流程。
-- `deploy/`：Docker Compose 与反向代理部署配置。
+仓库是顶层 Bun workspace + Turborepo monorepo（PLAN-036）：
+
+- `apps/web/`：生产 Dashboard（admin 后台），React 19、Vite、TanStack Router/Query、Tailwind v4、Base UI/shadcn/ui。镜像 `ttpos-web`——注意与 Flutter 侧 `ttpos-web-menu/mobile/member`（POS Web 三端）无关，勿混淆。
+- `apps/mcp/`：只读 MCP server，封装 FaynoSync API。镜像 `ttpos-mcp`。
+- `apps/server/`：FaynoSync Go API（module `faynoSync` 不变），负责版本、应用、上传、下载、认证、遥测和 TUF 相关服务。镜像 `ttpos-server`。经薄 `package.json`（`@ttpos/server`）挂进 turbo 任务图；其 `test` 只跑单元包，`test:integration` 为全量逃生口（需 Mongo/Redis/S3，见 QUAL-004）。
+- `packages/`：`config`（共享 tsconfig 等）、`shared`（共享 TS 代码）。
+- `.github/workflows/`：TTPOS Flutter 多平台构建与 FaynoSync 分发流程（`build-dashboard.yaml` / `build-mcp.yaml` / `build-server.yaml` 对应三镜像；`build-web.yaml` 属 Flutter，勿动）。
+- `deploy/`：Docker Compose 与反向代理部署配置（container_name/网络别名保持 `faynosync-*`，Caddy 反代依赖，勿改名）。
 - `docs/`：changelog、PMA plan/task 和项目决策记录。
 
 ## 常用命令
 
-在对应子目录执行命令，优先跑和改动范围匹配的聚焦 gate；跨模块、发布、安全、认证、上传下载、CI/CD 或数据契约改动再升级到全量验证。
-
-### Dashboard
+在仓库根执行，优先跑和改动范围匹配的聚焦 gate（`--filter`）；跨模块、发布、安全、认证、上传下载、CI/CD 或数据契约改动再升级到全量验证。
 
 ```bash
-cd dashboard-next
 bun install --frozen-lockfile
-bun dev
-bun run typecheck
-bun run lint
+bun dev                        # apps/web 开发服务器
+bun run typecheck              # turbo typecheck（全包，含 @ttpos/server go vet）
+bun run lint                   # 根级 eslint
 bun run lint:fix
-bun run test
-bun run test:e2e
-bun run build
+bun run test                   # turbo test（web/mcp vitest + server go 单元包）
+bun run test:e2e               # Playwright
+bun run build                  # turbo build
+bunx turbo test --filter @ttpos/web    # 聚焦单包
 ```
 
-### Server
+### Server（Go 直连方式）
 
 ```bash
-cd server
-go test ./...
+cd apps/server
+go test ./server/ownership/... ./server/utils/...   # 单元包（与 CI 一致）
+go test ./...                                       # 全量，需 Mongo/Redis/S3（QUAL-004）
 go build -o faynoSync .
 ```
 
@@ -68,21 +71,25 @@ docker compose up -d
 docker compose build
 ```
 
-### 发版 (dashboard-next)
+### 发版（per-app tag 门控）
 
-dashboard-next 打包推镜像**只在打 `dashboard-next-v*` tag 时触发**；push 到 main/release 只跑质量门、不打包（`build` job 被 `if: startsWith(github.ref,'refs/tags/dashboard-next-v')` 跳过）。
+三个镜像都**只在打对应 tag 时构建推送**：`web-v*` → `ttpos-web`、`mcp-v*` → `ttpos-mcp`、`server-v*` → `ttpos-server`；push 到 main/release 只跑质量门、不打包。
 
 ```bash
-cd dashboard-next
-bun run version:patch          # 或 version:minor / version:major：bump 两处 package.json + 归档 CHANGELOG
-git add -A && git commit -m "chore: 发布 dashboard-next v<version>"
+# web / mcp：bump 版本 + 归档 CHANGELOG（server 无 npm 版本，直接打 tag）
+bun run version:patch -- --app web    # 或 version:minor / version:major；--app web|mcp 必填
+git add -A && git commit -m "chore: 发布 web v<version>"
 git push origin main
-git tag dashboard-next-v<version> && git push origin dashboard-next-v<version>
+git tag web-v<version> && git push origin web-v<version>
+
+# server：手动打 tag 即发版
+git tag server-v<version> && git push origin server-v<version>
 ```
 
-- tag 名必须是 `dashboard-next-v<version>`，与 CI `type=match` 闭环；CI 据此推 ghcr 镜像 `:<version>` + `:latest` + `:<short-sha>`，并经 `GIT_COMMIT` build-arg 把 commit 注入镜像（侧边栏底部展示自身版本号）。
-- `scripts/bump-version.ts` 只改文件并打印建议的 commit/tag 命令，不自动提交、不自动打标签。
-- vm-node02 部署拉 `:latest`，故 `:latest` 只在发版（打 tag）时更新，不再随 push main 变化。
+- tag 名与 CI `type=match` 闭环；CI 据此推 ghcr 镜像 `:<version>` + `:latest` + `:<short-sha>`；web 镜像经 `GIT_COMMIT` build-arg 注入 commit（侧边栏底部展示版本号）。
+- `scripts/bump-version.ts` 只改文件并打印建议的 commit/tag 命令，不自动提交、不自动打标签；根 `package.json` version 恒为 `0.0.0`，不参与发版。
+- vm-node02 部署拉 `:latest`，`:latest` 只在打 tag 时更新；**server 发版从「push main 即发」改为「打 server-v* tag 才发」**（PLAN-036）。
+- 切换/发布硬门：先在部署机 `docker pull` 确认三个新镜像可拉取，再改 compose `up -d`；回滚 = compose 换回旧镜像名。
 
 ## 关键边界
 
@@ -98,6 +105,6 @@ git tag dashboard-next-v<version> && git push origin dashboard-next-v<version>
 
 - 文档-only 改动至少运行 `git diff --check`，并用 `git diff --name-only` 确认没有越界。
 - Dashboard 代码改动优先跑对应 `typecheck`、`lint`、`test`；UI 或流程改动补充 e2e 或浏览器验证。
-- Server 改动优先跑 `go test ./...`；上传、下载、认证、TUF、存储和迁移相关改动需要更聚焦的回归证据。
+- Server 改动优先跑单元包 `go test ./server/ownership/... ./server/utils/...`（全量 `go test ./...` 需外部服务，见 QUAL-004）；上传、下载、认证、TUF、存储和迁移相关改动需要更聚焦的回归证据。
 - Workflow 或部署改动要检查语法、分支/环境映射、secret 名称和分发路径；无法本地完整运行时说明验证缺口。
 - 提交或 PR 前汇总实际运行过的命令和结果；不能运行的 gate 要说明原因和剩余风险。
