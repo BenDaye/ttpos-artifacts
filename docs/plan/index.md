@@ -36,4 +36,4 @@
 | [x] | PLAN-032 | owner 收敛为部署单例（single-owner mode） | REFACTOR-006 |
 | [x] | PLAN-033 | 将 /dl 短链入口迁到 Caddy | REFACTOR-007 |
 | [x] | PLAN-034 | server 对抗式评审报告与推进计划 | — |
-| [ ] | PLAN-035 | 单租户焊死 + 清尸（single-owner lockdown） | 待建 REFACTOR-008 |
+| [x] | PLAN-035 | 单租户焊死 + 清尸（single-owner lockdown） | REFACTOR-008 |

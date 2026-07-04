@@ -1,7 +1,7 @@
 # PLAN-035 单租户焊死 + 清尸（single-owner lockdown）
 
-- **status**: in progress（核心已实现并本地编译/vet/单测验证；集成套件重塑待 mongo 环境）
-- **task**: 待建（建议 REFACTOR-008）
+- **status**: deployed（已合并 main via PR #27(merge `7f8a8e8`)；核心 gate + Opus 评审 + staging E2E 验证通过；集成套件重塑转 QUAL-004）
+- **task**: REFACTOR-008
 - **createdAt**: 2026-07-03
 - **mode**: DELIBERATE（auth/RBAC/安全边界改动，高风险）
 - **决策方式**: ralplan 共识（Planner → analyst → Architect → Critic，Critic 裁决 ITERATE 后按门禁清单收敛为本稿）
