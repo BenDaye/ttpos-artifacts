@@ -21,6 +21,7 @@ import (
 	"faynoSync/server/handler"
 	"faynoSync/server/handler/info"
 	"faynoSync/server/model"
+	"faynoSync/server/ownership"
 	"faynoSync/server/utils"
 
 	"github.com/gin-gonic/gin"
@@ -127,6 +128,14 @@ func setup() {
 	client, configDB = mongod.ConnectToDatabase(viper.GetString("MONGODB_URL_TESTS"), flagMap)
 	appDB = mongod.NewAppRepository(&configDB, client)
 	mongoDatabase = client.Database(configDB.Database)
+	// Run the suite in the shipped single-owner mode so tests exercise the code
+	// that actually deploys. NOTE (PLAN-035 Step 4, mongo env): with single-owner
+	// active, the 14 Test*WithSecondUser cases assert cross-admin isolation that
+	// no longer exists (the second admin collapses to the deployment owner) and
+	// must be reshaped/removed, and a positive `?owner=GARBAGE is ignored` case
+	// plus a token-owner lock case should be added. This requires a live Mongo to
+	// verify and is intentionally left for the mongo-backed run.
+	ownership.Configure("admin")
 	if viper.GetBool("ENABLE_TELEMETRY") {
 		redisConfig := redisdb.RedisConfig{
 			Addr:     viper.GetString("REDIS_HOST") + ":" + viper.GetString("REDIS_PORT"),

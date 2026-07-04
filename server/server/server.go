@@ -48,15 +48,28 @@ func StartServer(config *viper.Viper, flags map[string]interface{}) {
 	repo := db.NewAppRepository(&configDB, client)
 	mongoDatabase := client.Database(configDB.Database)
 
-	// Resolve the deployment-wide single owner before any owner-scoped work.
-	// An explicit DEPLOYMENT_OWNER enables single-owner mode and MUST name an
-	// existing admin: a bad value is fatal so we never boot into a config that
-	// would silently scope data under a non-existent owner (and never leave the
-	// deployment permanently un-writable). SEED_OWNER, when also set, must agree.
-	// When DEPLOYMENT_OWNER is unset the server keeps its legacy multi-tenant
-	// behavior.
+	// Single-owner is the only supported mode. DEPLOYMENT_OWNER pins the one owner
+	// namespace and is mandatory once the deployment has an admin; caller identity
+	// governs permission (RBAC) only, never namespace. The sole exception is
+	// first-boot bootstrap — an empty admins collection — where an unset
+	// DEPLOYMENT_OWNER is allowed so the first admin can be created via /signup
+	// before the owner is pinned. Any bad/absent value fails closed at boot: a
+	// dead pod is visible and recoverable; silently scoping data under the wrong
+	// owner is not. (The container CMD is `faynoSync --migration`, i.e. migrate
+	// then serve, so this guard runs on every normal boot.)
 	deploymentOwner := strings.TrimSpace(config.GetString("DEPLOYMENT_OWNER"))
-	if deploymentOwner != "" {
+	if deploymentOwner == "" {
+		adminCtx, cancelAdmin := context.WithTimeout(context.Background(), 30*time.Second)
+		adminCount, err := mongoDatabase.Collection("admins").CountDocuments(adminCtx, bson.M{})
+		cancelAdmin()
+		if err != nil {
+			logrus.Fatalf("failed to check the admins collection while resolving DEPLOYMENT_OWNER: %v", err)
+		}
+		if adminCount > 0 {
+			logrus.Fatalf("DEPLOYMENT_OWNER is required: this deployment already has an admin, so the single owner namespace must be pinned. Set DEPLOYMENT_OWNER to the admin username and restart. (First boot only: with no admin yet, start without it, create the admin via /signup, then set it and restart.)")
+		}
+		logrus.Warnln("DEPLOYMENT_OWNER is unset and no admin exists yet: booting in bootstrap mode. Create the first admin via /signup, then set DEPLOYMENT_OWNER and restart.")
+	} else {
 		ownerCtx, cancelOwner := context.WithTimeout(context.Background(), 30*time.Second)
 		err := mongoDatabase.Collection("admins").FindOne(ownerCtx, bson.M{"username": deploymentOwner}).Err()
 		cancelOwner()
@@ -65,14 +78,17 @@ func StartServer(config *viper.Viper, flags map[string]interface{}) {
 		} else if err != nil {
 			logrus.Fatalf("failed to verify DEPLOYMENT_OWNER %q against the admins collection: %v", deploymentOwner, err)
 		}
-		if seedOwner := strings.TrimSpace(config.GetString("SEED_OWNER")); seedOwner != "" && seedOwner != deploymentOwner {
-			logrus.Fatalf("DEPLOYMENT_OWNER (%q) and SEED_OWNER (%q) disagree; they must name the same owner", deploymentOwner, seedOwner)
+		if seedOwner := strings.TrimSpace(config.GetString("SEED_OWNER")); seedOwner != "" {
+			logrus.Warnln("SEED_OWNER is deprecated; DEPLOYMENT_OWNER supersedes it. Keep them equal or drop SEED_OWNER.")
+			if seedOwner != deploymentOwner {
+				logrus.Fatalf("DEPLOYMENT_OWNER (%q) and SEED_OWNER (%q) disagree; they must name the same owner", deploymentOwner, seedOwner)
+			}
 		}
 	}
 	ownership.Configure(deploymentOwner)
 
-	// Run seed if requested via -seed flag. In single-owner mode the deployment
-	// owner is authoritative; otherwise fall back to SEED_OWNER.
+	// Run seed if requested via -seed flag. Seed under the deployment owner;
+	// during first-boot bootstrap (owner not yet pinned) fall back to SEED_OWNER.
 	if seedFlag, ok := flags["seed"].(bool); ok && seedFlag {
 		seedOwner := config.GetString("SEED_OWNER")
 		if deploymentOwner != "" {

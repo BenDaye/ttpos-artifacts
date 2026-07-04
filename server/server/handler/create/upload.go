@@ -118,14 +118,8 @@ func UploadApp(c *gin.Context, repository db.AppRepository, database *mongo.Data
 		return
 	}
 
-	// Resolve the owner namespace this upload writes under. Single-owner mode
-	// collapses it to the deployment owner; otherwise a team member resolves to
-	// their admin's owner.
-	owner, err := ownership.ResolveOwner(c, database)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		return
-	}
+	// The owner namespace this upload writes under is the deployment owner.
+	owner := ownership.Owner()
 
 	ctxQueryMap, err := utils.ValidateParams(c, database)
 	if err != nil {
@@ -371,11 +365,7 @@ func CheckUploadAvailable(c *gin.Context, repository db.AppRepository, database 
 		return
 	}
 
-	owner, err := ownership.ResolveOwner(c, database)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		return
-	}
+	owner := ownership.Owner()
 
 	if err := validateAPITokenAppScope(c, database, owner, appName); err != nil {
 		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})

@@ -131,14 +131,8 @@ func GetTelemetry(c *gin.Context, rdb *redis.Client, db *mongo.Database) {
 		return
 	}
 
-	// Resolve the owner whose statistics to read. Single-owner mode collapses to
-	// the deployment owner; otherwise a team member resolves to their admin's
-	// owner.
-	admin, err := ownership.ResolveOwner(c, db)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		return
-	}
+	// The owner whose statistics to read is the deployment owner.
+	admin := ownership.Owner()
 	logrus.Debugf("Resolved telemetry owner: %s", admin)
 
 	// Get date range parameters

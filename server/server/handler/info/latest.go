@@ -138,12 +138,10 @@ func FindLatestVersion(c *gin.Context, repository db.AppRepository, db *mongo.Da
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
 	defer cancel()
 
-	// Single-owner mode: the deployment owner is authoritative for checkVersion
-	// (and the squirrel updater route), so override any client-supplied owner
-	// before the cache key is derived.
-	if ownership.Enabled() {
-		validatedParams["owner"] = ownership.DeploymentOwner()
-	}
+	// The deployment owner is authoritative for checkVersion (and the squirrel
+	// updater route): any client-supplied owner is ignored before the cache key
+	// is derived, so a client ?owner= can never reach the query.
+	validatedParams["owner"] = ownership.Owner()
 	cacheKey := CreateCacheKey(validatedParams)
 	logrus.Debugf("Generated cache key: %s", cacheKey)
 	// Check Redis only if PERFORMANCE_MODE is true and Redis client is not nil
@@ -260,13 +258,10 @@ func FetchLatestVersionOfApp(c *gin.Context, repository latestAppRepository, rdb
 		})
 		return
 	}
-	// In single-owner mode the server owns the namespace, not the caller: ignore
-	// any client-supplied owner and use the deployment owner so public download
-	// lookups (including /dl and squirrel) always resolve the one real owner.
-	owner := c.Query("owner")
-	if ownership.Enabled() {
-		owner = ownership.DeploymentOwner()
-	}
+	// The server owns the namespace, not the caller: any client-supplied owner is
+	// ignored and the deployment owner is used, so public download lookups
+	// (including /dl and squirrel) always resolve the one real owner.
+	owner := ownership.Owner()
 	params := map[string]interface{}{
 		"app_name": c.Query("app_name"),
 		"channel":  c.Query("channel"),
