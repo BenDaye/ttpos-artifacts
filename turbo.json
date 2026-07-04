@@ -1,0 +1,34 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
+    "typecheck": {},
+    "test": {},
+    "@ttpos/web#typecheck": {
+      "outputs": ["src/app/routeTree.gen.ts"]
+    },
+    "@ttpos/web#test": {
+      "outputs": ["src/app/routeTree.gen.ts"]
+    },
+    "@ttpos/web#build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", "src/app/routeTree.gen.ts"]
+    },
+    "@ttpos/server#build": {
+      "inputs": ["**/*.go", "go.mod", "go.sum"],
+      "outputs": ["faynoSync"]
+    },
+    "@ttpos/server#test": {
+      "inputs": ["**/*.go", "go.mod", "go.sum"]
+    },
+    "@ttpos/server#lint": {
+      "inputs": ["**/*.go", "go.mod", "go.sum"]
+    },
+    "@ttpos/server#typecheck": {
+      "inputs": ["**/*.go", "go.mod", "go.sum"]
+    }
+  }
+}
