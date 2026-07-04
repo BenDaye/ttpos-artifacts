@@ -54,6 +54,8 @@ bun run build                  # turbo build
 bunx turbo test --filter @ttpos/web    # 聚焦单包
 ```
 
+不带 `--filter` 的 `typecheck/test/build` 会连带跑 `@ttpos/server` 的 go 任务，需要本地 Go 工具链；纯前端改动用 `--filter` 聚焦即可。
+
 ### Server（Go 直连方式）
 
 ```bash

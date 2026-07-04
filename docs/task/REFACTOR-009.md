@@ -1,6 +1,6 @@
 # REFACTOR-009 仓库顶层 monorepo 化（top-level monorepo migration）
 
-- **status**: in_progress
+- **status**: implemented (pending merge)
 - **priority**: P1
 - **owner**: Claude
 - **createdAt**: 2026-07-04
@@ -33,6 +33,8 @@
 4. 回滚：compose 改回 `faynosync-*` 旧镜像名（旧镜像/旧 tag 全程保留）；代码层 `git revert` 合并提交。
 
 ## 批注
+
+- 2026-07-04：实施完成。code-reviewer APPROVE（0 阻塞，1 MINOR 已采纳：AGENTS.md 注明未过滤 turbo 命令需本地 Go）；verifier APPROVE（15 项验收 12 VERIFIED、1 PARTIAL、2 已知缺口）。三镜像 staging 实建成功（web/mcp/server 均 EXIT=0）。
 
 - 2026-07-04：实施环境限制——本机（LXC）docker 无法运行容器（runc sysctl 限制），三镜像构建 gate 改在 staging vm-node02 代跑（同为 amd64 部署机，代表性更强）。首跑 server 镜像因 staging 磁盘 98% 满失败（`no space left on device`，非迁移问题），清理 build cache 后重试。
 - 2026-07-04：本机无 Go 工具链，为跑 turbo server gate 安装用户态 Go 1.25.5 至 `~/.local/go`（与 go.mod 一致）。

@@ -1,6 +1,6 @@
 # PLAN-036 仓库顶层 monorepo 化（top-level monorepo migration）
 
-- **status**: implementing（用户已批准，分支 refactor/plan-036-monorepo 实施中）
+- **status**: implemented（分支 refactor/plan-036-monorepo 实施完毕，code-review + verifier 双 APPROVE；待合并 + 打 tag 演练闭环 CI，见 REFACTOR-009 发布 checklist）
 - **task**: 待立（实施阶段立 REFACTOR-009）
 - **createdAt**: 2026-07-04
 - **mode**: DELIBERATE（目录大搬家 + CI/发版/部署命名全链路变更）
