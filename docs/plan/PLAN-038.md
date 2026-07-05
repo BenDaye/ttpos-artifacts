@@ -1,7 +1,7 @@
 # PLAN-038 prod 主机 Caddy 独立化迁移（PLAN-037 北极星落地）
 
-- **status**: pending approval（共识规划完成，等待用户批准执行；**规划期未对 prod 做任何变更**）
-- **task**: 待立（实施阶段立 REFACTOR-011）
+- **status**: deployed（2026-07-05 已在 prod 执行完成，REFACTOR-011；两条红线全程守住，公网 5 路冒烟全绿，旧 caddy/网络/mongodump 保留至 2026-07-12 作回滚锚）
+- **task**: REFACTOR-011
 - **createdAt**: 2026-07-05
 - **mode**: DELIBERATE（生产、Cloudflare 前置、单 host:80、触及无关 aitrans 项目、网络所有权反转）
 - **决策方式**: ralplan 共识（Planner → Architect → Critic，两轮迭代后 Critic APPROVE；Architect + Critic 均实测 prod ground truth 只读核验）
