@@ -1,6 +1,6 @@
 import type { ComponentPropsWithoutRef } from 'react'
 import { Switch as BaseSwitch } from '@base-ui-components/react/switch'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@ttpos/ui/lib/utils'
 
 export function Switch({
   className,

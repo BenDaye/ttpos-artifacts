@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
+import { Button } from '@ttpos/ui/components/button'
 import { CircleAlert } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { EmptyState } from '@/shared/components/empty-state'
-import { Button } from '@/shared/components/ui/button'
 
 interface ErrorStateProps {
   title?: ReactNode

@@ -1,6 +1,6 @@
 import type { ComponentPropsWithoutRef } from 'react'
 import { Tabs as BaseTabs } from '@base-ui-components/react/tabs'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@ttpos/ui/lib/utils'
 
 export const Tabs = BaseTabs.Root
 

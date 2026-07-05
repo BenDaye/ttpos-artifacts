@@ -1,10 +1,10 @@
 import type { Updater, UpdaterType } from '@ttpos/shared'
+import { Badge } from '@ttpos/ui/components/badge'
+import { Button } from '@ttpos/ui/components/button'
+import { Checkbox } from '@ttpos/ui/components/checkbox'
+import { cn } from '@ttpos/ui/lib/utils'
 import { Apple, Laptop, MonitorCog, PackageCheck, Radio, Sparkles, Star, Wrench } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { Badge } from '@/shared/components/ui/badge'
-import { Button } from '@/shared/components/ui/button'
-import { Checkbox } from '@/shared/components/ui/checkbox'
-import { cn } from '@/shared/lib/utils'
 import { getDefaultUpdaterType, normalizeUpdaters, UPDATER_OPTIONS } from '../updaters'
 
 interface Props {

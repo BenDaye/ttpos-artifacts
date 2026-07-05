@@ -1,7 +1,7 @@
 import type { ComponentPropsWithoutRef, ReactNode } from 'react'
 import { Select as BaseSelect } from '@base-ui-components/react/select'
+import { cn } from '@ttpos/ui/lib/utils'
 import { Check, ChevronDown } from 'lucide-react'
-import { cn } from '@/shared/lib/utils'
 
 export const Select = BaseSelect.Root
 export const SelectGroup = BaseSelect.Group

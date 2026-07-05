@@ -1,8 +1,8 @@
+import { Button } from '@ttpos/ui/components/button'
+import { cn } from '@ttpos/ui/lib/utils'
 import { Check, Copy } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Button } from '@/shared/components/ui/button'
-import { cn } from '@/shared/lib/utils'
 
 export function ScriptOutput({ script, className }: { script: string, className?: string }) {
   const { t } = useTranslation('common')

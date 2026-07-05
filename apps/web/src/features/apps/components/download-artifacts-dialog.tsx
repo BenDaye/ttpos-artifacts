@@ -1,10 +1,6 @@
 import type { ArtifactEntry } from '@ttpos/shared'
-import { Check, Copy, Download } from 'lucide-react'
-import { useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import { toast } from 'sonner'
-import { Badge } from '@/shared/components/ui/badge'
-import { Button } from '@/shared/components/ui/button'
+import { Badge } from '@ttpos/ui/components/badge'
+import { Button } from '@ttpos/ui/components/button'
 import {
   Dialog,
   DialogBody,
@@ -13,7 +9,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/shared/components/ui/dialog'
+} from '@ttpos/ui/components/dialog'
+import { Check, Copy, Download } from 'lucide-react'
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
 import { appsApi } from '../api'
 
 interface Props {

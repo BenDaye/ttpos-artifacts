@@ -1,8 +1,8 @@
 import type { ComponentPropsWithoutRef, ReactNode } from 'react'
 import { Dialog as BaseDialog } from '@base-ui-components/react/dialog'
+import { cn } from '@ttpos/ui/lib/utils'
 import { X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { cn } from '@/shared/lib/utils'
 
 export const Dialog = BaseDialog.Root
 export const DialogTrigger = BaseDialog.Trigger

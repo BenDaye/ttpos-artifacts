@@ -21,7 +21,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@ttpos/ui/lib/utils'
 
 // 拖拽手柄需要附加到具体元素上的属性集合，由 dnd-kit 提供
 export type SortableHandleProps = HTMLAttributes<HTMLElement> & {

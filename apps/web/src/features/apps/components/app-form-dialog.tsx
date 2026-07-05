@@ -1,13 +1,13 @@
 import type { AppSummary } from '@ttpos/shared'
+import { Checkbox } from '@ttpos/ui/components/checkbox'
+import { FileInput } from '@ttpos/ui/components/file-input'
+import { Input } from '@ttpos/ui/components/input'
+import { Label } from '@ttpos/ui/components/label'
+import { Textarea } from '@ttpos/ui/components/textarea'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { EntityFormDialog } from '@/shared/components/common/entity-form-dialog'
-import { Checkbox } from '@/shared/components/ui/checkbox'
-import { FileInput } from '@/shared/components/ui/file-input'
-import { Input } from '@/shared/components/ui/input'
-import { Label } from '@/shared/components/ui/label'
-import { Textarea } from '@/shared/components/ui/textarea'
 import { useCreateAppMutation, useUpdateAppMutation } from '../hooks'
 
 interface Props {

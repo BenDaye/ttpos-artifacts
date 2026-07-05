@@ -1,5 +1,5 @@
 import type { ComponentPropsWithoutRef } from 'react'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@ttpos/ui/lib/utils'
 
 export function Textarea({ className, ...props }: ComponentPropsWithoutRef<'textarea'>) {
   return (

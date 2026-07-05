@@ -1,13 +1,13 @@
 import type { ThemeMode } from '@ttpos/shared'
-import { Monitor, Moon, Sun } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
-import { Button } from '@/shared/components/ui/button'
+import { Button } from '@ttpos/ui/components/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/shared/components/ui/dropdown-menu'
+} from '@ttpos/ui/components/dropdown-menu'
+import { Monitor, Moon, Sun } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useTheme } from './theme-provider'
 
 const ICON_MAP: Record<ThemeMode, typeof Sun> = {

@@ -1,19 +1,19 @@
 import type { TelemetryRange } from '../api'
+import { Badge } from '@ttpos/ui/components/badge'
+import { Button } from '@ttpos/ui/components/button'
+import { Checkbox } from '@ttpos/ui/components/checkbox'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@ttpos/ui/components/popover'
+import { ToggleGroup, ToggleGroupItem } from '@ttpos/ui/components/toggle-group'
 import { Filter, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useAppsListQuery } from '@/features/apps/hooks'
 import { useArchitecturesQuery } from '@/features/architectures/hooks'
 import { useChannelsQuery } from '@/features/channels/hooks'
 import { usePlatformsQuery } from '@/features/platforms/hooks'
-import { Badge } from '@/shared/components/ui/badge'
-import { Button } from '@/shared/components/ui/button'
-import { Checkbox } from '@/shared/components/ui/checkbox'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/shared/components/ui/popover'
-import { ToggleGroup, ToggleGroupItem } from '@/shared/components/ui/toggle-group'
 
 export interface TelemetryFilters {
   apps: string[]

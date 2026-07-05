@@ -1,7 +1,7 @@
 import type { ComponentPropsWithoutRef, ReactNode } from 'react'
 import { Menu as BaseMenu } from '@base-ui-components/react/menu'
+import { cn } from '@ttpos/ui/lib/utils'
 import { Check } from 'lucide-react'
-import { cn } from '@/shared/lib/utils'
 
 export const DropdownMenu = BaseMenu.Root
 export const DropdownMenuTrigger = BaseMenu.Trigger

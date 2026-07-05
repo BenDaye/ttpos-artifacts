@@ -1,7 +1,7 @@
 import type { ComponentPropsWithoutRef } from 'react'
 import { Checkbox as BaseCheckbox } from '@base-ui-components/react/checkbox'
+import { cn } from '@ttpos/ui/lib/utils'
 import { Check } from 'lucide-react'
-import { cn } from '@/shared/lib/utils'
 
 export function Checkbox({
   className,

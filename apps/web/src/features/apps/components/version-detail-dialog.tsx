@@ -1,13 +1,7 @@
 import type { AppVersion, ArtifactEntry } from '@ttpos/shared'
 import { Link } from '@tanstack/react-router'
-import { BookOpen, Check, Copy, Download, ExternalLink, FilePlus, Pencil, Trash2 } from 'lucide-react'
-import { useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import ReactMarkdown from 'react-markdown'
-import { toast } from 'sonner'
-import { ConfirmDialog } from '@/shared/components/common/confirm-dialog'
-import { Badge } from '@/shared/components/ui/badge'
-import { Button, buttonVariants } from '@/shared/components/ui/button'
+import { Badge } from '@ttpos/ui/components/badge'
+import { Button, buttonVariants } from '@ttpos/ui/components/button'
 import {
   Dialog,
   DialogBody,
@@ -16,9 +10,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/shared/components/ui/dialog'
+} from '@ttpos/ui/components/dialog'
+import { cn } from '@ttpos/ui/lib/utils'
+import { BookOpen, Check, Copy, Download, ExternalLink, FilePlus, Pencil, Trash2 } from 'lucide-react'
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import ReactMarkdown from 'react-markdown'
+import { toast } from 'sonner'
+import { ConfirmDialog } from '@/shared/components/common/confirm-dialog'
 import { formatDateTime } from '@/shared/lib/format'
-import { cn } from '@/shared/lib/utils'
 import { appsApi, buildDeleteArtifactPayload } from '../api'
 import { useDeleteArtifactMutation, useDeleteVersionMutation } from '../hooks'
 import { AddArtifactDialog } from './add-artifact-dialog'

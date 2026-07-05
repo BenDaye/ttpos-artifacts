@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
 import { Link, useRouterState } from '@tanstack/react-router'
+import { cn } from '@ttpos/ui/lib/utils'
 import { useTranslation } from 'react-i18next'
 import { PageHeader } from '@/shared/components/page-header'
-import { cn } from '@/shared/lib/utils'
 
 const TABS = [
   { to: '/settings', match: '/settings', labelKey: 'tabs.users' },

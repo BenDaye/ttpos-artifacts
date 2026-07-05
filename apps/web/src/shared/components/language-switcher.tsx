@@ -1,12 +1,12 @@
-import { Languages } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
-import { Button } from '@/shared/components/ui/button'
+import { Button } from '@ttpos/ui/components/button'
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuTrigger,
-} from '@/shared/components/ui/dropdown-menu'
+} from '@ttpos/ui/components/dropdown-menu'
+import { Languages } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 const LANGS = ['en', 'zh'] as const
 

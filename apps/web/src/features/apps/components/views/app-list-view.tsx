@@ -2,13 +2,13 @@ import type { AppSummary } from '@ttpos/shared'
 import type { AppViewProps } from './types'
 import type { SortableItemRenderProps } from '@/shared/components/common/sortable-list'
 import { verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { Button } from '@ttpos/ui/components/button'
+import { Card } from '@ttpos/ui/components/card'
+import { cn } from '@ttpos/ui/lib/utils'
 import { Boxes, GripVertical, Pencil, Trash2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { SortableList } from '@/shared/components/common/sortable-list'
-import { Button } from '@/shared/components/ui/button'
-import { Card } from '@/shared/components/ui/card'
 import { formatDateTime } from '@/shared/lib/format'
-import { cn } from '@/shared/lib/utils'
 
 export function AppListView({ apps, onSelect, onEdit, onDelete, onReorder, canReorder = false }: AppViewProps) {
   const { t } = useTranslation(['apps', 'common'])

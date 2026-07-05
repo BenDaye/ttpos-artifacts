@@ -1,9 +1,9 @@
+import { Button } from '@ttpos/ui/components/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@ttpos/ui/components/card'
+import { Input } from '@ttpos/ui/components/input'
+import { Label } from '@ttpos/ui/components/label'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Button } from '@/shared/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card'
-import { Input } from '@/shared/components/ui/input'
-import { Label } from '@/shared/components/ui/label'
 import { generateTufPythonScript } from '../scripts/generateTufScript'
 import { ScriptOutput } from './script-output'
 

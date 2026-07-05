@@ -1,6 +1,6 @@
 import type { ComponentPropsWithoutRef, ReactElement, ReactNode } from 'react'
 import { Tooltip as BaseTooltip } from '@base-ui-components/react/tooltip'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@ttpos/ui/lib/utils'
 
 export const TooltipProvider = BaseTooltip.Provider
 export const Tooltip = BaseTooltip.Root

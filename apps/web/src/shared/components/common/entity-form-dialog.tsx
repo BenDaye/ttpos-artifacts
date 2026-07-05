@@ -1,7 +1,5 @@
 import type { ReactNode } from 'react'
-import { Loader2 } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
-import { Button } from '@/shared/components/ui/button'
+import { Button } from '@ttpos/ui/components/button'
 import {
   Dialog,
   DialogBody,
@@ -10,7 +8,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/shared/components/ui/dialog'
+} from '@ttpos/ui/components/dialog'
+import { Loader2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 interface EntityFormDialogProps {
   open: boolean

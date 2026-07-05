@@ -1,6 +1,6 @@
+import { cn } from '@ttpos/ui/lib/utils'
 import { useTranslation } from 'react-i18next'
 import { buildInfo, formatBuildTooltip, formatVersionLabel } from '@/shared/lib/app-version'
-import { cn } from '@/shared/lib/utils'
 
 /**
  * 侧边栏底部常驻的版本徽标。

@@ -1,9 +1,9 @@
 import type { TeamUserPermissions } from '@ttpos/shared'
+import { Checkbox } from '@ttpos/ui/components/checkbox'
 import { useTranslation } from 'react-i18next'
 import { useArchitecturesQuery } from '@/features/architectures/hooks'
 import { useChannelsQuery } from '@/features/channels/hooks'
 import { usePlatformsQuery } from '@/features/platforms/hooks'
-import { Checkbox } from '@/shared/components/ui/checkbox'
 
 export function makeEmptyPermissions(): TeamUserPermissions {
   return {

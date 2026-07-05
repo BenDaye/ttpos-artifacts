@@ -1,6 +1,6 @@
 import type { ComponentPropsWithoutRef, ReactNode } from 'react'
 import { Popover as BasePopover } from '@base-ui-components/react/popover'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@ttpos/ui/lib/utils'
 
 export const Popover = BasePopover.Root
 export const PopoverTrigger = BasePopover.Trigger

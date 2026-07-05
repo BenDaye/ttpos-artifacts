@@ -1,6 +1,6 @@
 import type { ComponentPropsWithoutRef } from 'react'
 import { Avatar as BaseAvatar } from '@base-ui-components/react/avatar'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@ttpos/ui/lib/utils'
 
 export function Avatar({
   className,

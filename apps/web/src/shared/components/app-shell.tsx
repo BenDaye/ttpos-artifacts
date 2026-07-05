@@ -1,5 +1,8 @@
 import type { ComponentType } from 'react'
 import { Link, useRouter } from '@tanstack/react-router'
+import { Button } from '@ttpos/ui/components/button'
+import { Separator } from '@ttpos/ui/components/separator'
+import { cn } from '@ttpos/ui/lib/utils'
 import {
   BarChart3,
   ChevronLeft,
@@ -15,13 +18,10 @@ import {
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/features/auth/auth-store'
-import { cn } from '@/shared/lib/utils'
 import { useUiStore } from '@/shared/stores/ui-store'
 import { AppVersionBadge } from './app-version-badge'
 import { LanguageSwitcher } from './language-switcher'
 import { ThemeSwitcher } from './theme-switcher'
-import { Button } from './ui/button'
-import { Separator } from './ui/separator'
 
 interface NavItem {
   to: string

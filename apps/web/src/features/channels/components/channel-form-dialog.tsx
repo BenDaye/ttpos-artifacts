@@ -1,10 +1,10 @@
 import type { Channel } from '@ttpos/shared'
+import { Input } from '@ttpos/ui/components/input'
+import { Label } from '@ttpos/ui/components/label'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { EntityFormDialog } from '@/shared/components/common/entity-form-dialog'
-import { Input } from '@/shared/components/ui/input'
-import { Label } from '@/shared/components/ui/label'
 import {
   useCreateChannelMutation,
   useUpdateChannelMutation,

@@ -1,10 +1,7 @@
 import type { ChangelogEntry } from '@ttpos/shared'
 import type { ReactNode } from 'react'
-import { useMemo } from 'react'
-import { useTranslation } from 'react-i18next'
-import ReactMarkdown from 'react-markdown'
-import { Badge } from '@/shared/components/ui/badge'
-import { Button } from '@/shared/components/ui/button'
+import { Badge } from '@ttpos/ui/components/badge'
+import { Button } from '@ttpos/ui/components/button'
 import {
   Dialog,
   DialogBody,
@@ -13,7 +10,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/shared/components/ui/dialog'
+} from '@ttpos/ui/components/dialog'
+import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
+import ReactMarkdown from 'react-markdown'
 
 interface ChangelogModalProps {
   open: boolean

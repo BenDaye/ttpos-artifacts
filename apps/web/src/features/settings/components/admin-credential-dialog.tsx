@@ -1,11 +1,11 @@
 import type { UserProfile } from '@ttpos/shared'
+import { Input } from '@ttpos/ui/components/input'
+import { Label } from '@ttpos/ui/components/label'
+import { PasswordInput } from '@ttpos/ui/components/password-input'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { EntityFormDialog } from '@/shared/components/common/entity-form-dialog'
-import { Input } from '@/shared/components/ui/input'
-import { Label } from '@/shared/components/ui/label'
-import { PasswordInput } from '@/shared/components/ui/password-input'
 import { useAdminUpdateMutation } from '../hooks'
 
 interface Props {

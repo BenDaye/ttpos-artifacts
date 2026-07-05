@@ -1,9 +1,9 @@
 import type { ComponentPropsWithoutRef } from 'react'
+import { Input } from '@ttpos/ui/components/input'
+import { cn } from '@ttpos/ui/lib/utils'
 import { Eye, EyeOff } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Input } from '@/shared/components/ui/input'
-import { cn } from '@/shared/lib/utils'
 
 /**
  * 带明文切换的密码输入框:复用 Input 的全部样式与 aria-invalid 行为,

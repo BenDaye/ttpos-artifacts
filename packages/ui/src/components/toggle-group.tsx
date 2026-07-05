@@ -1,6 +1,6 @@
 import type { ComponentPropsWithoutRef } from 'react'
 import { ToggleGroup as BaseToggleGroup } from '@base-ui-components/react/toggle-group'
-import { cn } from '@/shared/lib/utils'
+import { cn } from '@ttpos/ui/lib/utils'
 
 export function ToggleGroup({
   className,

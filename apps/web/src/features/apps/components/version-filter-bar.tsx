@@ -1,17 +1,17 @@
+import { Badge } from '@ttpos/ui/components/badge'
+import { Button } from '@ttpos/ui/components/button'
+import { Checkbox } from '@ttpos/ui/components/checkbox'
+import { Input } from '@ttpos/ui/components/input'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@ttpos/ui/components/popover'
 import { Filter, Search, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useArchitecturesQuery } from '@/features/architectures/hooks'
 import { useChannelsQuery } from '@/features/channels/hooks'
 import { usePlatformsQuery } from '@/features/platforms/hooks'
-import { Badge } from '@/shared/components/ui/badge'
-import { Button } from '@/shared/components/ui/button'
-import { Checkbox } from '@/shared/components/ui/checkbox'
-import { Input } from '@/shared/components/ui/input'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/shared/components/ui/popover'
 
 export interface VersionFilters {
   channels: string[]

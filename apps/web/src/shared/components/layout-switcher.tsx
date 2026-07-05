@@ -1,8 +1,8 @@
 import type { LayoutMode } from '@ttpos/shared'
+import { ToggleGroup, ToggleGroupItem } from '@ttpos/ui/components/toggle-group'
+import { cn } from '@ttpos/ui/lib/utils'
 import { Columns, LayoutGrid, List as ListIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { ToggleGroup, ToggleGroupItem } from '@/shared/components/ui/toggle-group'
-import { cn } from '@/shared/lib/utils'
 import { useUiStore } from '@/shared/stores/ui-store'
 
 const ITEMS: { value: LayoutMode, icon: typeof LayoutGrid, labelKey: string }[] = [

@@ -1,9 +1,9 @@
 import type { ComponentPropsWithoutRef, ReactElement, ReactNode } from 'react'
 import type { ControllerProps, FieldPath, FieldValues } from 'react-hook-form'
+import { Label } from '@ttpos/ui/components/label'
+import { cn } from '@ttpos/ui/lib/utils'
 import { Children, cloneElement, createContext, isValidElement, use, useId } from 'react'
 import { Controller, FormProvider, useFormContext } from 'react-hook-form'
-import { cn } from '@/shared/lib/utils'
-import { Label } from './label'
 
 export const Form = FormProvider
 

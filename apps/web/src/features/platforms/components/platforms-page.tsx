@@ -1,4 +1,10 @@
 import type { Platform } from '@ttpos/shared'
+import { Badge } from '@ttpos/ui/components/badge'
+import { Button } from '@ttpos/ui/components/button'
+import { Card, CardContent } from '@ttpos/ui/components/card'
+import { Input } from '@ttpos/ui/components/input'
+import { Skeleton } from '@ttpos/ui/components/skeleton'
+import { cn } from '@ttpos/ui/lib/utils'
 import { GripVertical, Layers, Pencil, Plus, Search, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -8,12 +14,6 @@ import { SortableList } from '@/shared/components/common/sortable-list'
 import { EmptyState } from '@/shared/components/empty-state'
 import { ErrorState } from '@/shared/components/error-state'
 import { PageHeader } from '@/shared/components/page-header'
-import { Badge } from '@/shared/components/ui/badge'
-import { Button } from '@/shared/components/ui/button'
-import { Card, CardContent } from '@/shared/components/ui/card'
-import { Input } from '@/shared/components/ui/input'
-import { Skeleton } from '@/shared/components/ui/skeleton'
-import { cn } from '@/shared/lib/utils'
 import {
   useDeletePlatformMutation,
   usePlatformsQuery,

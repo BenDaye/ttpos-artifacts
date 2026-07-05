@@ -1,13 +1,13 @@
+import { Button } from '@ttpos/ui/components/button'
+import { Checkbox } from '@ttpos/ui/components/checkbox'
+import { Input } from '@ttpos/ui/components/input'
+import { Label } from '@ttpos/ui/components/label'
 import { Copy } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { useAppsListQuery } from '@/features/apps/hooks'
 import { EntityFormDialog } from '@/shared/components/common/entity-form-dialog'
-import { Button } from '@/shared/components/ui/button'
-import { Checkbox } from '@/shared/components/ui/checkbox'
-import { Input } from '@/shared/components/ui/input'
-import { Label } from '@/shared/components/ui/label'
 import { useCreateTokenMutation } from '../hooks'
 
 interface Props {
