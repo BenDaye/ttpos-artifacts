@@ -1,22 +1,25 @@
-# ---- Stage 1: Build ----
+# ---- Stage 1: Prune ----
+# turbo prune 生成只含 @ttpos/web 及其依赖的剪枝目录：
+# out/json = 所需 manifest 子集 + 剪枝 bun.lock，out/full = 源码子集。
+# 新增 workspace 成员自动纳入，无需再维护逐成员 COPY 清单（ENH-018）。
+FROM oven/bun:1.3.13-alpine AS pruner
+
+WORKDIR /workspace
+
+COPY . .
+RUN bunx turbo@2.10.3 prune @ttpos/web --docker
+
+# ---- Stage 2: Build ----
 FROM oven/bun:1.3.13-alpine AS builder
 
 WORKDIR /workspace
 
-# Install deps (cache layer)
-COPY package.json bun.lock ./
-COPY packages/config/package.json packages/config/
-COPY packages/shared/package.json packages/shared/
-COPY apps/web/package.json apps/web/
-# 工作区新增成员的 manifest 必须齐全，否则 --frozen-lockfile 因 workspace 缺失而失败
-COPY apps/mcp/package.json apps/mcp/
-COPY apps/server/package.json apps/server/
+# Install deps (cache layer)——manifest 未变时该层缓存命中
+COPY --from=pruner /workspace/out/json/ .
 RUN bun install --frozen-lockfile
 
-# Copy source and build
-COPY tsconfig.json eslint.config.js ./
-COPY packages packages
-COPY apps apps
+# Copy pruned source and build（根 tsconfig/eslint.config 不参与构建，extends 链走 @ttpos/config 包）
+COPY --from=pruner /workspace/out/full/ .
 
 # Build-time placeholder — replaced at container start by docker-entrypoint.sh
 ENV VITE_API_URL=__VITE_API_URL_PLACEHOLDER__
@@ -28,7 +31,7 @@ ARG GIT_COMMIT=unknown
 ENV GIT_COMMIT=$GIT_COMMIT
 RUN bun run --filter @ttpos/web build
 
-# ---- Stage 2: Serve ----
+# ---- Stage 3: Serve ----
 FROM nginx:alpine
 
 RUN rm /etc/nginx/conf.d/default.conf

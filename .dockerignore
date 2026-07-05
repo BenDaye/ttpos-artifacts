@@ -5,6 +5,7 @@
 *
 !package.json
 !bun.lock
+!turbo.json
 !tsconfig.json
 !eslint.config.js
 !packages
