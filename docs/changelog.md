@@ -1,5 +1,13 @@
 # 变更日志
 
+## 2026-07-05 10:58 [progress]
+
+完成 ENH-017 / ENH-018 两个 CI/构建改善任务并以 web v0.2.3 发版实证全链路，staging 与 prod 均已更新：
+
+- ENH-018：web/mcp Dockerfile 改用 `turbo prune` 剪枝构建，删除逐成员手工 COPY 清单（新增 workspace 成员自动纳入，staging 实测），`.dockerignore` 仅放行 `turbo.json` 一行；web 镜像体积与原构建一致（94.7MB），mcp 镜像因只装自身依赖从 388MB 降至 190MB。
+- ENH-017：三个 build workflow 删除 `on.push.paths`，改由 ~30s 的 `affected` 预检 job（`turbo ls --affected` 按依赖图判定 + git diff 兜底包图外文件）门控质量门；tag 发版门控一字未动，tag/首推/异常一律保守全跑。触发矩阵六场景（docs-only 跳过、改 shared 传递带跑 web、server-only 跳过、改 config 带跑 web+mcp 等）在原型分支实测后合入 main。
+- 发版 web v0.2.3 验证 tag 链路：质量门（tag 保守全跑）→ prune Dockerfile CI 实建 → ghcr 推送 `0.2.3`/`latest`/`99dc47d` 三 tag。staging（vm-node02）与 prod（ttpos-releases）先后 `compose pull + up -d dashboard` 精准更新单容器；两边均验证 HTTP 200、`GIT_COMMIT` 注入、`VITE_API_URL` 占位符零残留；prod 侧 api/db/cache/caddy 容器 ID 全程未变、Caddy 零 ACME 活动（红线合规）。
+
 ## 2026-07-02 19:10 [progress]
 
 Ralph 接管 prod B 方案前做 prod 只读拓扑核查，确认 prod 当前没有 Caddy、只有 nginx 绑定 80，且真实入口域名是 `*.ttpos.com`。补充 prod Caddy 受控切换产物：`deploy/prod-caddy-base.Caddyfile`、`deploy/docker-compose.prod-caddy.yml`，并让 `migrate-caddy-shortlinks.sh` 支持 `--source-site`，用于从 staging canonical block 生成 `http://update.ttpos.com` 候选配置；prod runbook 改为先用临时端口预检 Caddy，再停 nginx 切 80，避免在 prod 上手写 Caddy block。
