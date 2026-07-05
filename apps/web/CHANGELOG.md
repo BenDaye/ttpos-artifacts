@@ -14,6 +14,12 @@ bump 版本号、归档本文件的 Unreleased 段，并打印建议的 commit /
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-07-05
+
+### Changed
+
+- 镜像构建改用 `turbo prune` 剪枝上下文（无功能变化）：Dockerfile 不再手工维护 workspace 成员 COPY 清单，新增成员自动纳入。
+
 ## [0.2.2] - 2026-06-28
 
 ### Fixed
