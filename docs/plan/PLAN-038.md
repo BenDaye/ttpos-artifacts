@@ -9,6 +9,14 @@
 - **参考实现**: staging(vm-node02) `/opt/caddy/` 独立栈 + 裸名 `caddy-net`（带外创建、caddy 与 app 均 external 引用）+ 按 container_name 反代。已只读核对 staging `/opt/caddy/docker-compose.yml` 为 `caddy-net: {external:true}`、`docker network ls` 实名精确裸名无前缀——**prod 逐字对齐此形态**。
 - **prod 主机**: ttpos-releases / 34.92.53.164 / 部署目录 `/ttpos-releases/`
 
+> ## 🔴 硬约束（红线，不可违反）：Caddy 全程不得签发/重签任何 TLS 证书
+> prod 是 Cloudflare 终止 TLS、Caddy 只做 http 源站。迁移中新 Caddy **绝不能**触发 ACME 证书签发（会重签证书、且可能撞 Let's Encrypt 限流把域名打黑）。三层保险必须逐字延续、迁移后逐条断言：
+> 1. 新 `/opt/caddy/Caddyfile` **必须保留全局块 `{ auto_https off }`**（migrate 脚本只改站点块、不管全局块，靠人工搬——最易漏，列为首要 gate）。
+> 2. 三个站点地址 **必须保留 `http://` 前缀**（`http://releases.ttpos.com` / `http://update.ttpos.com` / `http://aitrans.ttpos.com`），不得写成裸域名。
+> 3. 新 caddy 容器 **只发布 `:80`，绝不发布 `:443`**；**绝不照搬 staging 的 `caddy-cf` 镜像/DNS-01/TLS 配置**（staging 真签证书，prod 不签）——prod 沿用 `caddy:2.11.4-alpine` http-only 形态。
+>
+> **验证闸**：`diff 最终Caddyfile vs 原始主机副本` 必须只有两处上游主机名不同（含 `{auto_https off}` 与三个 `http://` 零漂移）；`caddy validate` 后 + cutover 后立即查 caddy 日志**零 ACME/certificate 活动**、无到 `acme-v02.api.letsencrypt.org` 的出站；`ss -ltnp` 确认新 caddy 无 :443 监听。任一不满足即**中止/回滚**，绝不放行。
+
 ## 一、目标与不做
 
 ### 目标
@@ -84,8 +92,8 @@ migrate-caddy-shortlinks.sh --source-site releases.ttpos.dev --site http://relea
   --dashboard-upstream faynosync-prod-dashboard:3000 --validate none
 ```
 
-- **逐字保留**：`{auto_https off}` 全局块、`/dl` map 15 条、`request_body max_size 1GB`、`aitrans.ttpos.com→172.17.0.1:8005`（aitrans 纯手工搬、grep 复核）。
-- **diff gate**：`diff tmp/prod-host.final.Caddyfile <(原始主机副本)` 逐行核，与线上仅两处上游主机名（api/dashboard container_name）不同，其余（含 aitrans/dl map/1GB/全局块）零漂移；releases 上游 `dashboard:3000→faynosync-prod-dashboard:3000` 单独 diff 核。
+- **逐字保留**：`{auto_https off}` 全局块（🔴 红线，见硬约束）、三个站点的 `http://` 前缀（🔴 红线）、`/dl` map 15 条、`request_body max_size 1GB`、`aitrans.ttpos.com→172.17.0.1:8005`（aitrans 纯手工搬、grep 复核）。
+- **diff gate（含证书红线断言）**：`diff tmp/prod-host.final.Caddyfile <(原始主机副本)` 逐行核，与线上仅两处上游主机名（api/dashboard container_name）不同，其余零漂移；额外硬断言 `grep -qx '\tauto_https off' 最终文件`（全局块在）、`grep -c '^http://' 最终文件` == 3（三站 http:// 前缀在）；releases 上游 `dashboard:3000→faynosync-prod-dashboard:3000` 单独 diff 核。任一断言失败即中止（防证书重签）。
 
 ### 死 nginx
 **保留不动**（PROD-CADDY-API-NOTE 明列的 rollback 锚）。清理属正交动作、留 follow-up；**全程禁 `--remove-orphans`** 防误删。
@@ -144,6 +152,7 @@ migrate-caddy-shortlinks.sh --source-site releases.ttpos.dev --site http://relea
 - **config**：脚本派生候选比对线上仅上游名不同；目标主机 `docker exec <caddy> caddy validate`；`caddy_config_test.go::TestCaddyShortLatestRouteContract`（`cd apps/server/server && go test`）绿。
 - **集成（彩排）**：临时隔离网演练「`docker network create` + `connect` 运行中容器 + container_name 解析 + 跨 bridge 到 172.17.0.1:8005」（Architect 已只读实测等价覆盖，10min dry-run 作廉价保险即可，不需真流量）。
 - **e2e（cutover 后经 Cloudflare 公网 5 路）**：`update.ttpos.com/health`→200；`/dl/cashier.apk`→302；`/dl/unknown.apk`→400+`Cache-Control:no-store`；`releases.ttpos.com/`→200；`aitrans.ttpos.com/`→upstream 正常（**手工搬运无自动化兜底，必须经新 caddy 功能冒烟**）。
+- **🔴 证书红线（cutover 后立即，任一异常即回滚）**：`docker logs <新caddy>` **零** `certificate`/`acme`/`obtain`/`trying to solve` 字样；`ss -ltnp` 新 caddy **无 :443 监听**；确认无到 `acme-v02.api.letsencrypt.org` 的出站尝试。
 - **observability**：容器健康/restart 计数；`ss -ltnp ':80'` 归属新 caddy；/dl 302、/health 200、aitrans 200 持续观察；db/cache healthy 不变。
 
 ## 五、开放决策（给用户拍板）
@@ -161,11 +170,13 @@ migrate-caddy-shortlinks.sh --source-site releases.ttpos.dev --site http://relea
 
 **Viable Options**：A（选中，见二节）；B（原地搬网络定义 = 全栈停机 + 网络销毁重建，违背数据面零触碰，落选）；保持借用网络（不解决 owner 反转，违背 PLAN-037 边界）。
 
-**Pre-mortem（4 场景）**：
+**Pre-mortem（5 场景）**：
 1. **host:80 双绑 bind 失败** → 严格先 down 旧确认 `ss -ltnp` 释放再 up 新，禁两栈同 publish 80。
 2. **上游名解析错 502**（container_name 未接入 caddy-net，**或 caddy-net 被加前缀成 `caddy_caddy-net`**）→ 裸名创建 + `grep -xw` 命名硬断言 + Step2 先 connect 并从临时容器验解析连通再翻 80 + `caddy validate` 双关。
 3. **aitrans vhost 丢失/host 网关不可达** → 逐字搬 + grep 复核 + Step2 从 caddy-net 临时容器 `curl 172.17.0.1:8005` 预检（已预验通）；不可达则 `extra_hosts: host-gateway` + `host.docker.internal:8005` 回退。
 4. **镜像漂移 / interim 不受控 `compose up` 触发非预期 recreate** → 防漂移闸（recreate 前硬断言本地 sha==running sha、不等即中止、禁 `--pull`/`--remove-orphans`、先打 `migration-<UTC>` 不可变 tag）+ PROD-CADDY-API-NOTE 醒目前置备注 + PLAN-036 checklist 交接。
+5. **🔴 Caddy 触发证书签发/重签（用户红线）**：新 Caddyfile 丢了 `{auto_https off}` 全局块、或站点名丢了 `http://` 前缀、或照搬 staging 的 caddy-cf/TLS 配置 → Caddy 默认 auto_https 开，对 releases/update/aitrans 三域发起 ACME 签发，重签证书且可能撞 Let's Encrypt 限流打黑域名。
+   - 缓解：见文首🔴硬约束三层保险 + diff gate 的 `auto_https off`/`^http://`×3 硬断言（派生后、cutover 前）；沿用 `caddy:2.11.4-alpine` 只绑 :80、绝不用 caddy-cf；cutover 后立即查 caddy 日志零 ACME 活动 + 无 :443 监听，异常即回滚旧 overlay。
 - （附加：Cloudflare 源站探活失败）→ 行为与现状一致(TLS 终止、http 源站)，cutover 后即冒烟，异常即回滚旧 overlay，低峰 + CF 重试吸收空窗。
 
 **ADR**：Decision=Option A（caddy-net owner 反转 + /opt/caddy + container_name，对称 staging）；Drivers=downtime 最小化/解析稳妥/aitrans 不波及/数据面零触碰/可回滚；Alternatives=B(全栈停机重建网络)/保持借用网络；Why=A 用在线 connect 把停机压到 host:80 秒级、db/cache 不动、回滚锚清晰、终态对称已验证 staging，且 Synthesis 把 recreate 空窗都转嫁 PLAN-036；Consequences=app compose 加 caddy-net external(本次只改文件不专门 recreate、随 PLAN-036 自然生效)、引入「compose 已改未 recreate」过渡态(防漂移闸 + 备注管控)、主机 Caddyfile 收归 /opt/caddy、旧锚保留一 aging 周期、镜像债延后；Follow-ups=(a)镜像 faynosync→ttpos 切换独立任务 (b)Caddy infra 独立 repo 版本化 (c)aging 后清理旧 overlay + 死 nginx + short-latest.json (d)PLAN-036 认领 caddy-net 生效验证。
