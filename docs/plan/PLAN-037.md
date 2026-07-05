@@ -1,7 +1,7 @@
 # PLAN-037 Caddy 与 app 项目解耦：仓库归位 + 目标态设计
 
-- **status**: draft（设计已与用户逐段确认，待写实施计划）
-- **task**: 待立（实施阶段立 REFACTOR-010）
+- **status**: implemented（REFACTOR-010 完成：删 2 越界文件 + Caddyfile 边界头 + 脚本 usage + 修 PLAN-036 遗留测试路径 bug；architect APPROVED，gate 全绿。prod 主机迁移仍为后续单独授权任务）
+- **task**: REFACTOR-010
 - **createdAt**: 2026-07-05
 - **mode**: DELIBERATE（触碰部署边界与反代契约认知，但本次仅动仓库、不碰线上 prod）
 - **决策方式**: brainstorming 逐问收敛（范围、prod 片段去留、片段组织、caddy 栈处置均由用户逐项拍板）

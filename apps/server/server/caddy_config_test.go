@@ -33,7 +33,7 @@ var expectedShortLatestMappings = map[string]shortLatestMapping{
 }
 
 func TestCaddyShortLatestRouteContract(t *testing.T) {
-	data, err := os.ReadFile("../../deploy/Caddyfile")
+	data, err := os.ReadFile("../../../deploy/Caddyfile")
 	if err != nil {
 		t.Fatalf("read Caddyfile: %v", err)
 	}

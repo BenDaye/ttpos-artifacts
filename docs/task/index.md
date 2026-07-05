@@ -56,4 +56,5 @@
 | [x] | REFACTOR-007 | 将 /dl 短链入口迁到 Caddy | P1 | completed |
 | [x] | REFACTOR-008 | server 单租户焊死（single-owner lockdown） | P1 | completed |
 | [x] | REFACTOR-009 | 仓库顶层 monorepo 化（top-level monorepo migration） | P1 | completed |
+| [x] | REFACTOR-010 | Caddy 与 app 项目解耦（仓库归位） | P2 | completed |
 | [ ] | QUAL-004 | 修复 rotted 集成套件并重塑单 owner 测试 | P2 | pending |

@@ -35,7 +35,7 @@
 - `apps/server/`：FaynoSync Go API（module `faynoSync` 不变），负责版本、应用、上传、下载、认证、遥测和 TUF 相关服务。镜像 `ttpos-server`。经薄 `package.json`（`@ttpos/server`）挂进 turbo 任务图；其 `test` 只跑单元包，`test:integration` 为全量逃生口（需 Mongo/Redis/S3，见 QUAL-004）。
 - `packages/`：`config`（共享 tsconfig 等）、`shared`（共享 TS 代码）。
 - `.github/workflows/`：TTPOS Flutter 多平台构建与 FaynoSync 分发流程（`build-dashboard.yaml` / `build-mcp.yaml` / `build-server.yaml` 对应三镜像；`build-web.yaml` 属 Flutter，勿动）。
-- `deploy/`：Docker Compose 与反向代理部署配置（container_name/网络别名保持 `faynosync-*`，Caddy 反代依赖，勿改名）。
+- `deploy/`：本项目的部署产物——app compose（接入外部 `caddy-net`）+ 贡献给主机 Caddy 的**站点片段** `deploy/Caddyfile` + splice 脚本。**Caddy 本体、全局配置、网络与别的项目路由都归主机 infra，不进本仓库**（详见 PLAN-037）；container_name/网络别名保持 `faynosync-*`，Caddy 反代依赖，勿改名。
 - `docs/`：changelog、PMA plan/task 和项目决策记录。
 
 ## 常用命令
