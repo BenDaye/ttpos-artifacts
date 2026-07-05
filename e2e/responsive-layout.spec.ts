@@ -60,7 +60,7 @@ async function expectNoDocumentVerticalOverflow(page: Page) {
 async function expectReadableEmptyStateDescription(page: Page, text: string, minWidth: number) {
   const locator = page.getByText(text, { exact: true })
   await expect(locator).toBeVisible()
-  const body = locator.locator('xpath=ancestor::*[contains(@class, "dashboard-empty-state-body")][1]')
+  const body = locator.locator('xpath=ancestor::*[@data-slot="empty"][1]')
   await expect(body).toBeVisible()
   await expect.poll(async () => {
     const box = await body.boundingBox()
@@ -179,10 +179,10 @@ test.describe('Responsive layout', () => {
     await page.goto('/applications')
     await expectNoDocumentOverflow(page)
 
-    await page.getByRole('button', { name: 'Toggle navigation' }).click()
-    await expect(page.locator('aside[aria-label="Primary"]').getByRole('link', { name: 'Statistics' })).toBeVisible()
+    await page.getByRole('button', { name: 'Toggle Sidebar' }).click()
+    await expect(page.locator('[data-sidebar="sidebar"]').getByRole('link', { name: 'Statistics' })).toBeVisible()
 
-    await page.locator('aside[aria-label="Primary"]').getByRole('link', { name: 'Statistics' }).click()
+    await page.locator('[data-sidebar="sidebar"]').getByRole('link', { name: 'Statistics' }).click()
 
     await expect(page).toHaveURL(/\/statistics$/)
     await expect(page.getByRole('heading', { name: 'Statistics' })).toBeVisible()

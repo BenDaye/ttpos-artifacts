@@ -1,4 +1,5 @@
 import type { ComponentType, ReactNode } from 'react'
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@ttpos/ui/components/empty'
 import { cn } from '@ttpos/ui/lib/utils'
 import { Inbox } from 'lucide-react'
 
@@ -20,22 +21,24 @@ export function EmptyState({
   className,
 }: EmptyStateProps) {
   return (
-    <div
-      className={cn(
-        'flex min-w-0 w-full max-w-full flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border p-lg text-center sm:p-12',
-        className,
-      )}
-    >
-      <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
-        <Icon className={cn('size-6', iconClassName)} />
-      </div>
-      <div className="dashboard-empty-state-body flex min-w-0 w-full flex-col items-center gap-2">
-        <h3 className="w-full max-w-full break-words text-base font-medium text-foreground">{title}</h3>
+    <Empty className={cn('border border-dashed border-border p-lg sm:p-12', className)}>
+      <EmptyHeader>
+        <EmptyMedia
+          variant="icon"
+          className="size-12 rounded-full [&_svg]:size-6"
+        >
+          <Icon className={iconClassName} />
+        </EmptyMedia>
+        <EmptyTitle className="text-base font-medium text-foreground">{title}</EmptyTitle>
         {description && (
-          <p className="w-full max-w-full break-words text-sm text-muted-foreground">{description}</p>
+          <EmptyDescription className="min-w-[200px]">{description}</EmptyDescription>
         )}
-        {action && <div className="mt-1 flex w-full max-w-full flex-wrap justify-center gap-2">{action}</div>}
-      </div>
-    </div>
+      </EmptyHeader>
+      {action && (
+        <EmptyContent className="mt-1">
+          {action}
+        </EmptyContent>
+      )}
+    </Empty>
   )
 }

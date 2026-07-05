@@ -1,21 +1,22 @@
 import type { ComponentType } from 'react'
-import { Link, useRouter } from '@tanstack/react-router'
-import { Button } from '@ttpos/ui/components/button'
-import { Separator } from '@ttpos/ui/components/separator'
-import { cn } from '@ttpos/ui/lib/utils'
+import { Link, useRouter, useRouterState } from '@tanstack/react-router'
 import {
-  BarChart3,
-  ChevronLeft,
-  Cpu,
-  GitBranch,
-  Layers,
-  LayoutGrid,
-  LogOut,
-  Menu,
-  Settings,
-  X,
-} from 'lucide-react'
-import { useEffect, useState } from 'react'
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+  useSidebar,
+} from '@ttpos/ui/components/sidebar'
+import { cn } from '@ttpos/ui/lib/utils'
+import { BarChart3, Cpu, GitBranch, Layers, LayoutGrid, LogOut, Settings } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/features/auth/auth-store'
 import { useUiStore } from '@/shared/stores/ui-store'
@@ -23,13 +24,13 @@ import { AppVersionBadge } from './app-version-badge'
 import { LanguageSwitcher } from './language-switcher'
 import { ThemeSwitcher } from './theme-switcher'
 
-interface NavItem {
+interface NavItemDef {
   to: string
   labelKey: string
   icon: ComponentType<{ className?: string }>
 }
 
-const NAV: NavItem[] = [
+const NAV: NavItemDef[] = [
   { to: '/applications', labelKey: 'nav.applications', icon: LayoutGrid },
   { to: '/channels', labelKey: 'nav.channels', icon: GitBranch },
   { to: '/platforms', labelKey: 'nav.platforms', icon: Layers },
@@ -39,137 +40,112 @@ const NAV: NavItem[] = [
 ]
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { t } = useTranslation('common')
   const collapsed = useUiStore(s => s.sidebarCollapsed)
   const toggleSidebar = useUiStore(s => s.toggleSidebar)
+
+  return (
+    <SidebarProvider
+      open={!collapsed}
+      onOpenChange={(open) => {
+        // Bridge SidebarProvider controlled mode to ui-store memory state.
+        // Call toggleSidebar only when the desired open state differs from current.
+        if (open === collapsed)
+          toggleSidebar()
+      }}
+    >
+      <AppShellContent collapsed={collapsed}>{children}</AppShellContent>
+    </SidebarProvider>
+  )
+}
+
+function AppShellContent({
+  children,
+  collapsed,
+}: {
+  children: React.ReactNode
+  collapsed: boolean
+}) {
+  const { t } = useTranslation('common')
+  const { setOpenMobile } = useSidebar()
   const clearAuth = useAuthStore(s => s.clear)
   const router = useRouter()
-  const [mobileNavOpen, setMobileNavOpen] = useState(false)
-
-  useEffect(() => {
-    if (!mobileNavOpen)
-      return
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setMobileNavOpen(false)
-      }
-    }
-
-    document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
-  }, [mobileNavOpen])
+  const pathname = useRouterState({ select: s => s.location.pathname })
 
   const handleLogout = () => {
-    setMobileNavOpen(false)
+    setOpenMobile(false)
     clearAuth()
     void router.navigate({ to: '/signin' })
   }
 
   return (
-    <div className="flex min-h-svh min-w-0 bg-background text-foreground">
-      {mobileNavOpen && (
-        <button
-          type="button"
-          className="fixed inset-0 z-40 bg-sidebar/60 transition-opacity duration-200 md:hidden"
-          aria-label="Close navigation"
-          onClick={() => setMobileNavOpen(false)}
-        />
-      )}
-      <aside
-        className={cn(
-          'dashboard-sidebar fixed inset-y-0 left-0 z-50 flex h-svh w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:sticky md:top-0 md:z-auto md:translate-x-0',
-          mobileNavOpen ? 'translate-x-0' : '-translate-x-full',
-          collapsed ? 'md:w-14' : 'md:w-60',
-        )}
-        aria-label="Primary"
-      >
-        <div
-          className={cn(
-            'flex h-14 items-center justify-between gap-2 px-3',
-            collapsed && 'md:justify-center md:px-1',
-          )}
-        >
-          <span className={cn('truncate text-sm font-semibold tracking-tight', collapsed && 'md:hidden')}>
-            {t('app.name')}
-          </span>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="hidden size-8 md:inline-flex"
-            onClick={toggleSidebar}
-            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          >
-            <ChevronLeft className={cn('size-4 transition-transform', collapsed && 'rotate-180')} />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-8 md:hidden"
-            onClick={() => setMobileNavOpen(false)}
-            aria-label="Close navigation"
-          >
-            <X className="size-4" />
-          </Button>
-        </div>
-        <Separator />
-        <nav className={cn('flex-1 overflow-y-auto p-2', collapsed && 'md:p-1')}>
-          <ul className="space-y-1">
-            {NAV.map(item => (
-              <li key={item.to}>
-                <Link
-                  to={item.to}
-                  activeOptions={{ exact: item.to === '/' }}
-                  className={cn(
-                    'flex items-center gap-2 rounded-md px-2 py-2 text-sm font-medium text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-                    collapsed && 'md:justify-center md:px-0',
-                  )}
-                  activeProps={{
-                    className:
-                      'bg-sidebar-accent text-sidebar-accent-foreground',
-                  }}
-                  onClick={() => setMobileNavOpen(false)}
-                >
-                  <item.icon className="size-4 shrink-0" />
-                  <span className={cn('truncate', collapsed && 'md:hidden')}>{t(item.labelKey)}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
-        <Separator />
-        <div className={cn('p-2', collapsed && 'md:p-1')}>
-          <Button
-            variant="ghost"
-            size="sm"
-            className={cn('w-full justify-start gap-2', collapsed && 'md:justify-center md:px-0')}
-            onClick={handleLogout}
-            aria-label="Sign out"
-          >
-            <LogOut className="size-4" />
-            <span className={cn(collapsed && 'md:hidden')}>{t('auth.logout', { defaultValue: 'Sign out' })}</span>
-          </Button>
-        </div>
-        <AppVersionBadge collapsed={collapsed} />
-      </aside>
+    <>
+      <Sidebar collapsible="icon">
+        <SidebarHeader>
+          <div className="flex h-10 items-center gap-1 px-1">
+            <SidebarTrigger className="hidden md:flex" />
+            <span className={cn(
+              'truncate text-sm font-semibold tracking-tight',
+              'group-data-[collapsible=icon]:hidden',
+            )}
+            >
+              {t('app.name')}
+            </span>
+          </div>
+        </SidebarHeader>
 
-      <div className="flex min-h-svh min-w-0 flex-1 flex-col">
+        <SidebarContent>
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {NAV.map(item => (
+                  <SidebarMenuItem key={item.to}>
+                    <SidebarMenuButton
+                      render={
+                        <Link
+                          to={item.to}
+                          onClick={() => setOpenMobile(false)}
+                        /> as unknown as React.ReactElement<Record<string, unknown>>
+                      }
+                      isActive={pathname.startsWith(item.to)}
+                      tooltip={t(item.labelKey)}
+                    >
+                      <item.icon />
+                      <span>{t(item.labelKey)}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
+
+        <SidebarFooter>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                onClick={handleLogout}
+                tooltip={t('auth.logout', { defaultValue: 'Sign out' })}
+              >
+                <LogOut />
+                <span>{t('auth.logout', { defaultValue: 'Sign out' })}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+          <AppVersionBadge collapsed={collapsed} />
+        </SidebarFooter>
+      </Sidebar>
+
+      <SidebarInset>
         <header className="sticky top-0 z-30 flex h-14 min-w-0 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            onClick={() => setMobileNavOpen(true)}
-            aria-label="Toggle navigation"
-          >
-            <Menu className="size-4" />
-          </Button>
+          <SidebarTrigger className="md:hidden" />
           <div className="min-w-0 flex-1" />
           <LanguageSwitcher />
           <ThemeSwitcher />
         </header>
-        <main className="min-w-0 max-w-full flex-1 overflow-x-hidden p-4 md:p-6">{children}</main>
-      </div>
-    </div>
+        <div className="min-w-0 max-w-full flex-1 overflow-x-hidden p-4 md:p-6">
+          {children}
+        </div>
+      </SidebarInset>
+    </>
   )
 }

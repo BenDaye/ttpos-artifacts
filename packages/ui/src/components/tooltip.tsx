@@ -9,15 +9,19 @@ export const TooltipTrigger = BaseTooltip.Trigger
 export function TooltipContent({
   className,
   sideOffset = 6,
+  side,
+  align,
   children,
   ...props
 }: ComponentPropsWithoutRef<typeof BaseTooltip.Popup> & {
   children: ReactNode
   sideOffset?: number
+  side?: ComponentPropsWithoutRef<typeof BaseTooltip.Positioner>['side']
+  align?: ComponentPropsWithoutRef<typeof BaseTooltip.Positioner>['align']
 }) {
   return (
     <BaseTooltip.Portal>
-      <BaseTooltip.Positioner sideOffset={sideOffset}>
+      <BaseTooltip.Positioner sideOffset={sideOffset} side={side} align={align}>
         <BaseTooltip.Popup
           className={cn(
             'z-50 max-w-xs rounded-md border bg-popover px-sm py-xs text-xs text-popover-foreground shadow-none outline-hidden',

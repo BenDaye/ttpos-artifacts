@@ -4,7 +4,7 @@ test.describe('Sidebar navigation', () => {
   test('navigates between main pages via sidebar links', async ({ page }) => {
     await page.goto('/applications')
 
-    const sidebar = page.locator('aside[aria-label="Primary"]')
+    const sidebar = page.locator('[data-sidebar="sidebar"]')
     await expect(sidebar.getByRole('link', { name: 'Applications' })).toBeVisible()
 
     const items: { name: string, url: RegExp, heading: string }[] = [
@@ -25,7 +25,7 @@ test.describe('Sidebar navigation', () => {
   test('settings link routes to /settings (admin)', async ({ page }) => {
     await page.goto('/applications')
 
-    const sidebar = page.locator('aside[aria-label="Primary"]')
+    const sidebar = page.locator('[data-sidebar="sidebar"]')
     await sidebar.getByRole('link', { name: 'Settings', exact: true }).click()
 
     await expect(page).toHaveURL(/\/settings$/)
