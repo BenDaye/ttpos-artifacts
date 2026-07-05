@@ -17,6 +17,15 @@
 >
 > **验证闸**：`diff 最终Caddyfile vs 原始主机副本` 必须只有两处上游主机名不同（含 `{auto_https off}` 与三个 `http://` 零漂移）；`caddy validate` 后 + cutover 后立即查 caddy 日志**零 ACME/certificate 活动**、无到 `acme-v02.api.letsencrypt.org` 的出站；`ss -ltnp` 确认新 caddy 无 :443 监听。任一不满足即**中止/回滚**，绝不放行。
 
+> ## 🔴 硬约束（红线，不可违反）：prod server 数据（mongo）必须确保安全
+> 本迁移是网络/代理层，理论上不碰数据；但 **Step4 recreate api 会重启进程 → api 是 migrate-then-serve（`CMD faynoSync --migration`，PLAN-035 证实）→ 对 prod mongo 再跑一次 migration**。「通常安全」（镜像冻结不跳版 → 同一已应用 migration → no-op；PLAN-035 该版本不改表结构/不迁数据）不等于「确保安全」。硬措施：
+> 1. **任何 recreate 之前先 `mongodump` 备份 prod mongo**（落 `backups/caddy-migration-<UTC>/`），作为即使 no-op 也留的还原点——这是 Step0 的**前置闸**，没备份不许进 Step4。
+> 2. **db/cache 容器与数据卷全程不重建、不触碰**（`docker/mongo/data`、`docker/redis/data`）；**全程禁 `--remove-orphans`** 防误删 db/cache 容器。
+> 3. **防漂移闸保证 recreate 不跳版**（同文首镜像纪律）——不跳版 = 不引入新 migration = 不动数据。
+> 4. **api↔mongo 连接全程不中断**：`network connect/disconnect` 只加/减 caddy-net，api 始终保留 `faynosync-prod` 网；recreate 后断言 api 的 networks 含 `faynosync-prod`（mongo 可达）。
+>
+> **验证闸**：Step0 mongodump 成功且可读（`mongorestore --dryRun` 或校验 dump 大小/集合数）；recreate 后 api `/health` 200 且能读写 mongo（业务冒烟：一次只读查询命中数据）；db/cache 容器 id 与迁移前一致（未被重建）。任一不满足即**中止/回滚**（必要时用 dump 还原）。
+
 ## 一、目标与不做
 
 ### 目标
@@ -26,7 +35,7 @@
 4. Caddy 上游从服务别名（`api:9000`/`dashboard:3000`）改为 **container_name**（`faynosync-prod-api:9000`/`faynosync-prod-dashboard:3000`）。
 
 ### 明确不做（零触碰边界）
-- **不动 mongo/redis 数据卷**（`docker/mongo/data`、`docker/redis/data`），db/cache 容器不重建。
+- **不动 mongo/redis 数据卷**（`docker/mongo/data`、`docker/redis/data`），db/cache 容器不重建（🔴 数据安全红线，并 Step0 先 mongodump 兜底）。
 - **不改 aitrans 项目**：`aitrans-ai-translator-1`（发布 `0.0.0.0:8005`，独立 docker0 网络）容器/compose/端口零触碰；Caddyfile 里 `http://aitrans.ttpos.com → 172.17.0.1:8005` vhost **逐字保留**。
 - **不动 staging**（已是参考实现）。
 - **不改 /dl 短链契约、/mcp 行为、公开 API 路径**（prod 当前无 /mcp、无 mcp 服务，派生 `--mcp-upstream none`）。
@@ -102,8 +111,9 @@ migrate-caddy-shortlinks.sh --source-site releases.ttpos.dev --site http://relea
 
 > 备份产物统一放 `/ttpos-releases/backups/caddy-migration-<UTC>/`。
 
-**Step 0 — 备份与预检（无变更）**
-- 备份 compose×2、主机 Caddyfile、`docker network inspect ttpos-releases_faynosync-prod`、`docker ps`、`.env` 中 CADDY/端口项。**不备份 mongo/redis 数据**（不触碰数据面）。
+**Step 0 — 备份与预检（无变更；🔴 mongodump 是进 Step4 的前置闸）**
+- **🔴 `mongodump` 备份 prod mongo**（落 `backups/caddy-migration-<UTC>/mongo/`），校验 dump 非空/集合数合理；**没有这份可用备份，不许进 Step4 recreate**。redis 是缓存、可重建，不强制备份。
+- 备份 compose×2、主机 Caddyfile、`docker network inspect ttpos-releases_faynosync-prod`、`docker ps`（记录 db/cache 容器 id 作「未被重建」比对基线）、`.env` 中 CADDY/端口项。
 - **从 prod compose 读 api/dashboard 实际 image ref**（喂给防漂移闸；prod 大概率是本地 `faynosync-server:latest` / `faynosync-dashboard-next:latest`，非 ghcr——不要写死 ghcr）：`API_REF=$(docker inspect -f '{{.Config.Image}}' faynosync-prod-api)`、`DASH_REF=$(docker inspect -f '{{.Config.Image}}' faynosync-prod-dashboard)`，存档。
 - 记录基线：host:80 归属、5 容器网络成员/IP、公网 5 路当前返回码。回滚：无（只读）。
 
@@ -141,7 +151,7 @@ migrate-caddy-shortlinks.sh --source-site releases.ttpos.dev --site http://relea
   docker compose up -d --no-deps --pull never api        # 观察健康 + update 冒烟绿
   docker compose up -d --no-deps --pull never dashboard   # 观察健康 + releases 冒烟绿
   ```
-  recreate 后断言两容器已在 caddy-net 上（`docker inspect -f '{{json .NetworkSettings.Networks}}' faynosync-prod-{api,dashboard}` 含 `caddy-net`）、Caddy 按 container_name 反代仍绿。**注意**：api recreate 会重启进程 → 触发 PLAN-035 fail-closed 启动检查，已实测 `DEPLOYMENT_OWNER=ttpos` 在 .env、recreate 安全（见 ground truth）。
+  recreate 后断言：①两容器在 `caddy-net` 上（`docker inspect -f '{{json .NetworkSettings.Networks}}' faynosync-prod-{api,dashboard}` 含 `caddy-net`）**且仍在 `faynosync-prod` 上**（🔴 mongo 可达）；②Caddy 按 container_name 反代仍绿；③api `/health` 200 且业务只读查询命中数据（🔴 数据完好）；④db/cache 容器 id 与 Step0 基线一致（🔴 未被重建）。**注意**：api recreate 会重启进程 → migrate-then-serve 对 mongo 再跑 migration（前置已 mongodump 兜底，且镜像不跳版 = 同一已应用 migration = no-op）+ 触发 PLAN-035 fail-closed（已实测 `DEPLOYMENT_OWNER=ttpos` 在 .env、安全）。
 - 验证：config 通过 + 防漂移闸过 + 两容器在 caddy-net + 5 路冒烟绿。回滚：`docker compose up -d --no-deps` 用备份的旧 compose 还原（旧网 + 旧 caddy overlay 仍在）。
 
 **Step 5 — 收尾与文档**
@@ -166,29 +176,33 @@ migrate-caddy-shortlinks.sh --source-site releases.ttpos.dev --site http://relea
 
 ## 六、RALPLAN-DR 摘要（DELIBERATE）
 
-**Principles**：①数据面零触碰 ②无关项目(aitrans)零回归 ③单一事实来源派生(deploy/Caddyfile) ④可回滚优先(旧 caddy overlay/网络/Caddyfile 保留 7 天回滚锚) ⑤与 staging 对称 ⑥🔴 Caddy 零证书签发/重签(用户红线)。
+**Principles**：①数据面零触碰(db/cache 不重建 + Step0 mongodump 兜底) ②无关项目(aitrans)零回归 ③单一事实来源派生(deploy/Caddyfile) ④可回滚优先(旧 caddy overlay/网络/Caddyfile 保留 7 天回滚锚) ⑤与 staging 对称 ⑥🔴 Caddy 零证书签发/重签(用户红线) ⑦🔴 prod mongo 数据确保安全(用户红线)。
 
 **Decision Drivers**：①host:80 单绑下 downtime 最小化 + 低峰 ②上游 DNS 解析正确性(别名→container_name) ③aitrans/Cloudflare 源站不受波及。
 
 **Viable Options**：A（选中，见二节）；B（原地搬网络定义 = 全栈停机 + 网络销毁重建，违背数据面零触碰，落选）；保持借用网络（不解决 owner 反转，违背 PLAN-037 边界）。
 
-**Pre-mortem（5 场景）**：
+**Pre-mortem（6 场景）**：
 1. **host:80 双绑 bind 失败** → 严格先 down 旧确认 `ss -ltnp` 释放再 up 新，禁两栈同 publish 80。
 2. **上游名解析错 502**（container_name 未接入 caddy-net，**或 caddy-net 被加前缀成 `caddy_caddy-net`**）→ 裸名创建 + `grep -xw` 命名硬断言 + Step2 先 connect 并从临时容器验解析连通再翻 80 + `caddy validate` 双关。
 3. **aitrans vhost 丢失/host 网关不可达** → 逐字搬 + grep 复核 + Step2 从 caddy-net 临时容器 `curl 172.17.0.1:8005` 预检（已预验通）；不可达则 `extra_hosts: host-gateway` + `host.docker.internal:8005` 回退。
 4. **本次或未来 recreate 偷换镜像版本**（本次 recreate api/dashboard 或任何未来 `compose up` 若带 `--pull`/本地 `:latest` 已漂移，会把冻结 prod 悄悄跳到未验证版本；api 重启还会过 PLAN-035 fail-closed，已配 DEPLOYMENT_OWNER 故安全但不该跳版）→ 防漂移闸（recreate 前硬断言本地 sha==running sha、不等即中止、禁 `--pull`/`--remove-orphans`、先打 `migration-<UTC>` 不可变 tag）；写进 PROD-CADDY-API-NOTE 作**任何未来 `compose up` 的常备前置**。
 5. **🔴 Caddy 触发证书签发/重签（用户红线）**：新 Caddyfile 丢了 `{auto_https off}` 全局块、或站点名丢了 `http://` 前缀、或照搬 staging 的 caddy-cf/TLS 配置 → Caddy 默认 auto_https 开，对 releases/update/aitrans 三域发起 ACME 签发，重签证书且可能撞 Let's Encrypt 限流打黑域名。
    - 缓解：见文首🔴硬约束三层保险 + diff gate 的 `auto_https off`/`^http://`×3 硬断言（派生后、cutover 前）；沿用 `caddy:2.11.4-alpine` 只绑 :80、绝不用 caddy-cf；cutover 后立即查 caddy 日志零 ACME 活动 + 无 :443 监听，异常即回滚旧 overlay。
+6. **🔴 prod mongo 数据受损（用户红线）**：api recreate 重启 → migrate-then-serve 对 prod mongo 跑 migration；若镜像意外跳版（新 migration）、或 api recreate 后连不上 mongo（丢了 faynosync-prod 网）→ 数据被改/服务读不到数据。
+   - 缓解：Step0 `mongodump` 前置兜底（no-op 也留还原点）；防漂移闸保证不跳版（同一已应用 migration = no-op）；db/cache 容器/卷零触碰 + 禁 `--remove-orphans`；`network connect/disconnect` 只动 caddy-net、api 始终在 faynosync-prod 网；recreate 后断言 api 在 faynosync-prod 网 + `/health` 200 + 只读查询命中数据 + db/cache 容器 id 未变；异常即回滚（必要时 `mongorestore`）。
 - （附加：Cloudflare 源站探活失败）→ 行为与现状一致(TLS 终止、http 源站)，cutover 后即冒烟，异常即回滚旧 overlay，低峰 + CF 重试吸收空窗。
 
 **ADR**：Decision=Option A（caddy-net owner 反转 + /opt/caddy + container_name，对称 staging），本次一次性 recreate 固化（用户拍板）；Drivers=downtime 最小化/解析稳妥/aitrans 不波及/数据面零触碰/可回滚；Alternatives=B(全栈停机重建网络)/保持借用网络/Synthesis 延后固化(用户否，要求一次做完)；Why=A 用在线 connect 先把 runtime 搭好再翻 80、逐容器 recreate 固化，停机压到 host:80 秒级 + api/dashboard 各秒级、db/cache 不动、回滚锚清晰、终态对称已验证 staging；Consequences=app compose 加 caddy-net external 并本次 recreate 生效（无过渡态）、主机 Caddyfile 收归 /opt/caddy、旧 caddy overlay/网络/Caddyfile 保留 7 天回滚锚、镜像债独立处理；Follow-ups=(a)镜像 faynosync→ttpos 切换独立任务 (b)Caddy infra 独立 repo 版本化 (c)7 天后清理旧 overlay + 死 nginx + short-latest.json。
 
 ## 七、执行验证清单（本次一次性完成，无跨任务交接）
 
+- [ ] 🔴 Step0 mongodump 完成且校验可用（没有它不许进 Step4）。
 - [ ] 派生 Caddyfile diff gate 过（仅两处上游名变；🔴 `auto_https off` + 三个 `http://` 零漂移）。
 - [ ] Step2 后从 caddy-net 临时容器验 container_name 解析 + `curl 172.17.0.1:8005` aitrans 网关可达。
 - [ ] Step3 host:80 归新 caddy；🔴 caddy 日志零 ACME、无 :443 监听。
 - [ ] Step4 config 校验过 → 防漂移闸过（本地 sha==running sha、已打 `migration-<UTC>` tag、`--pull never`、无 `--remove-orphans`）→ 逐容器 recreate 后两容器在 caddy-net、按 container_name 反代绿。
+- [ ] 🔴 recreate 后 api 在 faynosync-prod 网 + `/health` 200 + 只读查询命中数据 + db/cache 容器 id 未变。
 - [ ] 公网 5 路冒烟全绿（update/health、/dl 302、/dl unknown 400、releases、aitrans）。
 - [ ] PROD-CADDY-API-NOTE 更新新拓扑 + 防漂移闸作常备 `compose up` 前置；旧锚保留 7 天。
 
