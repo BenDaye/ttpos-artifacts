@@ -1,5 +1,9 @@
-# 站点片段：追加到 vm-node02 /opt/caddy/Caddyfile 后执行
-#   docker exec caddy caddy reload --config /etc/caddy/Caddyfile
+# 本项目贡献给主机 Caddy 的【站点片段】，不是完整 Caddyfile（边界详见 docs/plan/PLAN-037.md）。
+# 只含本项目自己的站点块；全局配置、别的项目、Caddy 本体与网络都归主机 infra，勿写进这里。
+# 本文件是 /dl 短链契约的单一事实来源，apps/server/server/caddy_config_test.go 对它做断言，勿随意改路由。
+#
+# 用法：deploy/scripts/migrate-caddy-shortlinks.sh 把本片段 splice 进主机自有 Caddyfile
+#   （如 vm-node02 /opt/caddy/Caddyfile）后 reload；prod 形态由该脚本带参派生，不另存第二份。
 # 前置条件：faynosync-api / faynosync-dashboard 已加入外部 caddy-net 网络。
 
 releases.ttpos.dev {

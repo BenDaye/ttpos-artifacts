@@ -46,10 +46,14 @@ Examples:
     --output tmp/migrated.Caddyfile \
     --validate none
 
-  # Dry-run with the production legacy shortlink catalog and compose service names.
+  # Dry-run the prod variant. Caddy's full Caddyfile is host-owned infra (globals +
+  # other projects), NOT carried in this repo — first fetch a copy of the real host
+  # file, then splice this repo's site fragment into that copy. Prod is derived from
+  # the same deploy/Caddyfile source via flags (site/upstreams/mcp), no second file.
+  #   scp prod-host:/ttpos-releases/docker/caddy/Caddyfile tmp/prod-host.Caddyfile
   ./deploy/scripts/migrate-caddy-shortlinks.sh \
     --source-site update.ttpos.dev \
-    --target deploy/prod-caddy-base.Caddyfile \
+    --target tmp/prod-host.Caddyfile \
     --site http://update.ttpos.com \
     --shortlink-json tmp/prod-shortlink-dryrun/short-latest.json \
     --api-upstream api:9000 \
