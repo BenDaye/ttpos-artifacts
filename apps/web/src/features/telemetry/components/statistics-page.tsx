@@ -15,11 +15,11 @@ const tooltipStyle = {
   background: 'var(--popover)',
   borderColor: 'var(--border)',
   borderRadius: 'var(--radius-sm)',
-  fontSize: 'var(--text-fine)',
+  fontSize: '12px',
 } as const
 
 const axisTickStyle = {
-  fontSize: 'var(--text-fine)',
+  fontSize: '12px',
 } as const
 
 interface BucketDatum {

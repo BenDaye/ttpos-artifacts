@@ -294,7 +294,7 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
               <div className="flex min-w-0 flex-wrap items-baseline gap-sm">
                 <p
                   className={cn(
-                    'min-w-0 break-all font-display text-lg font-semibold',
+                    'min-w-0 break-all text-lg font-semibold',
                     tone === 'critical' && 'text-destructive',
                     tone === 'published' && 'text-primary',
                     tone === 'draft' && 'text-foreground',
@@ -320,7 +320,7 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
                 </p>
               )}
             </div>
-            <div className="flex shrink-0 items-center gap-xxs">
+            <div className="flex shrink-0 items-center gap-1">
               <Button variant="ghost" size="icon" className="size-xl" aria-label={t('common:actions.edit')} onClick={onEdit}>
                 <Pencil className="size-4" />
               </Button>

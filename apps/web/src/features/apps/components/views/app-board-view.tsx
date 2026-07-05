@@ -241,27 +241,27 @@ function VersionItem({ version, isSelected = false, onSelect }: VersionItemProps
         <div className="flex min-w-0 items-center gap-1.5">
           <span className="min-w-0 truncate text-sm font-medium">{version.Version}</span>
           {version.Channel && (
-            <Badge variant="secondary" className="max-w-full truncate text-micro">{version.Channel}</Badge>
+            <Badge variant="secondary" className="max-w-full truncate text-xs">{version.Channel}</Badge>
           )}
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
           <Badge
             variant="outline"
             className={version.Published
-              ? 'border-primary bg-secondary text-primary text-micro'
-              : 'text-micro text-muted-foreground'}
+              ? 'border-primary bg-secondary text-primary text-xs'
+              : 'text-xs text-muted-foreground'}
           >
             {version.Published
               ? t('board.published', { defaultValue: 'Published' })
               : t('badge.draft', { defaultValue: 'Draft' })}
           </Badge>
           {version.Critical && (
-            <Badge variant="outline" className="border-primary bg-secondary text-primary text-micro">
+            <Badge variant="outline" className="border-primary bg-secondary text-primary text-xs">
               {t('badge.critical', { defaultValue: 'Critical' })}
             </Badge>
           )}
           {artifactCount > 0 && (
-            <span className="ml-auto text-micro text-muted-foreground">
+            <span className="ml-auto text-xs text-muted-foreground">
               {t('board.artifacts_count', { count: artifactCount, defaultValue: '{{count}} artifact(s)' })}
             </span>
           )}

@@ -1,5 +1,13 @@
 # 变更日志
 
+## 2026-07-05 [shadcn-monorepo]
+
+shadcn monorepo 迁移交付一（PR-0 + PR-1）：
+
+- **PR-0（结构搬迁，视觉零变化）**：新建 `packages/ui`（`@ttpos/ui`）共享 UI 包，采用源码直出模式（`exports` 映射无构建）；shadcn base-nova + neutral 官方默认主题写入 `packages/ui/src/styles/globals.css`；21 个 UI 组件从 `apps/web/src/shared/components/ui/` 移至 `packages/ui/src/components/`；`apps/web` 中约 40 个文件的 import 路径收口到 `@ttpos/ui/components/*` 与 `@ttpos/ui/lib/utils`；双端 `components.json` `ui` alias 统一指向 `@ttpos/ui/components`。5.1 PR-0 门全绿（typecheck/lint/test/build）。
+- **PR-1（原子提交：去 Apple 化 + 主题退役 + 业务类名迁移）**：`packages/ui/src/components/` 中 4 处 `-apple-*` 工具类替换为 shadcn 官方默认类；`apps/web/src/index.css` 删除全套 Apple 主题 token（`--apple-*` 变量、SF Pro 字体、自定义 spacing/radius/text 尺寸）并改为 `@import '@ttpos/ui/globals.css'`，添加 `@source '../../../packages/ui/src'` 确保 Tailwind v4 扫描共享包；业务代码中 `rounded-pill`→`rounded-full`、`text-micro`→`text-xs`、`font-display` 删除、`gap-xxs`→`gap-1` 等定制类名全量迁移；`DESIGN.md` 退役（顶部添加 DEPRECATED 标注）；`AGENTS.md` UI 章节更新为以 shadcn 默认主题为视觉基准、禁 radix-ui。
+- 技术说明：registry 组件已升至 `@base-ui/react`（v1.0.0 正式版，新包名），现有组件保留 `@base-ui-components/react`（1.0.0-rc.0，旧包名），两包暂存共存；后续专项 PR 统一迁移。
+
 ## 2026-07-05 10:58 [progress]
 
 完成 ENH-017 / ENH-018 两个 CI/构建改善任务并以 web v0.2.3 发版实证全链路，staging 与 prod 均已更新：

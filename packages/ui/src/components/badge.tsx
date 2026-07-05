@@ -4,7 +4,7 @@ import { cn } from '@ttpos/ui/lib/utils'
 import { cva } from 'class-variance-authority'
 
 const badgeVariants = cva(
-  'inline-flex items-center gap-1 rounded-pill px-3 py-1 text-sm font-normal transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring',
+  'inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm font-normal transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring',
   {
     variants: {
       variant: {

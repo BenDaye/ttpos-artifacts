@@ -131,7 +131,7 @@ export function VersionDetailDialog({ open, onOpenChange, version }: VersionDeta
             <div className="flex min-w-0 flex-wrap items-baseline gap-sm">
               <DialogTitle
                 className={cn(
-                  'min-w-0 break-all font-display text-lg font-semibold leading-tight',
+                  'min-w-0 break-all text-lg font-semibold leading-tight',
                   tone === 'critical' && 'text-destructive',
                   tone === 'published' && 'text-primary',
                   tone === 'draft' && 'text-foreground',

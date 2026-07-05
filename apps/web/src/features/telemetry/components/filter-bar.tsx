@@ -133,7 +133,7 @@ function MultiSelectPopover({ label, options, selected, onChange }: MultiProps) 
             <Filter className="size-3.5" />
             <span className="min-w-0 truncate">{label}</span>
             {selected.length > 0 && (
-              <Badge variant="secondary" className="px-2 py-0 text-micro">{selected.length}</Badge>
+              <Badge variant="secondary" className="px-2 py-0 text-xs">{selected.length}</Badge>
             )}
           </Button>
         )}

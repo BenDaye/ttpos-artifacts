@@ -22,7 +22,7 @@ export function DialogContent({
     <BaseDialog.Portal>
       <BaseDialog.Backdrop
         className={cn(
-          'fixed inset-0 z-50 bg-apple-surface-black/60 backdrop-blur-sm',
+          'fixed inset-0 z-50 bg-black/80 backdrop-blur-sm',
           'data-starting:opacity-0 data-ending:opacity-0',
           'transition-opacity duration-150',
         )}

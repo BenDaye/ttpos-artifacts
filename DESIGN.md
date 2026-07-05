@@ -1,3 +1,7 @@
+> **[DEPRECATED]** 本文件已于 2026-07-05 随 shadcn monorepo 迁移（PR-1）正式退役。
+> 视觉基准已回归 **shadcn base-nova + neutral 默认主题**，主题变量由 `packages/ui/src/styles/globals.css` 承载。
+> 历史 plan/task 文档中的引用保持不变（归档记录），新开发请以 `AGENTS.md` UI 章节和 shadcn 官方文档为准。
+
 ---
 version: alpha
 name: Apple

@@ -23,8 +23,9 @@
 ## UI
 
 - 交互组件使用成熟 headless UI；不要手写 focus trap、scroll lock、ARIA、键盘导航。
-- 设计系统以 `DESIGN.md` 为准；若 `DESIGN.md` 与 pma-web 默认审美、base-nova 示例或局部组件习惯冲突，视觉决策优先服从 `DESIGN.md`。
-- 所有颜色、字号、间距、圆角、阴影等视觉值来自根目录 [`DESIGN.md`](DESIGN.md)，通过 Tailwind CSS v4 `@theme` 接入；禁止新增 hex 字面量和 arbitrary value。
+- 视觉以 **shadcn base-nova + neutral 默认主题**为准（`packages/ui/src/styles/globals.css` 承载主题变量）；`DESIGN.md` 已退役，不再作为视觉事实来源。
+- UI 组件统一从 `packages/ui`（`@ttpos/ui`）引入，alias `@ttpos/ui/components/*`；新组件优先用 `bunx shadcn@latest add` 落到 `packages/ui`，保持 `style=base-nova`、`iconLibrary=lucide`、`baseColor=neutral` 与双端 `components.json` 一致。
+- UI 基座保持 `@base-ui-components/react`（headless primitives），**禁止引入 `radix-ui` 依赖**。
 
 ## 仓库地图
 
@@ -33,7 +34,7 @@
 - `apps/web/`：生产 Dashboard（admin 后台），React 19、Vite、TanStack Router/Query、Tailwind v4、Base UI/shadcn/ui。镜像 `ttpos-web`——注意与 Flutter 侧 `ttpos-web-menu/mobile/member`（POS Web 三端）无关，勿混淆。
 - `apps/mcp/`：只读 MCP server，封装 FaynoSync API。镜像 `ttpos-mcp`。
 - `apps/server/`：FaynoSync Go API（module `faynoSync` 不变），负责版本、应用、上传、下载、认证、遥测和 TUF 相关服务。镜像 `ttpos-server`。经薄 `package.json`（`@ttpos/server`）挂进 turbo 任务图；其 `test` 只跑单元包，`test:integration` 为全量逃生口（需 Mongo/Redis/S3，见 QUAL-004）。
-- `packages/`：`config`（共享 tsconfig 等）、`shared`（共享 TS 代码）。
+- `packages/`：`config`（共享 tsconfig 等）、`shared`（共享 TS 代码）、`ui`（`@ttpos/ui`，shadcn base-nova 共享 UI 组件包，源码直出无构建，`exports` 映射 `components/*`/`lib/*`/`hooks/*`/`globals.css`）。
 - `.github/workflows/`：TTPOS Flutter 多平台构建与 FaynoSync 分发流程（`build-dashboard.yaml` / `build-mcp.yaml` / `build-server.yaml` 对应三镜像；`build-web.yaml` 属 Flutter，勿动）。
 - `deploy/`：本项目的部署产物——app compose（接入外部 `caddy-net`）+ 贡献给主机 Caddy 的**站点片段** `deploy/Caddyfile` + splice 脚本。**Caddy 本体、全局配置、网络与别的项目路由都归主机 infra，不进本仓库**（详见 PLAN-037）；container_name/网络别名保持 `faynosync-*`，Caddy 反代依赖，勿改名。
 - `docs/`：changelog、PMA plan/task 和项目决策记录。
