@@ -4,7 +4,6 @@ import { Badge } from '@ttpos/ui/components/badge'
 import { Button } from '@ttpos/ui/components/button'
 import {
   Dialog,
-  DialogBody,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -60,7 +59,7 @@ export function ChangelogModal({
           <DialogTitle>{title ?? t('changelog', { defaultValue: 'Changelog' })}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
-        <DialogBody className="dialog-scroll-area overflow-y-auto">
+        <div className="dialog-scroll-area overflow-y-auto">
           {groups.length === 0
             ? (
                 <p className="text-sm text-muted-foreground">
@@ -97,7 +96,7 @@ export function ChangelogModal({
                   ))}
                 </div>
               )}
-        </DialogBody>
+        </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {t('common:actions.close', { defaultValue: 'Close' })}

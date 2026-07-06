@@ -2,7 +2,13 @@ import type { AppVersion, ChangelogEntry } from '@ttpos/shared'
 import { Checkbox } from '@ttpos/ui/components/checkbox'
 import { Input } from '@ttpos/ui/components/input'
 import { Label } from '@ttpos/ui/components/label'
-import { SelectField } from '@ttpos/ui/components/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@ttpos/ui/components/select'
 import { Textarea } from '@ttpos/ui/components/textarea'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -115,13 +121,16 @@ export function VersionEditDialog({ open, onOpenChange, version }: Props) {
               {t('edit_version_immutable_hint', { defaultValue: 'Read-only after creation' })}
             </span>
           </Label>
-          <SelectField
-            aria-label={t('upload_dialog.channel', { defaultValue: 'Channel' })}
-            value={channel}
-            onValueChange={setChannel}
-            disabled
-            options={(channels.data ?? []).map(c => ({ value: c.ChannelName, label: c.ChannelName }))}
-          />
+          <Select value={channel} onValueChange={next => setChannel(next ?? '')} disabled>
+            <SelectTrigger aria-label={t('upload_dialog.channel', { defaultValue: 'Channel' })}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {(channels.data ?? []).map(c => (
+                <SelectItem key={c.ChannelName} value={c.ChannelName}>{c.ChannelName}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="flex items-center gap-4 self-end pb-2 sm:col-span-2">
           <label className="flex items-center gap-2 text-sm">

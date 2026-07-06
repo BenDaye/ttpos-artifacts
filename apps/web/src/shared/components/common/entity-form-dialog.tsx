@@ -2,7 +2,6 @@ import type { ReactNode } from 'react'
 import { Button } from '@ttpos/ui/components/button'
 import {
   Dialog,
-  DialogBody,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -50,7 +49,7 @@ export function EntityFormDialog({
             <DialogTitle>{title}</DialogTitle>
             {description && <DialogDescription>{description}</DialogDescription>}
           </DialogHeader>
-          <DialogBody className="dialog-scroll-area overflow-y-auto">{children}</DialogBody>
+          <div className="dialog-scroll-area overflow-y-auto">{children}</div>
           <DialogFooter>
             <Button
               type="button"

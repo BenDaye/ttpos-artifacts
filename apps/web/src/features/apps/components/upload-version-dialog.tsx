@@ -4,7 +4,13 @@ import { Checkbox } from '@ttpos/ui/components/checkbox'
 import { FileInput } from '@ttpos/ui/components/file-input'
 import { Input } from '@ttpos/ui/components/input'
 import { Label } from '@ttpos/ui/components/label'
-import { SelectField } from '@ttpos/ui/components/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@ttpos/ui/components/select'
 import { Textarea } from '@ttpos/ui/components/textarea'
 import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -144,43 +150,70 @@ export function UploadVersionDialog({ open, onOpenChange, appName }: Props) {
           <Input placeholder="1.2.3" autoFocus {...form.register('version')} />
         </FormBlock>
         <FormBlock label={t('upload_dialog.channel', { defaultValue: 'Channel' })} error={errors.channel?.message}>
-          <SelectField
-            aria-label={t('upload_dialog.channel', { defaultValue: 'Channel' })}
+          <Select
             value={form.watch('channel')}
-            onValueChange={next => form.setValue('channel', next, { shouldDirty: true, shouldTouch: true, shouldValidate: true })}
-            options={(channels.data ?? []).map(c => ({ value: c.ChannelName, label: c.ChannelName }))}
-          />
+            onValueChange={next => form.setValue('channel', next ?? '', { shouldDirty: true, shouldTouch: true, shouldValidate: true })}
+          >
+            <SelectTrigger aria-label={t('upload_dialog.channel', { defaultValue: 'Channel' })}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {(channels.data ?? []).map(c => (
+                <SelectItem key={c.ChannelName} value={c.ChannelName}>{c.ChannelName}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </FormBlock>
         <FormBlock label={t('upload_dialog.platform', { defaultValue: 'Platform' })} error={errors.platform?.message}>
-          <SelectField
-            aria-label={t('upload_dialog.platform', { defaultValue: 'Platform' })}
+          <Select
             value={form.watch('platform')}
-            onValueChange={next => form.setValue('platform', next, { shouldDirty: true, shouldTouch: true, shouldValidate: true })}
-            options={(platforms.data ?? []).map(p => ({ value: p.PlatformName, label: p.PlatformName }))}
-          />
+            onValueChange={next => form.setValue('platform', next ?? '', { shouldDirty: true, shouldTouch: true, shouldValidate: true })}
+          >
+            <SelectTrigger aria-label={t('upload_dialog.platform', { defaultValue: 'Platform' })}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {(platforms.data ?? []).map(p => (
+                <SelectItem key={p.PlatformName} value={p.PlatformName}>{p.PlatformName}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </FormBlock>
         <FormBlock label={t('upload_dialog.arch', { defaultValue: 'Architecture' })} error={errors.arch?.message}>
-          <SelectField
-            aria-label={t('upload_dialog.arch', { defaultValue: 'Architecture' })}
+          <Select
             value={form.watch('arch')}
-            onValueChange={next => form.setValue('arch', next, { shouldDirty: true, shouldTouch: true, shouldValidate: true })}
-            options={(archs.data ?? []).map(a => ({ value: a.ArchID, label: a.ArchID }))}
-          />
+            onValueChange={next => form.setValue('arch', next ?? '', { shouldDirty: true, shouldTouch: true, shouldValidate: true })}
+          >
+            <SelectTrigger aria-label={t('upload_dialog.arch', { defaultValue: 'Architecture' })}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {(archs.data ?? []).map(a => (
+                <SelectItem key={a.ArchID} value={a.ArchID}>{a.ArchID}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </FormBlock>
         {availableUpdaters.length > 1 && (
           <FormBlock label={t('upload_dialog.updater', { defaultValue: 'Updater' })}>
-            <SelectField
-              aria-label={t('upload_dialog.updater', { defaultValue: 'Updater' })}
+            <Select
               value={form.watch('updater') ?? 'manual'}
               onValueChange={(next) => {
-                form.setValue('updater', next, { shouldDirty: true, shouldTouch: true, shouldValidate: true })
+                form.setValue('updater', next ?? 'manual', { shouldDirty: true, shouldTouch: true, shouldValidate: true })
                 form.setValue('signature', '', { shouldDirty: true, shouldTouch: true, shouldValidate: true })
               }}
-              options={availableUpdaters.map(updater => ({
-                value: updater.type,
-                label: `${getUpdaterLabel(updater.type)}${updater.default ? ` (${t('upload_dialog.default_updater', { defaultValue: 'default' })})` : ''}`,
-              }))}
-            />
+            >
+              <SelectTrigger aria-label={t('upload_dialog.updater', { defaultValue: 'Updater' })}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {availableUpdaters.map(updater => (
+                  <SelectItem key={updater.type} value={updater.type}>
+                    {`${getUpdaterLabel(updater.type)}${updater.default ? ` (${t('upload_dialog.default_updater', { defaultValue: 'default' })})` : ''}`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </FormBlock>
         )}
         {selectedUpdater === 'tauri' && (

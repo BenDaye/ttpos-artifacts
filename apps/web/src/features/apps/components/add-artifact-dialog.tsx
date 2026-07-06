@@ -2,7 +2,13 @@ import type { AppVersion } from '@ttpos/shared'
 import { FileInput } from '@ttpos/ui/components/file-input'
 import { Input } from '@ttpos/ui/components/input'
 import { Label } from '@ttpos/ui/components/label'
-import { SelectField } from '@ttpos/ui/components/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@ttpos/ui/components/select'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -115,28 +121,38 @@ export function AddArtifactDialog({ open, onOpenChange, version }: Props) {
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-2">
           <Label>{t('upload_dialog.platform', { defaultValue: 'Platform' })}</Label>
-          <SelectField
-            aria-label={t('upload_dialog.platform', { defaultValue: 'Platform' })}
-            value={platform}
-            onValueChange={setPlatform}
-            options={(platforms.data ?? []).map(p => ({ value: p.PlatformName, label: p.PlatformName }))}
-          />
+          <Select value={platform} onValueChange={next => setPlatform(next ?? '')}>
+            <SelectTrigger aria-label={t('upload_dialog.platform', { defaultValue: 'Platform' })}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {(platforms.data ?? []).map(p => (
+                <SelectItem key={p.PlatformName} value={p.PlatformName}>{p.PlatformName}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         {availableUpdaters.length > 1 && (
           <div className="space-y-2">
             <Label>{t('upload_dialog.updater', { defaultValue: 'Updater' })}</Label>
-            <SelectField
-              aria-label={t('upload_dialog.updater', { defaultValue: 'Updater' })}
+            <Select
               value={updater}
               onValueChange={(next) => {
-                setUpdater(next)
+                setUpdater(next ?? 'manual')
                 setSignature('')
               }}
-              options={availableUpdaters.map(item => ({
-                value: item.type,
-                label: `${getUpdaterLabel(item.type)}${item.default ? ` (${t('upload_dialog.default_updater', { defaultValue: 'default' })})` : ''}`,
-              }))}
-            />
+            >
+              <SelectTrigger aria-label={t('upload_dialog.updater', { defaultValue: 'Updater' })}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {availableUpdaters.map(item => (
+                  <SelectItem key={item.type} value={item.type}>
+                    {`${getUpdaterLabel(item.type)}${item.default ? ` (${t('upload_dialog.default_updater', { defaultValue: 'default' })})` : ''}`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         )}
         {updater === 'tauri' && (
@@ -151,12 +167,16 @@ export function AddArtifactDialog({ open, onOpenChange, version }: Props) {
         )}
         <div className="space-y-2">
           <Label>{t('upload_dialog.arch', { defaultValue: 'Architecture' })}</Label>
-          <SelectField
-            aria-label={t('upload_dialog.arch', { defaultValue: 'Architecture' })}
-            value={arch}
-            onValueChange={setArch}
-            options={(archs.data ?? []).map(a => ({ value: a.ArchID, label: a.ArchID }))}
-          />
+          <Select value={arch} onValueChange={next => setArch(next ?? '')}>
+            <SelectTrigger aria-label={t('upload_dialog.arch', { defaultValue: 'Architecture' })}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {(archs.data ?? []).map(a => (
+                <SelectItem key={a.ArchID} value={a.ArchID}>{a.ArchID}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
       <div className="mt-3 space-y-2">

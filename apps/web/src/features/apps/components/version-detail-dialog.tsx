@@ -4,7 +4,6 @@ import { Badge } from '@ttpos/ui/components/badge'
 import { Button, buttonVariants } from '@ttpos/ui/components/button'
 import {
   Dialog,
-  DialogBody,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -156,7 +155,7 @@ export function VersionDetailDialog({ open, onOpenChange, version }: VersionDeta
             </DialogDescription>
           </DialogHeader>
 
-          <DialogBody className="dialog-scroll-area overflow-y-auto">
+          <div className="dialog-scroll-area overflow-y-auto">
             <div className="grid gap-md">
               <div className="flex min-w-0 flex-wrap items-center gap-xs border-y border-border py-sm">
                 <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
@@ -282,7 +281,7 @@ export function VersionDetailDialog({ open, onOpenChange, version }: VersionDeta
                     ))}
               </section>
             </div>
-          </DialogBody>
+          </div>
 
           <DialogFooter>
             <Link

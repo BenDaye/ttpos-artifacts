@@ -8,7 +8,7 @@ function Empty({ className, ...props }: React.ComponentProps<'div'>) {
     <div
       data-slot="empty"
       className={cn(
-        'flex w-full min-w-0 flex-1 flex-col items-center justify-center gap-4 rounded-xl border-dashed p-6 text-center',
+        'flex w-full min-w-0 flex-1 flex-col items-center justify-center gap-4 rounded-xl border-dashed p-6 text-center text-balance',
         className,
       )}
       {...props}
@@ -20,7 +20,7 @@ function EmptyHeader({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="empty-header"
-      className={cn('flex w-full max-w-sm flex-col items-center gap-2', className)}
+      className={cn('flex max-w-sm flex-col items-center gap-2', className)}
       {...props}
     />
   )
@@ -56,12 +56,12 @@ function EmptyMedia({
   )
 }
 
-function EmptyTitle({ className, ...props }: React.ComponentProps<'h2'>) {
+function EmptyTitle({ className, ...props }: React.ComponentProps<'div'>) {
   return (
-    <h2
+    <div
       data-slot="empty-title"
       className={cn(
-        'text-balance text-sm font-medium tracking-tight',
+        'text-sm font-medium tracking-tight',
         className,
       )}
       {...props}
@@ -74,7 +74,7 @@ function EmptyDescription({ className, ...props }: React.ComponentProps<'p'>) {
     <div
       data-slot="empty-description"
       className={cn(
-        'w-full text-sm/relaxed text-muted-foreground [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary',
+        'text-sm/relaxed text-muted-foreground [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary',
         className,
       )}
       {...props}

@@ -3,7 +3,6 @@ import { Badge } from '@ttpos/ui/components/badge'
 import { Button } from '@ttpos/ui/components/button'
 import {
   Dialog,
-  DialogBody,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -87,7 +86,7 @@ export function DownloadArtifactsDialog({
             )}
           </DialogDescription>
         </DialogHeader>
-        <DialogBody>
+        <div>
           {artifacts.length === 0
             ? (
                 <p className="py-6 text-center text-sm text-muted-foreground">
@@ -136,7 +135,7 @@ export function DownloadArtifactsDialog({
                   ))}
                 </ul>
               )}
-        </DialogBody>
+        </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {t('common:actions.close', { defaultValue: 'Close' })}

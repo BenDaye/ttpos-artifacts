@@ -1,34 +1,87 @@
-import type { ComponentPropsWithoutRef } from 'react'
-import { ToggleGroup as BaseToggleGroup } from '@base-ui-components/react/toggle-group'
+import type { VariantProps } from 'class-variance-authority'
+import { Toggle as TogglePrimitive } from '@base-ui/react/toggle'
+import { ToggleGroup as ToggleGroupPrimitive } from '@base-ui/react/toggle-group'
+import { toggleVariants } from '@ttpos/ui/components/toggle'
+
 import { cn } from '@ttpos/ui/lib/utils'
+import * as React from 'react'
 
-export function ToggleGroup({
+const ToggleGroupContext = React.createContext<
+  VariantProps<typeof toggleVariants> & {
+    spacing?: number
+    orientation?: 'horizontal' | 'vertical'
+  }
+>({
+  size: 'default',
+  variant: 'default',
+  spacing: 2,
+  orientation: 'horizontal',
+})
+
+function ToggleGroup({
   className,
+  variant,
+  size,
+  spacing = 2,
+  orientation = 'horizontal',
+  children,
   ...props
-}: ComponentPropsWithoutRef<typeof BaseToggleGroup>) {
+}: ToggleGroupPrimitive.Props
+  & VariantProps<typeof toggleVariants> & {
+    spacing?: number
+    orientation?: 'horizontal' | 'vertical'
+  }) {
   return (
-    <BaseToggleGroup
+    <ToggleGroupPrimitive
+      data-slot="toggle-group"
+      data-variant={variant}
+      data-size={size}
+      data-spacing={spacing}
+      data-orientation={orientation}
+      style={{ '--gap': spacing } as React.CSSProperties}
       className={cn(
-        'inline-flex max-w-full flex-wrap items-center gap-0.5 rounded-full border border-input bg-background p-0.5',
+        'group/toggle-group flex w-fit flex-row items-center gap-[--spacing(var(--gap))] rounded-lg data-[size=sm]:rounded-[min(var(--radius-md),10px)] data-vertical:flex-col data-vertical:items-stretch',
         className,
       )}
       {...props}
-    />
+    >
+      <ToggleGroupContext.Provider
+        value={{ variant, size, spacing, orientation }}
+      >
+        {children}
+      </ToggleGroupContext.Provider>
+    </ToggleGroupPrimitive>
   )
 }
 
-export function ToggleGroupItem({
+function ToggleGroupItem({
   className,
+  children,
+  variant = 'default',
+  size = 'default',
   ...props
-}: ComponentPropsWithoutRef<'button'> & { value: string }) {
+}: TogglePrimitive.Props & VariantProps<typeof toggleVariants>) {
+  const context = React.useContext(ToggleGroupContext)
+
   return (
-    <button
-      type="button"
+    <TogglePrimitive
+      data-slot="toggle-group-item"
+      data-variant={context.variant || variant}
+      data-size={context.size || size}
+      data-spacing={context.spacing}
       className={cn(
-        'inline-flex h-8 min-w-0 items-center justify-center gap-2 rounded-full px-3 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring data-pressed:bg-primary data-pressed:text-primary-foreground data-pressed:hover:bg-primary/80 data-pressed:hover:text-primary-foreground',
+        'shrink-0 group-data-[spacing=0]/toggle-group:rounded-none group-data-[spacing=0]/toggle-group:px-2 focus:z-10 focus-visible:z-10 group-data-[spacing=0]/toggle-group:has-data-[icon=inline-end]:pr-1.5 group-data-[spacing=0]/toggle-group:has-data-[icon=inline-start]:pl-1.5 group-data-horizontal/toggle-group:data-[spacing=0]:first:rounded-l-lg group-data-vertical/toggle-group:data-[spacing=0]:first:rounded-t-lg group-data-horizontal/toggle-group:data-[spacing=0]:last:rounded-r-lg group-data-vertical/toggle-group:data-[spacing=0]:last:rounded-b-lg group-data-horizontal/toggle-group:data-[spacing=0]:data-[variant=outline]:border-l-0 group-data-vertical/toggle-group:data-[spacing=0]:data-[variant=outline]:border-t-0 group-data-horizontal/toggle-group:data-[spacing=0]:data-[variant=outline]:first:border-l group-data-vertical/toggle-group:data-[spacing=0]:data-[variant=outline]:first:border-t',
+        toggleVariants({
+          variant: context.variant || variant,
+          size: context.size || size,
+        }),
         className,
       )}
       {...props}
-    />
+    >
+      {children}
+    </TogglePrimitive>
   )
 }
+
+export { ToggleGroup, ToggleGroupItem }
