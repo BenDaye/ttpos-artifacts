@@ -34,7 +34,7 @@ export function AppListView({ apps, onSelect, onEdit, onDelete, onReorder, canRe
         }
       }}
       className={cn(
-        'app-list-row-grid grid min-w-0 cursor-pointer gap-3 px-4 py-3 transition-colors hover:bg-accent/50 active:bg-accent focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring sm:items-center',
+        'app-list-row-grid grid min-w-0 cursor-pointer gap-3 px-4 py-3 transition-colors hover:bg-accent/50 active:bg-accent focus-visible:outline-1 focus-visible:outline-ring focus-visible:ring-3 focus-visible:ring-ring/50 sm:items-center',
         sortable?.isDragging && 'bg-accent/50 opacity-50',
       )}
     >
@@ -43,7 +43,7 @@ export function AppListView({ apps, onSelect, onEdit, onDelete, onReorder, canRe
           <button
             type="button"
             aria-label={t('reorder', { defaultValue: 'Drag to reorder' })}
-            className="shrink-0 cursor-grab touch-none text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring active:cursor-grabbing"
+            className="shrink-0 cursor-grab touch-none text-muted-foreground focus-visible:outline-1 focus-visible:outline-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:cursor-grabbing"
             onClick={e => e.stopPropagation()}
             {...sortable.handleProps}
           >

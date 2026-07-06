@@ -123,7 +123,7 @@ function BoardColumn({ app, versions, total, isLoading, isError, onSelect, onEdi
           <button
             type="button"
             aria-label={t('reorder', { defaultValue: 'Drag to reorder' })}
-            className="shrink-0 cursor-grab touch-none text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring active:cursor-grabbing"
+            className="shrink-0 cursor-grab touch-none text-muted-foreground focus-visible:outline-1 focus-visible:outline-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:cursor-grabbing"
             {...sortable.handleProps}
           >
             <GripVertical className="size-4" />
@@ -133,7 +133,7 @@ function BoardColumn({ app, versions, total, isLoading, isError, onSelect, onEdi
           type="button"
           onClick={() => onSelect(app)}
           data-testid="board-column-open"
-          className="flex min-w-0 flex-1 items-center gap-2 rounded-md text-left transition-colors hover:bg-accent/50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+          className="flex min-w-0 flex-1 items-center gap-2 rounded-md text-left transition-colors hover:bg-accent/50 focus-visible:outline-1 focus-visible:outline-ring focus-visible:ring-3 focus-visible:ring-ring/50"
         >
           <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
             {app.Logo
@@ -234,7 +234,7 @@ function VersionItem({ version, isSelected = false, onSelect }: VersionItemProps
         }
       }}
       className={cn(
-        'cursor-pointer transition-colors hover:ring-foreground/30 hover:bg-accent/50 active:bg-accent focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring',
+        'cursor-pointer transition-colors hover:ring-foreground/30 hover:bg-accent/50 active:bg-accent focus-visible:outline-1 focus-visible:outline-ring focus-visible:ring-3 focus-visible:ring-ring/50',
         isSelected && 'ring-primary bg-secondary',
       )}
     >
