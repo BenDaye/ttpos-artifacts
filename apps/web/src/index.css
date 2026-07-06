@@ -17,7 +17,7 @@
 @custom-variant data-pressed (&[data-pressed="true"]);
 
 @theme {
-  /* 最小必要间距子集：基础单位供 dialog-size-x、app-board-x calc 使用；
+  /* 最小必要间距子集：基础単位供 dialog-size-x、app-board-x calc 使用；
      命名间距供组件类（p-xs/gap-sm/p-lg 等）和布局 utilities 使用。 */
   --spacing: 4px;
   --spacing-xs: 8px;
@@ -28,6 +28,7 @@
   --spacing-xxl: 48px;
   --spacing-section: 80px;
 }
+
 
 * {
   border-color: var(--border);
@@ -157,5 +158,18 @@ body {
 
   .select-popup-width {
     width: var(--anchor-width);
+  }
+
+  /* Tailwind v4 では --spacing-sm/xs を @theme に置くと、sm:max-w-sm のような
+     レスポンシブ変体が max-width:var(--spacing-sm)=12px になる。
+     shadcn コンポーネント（dialog/sheet/tooltip/empty）が期待する標準コンテナ幅に
+     ここで戻す。plain .max-w-sm も同様に上書き。 */
+  .max-w-xs { max-width: 20rem; }
+  .max-w-sm { max-width: 24rem; }
+
+  @media (width >= 40rem) {
+    /* sm:max-w-sm → dialog / sheet のレスポンシブ上限を修正 */
+    .sm\:max-w-sm { max-width: 24rem; }
+    .sm\:max-w-xs { max-width: 20rem; }
   }
 }

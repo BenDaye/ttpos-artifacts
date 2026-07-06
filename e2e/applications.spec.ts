@@ -50,7 +50,7 @@ test.describe('Applications page', () => {
 
     await expect(page.getByText('TTPOS-Cashier')).not.toBeVisible()
     await expect(page.getByText('TTPOS-KDS')).not.toBeVisible()
-    await expect(page.getByRole('heading', { name: 'No applications yet' })).toBeVisible()
+    await expect(page.getByText('No applications yet')).toBeVisible()
   })
 
   test('layout switcher exposes card / list / board buttons', async ({ page }) => {

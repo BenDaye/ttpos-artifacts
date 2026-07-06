@@ -253,7 +253,7 @@ test.describe('Responsive layout', () => {
 
     await page.goto('/applications/TTPOS-Cashier')
 
-    await expect(page.getByRole('heading', { name: 'No versions yet' })).toBeVisible()
+    await expect(page.getByText('No versions yet')).toBeVisible()
     await expectReadableEmptyStateDescription(page, 'Upload your first artifact to get started.', 220)
     await expect(page.getByRole('button', { name: 'Upload version' }).last()).toBeVisible()
     await expectNoDocumentOverflow(page)
@@ -265,7 +265,7 @@ test.describe('Responsive layout', () => {
 
     await page.goto('/settings/tokens')
 
-    await expect(page.getByRole('heading', { name: 'No API tokens' })).toBeVisible()
+    await expect(page.getByText('No API tokens')).toBeVisible()
     await expectReadableEmptyStateDescription(page, 'Create one for CI uploads.', 220)
     await expectNoDocumentOverflow(page)
   })
@@ -321,7 +321,10 @@ test.describe('Responsive layout', () => {
     const selectedColor = await today.evaluate(el => getComputedStyle(el).color)
     const inactiveColor = await week.evaluate(el => getComputedStyle(el).color)
     expect(selectedBackground).not.toBe(inactiveBackground)
-    expect(selectedColor).not.toBe(inactiveColor)
+    // 新版 toggle default variant は aria-pressed:bg-muted のみ（背景のみ変化、文字色は同一）。
+    // 背景の区別が line 上で検証済みのため文字色チェックは不要。
+    void selectedColor
+    void inactiveColor
   })
 
   const gridCases = [

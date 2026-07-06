@@ -66,7 +66,7 @@ export function TelemetryFilterBar({ value, onChange }: Props) {
             <ToggleGroupItem
               key={r}
               value={r}
-              aria-pressed={r === value.range}
+              pressed={r === value.range}
               data-pressed={r === value.range}
               onClick={() => onChange({ ...value, range: r })}
             >

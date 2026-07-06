@@ -120,8 +120,8 @@ test.describe('App detail — version management', () => {
     await expect(dialog.getByText('Changelog', { exact: true })).not.toBeVisible()
     const platformSelector = dialog.getByRole('combobox', { name: 'Platform' })
     const selectorMetrics = await platformSelector.evaluate((element) => {
-      const text = element.querySelector('[data-testid="select-value-text"]')?.getBoundingClientRect()
-      const icon = element.querySelector('[data-testid="select-chevron"]')?.getBoundingClientRect()
+      const text = element.querySelector('[data-slot="select-value"]')?.getBoundingClientRect()
+      const icon = element.querySelector('svg[aria-hidden="true"]')?.getBoundingClientRect()
       const box = element.getBoundingClientRect()
       return text && icon
         ? {
