@@ -37,4 +37,4 @@
 | [x] | PLAN-033 | 将 /dl 短链入口迁到 Caddy | REFACTOR-007 |
 | [x] | PLAN-034 | server 对抗式评审报告与推进计划 | — |
 | [x] | PLAN-035 | 单租户焊死 + 清尸（single-owner lockdown） | REFACTOR-008 |
-| [ ] | PLAN-039 | /dl 短链 per-platform latest 回退（/apps/latest opt-in artifact fallback） | BUG-017 |
+| [x] | PLAN-039 | /dl 短链 per-platform latest 回退（/apps/latest opt-in artifact fallback） | BUG-017 |

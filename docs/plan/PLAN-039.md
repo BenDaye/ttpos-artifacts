@@ -1,6 +1,6 @@
 # PLAN-039 /dl 短链 per-platform latest 回退（/apps/latest opt-in artifact fallback）
 
-- **status**: implementing（语义方向经共识评审与用户批准；实现基于 monorepo 现架构重定位，见「架构重定位」）
+- **status**: verified（实现合并 PR #33 / a01f4db；server-v1.0.1 部署 vm-node02，staging 三态 + 回归验证通过；prod rollout 待授权。验收明细见 docs/task/BUG-017.md）
 - **task**: BUG-017
 - **createdAt**: 2026-07-06
 - **关联**: PLAN-033 / REFACTOR-007（/dl 迁 Caddy）、ENH-008（/dl 资源型 302）、PLAN-036（monorepo）、PLAN-037（Caddy 边界）
