@@ -31,7 +31,7 @@ export function AppCardView({ apps, onSelect, onEdit, onDelete, onReorder, canRe
         }
       }}
       className={cn(
-        'cursor-pointer transition-colors hover:border-foreground/30 hover:bg-accent/50 active:bg-accent focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring',
+        'cursor-pointer transition-colors hover:ring-foreground/30 hover:bg-accent/50 active:bg-accent focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring',
         sortable?.isDragging && 'opacity-50',
       )}
     >
