@@ -47,7 +47,7 @@ export function UsersPanel() {
     <div className="min-w-0 max-w-full space-y-4">
       {me.data && (
         <Card>
-          <CardContent className="flex min-w-0 flex-wrap items-center justify-between gap-3 p-4">
+          <CardContent className="flex min-w-0 flex-wrap items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
               <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
                 <User className="size-5" />
@@ -120,7 +120,7 @@ export function UsersPanel() {
         <div className="grid gap-3">
           {usersQuery.data.map(user => (
             <Card key={user.id}>
-              <CardContent className="flex min-w-0 flex-wrap items-center justify-between gap-3 p-4">
+              <CardContent className="flex min-w-0 flex-wrap items-center justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-3">
                   <Avatar>
                     <AvatarFallback>{user.username.slice(0, 2).toUpperCase()}</AvatarFallback>

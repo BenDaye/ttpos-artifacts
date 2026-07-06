@@ -139,7 +139,7 @@ export function ArchitecturesPage() {
                 className={cn('min-w-0', sortable.isDragging && 'opacity-50')}
               >
                 <Card>
-                  <CardContent className="flex items-center justify-between gap-3 p-4">
+                  <CardContent className="flex items-center justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-3">
                       {!isFiltering && (
                         <button

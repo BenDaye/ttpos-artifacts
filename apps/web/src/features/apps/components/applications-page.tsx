@@ -79,7 +79,7 @@ export function ApplicationsPage() {
   const renderSkeleton = () => {
     if (layout === 'list') {
       return (
-        <Card className="max-w-full overflow-hidden">
+        <Card className="max-w-full overflow-hidden py-0">
           <div className="divide-y divide-border">
             {['sk-1', 'sk-2', 'sk-3', 'sk-4', 'sk-5', 'sk-6'].map(k => (
               <Skeleton key={k} className="h-12 rounded-none" />

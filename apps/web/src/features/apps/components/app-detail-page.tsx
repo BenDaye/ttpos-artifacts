@@ -287,8 +287,8 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
 
   return (
     <li data-testid="version-card">
-      <Card className="h-full overflow-hidden">
-        <CardContent className="flex h-full min-w-0 flex-col gap-4 px-6 pb-6 pt-8">
+      <Card className="h-full overflow-hidden [--card-spacing:--spacing(6)]">
+        <CardContent className="flex h-full min-w-0 flex-col gap-4">
           <div className="flex min-w-0 items-start justify-between gap-4">
             <div className="min-w-0 flex-1 space-y-3">
               <div className="flex min-w-0 flex-wrap items-baseline gap-3">
