@@ -21,7 +21,7 @@ export function EmptyState({
   className,
 }: EmptyStateProps) {
   return (
-    <Empty className={cn('border border-dashed border-border p-lg sm:p-12', className)}>
+    <Empty className={cn('border border-dashed border-border p-6 sm:p-12', className)}>
       <EmptyHeader>
         <EmptyMedia
           variant="icon"

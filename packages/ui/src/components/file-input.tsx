@@ -39,7 +39,7 @@ export function FileInput({
     : (summary ? summary(files) : (files[0]?.name ?? ''))
 
   return (
-    <div className={cn('flex items-center gap-md', className)}>
+    <div className={cn('flex items-center gap-4', className)}>
       <Button
         type="button"
         variant="secondary"

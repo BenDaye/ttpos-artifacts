@@ -135,7 +135,7 @@ function AppShellContent({
         </SidebarFooter>
       </Sidebar>
 
-      <SidebarInset>
+      <SidebarInset className="min-w-0">
         <header className="sticky top-0 z-30 flex h-14 min-w-0 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur">
           <SidebarTrigger className="md:hidden" />
           <div className="min-w-0 flex-1" />

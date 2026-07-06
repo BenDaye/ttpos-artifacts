@@ -126,8 +126,8 @@ export function VersionDetailDialog({ open, onOpenChange, version }: VersionDeta
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="dialog-size-downloads" data-testid="version-detail-dialog">
-          <DialogHeader className="gap-sm">
-            <div className="flex min-w-0 flex-wrap items-baseline gap-sm">
+          <DialogHeader className="gap-3">
+            <div className="flex min-w-0 flex-wrap items-baseline gap-3">
               <DialogTitle
                 className={cn(
                   'min-w-0 break-all text-lg font-semibold leading-tight',
@@ -156,8 +156,8 @@ export function VersionDetailDialog({ open, onOpenChange, version }: VersionDeta
           </DialogHeader>
 
           <div className="dialog-scroll-area overflow-y-auto">
-            <div className="grid gap-md">
-              <div className="flex min-w-0 flex-wrap items-center gap-xs border-y border-border py-sm">
+            <div className="grid gap-4">
+              <div className="flex min-w-0 flex-wrap items-center gap-2 border-y border-border py-3">
                 <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
                   <Pencil className="size-3.5" />
                   {t('common:actions.edit')}
@@ -178,9 +178,9 @@ export function VersionDetailDialog({ open, onOpenChange, version }: VersionDeta
               </div>
 
               {changelog.length > 0 && (
-                <section className="grid min-w-0 gap-xs">
-                  <div className="flex min-w-0 items-center justify-between gap-sm text-sm">
-                    <span className="inline-flex min-w-0 items-center gap-xs font-semibold text-foreground">
+                <section className="grid min-w-0 gap-2">
+                  <div className="flex min-w-0 items-center justify-between gap-3 text-sm">
+                    <span className="inline-flex min-w-0 items-center gap-2 font-semibold text-foreground">
                       <BookOpen className="size-3.5 shrink-0" />
                       <span className="truncate">{t('changelog', { defaultValue: 'Changelog' })}</span>
                     </span>
@@ -191,7 +191,7 @@ export function VersionDetailDialog({ open, onOpenChange, version }: VersionDeta
                       })}
                     </span>
                   </div>
-                  <div className="grid min-w-0 gap-xs">
+                  <div className="grid min-w-0 gap-2">
                     {changelog.map(entry => (
                       <article
                         key={`${entry.Version}-${entry.Date}-${entry.Changes}`}
@@ -207,8 +207,8 @@ export function VersionDetailDialog({ open, onOpenChange, version }: VersionDeta
                 </section>
               )}
 
-              <section className="grid min-w-0 gap-xs">
-                <div className="flex min-w-0 items-center justify-between gap-sm text-sm">
+              <section className="grid min-w-0 gap-2">
+                <div className="flex min-w-0 items-center justify-between gap-3 text-sm">
                   <span className="font-semibold text-foreground">
                     {t('detail.artifacts', { defaultValue: 'Artifacts' })}
                   </span>
@@ -229,9 +229,9 @@ export function VersionDetailDialog({ open, onOpenChange, version }: VersionDeta
                   : artifacts.map(artifact => (
                       <div
                         key={artifact.link}
-                        className="flex min-w-0 flex-col gap-sm border-t border-border py-sm sm:flex-row sm:items-center sm:justify-between"
+                        className="flex min-w-0 flex-col gap-3 border-t border-border py-3 sm:flex-row sm:items-center sm:justify-between"
                       >
-                        <div className="min-w-0 flex-1 space-y-xs">
+                        <div className="min-w-0 flex-1 space-y-2">
                           <p className="min-w-0 break-words text-base font-semibold text-foreground">
                             {artifact.platform || t('detail.unknown_platform', { defaultValue: 'Unknown platform' })}
                             <span className="text-muted-foreground">
@@ -245,11 +245,11 @@ export function VersionDetailDialog({ open, onOpenChange, version }: VersionDeta
                             {getArtifactFileName(artifact)}
                           </p>
                         </div>
-                        <div className="flex shrink-0 flex-wrap items-center gap-xs">
+                        <div className="flex shrink-0 flex-wrap items-center gap-2">
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-8 px-sm text-sm"
+                            className="h-8 px-3 text-sm"
                             disabled={resolving === artifact.link}
                             onClick={() => onCopy(artifact.link)}
                           >
@@ -260,7 +260,7 @@ export function VersionDetailDialog({ open, onOpenChange, version }: VersionDeta
                           </Button>
                           <Button
                             size="sm"
-                            className="h-8 px-sm text-sm"
+                            className="h-8 px-3 text-sm"
                             disabled={resolving === artifact.link}
                             onClick={() => onDownload(artifact.link)}
                           >

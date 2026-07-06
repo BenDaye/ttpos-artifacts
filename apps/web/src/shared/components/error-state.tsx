@@ -21,7 +21,7 @@ interface ErrorStateProps {
 export function ErrorState({ title, description, onRetry, retryLabel, className }: ErrorStateProps) {
   const { t } = useTranslation('common')
   return (
-    <Empty className={cn('border border-dashed border-border p-lg sm:p-12', className)}>
+    <Empty className={cn('border border-dashed border-border p-6 sm:p-12', className)}>
       <EmptyHeader>
         <EmptyMedia
           variant="icon"

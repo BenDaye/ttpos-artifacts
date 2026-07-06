@@ -288,10 +288,10 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
   return (
     <li data-testid="version-card">
       <Card className="h-full overflow-hidden">
-        <CardContent className="flex h-full min-w-0 flex-col gap-md px-lg pb-lg pt-xl">
-          <div className="flex min-w-0 items-start justify-between gap-md">
-            <div className="min-w-0 flex-1 space-y-sm">
-              <div className="flex min-w-0 flex-wrap items-baseline gap-sm">
+        <CardContent className="flex h-full min-w-0 flex-col gap-4 px-6 pb-6 pt-8">
+          <div className="flex min-w-0 items-start justify-between gap-4">
+            <div className="min-w-0 flex-1 space-y-3">
+              <div className="flex min-w-0 flex-wrap items-baseline gap-3">
                 <p
                   className={cn(
                     'min-w-0 break-all text-lg font-semibold',
@@ -321,13 +321,13 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
               )}
             </div>
             <div className="flex shrink-0 items-center gap-1">
-              <Button variant="ghost" size="icon" className="size-xl" aria-label={t('common:actions.edit')} onClick={onEdit}>
+              <Button variant="ghost" size="icon" className="size-8" aria-label={t('common:actions.edit')} onClick={onEdit}>
                 <Pencil className="size-4" />
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
-                className="size-xl"
+                className="size-8"
                 aria-label={t('common:actions.delete')}
                 onClick={onDelete}
               >
@@ -336,12 +336,12 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
             </div>
           </div>
 
-          <div className="flex min-w-0 flex-wrap items-center gap-xs border-t border-border pt-sm">
+          <div className="flex min-w-0 flex-wrap items-center gap-2 border-t border-border pt-3">
             {changelog.length > 0 && (
               <Button
                 variant="link"
                 size="sm"
-                className="h-auto min-w-0 max-w-full px-xs py-xs text-primary no-underline hover:no-underline"
+                className="h-auto min-w-0 max-w-full px-2 py-2 text-primary no-underline hover:no-underline"
                 onClick={() => setShowChangelog(true)}
               >
                 <BookOpen className="size-3.5" />
@@ -358,7 +358,7 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
               <Button
                 variant="link"
                 size="sm"
-                className="h-auto min-w-0 max-w-full px-xs py-xs text-primary no-underline hover:no-underline"
+                className="h-auto min-w-0 max-w-full px-2 py-2 text-primary no-underline hover:no-underline"
                 onClick={() => setShowDownloads(true)}
               >
                 <Download className="size-3.5" />
@@ -374,7 +374,7 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
             <Button
               variant="link"
               size="sm"
-              className="h-auto min-w-0 max-w-full px-xs py-xs text-primary no-underline hover:no-underline"
+              className="h-auto min-w-0 max-w-full px-2 py-2 text-primary no-underline hover:no-underline"
               onClick={() => setShowAddArtifact(true)}
             >
               <FilePlus className="size-3.5" />
@@ -408,8 +408,8 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
 
           {artifacts.length > 0
             ? (
-                <div className="grid min-w-0 gap-xs">
-                  <div className="flex min-w-0 items-center justify-between gap-sm text-sm">
+                <div className="grid min-w-0 gap-2">
+                  <div className="flex min-w-0 items-center justify-between gap-3 text-sm">
                     <span className="font-semibold text-foreground">
                       {t('detail.artifacts', { defaultValue: 'Artifacts' })}
                     </span>
@@ -423,9 +423,9 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
                   {artifacts.map(a => (
                     <div
                       key={a.link}
-                      className="flex min-w-0 flex-col gap-sm border-t border-border py-sm sm:flex-row sm:items-center sm:justify-between"
+                      className="flex min-w-0 flex-col gap-3 border-t border-border py-3 sm:flex-row sm:items-center sm:justify-between"
                     >
-                      <div className="min-w-0 flex-1 space-y-xs">
+                      <div className="min-w-0 flex-1 space-y-2">
                         <p className="min-w-0 break-words text-base font-semibold text-foreground">
                           {a.platform || t('detail.unknown_platform', { defaultValue: 'Unknown platform' })}
                           <span className="text-muted-foreground">
@@ -439,11 +439,11 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
                           {getArtifactFileName(a)}
                         </p>
                       </div>
-                      <div className="flex shrink-0 flex-wrap items-center gap-xs">
+                      <div className="flex shrink-0 flex-wrap items-center gap-2">
                         <Button
                           variant="link"
                           size="sm"
-                          className="h-auto min-w-0 max-w-full px-xs py-xs text-primary no-underline hover:no-underline"
+                          className="h-auto min-w-0 max-w-full px-2 py-2 text-primary no-underline hover:no-underline"
                           disabled={downloading === a.link}
                           onClick={() => onDownload(a.link)}
                         >
@@ -453,7 +453,7 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="size-xl"
+                          className="size-8"
                           aria-label={t('common:actions.delete')}
                           onClick={() => onDeleteArtifact(a)}
                         >
@@ -465,7 +465,7 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
                 </div>
               )
             : (
-                <p className="border-t border-border pt-sm text-sm text-muted-foreground">
+                <p className="border-t border-border pt-3 text-sm text-muted-foreground">
                   {t('detail.no_artifacts', { defaultValue: 'No artifacts attached.' })}
                 </p>
               )}
