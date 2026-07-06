@@ -87,7 +87,7 @@ export function AppListView({ apps, onSelect, onEdit, onDelete, onReorder, canRe
   )
 
   return (
-    <Card className="max-w-full overflow-hidden">
+    <Card className="max-w-full overflow-hidden py-0">
       <div className="divide-y divide-border">
         <div aria-hidden className="app-list-header-grid hidden bg-muted/30 px-4 py-2 text-xs font-medium text-muted-foreground sm:grid sm:gap-3">
           <div>{t('list.name', { defaultValue: 'Name' })}</div>

@@ -35,7 +35,7 @@ export function AppCardView({ apps, onSelect, onEdit, onDelete, onReorder, canRe
         sortable?.isDragging && 'opacity-50',
       )}
     >
-      <CardContent className="p-5">
+      <CardContent>
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 flex-1 items-center gap-3">
             {reorderEnabled && sortable && (

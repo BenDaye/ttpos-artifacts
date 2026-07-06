@@ -79,7 +79,7 @@ export function TokensPanel() {
             const expired = expiresAt && !Number.isNaN(expiresAt.getTime()) && expiresAt < new Date()
             return (
               <Card key={token.id}>
-                <CardContent className="flex min-w-0 flex-wrap items-center justify-between gap-3 p-4">
+                <CardContent className="flex min-w-0 flex-wrap items-center justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-3">
                     <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
                       <Key className="size-4" />

@@ -217,6 +217,7 @@ function VersionItem({ version, isSelected = false, onSelect }: VersionItemProps
 
   return (
     <Card
+      size="sm"
       role="button"
       tabIndex={0}
       aria-label={t('board.open_version_details', {
@@ -237,7 +238,7 @@ function VersionItem({ version, isSelected = false, onSelect }: VersionItemProps
         isSelected && 'ring-primary bg-secondary',
       )}
     >
-      <CardContent className="space-y-1.5 p-2.5">
+      <CardContent className="space-y-1.5">
         <div className="flex min-w-0 items-center gap-1.5">
           <span className="min-w-0 truncate text-sm font-medium">{version.Version}</span>
           {version.Channel && (
