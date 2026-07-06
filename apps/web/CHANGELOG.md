@@ -14,6 +14,12 @@ bump 版本号、归档本文件的 Unreleased 段，并打印建议的 commit /
 
 ## [Unreleased]
 
+## [0.2.8] - 2026-07-06
+
+### Fixed
+
+- 交互卡片焦点态改用 base-nova 官方配方（1px `outline-ring` 细边 + 3px `ring-ring/50` 光晕）：修复键盘关闭版本详情弹窗后，焦点回落卡片时残留 2px 实心灰环、状似边框损坏的问题；7 个文件 11 处手写焦点环统一对齐 button/input/tabs
+
 ## [0.2.7] - 2026-07-06
 
 ### Fixed
