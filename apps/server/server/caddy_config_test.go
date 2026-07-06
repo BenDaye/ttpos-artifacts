@@ -67,7 +67,9 @@ func TestCaddyShortLatestRouteContract(t *testing.T) {
 		}
 	}
 
-	assertContains(t, caddyfile, "rewrite * /apps/latest?owner=ttpos&app_name={short_latest_app}&channel=prod&platform={short_latest_platform}&arch={short_latest_arch}&package={short_latest_package}")
+	// resolve=artifact-latest 是短链回退语义的开关（选「含该制品的最新 published 版本」），
+	// 由 /dl rewrite 独占开启；丢失该参数会静默退回旧的「全局最新版本再过滤」语义。
+	assertContains(t, caddyfile, "rewrite * /apps/latest?owner=ttpos&app_name={short_latest_app}&channel=prod&platform={short_latest_platform}&arch={short_latest_arch}&package={short_latest_package}&resolve=artifact-latest")
 	assertContains(t, caddyfile, "Cloudflare-CDN-Cache-Control \"public, max-age=300\"")
 	assertContains(t, caddyfile, "Cache-Control \"no-cache\"")
 	assertContains(t, caddyfile, "match status 3xx")

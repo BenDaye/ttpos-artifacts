@@ -21,6 +21,7 @@ var (
 	ErrAppNameNotFound        = errors.New("app_name not found in apps_meta collection")
 	ErrAppIdentifierAmbiguous = errors.New("app identifier matches multiple apps in apps_meta collection")
 	ErrChannelNotFound        = errors.New("channel not found in apps_meta collection")
+	ErrTargetNotFound         = errors.New("platform or arch not found in apps_meta collection")
 )
 
 type latestAppMeta struct {
@@ -471,6 +472,97 @@ func (c *appRepository) FetchLatestVersionOfApp(appName, channel string, ctx con
 	pipeline = append(pipeline, c.sortVersionPipeline()...)
 	basePipeline := c.getBasePipeline()
 	pipeline = append(pipeline, basePipeline...)
+
+	logrus.Debug("MongoDB Pipeline: ", pipeline)
+
+	cur, err := collection.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+
+	return c.processApps(cur, ctx)
+}
+
+// normalizePackage maps a caller-supplied package token ("apk", "APK", ".apk")
+// to the raw stored form of apps.artifacts[].package, which keeps the leading
+// dot and lower case (".apk"). The response-side filter in server/handler/info
+// trims the dot instead; the two layers are complementary, so this helper must
+// never strip the dot.
+func normalizePackage(pkg string) string {
+	normalized := strings.ToLower(strings.TrimSpace(pkg))
+	if normalized == "" {
+		return ""
+	}
+	if !strings.HasPrefix(normalized, ".") {
+		normalized = "." + normalized
+	}
+	return normalized
+}
+
+// targetArtifactElemMatch builds the artifacts $elemMatch used by
+// FetchLatestVersionOfAppForTarget. It runs in the initial $match, before
+// getBasePipeline resolves names, so platform/arch must be apps_meta ObjectIDs
+// and package the raw stored form; link must be a non-empty string so a ghost
+// artifact can never elect a version.
+func targetArtifactElemMatch(platformID, archID primitive.ObjectID, pkg string) bson.M {
+	return bson.M{
+		"$elemMatch": bson.M{
+			"platform": platformID,
+			"arch":     archID,
+			"package":  normalizePackage(pkg),
+			"link":     bson.M{"$exists": true, "$ne": ""},
+		},
+	}
+}
+
+// FetchLatestVersionOfAppForTarget resolves the newest published version that
+// actually ships a matching platform/arch/package artifact, instead of the
+// newest published version overall. It backs the /apps/latest
+// resolve=artifact-latest opt-in used by the Caddy /dl short links, so a
+// partially released version no longer 404s the platforms it skipped.
+func (c *appRepository) FetchLatestVersionOfAppForTarget(appName, channel, platform, arch, pkg string, ctx context.Context, owner string) ([]*model.SpecificAppWithoutIDs, error) {
+	metaCollection := c.client.Database(c.config.Database).Collection("apps_meta")
+	appMeta, err := c.resolveLatestAppMeta(ctx, metaCollection, appName, owner)
+	if err != nil {
+		return nil, err
+	}
+
+	var channelMeta, platformMeta, archMeta struct {
+		ID primitive.ObjectID `bson:"_id"`
+	}
+	if channel != "" {
+		channelFilter := bson.D{{Key: "channel_name", Value: channel}, {Key: "owner", Value: owner}}
+		if err := metaCollection.FindOne(ctx, channelFilter).Decode(&channelMeta); err != nil {
+			if !errors.Is(err, mongo.ErrNoDocuments) {
+				return nil, err
+			}
+			return nil, ErrChannelNotFound
+		}
+	}
+	if err := c.getMeta(ctx, metaCollection, "platform_name", platform, &platformMeta, owner); err != nil {
+		return nil, ErrTargetNotFound
+	}
+	if err := c.getMeta(ctx, metaCollection, "arch_id", arch, &archMeta, owner); err != nil {
+		return nil, ErrTargetNotFound
+	}
+
+	matchFilter := bson.M{
+		"app_id":    appMeta.ID,
+		"published": true,
+		"owner":     owner,
+		"artifacts": targetArtifactElemMatch(platformMeta.ID, archMeta.ID, pkg),
+	}
+	if channel != "" {
+		matchFilter["channel_id"] = channelMeta.ID
+	}
+
+	collection := c.client.Database(c.config.Database).Collection("apps")
+	pipeline := mongo.Pipeline{
+		{{Key: "$match", Value: matchFilter}},
+	}
+	pipeline = append(pipeline, c.sortVersionPipeline()...)
+	pipeline = append(pipeline, c.getBasePipeline()...)
 
 	logrus.Debug("MongoDB Pipeline: ", pipeline)
 

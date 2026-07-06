@@ -52,6 +52,7 @@
 | [ ] | ENH-018 | Docker 构建改用 turbo prune 剪枝上下文 | P3 | pending |
 | [x] | BUG-015 | 修复 FaynoSync CI 重传覆盖失败 | P1 | completed |
 | [x] | BUG-016 | 删光构建物后版本显示 Unknown platform/architecture | P2 | completed |
+| [ ] | BUG-017 | /dl 短链在部分平台发版时对缺失平台 404 | P1 | implementing |
 | [x] | REFACTOR-006 | owner 收敛为部署单例（single-owner mode） | P1 | deployed |
 | [x] | REFACTOR-007 | 将 /dl 短链入口迁到 Caddy | P1 | completed |
 | [x] | REFACTOR-008 | server 单租户焊死（single-owner lockdown） | P1 | completed |

@@ -30,8 +30,22 @@ type CachedResponse struct {
 
 const CacheRedirectHeadersContextKey = "cache_latest_redirect_headers"
 
+// ResolveArtifactLatest is the /apps/latest opt-in (`resolve=artifact-latest`)
+// that switches version election from "newest published version, filtered
+// afterwards" to "newest published version that actually ships the requested
+// platform/arch/package artifact". The Caddy /dl short links enable it so a
+// partially released version cannot 404 the platforms it skipped; without the
+// parameter behavior is unchanged.
+const ResolveArtifactLatest = "artifact-latest"
+
 type latestAppRepository interface {
 	FetchLatestVersionOfApp(appName, channel string, ctx context.Context, owner string) ([]*model.SpecificAppWithoutIDs, error)
+}
+
+// latestTargetRepository is asserted at the call site (mirroring the narrow
+// metaReorderer pattern) so latestAppRepository and its stubs stay untouched.
+type latestTargetRepository interface {
+	FetchLatestVersionOfAppForTarget(appName, channel, platform, arch, pkg string, ctx context.Context, owner string) ([]*model.SpecificAppWithoutIDs, error)
 }
 
 func CreateCacheKey(params map[string]interface{}) string {
@@ -50,6 +64,11 @@ func CreateCacheKey(params map[string]interface{}) string {
 
 	if pkg := cacheParam(params, "package"); pkg != "" {
 		baseKey += fmt.Sprintf("&package=%s", pkg)
+	}
+
+	// The two election semantics must never share a cache entry.
+	if resolve := cacheParam(params, "resolve"); resolve != "" {
+		baseKey += fmt.Sprintf("&resolve=%s", resolve)
 	}
 
 	return baseKey
@@ -262,6 +281,17 @@ func FetchLatestVersionOfApp(c *gin.Context, repository latestAppRepository, rdb
 	// ignored and the deployment owner is used, so public download lookups
 	// (including /dl and squirrel) always resolve the one real owner.
 	owner := ownership.Owner()
+
+	// Artifact-latest election needs the full target triple; with anything
+	// missing the request silently keeps the legacy semantics.
+	resolve := ""
+	targetRepo, supportsTarget := repository.(latestTargetRepository)
+	if supportsTarget &&
+		c.Query("resolve") == ResolveArtifactLatest &&
+		c.Query("platform") != "" && c.Query("arch") != "" && c.Query("package") != "" {
+		resolve = ResolveArtifactLatest
+	}
+
 	params := map[string]interface{}{
 		"app_name": c.Query("app_name"),
 		"channel":  c.Query("channel"),
@@ -269,6 +299,7 @@ func FetchLatestVersionOfApp(c *gin.Context, repository latestAppRepository, rdb
 		"arch":     c.Query("arch"),
 		"package":  c.Query("package"),
 		"owner":    owner,
+		"resolve":  resolve,
 	}
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
 	defer cancel()
@@ -299,7 +330,13 @@ func FetchLatestVersionOfApp(c *gin.Context, repository latestAppRepository, rdb
 		}
 	}
 
-	checkResult, err := repository.FetchLatestVersionOfApp(params["app_name"].(string), params["channel"].(string), ctx, params["owner"].(string))
+	var checkResult []*model.SpecificAppWithoutIDs
+	var err error
+	if resolve == ResolveArtifactLatest {
+		checkResult, err = targetRepo.FetchLatestVersionOfAppForTarget(params["app_name"].(string), params["channel"].(string), params["platform"].(string), params["arch"].(string), params["package"].(string), ctx, params["owner"].(string))
+	} else {
+		checkResult, err = repository.FetchLatestVersionOfApp(params["app_name"].(string), params["channel"].(string), ctx, params["owner"].(string))
+	}
 	if err != nil {
 		logrus.Error(err)
 		status, response := latestFetchErrorResponse(err)
@@ -385,7 +422,7 @@ func FetchLatestVersionOfApp(c *gin.Context, repository latestAppRepository, rdb
 }
 
 func latestFetchErrorResponse(err error) (int, gin.H) {
-	if errors.Is(err, db.ErrAppNameNotFound) || errors.Is(err, db.ErrChannelNotFound) {
+	if errors.Is(err, db.ErrAppNameNotFound) || errors.Is(err, db.ErrChannelNotFound) || errors.Is(err, db.ErrTargetNotFound) {
 		return http.StatusNotFound, gin.H{"error": "No matching data found for the provided parameters"}
 	}
 	if errors.Is(err, db.ErrAppIdentifierAmbiguous) {

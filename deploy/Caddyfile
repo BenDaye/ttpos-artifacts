@@ -55,7 +55,9 @@ update.ttpos.dev {
 			}
 
 			handle @known_short_latest {
-				rewrite * /apps/latest?owner=ttpos&app_name={short_latest_app}&channel=prod&platform={short_latest_platform}&arch={short_latest_arch}&package={short_latest_package}
+				# resolve=artifact-latest：短链选「含该 platform/arch/package 制品的最新 published 版本」，
+				# 部分平台发版不再 404 未发平台（回退到上一个有制品的版本）。
+				rewrite * /apps/latest?owner=ttpos&app_name={short_latest_app}&channel=prod&platform={short_latest_platform}&arch={short_latest_arch}&package={short_latest_package}&resolve=artifact-latest
 				header {
 					Cloudflare-CDN-Cache-Control "public, max-age=300"
 					Cache-Control "no-cache"
