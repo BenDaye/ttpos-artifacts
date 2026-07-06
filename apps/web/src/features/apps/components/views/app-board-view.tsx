@@ -233,8 +233,8 @@ function VersionItem({ version, isSelected = false, onSelect }: VersionItemProps
         }
       }}
       className={cn(
-        'cursor-pointer transition-colors hover:border-foreground/30 hover:bg-accent/50 active:bg-accent focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring',
-        isSelected && 'border-primary bg-secondary',
+        'cursor-pointer transition-colors hover:ring-foreground/30 hover:bg-accent/50 active:bg-accent focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring',
+        isSelected && 'ring-primary bg-secondary',
       )}
     >
       <CardContent className="space-y-1.5 p-2.5">
