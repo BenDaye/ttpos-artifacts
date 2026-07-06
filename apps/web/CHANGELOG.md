@@ -14,6 +14,12 @@ bump 版本号、归档本文件的 Unreleased 段，并打印建议的 commit /
 
 ## [Unreleased]
 
+## [0.2.7] - 2026-07-06
+
+### Fixed
+
+- 调用点适配新版 Card 自带 padding 契约,消除叠加留白:版本卡片(board)改 `size="sm"` 均匀 12px,应用卡片与平台/架构/渠道/Tokens/Users 行卡片用默认 16px,应用详情面板均匀 24px,列表表格容器 Card 改 `py-0` 全出血
+
 ## [0.2.6] - 2026-07-06
 
 ### Fixed
