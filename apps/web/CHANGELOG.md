@@ -14,6 +14,13 @@ bump 版本号、归档本文件的 Unreleased 段，并打印建议的 commit /
 
 ## [Unreleased]
 
+## [0.2.6] - 2026-07-06
+
+### Fixed
+
+- 主题变量重同步为 shadcn 官方 neutral cssVarsV4（OKLCH）：修复输入框 focus 黑色双层粗框、版本卡片回焦黑色粗 ring；`--radius` 跟随官方默认 0.625rem
+- 版本卡片选中态/hover 适配新版 Card 的 ring 体系（`border-primary` → `ring-primary` 等），恢复选中描边
+
 ## [0.2.5] - 2026-07-06
 
 ## [0.2.4] - 2026-07-06
