@@ -171,7 +171,7 @@ function BoardColumn({ app, versions, total, isLoading, isError, onSelect, onEdi
 
       <div className="min-h-0 flex-1 py-2">
         {/* app-board-scroll-area: 列内版本列表滚动区,同时作为 e2e(responsive-layout) 定位锚点,勿删类名 */}
-        <div className="app-board-scroll-area flex h-full min-h-0 flex-col gap-2 overflow-y-auto px-2">
+        <div className="app-board-scroll-area flex h-full min-h-0 flex-col gap-2 overflow-y-auto px-2 py-2">
           {isLoading && (
             <>
               <Skeleton className="h-16 rounded-md" />

@@ -23,8 +23,10 @@
   --spacing-section: 80px;
 }
 
-* {
-  border-color: var(--border);
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
 }
 
 html,
