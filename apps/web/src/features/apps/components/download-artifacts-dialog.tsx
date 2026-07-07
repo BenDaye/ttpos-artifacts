@@ -94,7 +94,7 @@ export function DownloadArtifactsDialog({
                 </p>
               )
             : (
-                <ul className="dialog-scroll-area space-y-2 overflow-y-auto pr-1">
+                <ul className="dialog-scroll-area -mx-4 space-y-2 overflow-y-auto px-4">
                   {artifacts.map(a => (
                     <li
                       key={a.link}

@@ -155,7 +155,7 @@ export function VersionDetailDialog({ open, onOpenChange, version }: VersionDeta
             </DialogDescription>
           </DialogHeader>
 
-          <div className="dialog-scroll-area overflow-y-auto">
+          <div className="dialog-scroll-area -mx-4 overflow-y-auto px-4">
             <div className="grid gap-4">
               <div className="flex min-w-0 flex-wrap items-center gap-2 border-y border-border py-3">
                 <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
