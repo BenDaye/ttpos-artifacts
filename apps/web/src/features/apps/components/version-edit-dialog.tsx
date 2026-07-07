@@ -1,4 +1,4 @@
-import type { AppVersion, ChangelogEntry } from '@ttpos/shared'
+import type { AppVersion } from '@ttpos/shared'
 import { Checkbox } from '@ttpos/ui/components/checkbox'
 import { Input } from '@ttpos/ui/components/input'
 import { Label } from '@ttpos/ui/components/label'
@@ -16,17 +16,12 @@ import { toast } from 'sonner'
 import { useChannelsQuery } from '@/features/channels/hooks'
 import { EntityFormDialog } from '@/shared/components/common/entity-form-dialog'
 import { useUpdateVersionMutation } from '../hooks'
+import { changelogTextForVersion } from './version-ui'
 
 interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
   version: AppVersion | null
-}
-
-function changelogToText(entries: ChangelogEntry[]): string {
-  return entries
-    .map(e => `## ${e.Version}${e.Date ? ` — ${e.Date}` : ''}\n${e.Changes}`)
-    .join('\n\n')
 }
 
 export function VersionEditDialog({ open, onOpenChange, version }: Props) {
@@ -60,7 +55,7 @@ export function VersionEditDialog({ open, onOpenChange, version }: Props) {
     setPublish(Boolean(version.Published))
     setCritical(Boolean(version.Critical))
     setIntermediate(Boolean(version.Intermediate))
-    setChangelogText(changelogToText(version.Changelog ?? []))
+    setChangelogText(changelogTextForVersion(version))
   }, [open, version])
   /* eslint-enable react/set-state-in-effect */
 

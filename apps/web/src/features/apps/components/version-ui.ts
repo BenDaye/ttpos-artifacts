@@ -1,5 +1,20 @@
 import type { AppVersion, ArtifactEntry } from '@ttpos/shared'
 
+/**
+ * 取出「当前版本那一条」changelog 的纯 Changes 文本，供编辑对话框回填。
+ *
+ * 编辑对话框只编辑这个 version 自己的 changelog，与上传对话框对称：读=写都是纯文本，
+ * 不渲染 `## 版本 — 日期` 标题。若渲染标题再整段回写，后端会把标题当正文覆盖进
+ * 同版本那条的 Changes，下次打开又在前面套一层标题，导致 changelog 逐次累积膨胀。
+ *
+ * 按 version.Version 精确匹配（后端 create/update 存的 Changelog.Version 即版本号）；
+ * 匹配不到返回空串。
+ */
+export function changelogTextForVersion(version: AppVersion): string {
+  const entry = (version.Changelog ?? []).find(e => e.Version === version.Version)
+  return entry?.Changes ?? ''
+}
+
 export function getVersionTone(version: AppVersion): 'critical' | 'published' | 'draft' {
   if (version.Critical)
     return 'critical'
