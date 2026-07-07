@@ -14,6 +14,12 @@ bump 版本号、归档本文件的 Unreleased 段，并打印建议的 commit /
 
 ## [Unreleased]
 
+## [0.2.11] - 2026-07-07
+
+### Fixed
+
+- 弹窗滚动区改为集中式四周留白（`.dialog-scroll-area` 统一 `margin: -16px` + `padding: 16px`）：根因是 `overflow` 容器把后代 box-shadow（`:focus-visible` 光晕）裁在自身 padding box，四条边都会裁、内容不滚动也裁。裁剪框整体外扩到弹窗内边距边缘后，输入框聚焦光晕四周完整；四个弹窗调用点收敛为纯类名，替代 0.2.10 的逐边 inline 补丁
+
 ## [0.2.10] - 2026-07-07
 
 ### Fixed
