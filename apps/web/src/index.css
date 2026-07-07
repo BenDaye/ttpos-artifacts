@@ -107,8 +107,14 @@ body {
     }
   }
 
+  /* 滚动容器 overflow 会把后代的 box-shadow(含 :focus-visible 光晕)裁在自身 padding box。
+     用「四周负外边距 + 等量内边距」把裁剪框整体外扩到弹窗内边距边缘,聚焦元素四周都留出
+     光晕空间,视觉位置不变。四个调用点只挂类名即可,不再逐边补 -mx/px。 */
   .dialog-scroll-area {
     max-height: calc(100vh - (var(--spacing-section) * 2));
+    margin: calc(var(--spacing) * -4);
+    padding: calc(var(--spacing) * 4);
+    overflow-y: auto;
   }
 
   .app-list-header-grid {

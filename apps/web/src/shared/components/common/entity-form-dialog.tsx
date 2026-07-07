@@ -49,7 +49,7 @@ export function EntityFormDialog({
             <DialogTitle>{title}</DialogTitle>
             {description && <DialogDescription>{description}</DialogDescription>}
           </DialogHeader>
-          <div className="dialog-scroll-area -mx-4 overflow-y-auto px-4">{children}</div>
+          <div className="dialog-scroll-area">{children}</div>
           <DialogFooter>
             <Button
               type="button"

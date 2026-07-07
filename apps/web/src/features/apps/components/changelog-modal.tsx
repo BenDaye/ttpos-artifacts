@@ -59,7 +59,7 @@ export function ChangelogModal({
           <DialogTitle>{title ?? t('changelog', { defaultValue: 'Changelog' })}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
-        <div className="dialog-scroll-area -mx-4 overflow-y-auto px-4">
+        <div className="dialog-scroll-area">
           {groups.length === 0
             ? (
                 <p className="text-sm text-muted-foreground">
