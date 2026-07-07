@@ -166,6 +166,13 @@ test.describe('Responsive layout', () => {
       return Math.ceil(element.scrollHeight - element.clientHeight)
     })).toBeGreaterThan(40)
 
+    // 版本多时，版本卡不得被 flex 压缩到内容高度以下（回归守卫：缺 shrink-0 会被压成 ~24px 裁切）。
+    // 只查“能滚动”不够——压扁后仍会溢出可滚，必须显式断言卡片保持自然高度。
+    await expect.poll(async () => scrollArea.evaluate((element) => {
+      const cards = element.querySelectorAll('[data-testid="board-version-card"]')
+      return Math.round(Math.min(...Array.from(cards, c => c.getBoundingClientRect().height)))
+    })).toBeGreaterThanOrEqual(40)
+
     await scrollArea.evaluate((element) => {
       element.scrollTop = 120
     })
