@@ -234,7 +234,9 @@ function VersionItem({ version, isSelected = false, onSelect }: VersionItemProps
         }
       }}
       className={cn(
-        'cursor-pointer transition-colors hover:ring-foreground/30 hover:bg-accent/50 active:bg-accent focus-visible:outline-1 focus-visible:outline-ring focus-visible:ring-3 focus-visible:ring-ring/50',
+        // shrink-0：版本卡是 flex-col 滚动容器的子项，Card 自带 overflow-hidden 会让 min-height:auto 失效为 0，
+        // 列内版本多时 flex 会把卡片压到内容高度以下（裁切/压扁）。固定不收缩，改由滚动区滚动。
+        'shrink-0 cursor-pointer transition-colors hover:ring-foreground/30 hover:bg-accent/50 active:bg-accent focus-visible:outline-1 focus-visible:outline-ring focus-visible:ring-3 focus-visible:ring-ring/50',
         isSelected && 'ring-primary bg-secondary',
       )}
     >
