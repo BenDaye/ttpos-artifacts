@@ -14,6 +14,12 @@ bump 版本号、归档本文件的 Unreleased 段，并打印建议的 commit /
 
 ## [Unreleased]
 
+## [0.2.12] - 2026-07-07
+
+### Fixed
+
+- Board 视图版本卡加 `shrink-0`：修复版本多的列（如 53 / 66 个版本）版本卡被 flex 压扁、内容被 `Card` 自带 `overflow-hidden` 裁切、呈压扁 / 发灰截断的问题。根因是版本卡作为 `flex-col` 滚动容器子项缺 `shrink-0`，叠加 `overflow-hidden` 使 `min-height:auto` 失效为 0；补 `shrink-0` 后卡片保持自然高度、超出改由滚动区滚动。并给 e2e board 用例补卡片最小高度断言（原测试只查滚动区能滚、抓不到压扁）
+
 ## [0.2.11] - 2026-07-07
 
 ### Fixed
