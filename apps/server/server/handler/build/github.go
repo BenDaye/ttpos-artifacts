@@ -48,23 +48,7 @@ type Config struct {
 	BaseURLTest   string // e.g. https://api.ttpos.dev/api/v1
 	BaseWSURLTest string // e.g. wss://api.ttpos.dev/ws
 
-	// PackageAppMap maps a Flutter package (pos/kds/...) to its FaynoSync app
-	// name (TTPOS / "TTPOS Kitchen" / ...). Used for app-scope authorization and
-	// completion detection. Deployment-provided; if a package is missing here it
-	// is treated as unknown (fail-closed).
-	PackageAppMap map[string]string
-
 	MaxLegs int
-}
-
-// KnownPackages returns the set of packages the deployment can build (keys of
-// PackageAppMap).
-func (c Config) KnownPackages() map[string]struct{} {
-	set := make(map[string]struct{}, len(c.PackageAppMap))
-	for pkg := range c.PackageAppMap {
-		set[pkg] = struct{}{}
-	}
-	return set
 }
 
 // Configured reports whether the dispatcher has a usable credential and target.

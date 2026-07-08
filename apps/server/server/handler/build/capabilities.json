@@ -1,0 +1,77 @@
+{
+  "platforms": [
+    "android",
+    "ios",
+    "windows",
+    "macos"
+  ],
+  "packages": [
+    {
+      "package": "assistant",
+      "app_name": "TTPOS Go",
+      "platforms": [
+        "android",
+        "ios",
+        "windows",
+        "macos"
+      ]
+    },
+    {
+      "package": "kds",
+      "app_name": "TTPOS Kitchen",
+      "platforms": [
+        "android",
+        "ios",
+        "windows",
+        "macos"
+      ]
+    },
+    {
+      "package": "kiosk",
+      "app_name": "TTPOS Kiosk",
+      "platforms": [
+        "android",
+        "ios",
+        "windows",
+        "macos"
+      ]
+    },
+    {
+      "package": "pos",
+      "app_name": "TTPOS",
+      "platforms": [
+        "android",
+        "ios",
+        "windows",
+        "macos"
+      ]
+    },
+    {
+      "package": "qds",
+      "app_name": "TTPOS Queue",
+      "platforms": [
+        "android"
+      ]
+    },
+    {
+      "package": "shop",
+      "app_name": "TTPOS Shop",
+      "platforms": [
+        "android",
+        "ios",
+        "windows",
+        "macos"
+      ]
+    },
+    {
+      "package": "tablet",
+      "app_name": "TTPOS Menu",
+      "platforms": [
+        "android",
+        "ios",
+        "windows",
+        "macos"
+      ]
+    }
+  ]
+}

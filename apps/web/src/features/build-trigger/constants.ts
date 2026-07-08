@@ -1,34 +1,31 @@
-// Single source of truth for the self-serve build-trigger option sets.
-// Both the trigger dialog and the status sheet import from here so the package
-// label map cannot drift.
-//
-// NOTE: qds (叫号) is intentionally excluded — it is android-only in the build
-// system (auto-build's iOS/Windows/macOS steps exclude qds), so a multi-platform
-// self-serve build would silently time out. Keep this list in lockstep with the
-// server's BUILD_PACKAGE_APP_MAP keys.
-
-export interface PackageOption {
-  value: string
-  label: string
-}
-
-export const PACKAGE_OPTIONS: PackageOption[] = [
-  { value: 'pos', label: '收银' },
-  { value: 'assistant', label: '助手' },
-  { value: 'kds', label: '厨显' },
-  { value: 'tablet', label: '菜牌' },
-  { value: 'shop', label: '商城' },
-  { value: 'kiosk', label: '自助机' },
-]
-
-export const PLATFORM_OPTIONS: string[] = ['android', 'ios', 'windows', 'macos']
+// Presentation-only labels for the self-serve build form. The buildable set
+// (which packages, which platforms) is NOT here — it comes from the server's
+// /build/capabilities (derived from the build-*.yaml workflow matrices). These
+// maps are only Chinese display names; an unknown id falls back to the id.
 
 export const MAX_BUILD_COUNT = 12
 
-const PACKAGE_LABELS: Record<string, string> = Object.fromEntries(
-  PACKAGE_OPTIONS.map(p => [p.value, p.label]),
-)
+const PACKAGE_LABELS: Record<string, string> = {
+  pos: '收银',
+  assistant: '助手',
+  kds: '厨显',
+  tablet: '菜牌',
+  shop: '商城',
+  qds: '叫号',
+  kiosk: '自助机',
+}
+
+const PLATFORM_LABELS: Record<string, string> = {
+  android: 'Android',
+  ios: 'iOS',
+  windows: 'Windows',
+  macos: 'macOS',
+}
 
 export function packageLabel(pkg: string): string {
   return PACKAGE_LABELS[pkg] ?? pkg
+}
+
+export function platformLabel(platform: string): string {
+  return PLATFORM_LABELS[platform] ?? platform
 }

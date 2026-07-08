@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"net/http"
 	"strings"
@@ -223,6 +222,10 @@ func StartServer(config *viper.Viper, flags map[string]interface{}) {
 		func(c *gin.Context) {
 			build.Trigger(c, mongoDatabase, buildDispatcher, buildLimiter, buildCfg)
 		})
+	// Workflow-derived capabilities (what the self-serve form may offer).
+	router.GET("/build/capabilities", func(c *gin.Context) {
+		c.JSON(http.StatusOK, build.GetCapabilities())
+	})
 
 	if config.GetBool("TUF_ENABLED") {
 		tuf.SetupRoutes(router, authMiddleware, mongoDatabase, redisClient, repo)
@@ -262,17 +265,6 @@ func newBuildConfig(config *viper.Viper) build.Config {
 		maxLegs = build.DefaultMaxLegs
 	}
 
-	// BUILD_PACKAGE_APP_MAP is a JSON object mapping Flutter package -> FaynoSync
-	// app name, e.g. {"pos":"TTPOS","kds":"TTPOS Kitchen"}. Without it, only
-	// admins can trigger (fail-closed app-scope).
-	packageAppMap := map[string]string{}
-	if raw := config.GetString("BUILD_PACKAGE_APP_MAP"); raw != "" {
-		if err := json.Unmarshal([]byte(raw), &packageAppMap); err != nil {
-			logrus.Warnf("BUILD_PACKAGE_APP_MAP is not valid JSON, ignoring: %v", err)
-			packageAppMap = map[string]string{}
-		}
-	}
-
 	privateKey := config.GetString("GITHUB_APP_PRIVATE_KEY")
 
 	return build.Config{
@@ -286,7 +278,6 @@ func newBuildConfig(config *viper.Viper) build.Config {
 		WorkflowRef:    workflowRef,
 		BaseURLTest:    baseURL,
 		BaseWSURLTest:  baseWS,
-		PackageAppMap:  packageAppMap,
 		MaxLegs:        maxLegs,
 	}
 }
