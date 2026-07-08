@@ -36,6 +36,14 @@ type Config struct {
 	Repo           string
 	WorkflowFile   string // e.g. "auto-build.yaml"
 
+	// WorkflowRef is the ref IN THIS repo (ttpos-artifacts) that holds the
+	// workflow definition to run — almost always "main". It is NOT the source
+	// branch to build: that is DispatchInput.Branch (a ttpos-flutter branch)
+	// which is passed as the workflow's `branch` INPUT. Conflating the two makes
+	// the dispatch fail when the user picks a source branch (e.g. new-test) that
+	// does not exist in this repo.
+	WorkflowRef string
+
 	// Env->URL mapping. env is always EnvTest, so only the test URLs are used.
 	BaseURLTest   string // e.g. https://api.ttpos.dev/api/v1
 	BaseWSURLTest string // e.g. wss://api.ttpos.dev/ws
@@ -90,6 +98,7 @@ type Dispatcher interface {
 type githubDispatcher struct {
 	cfg        Config
 	httpClient *http.Client
+	apiBase    string // overridable in tests; defaults to githubAPIBase
 
 	mu         sync.Mutex
 	cachedTok  string
@@ -101,6 +110,7 @@ func NewDispatcher(cfg Config) Dispatcher {
 	return &githubDispatcher{
 		cfg:        cfg,
 		httpClient: &http.Client{Timeout: 20 * time.Second},
+		apiBase:    githubAPIBase,
 	}
 }
 
@@ -131,8 +141,14 @@ func (g *githubDispatcher) Dispatch(ctx context.Context, in DispatchInput) (stri
 	// a bare 204 (GitHub changelog 2026-02). Verify availability on the target
 	// GitHub tier at implementation time; older tiers 204 and we fall back to a
 	// deep link to the workflow runs list.
+	// ref = the workflow-holding branch in THIS repo (default main); the source
+	// branch to build (in.Branch, a ttpos-flutter branch) travels only in inputs.
+	workflowRef := g.cfg.WorkflowRef
+	if workflowRef == "" {
+		workflowRef = "main"
+	}
 	body := map[string]any{
-		"ref":                in.Branch,
+		"ref":                workflowRef,
 		"inputs":             inputs,
 		"return_run_details": true,
 	}
@@ -142,7 +158,7 @@ func (g *githubDispatcher) Dispatch(ctx context.Context, in DispatchInput) (stri
 	}
 
 	url := fmt.Sprintf("%s/repos/%s/%s/actions/workflows/%s/dispatches",
-		githubAPIBase, g.cfg.Owner, g.cfg.Repo, g.cfg.WorkflowFile)
+		g.apiBase, g.cfg.Owner, g.cfg.Repo, g.cfg.WorkflowFile)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(payload))
 	if err != nil {
 		return "", err
@@ -222,7 +238,7 @@ func (g *githubDispatcher) installationToken(ctx context.Context) (string, error
 		return "", err
 	}
 
-	url := fmt.Sprintf("%s/app/installations/%d/access_tokens", githubAPIBase, g.cfg.InstallationID)
+	url := fmt.Sprintf("%s/app/installations/%d/access_tokens", g.apiBase, g.cfg.InstallationID)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {
 		return "", err
