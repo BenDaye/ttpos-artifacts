@@ -109,6 +109,8 @@
     "env": "环境",
     "env_locked": "固定 test 不可改",
     "build_count": "{{packages}} 端 × {{platforms}} 平台 = {{count}} 个构建",
+    "build_count_simple": "将触发 {{count}} 个构建",
+    "loading_caps": "加载可构建项…",
     "over_limit": "超过上限 {{max}}，请减少选择",
     "subset_hint": "子集构建即将支持（Track 2-b），请选单个或全部",
     "select_all": "全选",

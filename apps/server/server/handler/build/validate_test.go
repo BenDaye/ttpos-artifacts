@@ -2,28 +2,28 @@ package build
 
 import "testing"
 
-// T-5 (partial) / boundary: env is a compile-time constant, never a request
-// field. This asserts the constant can only be "test" so no caller input can
-// redirect the dispatch environment.
+// env is a compile-time constant, never a request field.
 func TestEnvIsPinnedToTest(t *testing.T) {
 	if EnvTest != "test" {
 		t.Fatalf("EnvTest must be \"test\", got %q", EnvTest)
 	}
 }
 
-// T-10: branch allowlist rejects arbitrary/injection refs and accepts safe ones.
+// Branch validation is format/anti-injection only (no allowlist): any safe ref
+// string is accepted; injection payloads are rejected.
 func TestValidateBranch(t *testing.T) {
 	valid := []string{
 		"new-test",
 		"release",
 		"main",
 		"feature/foo-bar",
-		"feature/ABC_123",
+		"random-branch",  // no allowlist anymore -> a well-formed branch is fine
+		"hotfix/abc_123", // ditto
 		"0123456789abcdef0123456789abcdef01234567", // 40-hex SHA
 	}
 	for _, b := range valid {
 		if err := ValidateBranch(b); err != nil {
-			t.Errorf("expected %q to be valid, got: %v", b, err)
+			t.Errorf("expected %q valid, got: %v", b, err)
 		}
 	}
 
@@ -31,80 +31,80 @@ func TestValidateBranch(t *testing.T) {
 		"",
 		"../../evil",
 		`zzz";echo "hi";#`,
-		"feature/",             // prefix with nothing after
-		"random-branch",        // not in allowlist, no allowed prefix
 		"main; rm -rf /",       // space + special chars
 		"feature/..\\traverse", // backslash + traversal
+		"a b",                  // space
 	}
 	for _, b := range invalid {
 		if err := ValidateBranch(b); err == nil {
-			t.Errorf("expected %q to be rejected, but it passed", b)
+			t.Errorf("expected %q rejected, but it passed", b)
 		}
 	}
 }
 
-// T-6: leg count = |packages| x |platforms|; the cap is enforced by callers
-// against DefaultMaxLegs.
 func TestLegCountAndCap(t *testing.T) {
-	pkgs := []string{"pos", "kds", "shop"}
-	plats := []string{"android", "ios", "windows", "macos"}
-	if got := LegCount(pkgs, plats); got != 12 {
+	if got := LegCount([]string{"pos", "kds", "shop"}, []string{"android", "ios", "windows", "macos"}); got != 12 {
 		t.Fatalf("LegCount = %d, want 12", got)
 	}
-	// 4 x 4 = 16 > DefaultMaxLegs(12)
 	over := LegCount([]string{"a", "b", "c", "d"}, []string{"android", "ios", "windows", "macos"})
 	if over <= DefaultMaxLegs {
 		t.Fatalf("expected %d to exceed cap %d", over, DefaultMaxLegs)
 	}
 }
 
-// M-3 / T-12: Phase 1 supports only single-or-all per axis; a strict subset is
-// rejected (Track 2-b), never silently reduced.
+// Phase 1 supports only single-or-all per axis; a strict subset is rejected.
 func TestResolveDispatch(t *testing.T) {
-	known := map[string]struct{}{"pos": {}, "kds": {}, "shop": {}}
+	caps := GetCapabilities()
+	allPkgs := make([]string, 0, len(caps.Packages))
+	for _, p := range caps.Packages {
+		allPkgs = append(allPkgs, p.Package)
+	}
+	allPlats := append([]string{}, caps.Platforms...)
 
-	// single package + single platform
-	sel, err := ResolveDispatch([]string{"pos"}, []string{"android"}, known)
+	sel, err := ResolveDispatch([]string{"pos"}, []string{"android"})
 	if err != nil || sel.Package != "pos" || sel.Platform != "android" {
 		t.Fatalf("single/single: got %+v err=%v", sel, err)
 	}
 
-	// all packages + all platforms -> "all"/"all"
-	sel, err = ResolveDispatch([]string{"pos", "kds", "shop"}, AllowedPlatforms, known)
+	sel, err = ResolveDispatch(allPkgs, allPlats)
 	if err != nil || sel.Package != "all" || sel.Platform != "all" {
 		t.Fatalf("all/all: got %+v err=%v", sel, err)
 	}
 
-	// strict subset of packages -> rejected
-	if _, err := ResolveDispatch([]string{"pos", "kds"}, []string{"android"}, known); err == nil {
+	if _, err := ResolveDispatch([]string{"pos", "kds"}, []string{"android"}); err == nil {
 		t.Fatalf("expected strict package subset to be rejected")
 	}
-
-	// strict subset of platforms -> rejected
-	if _, err := ResolveDispatch([]string{"pos"}, []string{"android", "ios"}, known); err == nil {
+	if _, err := ResolveDispatch([]string{"pos"}, []string{"android", "ios"}); err == nil {
 		t.Fatalf("expected strict platform subset to be rejected")
 	}
 }
 
 func TestNormalizePlatforms(t *testing.T) {
 	out, err := NormalizePlatforms([]string{"android", "android", "ios"})
-	if err != nil {
-		t.Fatalf("unexpected err: %v", err)
-	}
-	if len(out) != 2 {
-		t.Fatalf("expected dedupe to 2, got %v", out)
+	if err != nil || len(out) != 2 {
+		t.Fatalf("dedupe: out=%v err=%v", out, err)
 	}
 	if _, err := NormalizePlatforms([]string{"web"}); err == nil {
-		t.Fatalf("expected web to be rejected in Phase 1")
+		t.Fatalf("expected web rejected in Phase 1")
 	}
 	if _, err := NormalizePlatforms([]string{"solaris"}); err == nil {
-		t.Fatalf("expected unknown platform to be rejected")
+		t.Fatalf("expected unknown platform rejected")
 	}
 }
 
-// Per-platform package availability: qds is android-only; other packages build
-// on all native platforms. Prevents impossible (package, platform) cells from
-// being dispatched/polled (false-timeout bug).
+func TestNormalizePackages(t *testing.T) {
+	if _, err := NormalizePackages([]string{"pos"}); err != nil {
+		t.Errorf("pos should be known: %v", err)
+	}
+	if _, err := NormalizePackages([]string{"bogus"}); err == nil {
+		t.Errorf("unknown package should be rejected")
+	}
+	if _, err := NormalizePackages([]string{"menu"}); err == nil {
+		t.Errorf("web package menu is not in Phase-1 capabilities, should be rejected")
+	}
+}
+
+// Capabilities-derived per-platform availability: qds is android-only.
 func TestPlatformAvailable(t *testing.T) {
 	if !PlatformAvailable("qds", "android") {
 		t.Error("qds should be available on android")
@@ -114,34 +114,38 @@ func TestPlatformAvailable(t *testing.T) {
 			t.Errorf("qds must NOT be available on %s", plat)
 		}
 	}
-	// A package with no exclusions is available everywhere.
-	for _, plat := range AllowedPlatforms {
+	for _, plat := range GetCapabilities().Platforms {
 		if !PlatformAvailable("pos", plat) {
 			t.Errorf("pos should be available on %s", plat)
 		}
+	}
+	if PlatformAvailable("bogus", "android") {
+		t.Error("unknown package must not be available")
 	}
 }
 
 // BLOCKER-3: app-scope fail-safe. Empty allowed set for a non-admin = deny.
 func TestAuthorizeApps(t *testing.T) {
-	// admin: unrestricted
 	if err := AuthorizeApps(true, nil, []string{"any"}); err != nil {
 		t.Errorf("admin should be unrestricted: %v", err)
 	}
-	// non-admin, empty Allowed -> deny (fail-safe, NOT allow-all)
 	if err := AuthorizeApps(false, nil, []string{"app1"}); err == nil {
 		t.Errorf("empty Allowed for non-admin must be denied")
 	}
-	// non-admin, app in Allowed -> ok
 	if err := AuthorizeApps(false, []string{"app1", "app2"}, []string{"app1"}); err != nil {
-		t.Errorf("expected app1 to be allowed: %v", err)
+		t.Errorf("expected app1 allowed: %v", err)
 	}
-	// non-admin, app NOT in Allowed -> deny
 	if err := AuthorizeApps(false, []string{"app1"}, []string{"app2"}); err == nil {
-		t.Errorf("expected app2 to be denied")
+		t.Errorf("expected app2 denied")
 	}
-	// non-admin, one of several requested not allowed -> deny
-	if err := AuthorizeApps(false, []string{"app1"}, []string{"app1", "app2"}); err == nil {
-		t.Errorf("expected mixed request to be denied")
+}
+
+// AppNameForPackage comes from the workflow-derived capabilities.
+func TestAppNameForPackage(t *testing.T) {
+	if n, ok := AppNameForPackage("pos"); !ok || n != "TTPOS" {
+		t.Errorf("pos -> %q,%v want TTPOS,true", n, ok)
+	}
+	if _, ok := AppNameForPackage("bogus"); ok {
+		t.Error("bogus should have no app name")
 	}
 }

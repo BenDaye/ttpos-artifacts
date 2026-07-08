@@ -21,6 +21,16 @@ export function useTriggerBuild() {
   })
 }
 
+// useCapabilities fetches the workflow-derived buildable packages/platforms.
+export function useCapabilities(enabled: boolean) {
+  return useQuery({
+    queryKey: ['build-capabilities'],
+    queryFn: () => buildTriggerApi.capabilities(),
+    enabled,
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
 export type TargetStatus = 'building' | 'done' | 'timeout'
 
 export interface TargetResult {

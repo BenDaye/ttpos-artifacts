@@ -109,6 +109,8 @@
     "env": "Environment",
     "env_locked": "Fixed to 'test', cannot be changed.",
     "build_count": "{{packages}} app(s) × {{platforms}} platform(s) = {{count}} build(s)",
+    "build_count_simple": "Will trigger {{count}} build(s)",
+    "loading_caps": "Loading buildable options…",
     "over_limit": "Exceeds limit of {{max}}. Please reduce selection.",
     "subset_hint": "Subset builds coming soon (Track 2-b). Please select one or all.",
     "select_all": "Select all",

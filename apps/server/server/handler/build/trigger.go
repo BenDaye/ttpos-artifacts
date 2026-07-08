@@ -66,7 +66,7 @@ func Trigger(c *gin.Context, database *mongo.Database, dispatcher Dispatcher, li
 
 	// 2. Validate + normalize packages/platforms against the deployment's known
 	//    set (fail-closed on unknowns; web excluded in Phase 1).
-	packages, err := NormalizePackages(req.Packages, cfg.KnownPackages())
+	packages, err := NormalizePackages(req.Packages)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -89,7 +89,7 @@ func Trigger(c *gin.Context, database *mongo.Database, dispatcher Dispatcher, li
 	}
 
 	// 4. Phase-1 supports single-or-all per axis only (subset -> Track 2-b).
-	sel, err := ResolveDispatch(packages, platforms, cfg.KnownPackages())
+	sel, err := ResolveDispatch(packages, platforms)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -105,7 +105,7 @@ func Trigger(c *gin.Context, database *mongo.Database, dispatcher Dispatcher, li
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
-	requestedAppIDs, err := resolveAppIDs(ctx, database, packages, cfg.PackageAppMap)
+	requestedAppIDs, err := resolveAppIDs(ctx, database, packages)
 	if err != nil {
 		// Unknown mapping / app -> fail closed.
 		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
@@ -137,9 +137,10 @@ func Trigger(c *gin.Context, database *mongo.Database, dispatcher Dispatcher, li
 			if !PlatformAvailable(pkg, plat) {
 				continue
 			}
+			appName, _ := AppNameForPackage(pkg)
 			targets = append(targets, BuildTarget{
 				Package:  pkg,
-				AppName:  cfg.PackageAppMap[pkg],
+				AppName:  appName,
 				Platform: plat,
 			})
 		}
@@ -227,19 +228,17 @@ func resolvePrincipalScope(ctx context.Context, c *gin.Context, database *mongo.
 	return false, teamUser.Permissions.Apps.Allowed, nil
 }
 
-// resolveAppIDs maps requested packages -> FaynoSync app names (via the
-// deployment map) -> app-meta _id hex strings. Any package without a mapping, or
-// any app name not found in apps_meta, is a fail-closed error.
-func resolveAppIDs(ctx context.Context, database *mongo.Database, packages []string, packageAppMap map[string]string) ([]string, error) {
-	if len(packageAppMap) == 0 {
-		return nil, fmt.Errorf("build package->app map is not configured; ask an admin")
-	}
+// resolveAppIDs maps requested packages -> FaynoSync app names (from the
+// workflow-derived capabilities) -> app-meta _id hex strings. Any package
+// without a mapping, or any app name not found in apps_meta, is a fail-closed
+// error.
+func resolveAppIDs(ctx context.Context, database *mongo.Database, packages []string) ([]string, error) {
 	seen := make(map[string]struct{})
 	ids := make([]string, 0, len(packages))
 	for _, pkg := range packages {
-		appName, ok := packageAppMap[pkg]
+		appName, ok := AppNameForPackage(pkg)
 		if !ok {
-			return nil, fmt.Errorf("package %q has no configured app mapping", pkg)
+			return nil, fmt.Errorf("package %q is not buildable", pkg)
 		}
 		var meta struct {
 			ID primitive.ObjectID `bson:"_id"`
