@@ -97,6 +97,33 @@
       "description": "Upload your first artifact to get started."
     }
   },
+  "build_trigger": {
+    "button": "Build Test Package",
+    "title": "Trigger Test Build",
+    "description": "Select apps and platforms to trigger a CI test build.",
+    "apps": "Apps",
+    "platforms": "Platforms",
+    "branch": "Branch",
+    "branch_required": "Branch is required.",
+    "branch_invalid": "Branch contains invalid characters.",
+    "env": "Environment",
+    "env_locked": "Fixed to 'test', cannot be changed.",
+    "build_count": "{{packages}} app(s) × {{platforms}} platform(s) = {{count}} build(s)",
+    "over_limit": "Exceeds limit of {{max}}. Please reduce selection.",
+    "subset_hint": "Subset builds coming soon (Track 2-b). Please select one or all.",
+    "select_all": "Select all",
+    "deselect_all": "Deselect all",
+    "submit": "Trigger Build",
+    "submit_success": "Build triggered successfully",
+    "status_title": "Build Status",
+    "status_progress": "{{done}} / {{total}} complete",
+    "status_building": "Building",
+    "status_done": "Done",
+    "status_failed": "Timed out",
+    "status_done_hint": "Build complete. Please download from the version list.",
+    "download": "Download",
+    "view_run": "View Actions run"
+  },
   "upload_dialog": {
     "title": "Upload new version",
     "description": "Bundle artifacts under a single version entry.",

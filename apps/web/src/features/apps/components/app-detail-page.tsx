@@ -1,14 +1,17 @@
 import type { AppVersion, ArtifactEntry } from '@ttpos/shared'
+import type { TriggerBuildResponse } from '@/features/build-trigger/api'
 import { Link } from '@tanstack/react-router'
 import { Badge } from '@ttpos/ui/components/badge'
 import { Button, buttonVariants } from '@ttpos/ui/components/button'
 import { Card, CardContent } from '@ttpos/ui/components/card'
 import { Skeleton } from '@ttpos/ui/components/skeleton'
 import { cn } from '@ttpos/ui/lib/utils'
-import { ArrowLeft, BookOpen, Boxes, Download, FilePlus, Pencil, Plus, Trash2 } from 'lucide-react'
+import { ArrowLeft, BookOpen, Boxes, Download, FilePlus, Hammer, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+import { BuildStatusSheet } from '@/features/build-trigger/components/build-status-sheet'
+import { TriggerBuildDialog } from '@/features/build-trigger/components/trigger-build-dialog'
 import { useChannelsQuery } from '@/features/channels/hooks'
 import { ConfirmDialog } from '@/shared/components/common/confirm-dialog'
 import { EmptyState } from '@/shared/components/empty-state'
@@ -61,6 +64,9 @@ export function AppDetailPage({ appName }: { appName: string }) {
   const allVersions = versionsQuery.data?.versions ?? []
   /* eslint-enable react/exhaustive-deps */
   const [uploading, setUploading] = useState(false)
+  const [buildTriggering, setBuildTriggering] = useState(false)
+  const [buildStatusOpen, setBuildStatusOpen] = useState(false)
+  const [buildResponse, setBuildResponse] = useState<TriggerBuildResponse | null>(null)
   // 编辑 / 删除目标按稳定 id 从最新版本列表派生「活」对象：
   // mutation 失效查询并 refetch 后弹层显示的目标随之刷新；目标被删时派生为 null，弹层自动关闭。
   const [editing, setEditingId] = useSelectedEntity(allVersions, version => version.ID)
@@ -148,6 +154,10 @@ export function AppDetailPage({ appName }: { appName: string }) {
               <ArrowLeft className="size-4" />
               {t('detail.back')}
             </Link>
+            <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => setBuildTriggering(true)}>
+              <Hammer className="size-4" />
+              {t('build_trigger.button', { defaultValue: '构建测试包' })}
+            </Button>
             <Button size="sm" className="w-full sm:w-auto" onClick={() => setUploading(true)}>
               <Plus className="size-4" />
               {t('upload', { defaultValue: 'Upload version' })}
@@ -206,6 +216,21 @@ export function AppDetailPage({ appName }: { appName: string }) {
         </ul>
       )}
 
+      <TriggerBuildDialog
+        open={buildTriggering}
+        onOpenChange={setBuildTriggering}
+        onBuildTriggered={(response) => {
+          setBuildResponse(response)
+          setBuildStatusOpen(true)
+        }}
+      />
+      <BuildStatusSheet
+        open={buildStatusOpen}
+        onOpenChange={setBuildStatusOpen}
+        correlationId={buildResponse?.correlation_id ?? ''}
+        targets={buildResponse?.targets ?? []}
+        runUrl={buildResponse?.run_url}
+      />
       <UploadVersionDialog open={uploading} onOpenChange={setUploading} appName={appName} />
       <VersionEditDialog
         open={Boolean(editing)}

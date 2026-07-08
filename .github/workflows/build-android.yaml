@@ -50,6 +50,11 @@ on:
           - "off"
           - "on"
           - "force"
+      correlation_id:
+        description: "自助触发关联ID(非空时版本号追加 +b<id> 后缀;常规构建留空)"
+        required: false
+        type: string
+        default: ""
 
 jobs:
   authorize:
@@ -233,7 +238,11 @@ jobs:
           echo "VERSION_APK=${{ matrix.apk_name }}-V${version}.apk" >> $GITHUB_ENV
           echo "LATEST_NAME=${{ matrix.apk_name }}-latest.apk" >> $GITHUB_ENV
 
-          echo "FS_VERSION=${version}" >> $GITHUB_ENV
+          if [ -n "${{ inputs.correlation_id }}" ]; then
+            echo "FS_VERSION=${version}+b${{ inputs.correlation_id }}" >> $GITHUB_ENV
+          else
+            echo "FS_VERSION=${version}" >> $GITHUB_ENV
+          fi
 
       - name: FaynoSync 上传预检查
         if: steps.check.outputs.should_run == 'true' && inputs.faynosync != 'off'
