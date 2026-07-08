@@ -49,6 +49,11 @@ on:
           - "off"
           - "on"
           - "force"
+      correlation_id:
+        description: "自助触发关联ID(非空时版本号追加 +b<id> 后缀;常规构建留空)"
+        required: false
+        type: string
+        default: ""
 
 jobs:
   authorize:
@@ -235,7 +240,11 @@ jobs:
           echo "MELOS_PACKAGE_NAME=$env:MELOS_PACKAGE_NAME" >> $env:GITHUB_ENV
           echo "MELOS_PACKAGE_VERSION=$env:MELOS_PACKAGE_VERSION" >> $env:GITHUB_ENV
 
-          echo "FS_VERSION=$version" >> $env:GITHUB_ENV
+          if ("${{ inputs.correlation_id }}") {
+            echo "FS_VERSION=$version+b${{ inputs.correlation_id }}" >> $env:GITHUB_ENV
+          } else {
+            echo "FS_VERSION=$version" >> $env:GITHUB_ENV
+          }
 
       - name: FaynoSync 上传预检查
         if: steps.check.outputs.should_run == 'true' && inputs.faynosync != 'off'

@@ -63,3 +63,6 @@ e2e/.auth/
 # Local agent runtime state
 .claude/scheduled_tasks.lock
 .omc/
+
+# superpowers 可视化伴侣产物
+.superpowers/
