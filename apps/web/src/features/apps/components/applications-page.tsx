@@ -1,11 +1,11 @@
 import type { AppSummary } from '@ttpos/shared'
+import { CubeIcon, MagnifyingGlassIcon, PlusIcon } from '@phosphor-icons/react'
 import { useNavigate } from '@tanstack/react-router'
 import { Button } from '@ttpos/ui/components/button'
 import { Card } from '@ttpos/ui/components/card'
 import { Input } from '@ttpos/ui/components/input'
 import { Skeleton } from '@ttpos/ui/components/skeleton'
 import { cn } from '@ttpos/ui/lib/utils'
-import { Boxes, Plus, Search } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -110,12 +110,12 @@ export function ApplicationsPage() {
     if (filtered.length === 0) {
       return (
         <EmptyState
-          icon={Boxes}
+          icon={CubeIcon}
           title={t('empty.title')}
           description={t('empty.description')}
           action={(
             <Button onClick={() => setCreating(true)}>
-              <Plus className="size-4" />
+              <PlusIcon className="size-4" />
               {t('create', { defaultValue: 'New app' })}
             </Button>
           )}
@@ -168,7 +168,7 @@ export function ApplicationsPage() {
           <div className="grid w-full min-w-0 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center" data-testid="applications-header-actions">
             <LayoutSwitcher className="justify-self-start" />
             <Button className="w-full sm:w-auto" onClick={() => setCreating(true)}>
-              <Plus className="size-4" />
+              <PlusIcon className="size-4" />
               {t('create', { defaultValue: 'New app' })}
             </Button>
           </div>
@@ -177,7 +177,7 @@ export function ApplicationsPage() {
 
       <div className={cn('dashboard-search-shell mb-4 flex items-center gap-2', isBoardLayout && 'shrink-0')}>
         <div className="relative min-w-0 flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={search}
             onChange={e => setSearch(e.target.value)}

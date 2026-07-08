@@ -1,4 +1,5 @@
 import type { TelemetryRange } from '../api'
+import { FunnelIcon, XIcon } from '@phosphor-icons/react'
 import { Badge } from '@ttpos/ui/components/badge'
 import { Button } from '@ttpos/ui/components/button'
 import { Checkbox } from '@ttpos/ui/components/checkbox'
@@ -8,7 +9,6 @@ import {
   PopoverTrigger,
 } from '@ttpos/ui/components/popover'
 import { ToggleGroup, ToggleGroupItem } from '@ttpos/ui/components/toggle-group'
-import { Filter, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useAppsListQuery } from '@/features/apps/hooks'
 import { useArchitecturesQuery } from '@/features/architectures/hooks'
@@ -101,7 +101,7 @@ export function TelemetryFilterBar({ value, onChange }: Props) {
         />
         {totalActive > 0 && (
           <Button variant="ghost" size="sm" className="shrink-0" onClick={reset}>
-            <X className="size-3.5" />
+            <XIcon className="size-3.5" />
             {t('filter.clear', { defaultValue: 'Clear' })}
             {' '}
             (
@@ -130,7 +130,7 @@ function MultiSelectPopover({ label, options, selected, onChange }: MultiProps) 
       <PopoverTrigger
         render={(
           <Button variant="outline" size="sm" className="h-8 max-w-full shrink-0 gap-1.5">
-            <Filter className="size-3.5" />
+            <FunnelIcon className="size-3.5" />
             <span className="min-w-0 truncate">{label}</span>
             {selected.length > 0 && (
               <Badge variant="secondary" className="px-2 py-0 text-xs">{selected.length}</Badge>

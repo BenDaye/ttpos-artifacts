@@ -1,5 +1,5 @@
+import { CircleNotchIcon } from '@phosphor-icons/react'
 import { cn } from '@ttpos/ui/lib/utils'
-import { Loader2 } from 'lucide-react'
 
 export function LoadingSpinner({
   fullScreen = false,
@@ -18,7 +18,7 @@ export function LoadingSpinner({
       role="status"
       aria-live="polite"
     >
-      <Loader2 className="size-6 animate-spin" />
+      <CircleNotchIcon className="size-6 animate-spin" />
       <span className="sr-only">Loading…</span>
     </div>
   )

@@ -1,11 +1,11 @@
 import type { Channel } from '@ttpos/shared'
+import { DotsSixVerticalIcon, GitBranchIcon, MagnifyingGlassIcon, PencilSimpleIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react'
 import { Badge } from '@ttpos/ui/components/badge'
 import { Button } from '@ttpos/ui/components/button'
 import { Card, CardContent } from '@ttpos/ui/components/card'
 import { Input } from '@ttpos/ui/components/input'
 import { Skeleton } from '@ttpos/ui/components/skeleton'
 import { cn } from '@ttpos/ui/lib/utils'
-import { GitBranch, GripVertical, Pencil, Plus, Search, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -73,7 +73,7 @@ export function ChannelsPage() {
         description={t('description', { defaultValue: 'Manage release channels for your applications.' })}
         actions={(
           <Button onClick={() => setCreating(true)}>
-            <Plus className="size-4" />
+            <PlusIcon className="size-4" />
             {t('common:actions.create')}
           </Button>
         )}
@@ -81,7 +81,7 @@ export function ChannelsPage() {
 
       <div className="dashboard-search-shell mb-4 flex items-center gap-2">
         <div className="relative min-w-0 flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={search}
             onChange={e => setSearch(e.target.value)}
@@ -105,12 +105,12 @@ export function ChannelsPage() {
 
       {channelsQuery.isSuccess && filteredChannels.length === 0 && (
         <EmptyState
-          icon={GitBranch}
+          icon={GitBranchIcon}
           title={t('empty.title', { defaultValue: 'No channels yet' })}
           description={t('empty.description', { defaultValue: 'Create your first channel to start tagging releases.' })}
           action={(
             <Button onClick={() => setCreating(true)}>
-              <Plus className="size-4" />
+              <PlusIcon className="size-4" />
               {t('common:actions.create')}
             </Button>
           )}
@@ -144,11 +144,11 @@ export function ChannelsPage() {
                           className="shrink-0 cursor-grab touch-none text-muted-foreground focus-visible:outline-1 focus-visible:outline-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:cursor-grabbing"
                           {...sortable.handleProps}
                         >
-                          <GripVertical className="size-4" />
+                          <DotsSixVerticalIcon className="size-4" />
                         </button>
                       )}
                       <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
-                        <GitBranch className="size-4" />
+                        <GitBranchIcon className="size-4" />
                       </div>
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium">{channel.ChannelName}</p>
@@ -164,7 +164,7 @@ export function ChannelsPage() {
                         aria-label={t('common:actions.edit')}
                         onClick={() => setEditing(channel)}
                       >
-                        <Pencil className="size-4" />
+                        <PencilSimpleIcon className="size-4" />
                       </Button>
                       <Button
                         variant="ghost"
@@ -172,7 +172,7 @@ export function ChannelsPage() {
                         aria-label={t('common:actions.delete')}
                         onClick={() => setDeleting(channel)}
                       >
-                        <Trash2 className="size-4 text-destructive" />
+                        <TrashIcon className="size-4 text-destructive" />
                       </Button>
                     </div>
                   </CardContent>

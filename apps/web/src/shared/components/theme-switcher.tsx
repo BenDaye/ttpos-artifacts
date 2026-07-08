@@ -1,4 +1,5 @@
 import type { ThemeMode } from '@ttpos/shared'
+import { MonitorIcon, MoonIcon, SunIcon } from '@phosphor-icons/react'
 import { Button } from '@ttpos/ui/components/button'
 import {
   DropdownMenu,
@@ -6,14 +7,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@ttpos/ui/components/dropdown-menu'
-import { Monitor, Moon, Sun } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from './theme-provider'
 
-const ICON_MAP: Record<ThemeMode, typeof Sun> = {
-  light: Sun,
-  dark: Moon,
-  auto: Monitor,
+const ICON_MAP: Record<ThemeMode, typeof SunIcon> = {
+  light: SunIcon,
+  dark: MoonIcon,
+  auto: MonitorIcon,
 }
 
 export function ThemeSwitcher() {
@@ -32,15 +32,15 @@ export function ThemeSwitcher() {
       />
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={() => setMode('light')}>
-          <Sun className="size-4" />
+          <SunIcon className="size-4" />
           {t('theme.light')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setMode('dark')}>
-          <Moon className="size-4" />
+          <MoonIcon className="size-4" />
           {t('theme.dark')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setMode('auto')}>
-          <Monitor className="size-4" />
+          <MonitorIcon className="size-4" />
           {t('theme.auto')}
         </DropdownMenuItem>
       </DropdownMenuContent>

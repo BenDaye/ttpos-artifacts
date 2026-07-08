@@ -2,13 +2,13 @@ import type { AppSummary, AppVersion } from '@ttpos/shared'
 import type { AppViewProps } from './types'
 import type { SortableItemRenderProps } from '@/shared/components/common/sortable-list'
 import { horizontalListSortingStrategy } from '@dnd-kit/sortable'
+import { CubeIcon, DotsSixVerticalIcon, PencilSimpleIcon, TrashIcon } from '@phosphor-icons/react'
 import { useQueries } from '@tanstack/react-query'
 import { Badge } from '@ttpos/ui/components/badge'
 import { Button } from '@ttpos/ui/components/button'
 import { Card, CardContent } from '@ttpos/ui/components/card'
 import { Skeleton } from '@ttpos/ui/components/skeleton'
 import { cn } from '@ttpos/ui/lib/utils'
-import { Boxes, GripVertical, Pencil, Trash2 } from 'lucide-react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useChannelsQuery } from '@/features/channels/hooks'
@@ -126,7 +126,7 @@ function BoardColumn({ app, versions, total, isLoading, isError, onSelect, onEdi
             className="shrink-0 cursor-grab touch-none text-muted-foreground focus-visible:outline-1 focus-visible:outline-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:cursor-grabbing"
             {...sortable.handleProps}
           >
-            <GripVertical className="size-4" />
+            <DotsSixVerticalIcon className="size-4" />
           </button>
         )}
         <button
@@ -138,7 +138,7 @@ function BoardColumn({ app, versions, total, isLoading, isError, onSelect, onEdi
           <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
             {app.Logo
               ? <img src={app.Logo} alt="" className="size-full rounded-md object-cover" />
-              : <Boxes className="size-4" />}
+              : <CubeIcon className="size-4" />}
           </div>
           <div className="flex min-w-0 flex-1 flex-col">
             <span className="truncate text-sm font-semibold" title={app.AppName}>{app.AppName}</span>
@@ -155,7 +155,7 @@ function BoardColumn({ app, versions, total, isLoading, isError, onSelect, onEdi
             aria-label={t('common:actions.edit')}
             onClick={() => onEdit(app)}
           >
-            <Pencil className="size-3.5" />
+            <PencilSimpleIcon className="size-3.5" />
           </Button>
           <Button
             variant="ghost"
@@ -164,7 +164,7 @@ function BoardColumn({ app, versions, total, isLoading, isError, onSelect, onEdi
             aria-label={t('common:actions.delete')}
             onClick={() => onDelete(app)}
           >
-            <Trash2 className="size-3.5 text-destructive" />
+            <TrashIcon className="size-3.5 text-destructive" />
           </Button>
         </div>
       </div>

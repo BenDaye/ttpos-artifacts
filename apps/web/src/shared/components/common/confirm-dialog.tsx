@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { CircleNotchIcon } from '@phosphor-icons/react'
 import { Button } from '@ttpos/ui/components/button'
 import {
   Dialog,
@@ -8,7 +9,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@ttpos/ui/components/dialog'
-import { Loader2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 export interface ConfirmDialogProps {
@@ -57,7 +57,7 @@ export function ConfirmDialog({
             }}
             disabled={loading}
           >
-            {loading && <Loader2 className="size-4 animate-spin" />}
+            {loading && <CircleNotchIcon className="size-4 animate-spin" />}
             {confirmLabel ?? t('actions.confirm')}
           </Button>
         </DialogFooter>

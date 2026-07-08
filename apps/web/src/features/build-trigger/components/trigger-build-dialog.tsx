@@ -1,4 +1,5 @@
 import type { TriggerBuildResponse } from '../api'
+import { CircleNotchIcon } from '@phosphor-icons/react'
 import { Badge } from '@ttpos/ui/components/badge'
 import { Button } from '@ttpos/ui/components/button'
 import { Checkbox } from '@ttpos/ui/components/checkbox'
@@ -12,7 +13,6 @@ import {
 } from '@ttpos/ui/components/dialog'
 import { Input } from '@ttpos/ui/components/input'
 import { Label } from '@ttpos/ui/components/label'
-import { Loader2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -148,7 +148,7 @@ export function TriggerBuildDialog({ open, onOpenChange, onBuildTriggered }: Pro
           {isLoading
             ? (
                 <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
-                  <Loader2 className="size-4 animate-spin" />
+                  <CircleNotchIcon className="size-4 animate-spin" />
                   {t('build_trigger.loading_caps', { defaultValue: '加载可构建项…' })}
                 </div>
               )
@@ -268,7 +268,7 @@ export function TriggerBuildDialog({ open, onOpenChange, onBuildTriggered }: Pro
               {t('common:actions.cancel')}
             </Button>
             <Button type="submit" disabled={!canSubmit || trigger.isPending || isLoading}>
-              {trigger.isPending && <Loader2 className="size-4 animate-spin" />}
+              {trigger.isPending && <CircleNotchIcon className="size-4 animate-spin" />}
               {t('build_trigger.submit', { defaultValue: '触发构建' })}
             </Button>
           </DialogFooter>

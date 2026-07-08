@@ -1,10 +1,10 @@
 import type { TeamUser } from '@ttpos/shared'
+import { KeyIcon, PencilSimpleIcon, PlusIcon, ShieldCheckIcon, TrashIcon, UserIcon } from '@phosphor-icons/react'
 import { Avatar, AvatarFallback } from '@ttpos/ui/components/avatar'
 import { Badge } from '@ttpos/ui/components/badge'
 import { Button } from '@ttpos/ui/components/button'
 import { Card, CardContent } from '@ttpos/ui/components/card'
 import { Skeleton } from '@ttpos/ui/components/skeleton'
-import { KeyRound, Pencil, Plus, ShieldCheck, Trash2, User } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -50,7 +50,7 @@ export function UsersPanel() {
           <CardContent className="flex min-w-0 flex-wrap items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
               <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
-                <User className="size-5" />
+                <UserIcon className="size-5" />
               </div>
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium">{me.data.username}</p>
@@ -62,7 +62,7 @@ export function UsersPanel() {
             {me.data.is_admin
               ? (
                   <Button variant="outline" size="sm" className="max-w-full" onClick={() => setAdminEdit(true)}>
-                    <KeyRound className="size-4" />
+                    <KeyIcon className="size-4" />
                     <span className="min-w-0 truncate">{t('users.change_credentials', { defaultValue: 'Change credentials' })}</span>
                   </Button>
                 )
@@ -78,7 +78,7 @@ export function UsersPanel() {
       <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
         <h2 className="text-base font-medium">{t('users.team_title', { defaultValue: 'Team users' })}</h2>
         <Button size="sm" onClick={() => setCreating(true)} disabled={!me.data?.is_admin}>
-          <Plus className="size-4" />
+          <PlusIcon className="size-4" />
           {t('users.create', { defaultValue: 'New user' })}
         </Button>
       </div>
@@ -93,7 +93,7 @@ export function UsersPanel() {
 
       {usersQuery.isError && adminFallback && (
         <EmptyState
-          icon={ShieldCheck}
+          icon={ShieldCheckIcon}
           title={t('users.forbidden', { defaultValue: 'Admin only' })}
           description={t('users.forbidden_description', { defaultValue: 'Sign in as an admin to manage team users.' })}
         />
@@ -104,12 +104,12 @@ export function UsersPanel() {
 
       {usersQuery.isSuccess && usersQuery.data.length === 0 && (
         <EmptyState
-          icon={User}
+          icon={UserIcon}
           title={t('users.empty', { defaultValue: 'No team users yet' })}
           description={t('users.empty_description', { defaultValue: 'Invite teammates to grant scoped access.' })}
           action={(
             <Button onClick={() => setCreating(true)}>
-              <Plus className="size-4" />
+              <PlusIcon className="size-4" />
               {t('users.create', { defaultValue: 'New user' })}
             </Button>
           )}
@@ -137,7 +137,7 @@ export function UsersPanel() {
                 </div>
                 <div className="flex shrink-0 items-center gap-1">
                   <Button variant="ghost" size="icon" aria-label={t('common:actions.edit')} onClick={() => setEditing(user)}>
-                    <Pencil className="size-4" />
+                    <PencilSimpleIcon className="size-4" />
                   </Button>
                   <Button
                     variant="ghost"
@@ -145,7 +145,7 @@ export function UsersPanel() {
                     aria-label={t('common:actions.delete')}
                     onClick={() => setDeleting(user)}
                   >
-                    <Trash2 className="size-4 text-destructive" />
+                    <TrashIcon className="size-4 text-destructive" />
                   </Button>
                 </div>
               </CardContent>

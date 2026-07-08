@@ -1,8 +1,8 @@
+import { KeyIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react'
 import { Badge } from '@ttpos/ui/components/badge'
 import { Button } from '@ttpos/ui/components/button'
 import { Card, CardContent } from '@ttpos/ui/components/card'
 import { Skeleton } from '@ttpos/ui/components/skeleton'
-import { Key, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -41,7 +41,7 @@ export function TokensPanel() {
     <div className="min-w-0 max-w-full">
       <div className="mb-4 flex flex-wrap justify-end gap-2">
         <Button onClick={() => setCreating(true)}>
-          <Plus className="size-4" />
+          <PlusIcon className="size-4" />
           {t('tokens.create', { defaultValue: 'Create token' })}
         </Button>
       </div>
@@ -60,12 +60,12 @@ export function TokensPanel() {
 
       {tokensQuery.isSuccess && tokensQuery.data.length === 0 && (
         <EmptyState
-          icon={Key}
+          icon={KeyIcon}
           title={t('tokens.empty', { defaultValue: 'No API tokens' })}
           description={t('tokens.empty_description', { defaultValue: 'Create one for CI uploads.' })}
           action={(
             <Button onClick={() => setCreating(true)}>
-              <Plus className="size-4" />
+              <PlusIcon className="size-4" />
               {t('tokens.create', { defaultValue: 'Create token' })}
             </Button>
           )}
@@ -82,7 +82,7 @@ export function TokensPanel() {
                 <CardContent className="flex min-w-0 flex-wrap items-center justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-3">
                     <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
-                      <Key className="size-4" />
+                      <KeyIcon className="size-4" />
                     </div>
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
@@ -138,7 +138,7 @@ export function TokensPanel() {
                     aria-label={t('tokens.revoke', { defaultValue: 'Revoke' })}
                     onClick={() => setRevoking(token.id)}
                   >
-                    <Trash2 className="size-4 text-destructive" />
+                    <TrashIcon className="size-4 text-destructive" />
                   </Button>
                 </CardContent>
               </Card>

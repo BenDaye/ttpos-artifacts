@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { CircleNotchIcon } from '@phosphor-icons/react'
 import { Button } from '@ttpos/ui/components/button'
 import {
   Dialog,
@@ -8,7 +9,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@ttpos/ui/components/dialog'
-import { Loader2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 interface EntityFormDialogProps {
@@ -60,7 +60,7 @@ export function EntityFormDialog({
               {cancelLabel ?? t('actions.cancel')}
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading && <Loader2 className="size-4 animate-spin" />}
+              {loading && <CircleNotchIcon className="size-4 animate-spin" />}
               {submitLabel ?? t('actions.save')}
             </Button>
           </DialogFooter>

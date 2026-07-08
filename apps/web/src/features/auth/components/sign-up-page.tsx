@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { CircleNotchIcon, KeyIcon, UserIcon } from '@phosphor-icons/react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { Button } from '@ttpos/ui/components/button'
 import {
@@ -19,7 +20,6 @@ import {
 } from '@ttpos/ui/components/form'
 import { Input } from '@ttpos/ui/components/input'
 import { PasswordInput } from '@ttpos/ui/components/password-input'
-import { KeyRound, Loader2, User } from 'lucide-react'
 import { useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
@@ -81,7 +81,7 @@ export function SignUpPage() {
                 <FormItem>
                   <FormLabel>{t('fields.username', { defaultValue: 'Username' })}</FormLabel>
                   <div className="relative">
-                    <User className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <UserIcon className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                     <FormControl>
                       <Input className="pl-9" autoComplete="username" {...field} />
                     </FormControl>
@@ -113,7 +113,7 @@ export function SignUpPage() {
                 <FormItem>
                   <FormLabel>{t('fields.secret_key', { defaultValue: 'Secret key' })}</FormLabel>
                   <div className="relative">
-                    <KeyRound className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <KeyIcon className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                     <FormControl>
                       <Input className="pl-9" {...field} />
                     </FormControl>
@@ -123,7 +123,7 @@ export function SignUpPage() {
               )}
             />
             <Button type="submit" className="w-full" disabled={mutation.isPending}>
-              {mutation.isPending && <Loader2 className="size-4 animate-spin" />}
+              {mutation.isPending && <CircleNotchIcon className="size-4 animate-spin" />}
               {t('signup.submit', { defaultValue: 'Create account' })}
             </Button>
           </form>

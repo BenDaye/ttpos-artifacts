@@ -1,4 +1,4 @@
-import { ShieldOff } from 'lucide-react'
+import { ShieldSlashIcon } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 import { EmptyState } from '@/shared/components/empty-state'
 
@@ -6,7 +6,7 @@ export function TufPanel() {
   const { t } = useTranslation('settings')
   return (
     <EmptyState
-      icon={ShieldOff}
+      icon={ShieldSlashIcon}
       title={t('tuf.disabled_title', { defaultValue: 'TUF management is disabled' })}
       description={t('tuf.disabled_description', {
         defaultValue:

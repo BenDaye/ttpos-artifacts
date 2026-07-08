@@ -1,7 +1,7 @@
 import type { ComponentType, ReactNode } from 'react'
+import { TrayIcon } from '@phosphor-icons/react'
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@ttpos/ui/components/empty'
 import { cn } from '@ttpos/ui/lib/utils'
-import { Inbox } from 'lucide-react'
 
 interface EmptyStateProps {
   icon?: ComponentType<{ className?: string }>
@@ -13,7 +13,7 @@ interface EmptyStateProps {
 }
 
 export function EmptyState({
-  icon: Icon = Inbox,
+  icon: Icon = TrayIcon,
   iconClassName,
   title,
   description,

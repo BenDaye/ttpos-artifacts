@@ -1,3 +1,4 @@
+import { FunnelIcon, MagnifyingGlassIcon, XIcon } from '@phosphor-icons/react'
 import { Badge } from '@ttpos/ui/components/badge'
 import { Button } from '@ttpos/ui/components/button'
 import { Checkbox } from '@ttpos/ui/components/checkbox'
@@ -7,7 +8,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@ttpos/ui/components/popover'
-import { Filter, Search, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useArchitecturesQuery } from '@/features/architectures/hooks'
 import { useChannelsQuery } from '@/features/channels/hooks'
@@ -59,7 +59,7 @@ export function VersionFilterBar({ value, onChange }: Props) {
   return (
     <div className="mb-4 grid max-w-full min-w-0 gap-2 sm:flex sm:flex-wrap sm:items-center">
       <div className="relative min-w-0 w-full sm:w-60 sm:flex-none" data-testid="version-filter-search">
-        <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+        <MagnifyingGlassIcon className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={value.search}
           onChange={e => onChange({ ...value, search: e.target.value })}
@@ -98,7 +98,7 @@ export function VersionFilterBar({ value, onChange }: Props) {
         />
         {totalActive > 0 && (
           <Button variant="ghost" size="sm" className="shrink-0" onClick={reset}>
-            <X className="size-3.5" />
+            <XIcon className="size-3.5" />
             {t('filter.clear', { defaultValue: 'Clear' })}
             {' '}
             (
@@ -127,7 +127,7 @@ function MultiSelectPopover({ label, options, selected, onChange }: MultiProps) 
       <PopoverTrigger
         render={(
           <Button variant="outline" size="sm" className="h-8 max-w-full shrink-0 gap-1.5">
-            <Filter className="size-3.5" />
+            <FunnelIcon className="size-3.5" />
             <span className="min-w-0 truncate">{label}</span>
             {selected.length > 0 && (
               <Badge variant="secondary" className="px-2 py-0 text-xs">{selected.length}</Badge>

@@ -1,4 +1,5 @@
 import type { ArtifactEntry } from '@ttpos/shared'
+import { CheckIcon, CopyIcon, DownloadSimpleIcon } from '@phosphor-icons/react'
 import { Badge } from '@ttpos/ui/components/badge'
 import { Button } from '@ttpos/ui/components/button'
 import {
@@ -9,7 +10,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@ttpos/ui/components/dialog'
-import { Check, Copy, Download } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -117,8 +117,8 @@ export function DownloadArtifactsDialog({
                           onClick={() => onCopy(a.link)}
                         >
                           {copied === a.link
-                            ? <Check className="size-3" />
-                            : <Copy className="size-3" />}
+                            ? <CheckIcon className="size-3" />
+                            : <CopyIcon className="size-3" />}
                           {t('download_dialog.copy_url', { defaultValue: 'Copy URL' })}
                         </Button>
                         <Button
@@ -127,7 +127,7 @@ export function DownloadArtifactsDialog({
                           disabled={resolving === a.link}
                           onClick={() => onDownload(a.link)}
                         >
-                          <Download className="size-3" />
+                          <DownloadSimpleIcon className="size-3" />
                           {t('actions.download', { defaultValue: 'Download' })}
                         </Button>
                       </div>

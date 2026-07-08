@@ -1,12 +1,12 @@
 import type { AppVersion, ArtifactEntry } from '@ttpos/shared'
 import type { TriggerBuildResponse } from '@/features/build-trigger/api'
+import { ArrowLeftIcon, BookOpenIcon, CubeIcon, DownloadSimpleIcon, FilePlusIcon, HammerIcon, PencilSimpleIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react'
 import { Link } from '@tanstack/react-router'
 import { Badge } from '@ttpos/ui/components/badge'
 import { Button, buttonVariants } from '@ttpos/ui/components/button'
 import { Card, CardContent } from '@ttpos/ui/components/card'
 import { Skeleton } from '@ttpos/ui/components/skeleton'
 import { cn } from '@ttpos/ui/lib/utils'
-import { ArrowLeft, BookOpen, Boxes, Download, FilePlus, Hammer, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -151,15 +151,15 @@ export function AppDetailPage({ appName }: { appName: string }) {
         actions={(
           <div className="grid w-full min-w-0 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
             <Link to="/applications" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'w-full sm:w-auto')}>
-              <ArrowLeft className="size-4" />
+              <ArrowLeftIcon className="size-4" />
               {t('detail.back')}
             </Link>
             <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => setBuildTriggering(true)}>
-              <Hammer className="size-4" />
+              <HammerIcon className="size-4" />
               {t('build_trigger.button', { defaultValue: '构建测试包' })}
             </Button>
             <Button size="sm" className="w-full sm:w-auto" onClick={() => setUploading(true)}>
-              <Plus className="size-4" />
+              <PlusIcon className="size-4" />
               {t('upload', { defaultValue: 'Upload version' })}
             </Button>
           </div>
@@ -182,14 +182,14 @@ export function AppDetailPage({ appName }: { appName: string }) {
 
       {versionsQuery.isSuccess && versions.length === 0 && (
         <EmptyState
-          icon={Boxes}
+          icon={CubeIcon}
           title={t('detail.empty.title', { defaultValue: 'No versions yet' })}
           description={t('detail.empty.description', {
             defaultValue: 'Upload your first artifact to get started.',
           })}
           action={(
             <Button onClick={() => setUploading(true)}>
-              <Plus className="size-4" />
+              <PlusIcon className="size-4" />
               {t('upload', { defaultValue: 'Upload version' })}
             </Button>
           )}
@@ -347,7 +347,7 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
             </div>
             <div className="flex shrink-0 items-center gap-1">
               <Button variant="ghost" size="icon" className="size-8" aria-label={t('common:actions.edit')} onClick={onEdit}>
-                <Pencil className="size-4" />
+                <PencilSimpleIcon className="size-4" />
               </Button>
               <Button
                 variant="ghost"
@@ -356,7 +356,7 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
                 aria-label={t('common:actions.delete')}
                 onClick={onDelete}
               >
-                <Trash2 className="size-4 text-destructive" />
+                <TrashIcon className="size-4 text-destructive" />
               </Button>
             </div>
           </div>
@@ -369,7 +369,7 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
                 className="h-auto min-w-0 max-w-full px-2 py-2 text-primary no-underline hover:no-underline"
                 onClick={() => setShowChangelog(true)}
               >
-                <BookOpen className="size-3.5" />
+                <BookOpenIcon className="size-3.5" />
                 <span className="min-w-0 truncate">
                   {t('changelog')}
                   {' '}
@@ -386,7 +386,7 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
                 className="h-auto min-w-0 max-w-full px-2 py-2 text-primary no-underline hover:no-underline"
                 onClick={() => setShowDownloads(true)}
               >
-                <Download className="size-3.5" />
+                <DownloadSimpleIcon className="size-3.5" />
                 <span className="min-w-0 truncate">
                   {t('actions.download')}
                   {' '}
@@ -402,7 +402,7 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
               className="h-auto min-w-0 max-w-full px-2 py-2 text-primary no-underline hover:no-underline"
               onClick={() => setShowAddArtifact(true)}
             >
-              <FilePlus className="size-3.5" />
+              <FilePlusIcon className="size-3.5" />
               <span className="min-w-0 truncate">{t('add_artifact.button', { defaultValue: 'Add artifact' })}</span>
             </Button>
           </div>
@@ -472,7 +472,7 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
                           disabled={downloading === a.link}
                           onClick={() => onDownload(a.link)}
                         >
-                          <Download className="size-3" />
+                          <DownloadSimpleIcon className="size-3" />
                           <span className="min-w-0 truncate">{t('actions.download', { defaultValue: 'Download' })}</span>
                         </Button>
                         <Button
@@ -482,7 +482,7 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
                           aria-label={t('common:actions.delete')}
                           onClick={() => onDeleteArtifact(a)}
                         >
-                          <Trash2 className="size-3.5 text-destructive" />
+                          <TrashIcon className="size-3.5 text-destructive" />
                         </Button>
                       </div>
                     </div>

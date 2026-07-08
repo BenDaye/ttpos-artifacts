@@ -1,14 +1,14 @@
 import type { LayoutMode } from '@ttpos/shared'
+import { ColumnsIcon, ListIcon, SquaresFourIcon } from '@phosphor-icons/react'
 import { ToggleGroup, ToggleGroupItem } from '@ttpos/ui/components/toggle-group'
 import { cn } from '@ttpos/ui/lib/utils'
-import { Columns, LayoutGrid, List as ListIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useUiStore } from '@/shared/stores/ui-store'
 
-const ITEMS: { value: LayoutMode, icon: typeof LayoutGrid, labelKey: string }[] = [
-  { value: 'card', icon: LayoutGrid, labelKey: 'layout.card' },
+const ITEMS: { value: LayoutMode, icon: typeof SquaresFourIcon, labelKey: string }[] = [
+  { value: 'card', icon: SquaresFourIcon, labelKey: 'layout.card' },
   { value: 'list', icon: ListIcon, labelKey: 'layout.list' },
-  { value: 'board', icon: Columns, labelKey: 'layout.board' },
+  { value: 'board', icon: ColumnsIcon, labelKey: 'layout.board' },
 ]
 
 export function LayoutSwitcher({ className }: { className?: string }) {

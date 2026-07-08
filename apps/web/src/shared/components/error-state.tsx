@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
+import { WarningCircleIcon } from '@phosphor-icons/react'
 import { Button } from '@ttpos/ui/components/button'
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@ttpos/ui/components/empty'
 import { cn } from '@ttpos/ui/lib/utils'
-import { CircleAlert } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 interface ErrorStateProps {
@@ -27,7 +27,7 @@ export function ErrorState({ title, description, onRetry, retryLabel, className 
           variant="icon"
           className="size-12 rounded-full [&_svg]:size-6"
         >
-          <CircleAlert className="text-destructive" />
+          <WarningCircleIcon className="text-destructive" />
         </EmptyMedia>
         <EmptyTitle className="text-base font-medium text-foreground">
           {title ?? t('states.error_title', { defaultValue: 'Failed to load' })}

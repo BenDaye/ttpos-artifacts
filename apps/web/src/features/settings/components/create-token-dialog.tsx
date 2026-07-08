@@ -1,8 +1,8 @@
+import { CopyIcon } from '@phosphor-icons/react'
 import { Button } from '@ttpos/ui/components/button'
 import { Checkbox } from '@ttpos/ui/components/checkbox'
 import { Input } from '@ttpos/ui/components/input'
 import { Label } from '@ttpos/ui/components/label'
-import { Copy } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -110,7 +110,7 @@ export function CreateTokenDialog({ open, onOpenChange }: Props) {
                     toast.success(t('common:actions.copied', { defaultValue: 'Copied' }))
                   }}
                 >
-                  <Copy className="size-4" />
+                  <CopyIcon className="size-4" />
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
