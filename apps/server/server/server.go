@@ -244,6 +244,11 @@ func newBuildConfig(config *viper.Viper) build.Config {
 	if workflowFile == "" {
 		workflowFile = "auto-build.yaml"
 	}
+	// ttpos-artifacts ref holding the workflow (NOT the source branch to build).
+	workflowRef := config.GetString("BUILD_WORKFLOW_REF")
+	if workflowRef == "" {
+		workflowRef = "main"
+	}
 	baseURL := config.GetString("BUILD_BASE_URL_TEST")
 	if baseURL == "" {
 		baseURL = "https://api.ttpos.dev/api/v1"
@@ -278,6 +283,7 @@ func newBuildConfig(config *viper.Viper) build.Config {
 		Owner:          config.GetString("GITHUB_REPO_OWNER"),
 		Repo:           config.GetString("GITHUB_REPO_NAME"),
 		WorkflowFile:   workflowFile,
+		WorkflowRef:    workflowRef,
 		BaseURLTest:    baseURL,
 		BaseWSURLTest:  baseWS,
 		PackageAppMap:  packageAppMap,
