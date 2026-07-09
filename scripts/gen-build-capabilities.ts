@@ -32,7 +32,10 @@ for (const plat of PLATFORMS) {
   let matrix: any = null
   for (const job of Object.values(jobs)) {
     const m = (job as any)?.strategy?.matrix
-    if (m?.package) { matrix = m; break }
+    if (m?.package) {
+      matrix = m
+      break
+    }
   }
   if (!matrix)
     throw new Error(`build-${plat}.yaml: 找不到 strategy.matrix.package`)
@@ -69,5 +72,5 @@ const packages = [...byPkg.entries()]
 
 const output = { platforms: [...PLATFORMS], packages }
 writeFileSync(OUT, `${JSON.stringify(output, null, 2)}\n`)
-console.log(`generated ${path.relative(ROOT, OUT)}: ${packages.length} packages, ${PLATFORMS.length} platforms`)
+console.info(`generated ${path.relative(ROOT, OUT)}: ${packages.length} packages, ${PLATFORMS.length} platforms`)
 process.exit(0)
