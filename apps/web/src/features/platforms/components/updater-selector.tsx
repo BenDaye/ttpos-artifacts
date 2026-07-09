@@ -1,9 +1,9 @@
 import type { Updater, UpdaterType } from '@ttpos/shared'
+import { AppleLogoIcon, GearSixIcon, LaptopIcon, PackageIcon, RadioIcon, SparkleIcon, StarIcon, WrenchIcon } from '@phosphor-icons/react'
 import { Badge } from '@ttpos/ui/components/badge'
 import { Button } from '@ttpos/ui/components/button'
 import { Checkbox } from '@ttpos/ui/components/checkbox'
 import { cn } from '@ttpos/ui/lib/utils'
-import { Apple, Laptop, MonitorCog, PackageCheck, Radio, Sparkles, Star, Wrench } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { getDefaultUpdaterType, normalizeUpdaters, UPDATER_OPTIONS } from '../updaters'
 
@@ -12,13 +12,13 @@ interface Props {
   onChange: (updaters: Updater[]) => void
 }
 
-const ICONS: Record<string, typeof Wrench> = {
-  'manual': Wrench,
-  'squirrel_darwin': Apple,
-  'squirrel_windows': MonitorCog,
-  'sparkle': Sparkles,
-  'electron-builder': PackageCheck,
-  'tauri': Laptop,
+const ICONS: Record<string, typeof WrenchIcon> = {
+  'manual': WrenchIcon,
+  'squirrel_darwin': AppleLogoIcon,
+  'squirrel_windows': GearSixIcon,
+  'sparkle': SparkleIcon,
+  'electron-builder': PackageIcon,
+  'tauri': LaptopIcon,
 }
 
 export function UpdaterSelector({ value, onChange }: Props) {
@@ -60,7 +60,7 @@ export function UpdaterSelector({ value, onChange }: Props) {
       </div>
       <div className="grid gap-2 sm:grid-cols-2">
         {UPDATER_OPTIONS.map((option) => {
-          const Icon = ICONS[option.type] ?? Radio
+          const Icon = ICONS[option.type] ?? RadioIcon
           const isSelected = selected.has(option.type)
           const isDefault = defaultType === option.type
           const label = t(`updaters.options.${option.type}.label`, { defaultValue: option.label })
@@ -87,7 +87,7 @@ export function UpdaterSelector({ value, onChange }: Props) {
                     <p className="truncate text-sm font-medium">{label}</p>
                     {isDefault && (
                       <Badge variant="secondary" className="gap-1">
-                        <Star className="size-3" />
+                        <StarIcon className="size-3" />
                         {t('form.default_updater', { defaultValue: 'Default' })}
                       </Badge>
                     )}
@@ -101,7 +101,7 @@ export function UpdaterSelector({ value, onChange }: Props) {
                       className="mt-2 h-7 px-2 text-xs"
                       onClick={() => setDefault(option.type)}
                     >
-                      <Star className="size-3" />
+                      <StarIcon className="size-3" />
                       {t('form.set_default', { defaultValue: 'Use as default updater' })}
                     </Button>
                   )}

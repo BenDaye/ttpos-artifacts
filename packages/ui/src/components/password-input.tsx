@@ -1,7 +1,7 @@
 import type { ComponentPropsWithoutRef } from 'react'
+import { EyeIcon, EyeSlashIcon } from '@phosphor-icons/react'
 import { Input } from '@ttpos/ui/components/input'
 import { cn } from '@ttpos/ui/lib/utils'
-import { Eye, EyeOff } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -31,7 +31,7 @@ export function PasswordInput({
         aria-pressed={visible}
         className="absolute right-2 top-1/2 inline-flex size-7 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
       >
-        {visible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+        {visible ? <EyeSlashIcon className="size-4" /> : <EyeIcon className="size-4" />}
       </button>
     </div>
   )

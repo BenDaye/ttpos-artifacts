@@ -1,4 +1,5 @@
 import type { BuildTarget } from '../api'
+import { ArrowSquareOutIcon, CircleNotchIcon, DownloadSimpleIcon } from '@phosphor-icons/react'
 import { Badge } from '@ttpos/ui/components/badge'
 import { Button } from '@ttpos/ui/components/button'
 import {
@@ -8,7 +9,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@ttpos/ui/components/sheet'
-import { Download, ExternalLink, Loader2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -81,7 +81,7 @@ export function BuildStatusSheet({
                 defaultValue: '{{done}} / {{total}} 完成',
               })}
             </span>
-            {!allSettled && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
+            {!allSettled && <CircleNotchIcon className="size-4 animate-spin text-muted-foreground" />}
             {runUrl && (
               <a
                 href={runUrl}
@@ -89,7 +89,7 @@ export function BuildStatusSheet({
                 rel="noreferrer"
                 className="ml-auto flex items-center gap-1 text-xs text-primary underline-offset-2 hover:underline"
               >
-                <ExternalLink className="size-3" />
+                <ArrowSquareOutIcon className="size-3" />
                 {t('build_trigger.view_run', { defaultValue: '查看 Actions run' })}
               </a>
             )}
@@ -133,7 +133,7 @@ export function BuildStatusSheet({
                           disabled={downloading === target.app_name}
                           onClick={() => handleDownload(target.app_name)}
                         >
-                          <Download className="size-3.5" />
+                          <DownloadSimpleIcon className="size-3.5" />
                           {t('build_trigger.download', { defaultValue: '下载' })}
                         </Button>
                       </>
@@ -155,7 +155,7 @@ export function BuildStatusSheet({
                             rel="noreferrer"
                             className="flex items-center gap-1 text-xs text-primary hover:underline"
                           >
-                            <ExternalLink className="size-3" />
+                            <ArrowSquareOutIcon className="size-3" />
                             {t('build_trigger.view_run', { defaultValue: '查看 Actions run' })}
                           </a>
                         )}

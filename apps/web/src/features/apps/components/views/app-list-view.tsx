@@ -2,10 +2,10 @@ import type { AppSummary } from '@ttpos/shared'
 import type { AppViewProps } from './types'
 import type { SortableItemRenderProps } from '@/shared/components/common/sortable-list'
 import { verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { CubeIcon, DotsSixVerticalIcon, PencilSimpleIcon, TrashIcon } from '@phosphor-icons/react'
 import { Button } from '@ttpos/ui/components/button'
 import { Card } from '@ttpos/ui/components/card'
 import { cn } from '@ttpos/ui/lib/utils'
-import { Boxes, GripVertical, Pencil, Trash2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { SortableList } from '@/shared/components/common/sortable-list'
 import { formatDateTime } from '@/shared/lib/format'
@@ -47,13 +47,13 @@ export function AppListView({ apps, onSelect, onEdit, onDelete, onReorder, canRe
             onClick={e => e.stopPropagation()}
             {...sortable.handleProps}
           >
-            <GripVertical className="size-4" />
+            <DotsSixVerticalIcon className="size-4" />
           </button>
         )}
         <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
           {app.Logo
             ? <img src={app.Logo} alt="" className="size-full rounded-md object-cover" />
-            : <Boxes className="size-3.5" />}
+            : <CubeIcon className="size-3.5" />}
         </div>
         <span className="truncate text-sm font-medium" title={app.AppName}>{app.AppName}</span>
       </div>
@@ -69,7 +69,7 @@ export function AppListView({ apps, onSelect, onEdit, onDelete, onReorder, canRe
             onEdit(app)
           }}
         >
-          <Pencil className="size-4" />
+          <PencilSimpleIcon className="size-4" />
         </Button>
         <Button
           variant="ghost"
@@ -80,7 +80,7 @@ export function AppListView({ apps, onSelect, onEdit, onDelete, onReorder, canRe
             onDelete(app)
           }}
         >
-          <Trash2 className="size-4 text-destructive" />
+          <TrashIcon className="size-4 text-destructive" />
         </Button>
       </div>
     </div>

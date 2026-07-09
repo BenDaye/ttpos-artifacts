@@ -1,4 +1,5 @@
 import type { ComponentType } from 'react'
+import { ChartBarIcon, CpuIcon, GearIcon, GitBranchIcon, SignOutIcon, SquaresFourIcon, StackIcon } from '@phosphor-icons/react'
 import { Link, useRouter, useRouterState } from '@tanstack/react-router'
 import {
   Sidebar,
@@ -16,7 +17,6 @@ import {
   useSidebar,
 } from '@ttpos/ui/components/sidebar'
 import { cn } from '@ttpos/ui/lib/utils'
-import { BarChart3, Cpu, GitBranch, Layers, LayoutGrid, LogOut, Settings } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/features/auth/auth-store'
 import { useUiStore } from '@/shared/stores/ui-store'
@@ -31,12 +31,12 @@ interface NavItemDef {
 }
 
 const NAV: NavItemDef[] = [
-  { to: '/applications', labelKey: 'nav.applications', icon: LayoutGrid },
-  { to: '/channels', labelKey: 'nav.channels', icon: GitBranch },
-  { to: '/platforms', labelKey: 'nav.platforms', icon: Layers },
-  { to: '/architectures', labelKey: 'nav.architectures', icon: Cpu },
-  { to: '/statistics', labelKey: 'nav.statistics', icon: BarChart3 },
-  { to: '/settings', labelKey: 'nav.settings', icon: Settings },
+  { to: '/applications', labelKey: 'nav.applications', icon: SquaresFourIcon },
+  { to: '/channels', labelKey: 'nav.channels', icon: GitBranchIcon },
+  { to: '/platforms', labelKey: 'nav.platforms', icon: StackIcon },
+  { to: '/architectures', labelKey: 'nav.architectures', icon: CpuIcon },
+  { to: '/statistics', labelKey: 'nav.statistics', icon: ChartBarIcon },
+  { to: '/settings', labelKey: 'nav.settings', icon: GearIcon },
 ]
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -126,7 +126,7 @@ function AppShellContent({
                 onClick={handleLogout}
                 tooltip={t('auth.logout', { defaultValue: 'Sign out' })}
               >
-                <LogOut />
+                <SignOutIcon />
                 <span>{t('auth.logout', { defaultValue: 'Sign out' })}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>

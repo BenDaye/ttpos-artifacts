@@ -27,6 +27,9 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    @apply font-mono;
+  }
 }
 
 html,
@@ -36,7 +39,6 @@ body,
 }
 
 body {
-  font-family: var(--font-sans);
   font-feature-settings:
     'rlig' 1,
     'calt' 1;

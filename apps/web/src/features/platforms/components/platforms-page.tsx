@@ -1,11 +1,11 @@
 import type { Platform } from '@ttpos/shared'
+import { DotsSixVerticalIcon, MagnifyingGlassIcon, PencilSimpleIcon, PlusIcon, StackIcon, TrashIcon } from '@phosphor-icons/react'
 import { Badge } from '@ttpos/ui/components/badge'
 import { Button } from '@ttpos/ui/components/button'
 import { Card, CardContent } from '@ttpos/ui/components/card'
 import { Input } from '@ttpos/ui/components/input'
 import { Skeleton } from '@ttpos/ui/components/skeleton'
 import { cn } from '@ttpos/ui/lib/utils'
-import { GripVertical, Layers, Pencil, Plus, Search, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -78,7 +78,7 @@ export function PlatformsPage() {
         description={t('description')}
         actions={(
           <Button onClick={() => setCreating(true)}>
-            <Plus className="size-4" />
+            <PlusIcon className="size-4" />
             {t('common:actions.create')}
           </Button>
         )}
@@ -86,7 +86,7 @@ export function PlatformsPage() {
 
       <div className="dashboard-search-shell mb-4 flex items-center gap-2">
         <div className="relative min-w-0 flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={search}
             onChange={e => setSearch(e.target.value)}
@@ -110,12 +110,12 @@ export function PlatformsPage() {
 
       {platformsQuery.isSuccess && filteredPlatforms.length === 0 && (
         <EmptyState
-          icon={Layers}
+          icon={StackIcon}
           title={t('empty.title')}
           description={t('empty.description')}
           action={(
             <Button onClick={() => setCreating(true)}>
-              <Plus className="size-4" />
+              <PlusIcon className="size-4" />
               {t('common:actions.create')}
             </Button>
           )}
@@ -149,11 +149,11 @@ export function PlatformsPage() {
                           className="shrink-0 cursor-grab touch-none text-muted-foreground focus-visible:outline-1 focus-visible:outline-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:cursor-grabbing"
                           {...sortable.handleProps}
                         >
-                          <GripVertical className="size-4" />
+                          <DotsSixVerticalIcon className="size-4" />
                         </button>
                       )}
                       <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground">
-                        <Layers className="size-4" />
+                        <StackIcon className="size-4" />
                       </div>
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium">{platform.PlatformName}</p>
@@ -176,7 +176,7 @@ export function PlatformsPage() {
                         aria-label={t('common:actions.edit')}
                         onClick={() => setEditing(platform)}
                       >
-                        <Pencil className="size-4" />
+                        <PencilSimpleIcon className="size-4" />
                       </Button>
                       <Button
                         variant="ghost"
@@ -184,7 +184,7 @@ export function PlatformsPage() {
                         aria-label={t('common:actions.delete')}
                         onClick={() => setDeleting(platform)}
                       >
-                        <Trash2 className="size-4 text-destructive" />
+                        <TrashIcon className="size-4 text-destructive" />
                       </Button>
                     </div>
                   </CardContent>

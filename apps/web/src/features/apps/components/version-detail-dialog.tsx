@@ -1,4 +1,5 @@
 import type { AppVersion, ArtifactEntry } from '@ttpos/shared'
+import { ArrowSquareOutIcon, BookOpenIcon, CheckIcon, CopyIcon, DownloadSimpleIcon, FilePlusIcon, PencilSimpleIcon, TrashIcon } from '@phosphor-icons/react'
 import { Link } from '@tanstack/react-router'
 import { Badge } from '@ttpos/ui/components/badge'
 import { Button, buttonVariants } from '@ttpos/ui/components/button'
@@ -11,7 +12,6 @@ import {
   DialogTitle,
 } from '@ttpos/ui/components/dialog'
 import { cn } from '@ttpos/ui/lib/utils'
-import { BookOpen, Check, Copy, Download, ExternalLink, FilePlus, Pencil, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import ReactMarkdown from 'react-markdown'
@@ -159,11 +159,11 @@ export function VersionDetailDialog({ open, onOpenChange, version }: VersionDeta
             <div className="grid gap-4">
               <div className="flex min-w-0 flex-wrap items-center gap-2 border-y border-border py-3">
                 <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-                  <Pencil className="size-3.5" />
+                  <PencilSimpleIcon className="size-3.5" />
                   {t('common:actions.edit')}
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => setAddingArtifact(true)}>
-                  <FilePlus className="size-3.5" />
+                  <FilePlusIcon className="size-3.5" />
                   {t('add_artifact.button', { defaultValue: 'Add artifact' })}
                 </Button>
                 <Button
@@ -173,7 +173,7 @@ export function VersionDetailDialog({ open, onOpenChange, version }: VersionDeta
                   aria-label={t('common:actions.delete')}
                   onClick={() => setDeletingVersion(true)}
                 >
-                  <Trash2 className="size-4 text-destructive" />
+                  <TrashIcon className="size-4 text-destructive" />
                 </Button>
               </div>
 
@@ -181,7 +181,7 @@ export function VersionDetailDialog({ open, onOpenChange, version }: VersionDeta
                 <section className="grid min-w-0 gap-2">
                   <div className="flex min-w-0 items-center justify-between gap-3 text-sm">
                     <span className="inline-flex min-w-0 items-center gap-2 font-semibold text-foreground">
-                      <BookOpen className="size-3.5 shrink-0" />
+                      <BookOpenIcon className="size-3.5 shrink-0" />
                       <span className="truncate">{t('changelog', { defaultValue: 'Changelog' })}</span>
                     </span>
                     <span className="shrink-0 text-muted-foreground">
@@ -254,8 +254,8 @@ export function VersionDetailDialog({ open, onOpenChange, version }: VersionDeta
                             onClick={() => onCopy(artifact.link)}
                           >
                             {copied === artifact.link
-                              ? <Check className="size-3.5" />
-                              : <Copy className="size-3.5" />}
+                              ? <CheckIcon className="size-3.5" />
+                              : <CopyIcon className="size-3.5" />}
                             {t('download_dialog.copy_url', { defaultValue: 'Copy URL' })}
                           </Button>
                           <Button
@@ -264,7 +264,7 @@ export function VersionDetailDialog({ open, onOpenChange, version }: VersionDeta
                             disabled={resolving === artifact.link}
                             onClick={() => onDownload(artifact.link)}
                           >
-                            <Download className="size-3.5" />
+                            <DownloadSimpleIcon className="size-3.5" />
                             {t('actions.download', { defaultValue: 'Download' })}
                           </Button>
                           <Button
@@ -274,7 +274,7 @@ export function VersionDetailDialog({ open, onOpenChange, version }: VersionDeta
                             aria-label={t('delete_artifact_title', { defaultValue: 'Delete artifact?' })}
                             onClick={() => setDeletingArtifact(artifact)}
                           >
-                            <Trash2 className="size-3.5 text-destructive" />
+                            <TrashIcon className="size-3.5 text-destructive" />
                           </Button>
                         </div>
                       </div>
@@ -289,7 +289,7 @@ export function VersionDetailDialog({ open, onOpenChange, version }: VersionDeta
               params={{ appName: version.AppName }}
               className={buttonVariants({ variant: 'outline' })}
             >
-              <ExternalLink className="size-4" />
+              <ArrowSquareOutIcon className="size-4" />
               {t('detail.open_full_detail', { defaultValue: 'Open app detail' })}
             </Link>
             <Button variant="outline" onClick={() => onOpenChange(false)}>

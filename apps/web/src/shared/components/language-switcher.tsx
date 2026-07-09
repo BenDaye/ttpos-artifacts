@@ -1,3 +1,4 @@
+import { TranslateIcon } from '@phosphor-icons/react'
 import { Button } from '@ttpos/ui/components/button'
 import {
   DropdownMenu,
@@ -5,7 +6,6 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@ttpos/ui/components/dropdown-menu'
-import { Languages } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 const LANGS = ['en', 'zh'] as const
@@ -19,7 +19,7 @@ export function LanguageSwitcher() {
       <DropdownMenuTrigger
         render={(
           <Button variant="ghost" size="icon" aria-label={t('language.label')}>
-            <Languages className="size-4" />
+            <TranslateIcon className="size-4" />
           </Button>
         )}
       />
