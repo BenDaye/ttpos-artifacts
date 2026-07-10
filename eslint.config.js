@@ -22,7 +22,10 @@ export default antfu({
     'docs/**',
     'deploy/**',
     '.github/**',
+    '.omc/**',
+    '.omx/**',
     '.serena/**',
+    '.superpowers/**',
     '*.md',
   ],
 }, {
