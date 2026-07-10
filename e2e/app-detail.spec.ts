@@ -88,7 +88,26 @@ test.describe('App detail — version management', () => {
   test('upload version button opens upload dialog with app pre-filled', async ({ page }) => {
     await page.getByRole('button', { name: 'Upload version' }).click()
 
-    await expect(page.getByRole('heading', { name: 'Upload new version' })).toBeVisible()
+    const dialog = page.getByRole('dialog', { name: 'Upload new version' })
+    await expect(dialog.getByRole('heading', { name: 'Upload new version' })).toBeVisible()
+    await expect(dialog.getByRole('combobox', { name: 'Channel' })).toContainText('Select channel')
+    await expect(dialog.getByRole('combobox', { name: 'Platform' })).toContainText('Select platform')
+    await expect(dialog.getByRole('combobox', { name: 'Architecture' })).toContainText('Select architecture')
+
+    const selectorWidths = await dialog.evaluate((element) => {
+      const widthFor = (name: string) =>
+        element.querySelector(`[role="combobox"][aria-label="${name}"]`)?.getBoundingClientRect().width ?? 0
+
+      return {
+        channel: widthFor('Channel'),
+        platform: widthFor('Platform'),
+        architecture: widthFor('Architecture'),
+      }
+    })
+
+    expect(selectorWidths.channel).toBeGreaterThan(120)
+    expect(Math.abs(selectorWidths.channel - selectorWidths.platform)).toBeLessThanOrEqual(2)
+    expect(selectorWidths.architecture).toBeGreaterThan(selectorWidths.channel)
   })
 
   test('upload version submits updater and intermediate fields', async ({ page }) => {
