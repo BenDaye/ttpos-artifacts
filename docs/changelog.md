@@ -1,5 +1,13 @@
 # 变更日志
 
+## 2026-07-10 [BUG-021]
+
+构建测试包入口迁移到 Applications：
+
+- `/applications` 顶部操作区新增 "Build Test Package" 作为唯一主入口，沿用既有触发弹窗和构建状态抽屉。
+- App detail 页移除构建按钮及相关弹窗/状态 ownership，保留 Back 与 Upload version。
+- e2e 补充 Applications 触发构建、detail 无入口和移动端 header actions 无溢出回归。
+
 ## 2026-07-05 [shadcn-monorepo]
 
 shadcn monorepo 迁移交付一（PR-0 + PR-1）：

@@ -1,5 +1,6 @@
 import type { AppSummary } from '@ttpos/shared'
-import { CubeIcon, MagnifyingGlassIcon, PlusIcon } from '@phosphor-icons/react'
+import type { TriggerBuildResponse } from '@/features/build-trigger/api'
+import { CubeIcon, HammerIcon, MagnifyingGlassIcon, PlusIcon } from '@phosphor-icons/react'
 import { useNavigate } from '@tanstack/react-router'
 import { Button } from '@ttpos/ui/components/button'
 import { Card } from '@ttpos/ui/components/card'
@@ -9,6 +10,8 @@ import { cn } from '@ttpos/ui/lib/utils'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+import { BuildStatusSheet } from '@/features/build-trigger/components/build-status-sheet'
+import { TriggerBuildDialog } from '@/features/build-trigger/components/trigger-build-dialog'
 import { ConfirmDialog } from '@/shared/components/common/confirm-dialog'
 import { EmptyState } from '@/shared/components/empty-state'
 import { ErrorState } from '@/shared/components/error-state'
@@ -33,6 +36,9 @@ export function ApplicationsPage() {
   const allApps = appsQuery.data?.apps ?? []
   const [search, setSearch] = useState('')
   const [creating, setCreating] = useState(false)
+  const [buildTriggering, setBuildTriggering] = useState(false)
+  const [buildStatusOpen, setBuildStatusOpen] = useState(false)
+  const [buildResponse, setBuildResponse] = useState<TriggerBuildResponse | null>(null)
   // 编辑 / 删除目标按稳定 id 从完整应用列表派生「活」对象（用完整列表而非过滤后，
   // 避免改名后落出搜索过滤导致编辑中的目标被置空）；refetch 后弹层目标随之刷新，目标被删时自动关闭。
   const [editing, setEditingId] = useSelectedEntity(allApps, app => app.ID)
@@ -167,6 +173,10 @@ export function ApplicationsPage() {
         actions={(
           <div className="grid w-full min-w-0 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center" data-testid="applications-header-actions">
             <LayoutSwitcher className="justify-self-start" />
+            <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => setBuildTriggering(true)}>
+              <HammerIcon className="size-4" />
+              {t('build_trigger.button', { defaultValue: 'Build Test Package' })}
+            </Button>
             <Button className="w-full sm:w-auto" onClick={() => setCreating(true)}>
               <PlusIcon className="size-4" />
               {t('create', { defaultValue: 'New app' })}
@@ -203,6 +213,21 @@ export function ApplicationsPage() {
           : renderView()
       )}
 
+      <TriggerBuildDialog
+        open={buildTriggering}
+        onOpenChange={setBuildTriggering}
+        onBuildTriggered={(response) => {
+          setBuildResponse(response)
+          setBuildStatusOpen(true)
+        }}
+      />
+      <BuildStatusSheet
+        open={buildStatusOpen}
+        onOpenChange={setBuildStatusOpen}
+        correlationId={buildResponse?.correlation_id ?? ''}
+        targets={buildResponse?.targets ?? []}
+        runUrl={buildResponse?.run_url}
+      />
       <AppFormDialog open={creating} onOpenChange={setCreating} />
       <AppFormDialog
         open={Boolean(editing)}
