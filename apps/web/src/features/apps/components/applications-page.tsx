@@ -1,5 +1,4 @@
 import type { AppSummary } from '@ttpos/shared'
-import type { TriggerBuildResponse } from '@/features/build-trigger/api'
 import { CubeIcon, HammerIcon, MagnifyingGlassIcon, PlusIcon } from '@phosphor-icons/react'
 import { useNavigate } from '@tanstack/react-router'
 import { Button } from '@ttpos/ui/components/button'
@@ -10,7 +9,7 @@ import { cn } from '@ttpos/ui/lib/utils'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { BuildStatusSheet } from '@/features/build-trigger/components/build-status-sheet'
+import { useBuildActivityStore } from '@/features/build-trigger/build-activity-store'
 import { TriggerBuildDialog } from '@/features/build-trigger/components/trigger-build-dialog'
 import { ConfirmDialog } from '@/shared/components/common/confirm-dialog'
 import { EmptyState } from '@/shared/components/empty-state'
@@ -37,8 +36,7 @@ export function ApplicationsPage() {
   const [search, setSearch] = useState('')
   const [creating, setCreating] = useState(false)
   const [buildTriggering, setBuildTriggering] = useState(false)
-  const [buildStatusOpen, setBuildStatusOpen] = useState(false)
-  const [buildResponse, setBuildResponse] = useState<TriggerBuildResponse | null>(null)
+  const setActiveBuildFromResponse = useBuildActivityStore(s => s.setActiveBuildFromResponse)
   // 编辑 / 删除目标按稳定 id 从完整应用列表派生「活」对象（用完整列表而非过滤后，
   // 避免改名后落出搜索过滤导致编辑中的目标被置空）；refetch 后弹层目标随之刷新，目标被删时自动关闭。
   const [editing, setEditingId] = useSelectedEntity(allApps, app => app.ID)
@@ -216,17 +214,7 @@ export function ApplicationsPage() {
       <TriggerBuildDialog
         open={buildTriggering}
         onOpenChange={setBuildTriggering}
-        onBuildTriggered={(response) => {
-          setBuildResponse(response)
-          setBuildStatusOpen(true)
-        }}
-      />
-      <BuildStatusSheet
-        open={buildStatusOpen}
-        onOpenChange={setBuildStatusOpen}
-        correlationId={buildResponse?.correlation_id ?? ''}
-        targets={buildResponse?.targets ?? []}
-        runUrl={buildResponse?.run_url}
+        onBuildTriggered={setActiveBuildFromResponse}
       />
       <AppFormDialog open={creating} onOpenChange={setCreating} />
       <AppFormDialog

@@ -1,5 +1,14 @@
 # 变更日志
 
+## 2026-07-10 [BUG-022]
+
+构建状态跨页面保留：
+
+- 新增 private shell 级构建状态入口，触发测试包后离开 `/applications` 仍可重新打开 Build Status。
+- active build 元数据使用 sessionStorage 做 30 分钟窗口恢复，刷新页面后仍能继续查看当前构建状态。
+- `/applications` 只保留触发弹窗 ownership；状态抽屉和清理逻辑移到 shell 层，登出时清除 active build。
+- e2e 补充跨 route + refresh 恢复回归。
+
 ## 2026-07-10 [BUG-021]
 
 构建测试包入口迁移到 Applications：

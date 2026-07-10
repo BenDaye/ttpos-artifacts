@@ -18,6 +18,54 @@ async function dragGripOnto(page: Page, grip: Locator, target: Locator) {
   await page.mouse.up()
 }
 
+async function mockSingleAndroidBuild(page: Page, runUrl = 'https://github.com/ttpos/actions/runs/123') {
+  await page.route('**/build/capabilities', route =>
+    route.fulfill({
+      status: 200,
+      json: {
+        platforms: ['android'],
+        packages: [
+          { package: 'pos', app_name: 'TTPOS-Cashier', platforms: ['android'] },
+        ],
+      },
+    }))
+  await page.route('**/build/trigger', (route) => {
+    expect(route.request().method()).toBe('POST')
+    expect(route.request().postDataJSON()).toEqual({
+      packages: ['pos'],
+      platforms: ['android'],
+      branch: 'new-test',
+    })
+    return route.fulfill({
+      status: 200,
+      json: {
+        correlation_id: 'build-123',
+        env: 'test',
+        build_count: 1,
+        run_url: runUrl,
+        status: 'queued',
+        targets: [
+          { package: 'pos', app_name: 'TTPOS-Cashier', platform: 'android' },
+        ],
+      },
+    })
+  })
+  return runUrl
+}
+
+async function triggerSingleAndroidBuild(page: Page) {
+  await page.goto('/applications')
+
+  await page.getByRole('button', { name: 'Build Test Package' }).click()
+
+  const dialog = page.getByRole('dialog', { name: 'Trigger Test Build' })
+  await expect(dialog).toBeVisible()
+  await dialog.locator('label', { hasText: 'TTPOS-Cashier' }).click()
+  await dialog.getByRole('button', { name: 'Android' }).click()
+  await dialog.getByLabel('Branch').fill('new-test')
+  await dialog.getByRole('button', { name: 'Trigger build' }).click()
+}
+
 test.describe('Applications page', () => {
   test('displays app list from mock data', async ({ page }) => {
     await page.goto('/applications')
@@ -115,56 +163,49 @@ test.describe('Applications page', () => {
   })
 
   test('build test package button triggers build and opens status sheet', async ({ page }) => {
-    const runUrl = 'https://github.com/ttpos/actions/runs/123'
+    const runUrl = await mockSingleAndroidBuild(page)
+    await triggerSingleAndroidBuild(page)
 
-    await page.route('**/build/capabilities', route =>
-      route.fulfill({
-        status: 200,
-        json: {
-          platforms: ['android'],
-          packages: [
-            { package: 'pos', app_name: 'TTPOS-Cashier', platforms: ['android'] },
-          ],
-        },
-      }))
-    await page.route('**/build/trigger', (route) => {
-      expect(route.request().method()).toBe('POST')
-      expect(route.request().postDataJSON()).toEqual({
-        packages: ['pos'],
-        platforms: ['android'],
-        branch: 'new-test',
-      })
-      return route.fulfill({
-        status: 200,
-        json: {
-          correlation_id: 'build-123',
-          env: 'test',
-          build_count: 1,
-          run_url: runUrl,
-          status: 'queued',
-          targets: [
-            { package: 'pos', app_name: 'TTPOS-Cashier', platform: 'android' },
-          ],
-        },
-      })
-    })
-
-    await page.goto('/applications')
-
-    await page.getByRole('button', { name: 'Build Test Package' }).click()
-
-    const dialog = page.getByRole('dialog', { name: 'Trigger Test Build' })
-    await expect(dialog).toBeVisible()
-    await dialog.locator('label', { hasText: 'TTPOS-Cashier' }).click()
-    await dialog.getByRole('button', { name: 'Android' }).click()
-    await dialog.getByLabel('Branch').fill('new-test')
-    await dialog.getByRole('button', { name: 'Trigger build' }).click()
-
-    const statusSheet = page.getByLabel('Build Status')
+    const statusSheet = page.getByRole('dialog', { name: 'Build Status' })
     await expect(statusSheet.getByRole('heading', { name: 'Build Status' })).toBeVisible()
     await expect(statusSheet.getByText('TTPOS-Cashier')).toBeVisible()
     await expect(statusSheet.getByText('android', { exact: true })).toBeVisible()
     await expect(statusSheet.getByRole('link', { name: 'View Actions run' })).toHaveAttribute('href', runUrl)
+  })
+
+  test('keeps build status available after leaving applications', async ({ page }) => {
+    const runUrl = await mockSingleAndroidBuild(page, 'https://github.com/ttpos/actions/runs/456')
+    await triggerSingleAndroidBuild(page)
+
+    await expect(page.getByRole('dialog', { name: 'Build Status' }).getByRole('heading', { name: 'Build Status' })).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('dialog', { name: 'Build Status' })).not.toBeVisible({ timeout: 5000 })
+
+    await page.goto('/applications/TTPOS-Cashier')
+    await expect(page).toHaveURL(/\/applications\/TTPOS-Cashier/)
+    await page.reload()
+    await expect(page.getByRole('heading', { level: 1, name: 'TTPOS-Cashier' })).toBeVisible()
+
+    await page.getByRole('button', { name: 'Build Status' }).click()
+    const statusSheet = page.getByRole('dialog', { name: 'Build Status' })
+    await expect(statusSheet.getByRole('heading', { name: 'Build Status' })).toBeVisible()
+    await expect(statusSheet.getByText('TTPOS-Cashier')).toBeVisible()
+    await expect(statusSheet.getByText('android', { exact: true })).toBeVisible()
+    await expect(statusSheet.getByRole('link', { name: 'View Actions run' })).toHaveAttribute('href', runUrl)
+  })
+
+  test('clears active build status on sign out', async ({ page }) => {
+    await mockSingleAndroidBuild(page)
+    await triggerSingleAndroidBuild(page)
+
+    await expect(page.getByRole('dialog', { name: 'Build Status' })).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('dialog', { name: 'Build Status' })).not.toBeVisible({ timeout: 5000 })
+    await expect(page.getByRole('button', { name: 'Build Status' })).toBeVisible()
+
+    await page.getByRole('button', { name: 'Sign out' }).click()
+    await expect(page).toHaveURL(/\/signin$/)
+    await expect.poll(() => page.evaluate(() => sessionStorage.getItem('buildActivity.active'))).toBeNull()
   })
 
   test('card view drag reorders applications and posts new order', async ({ page }) => {
