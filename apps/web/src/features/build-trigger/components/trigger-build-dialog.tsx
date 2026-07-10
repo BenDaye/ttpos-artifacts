@@ -16,7 +16,7 @@ import { Label } from '@ttpos/ui/components/label'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { MAX_BUILD_COUNT, packageLabel, platformLabel } from '../constants'
+import { appDisplayName, MAX_BUILD_COUNT, packageAlias, platformLabel } from '../constants'
 import { useCapabilities, useTriggerBuild } from '../hooks'
 
 // Branch: format/anti-injection guard only (server does the same). The branch is
@@ -75,6 +75,7 @@ export function TriggerBuildDialog({ open, onOpenChange, onBuildTriggered }: Pro
 
   const allPackagesSelected = packages.length > 0 && selectedPackages.length === packages.length
   const allPlatformsSelected = platforms.length > 0 && selectedPlatforms.length === platforms.length
+  const appsLabel = t('build_trigger.apps', { defaultValue: '应用端' })
 
   function togglePackage(value: string) {
     setSelectedPackages(prev => prev.includes(value) ? prev.filter(p => p !== value) : [...prev, value])
@@ -157,28 +158,34 @@ export function TriggerBuildDialog({ open, onOpenChange, onBuildTriggered }: Pro
                   {/* 应用端多选 */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <Label>{t('build_trigger.apps', { defaultValue: '应用端' })}</Label>
+                      <Label>{appsLabel}</Label>
                       <Button type="button" variant="ghost" size="sm" className="h-auto px-2 py-1 text-xs" onClick={toggleAllPackages}>
                         {allPackagesSelected
                           ? t('build_trigger.deselect_all', { defaultValue: '反选' })
                           : t('build_trigger.select_all', { defaultValue: '全选' })}
                       </Button>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
+                    <div role="group" aria-label={appsLabel} className="grid grid-cols-2 gap-3">
                       {packages.map(pkg => (
                         <label
                           key={pkg.package}
-                          className="flex cursor-pointer items-center gap-2 rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-muted/50 has-[:checked]:border-primary has-[:checked]:bg-primary/5"
+                          className="flex min-h-16 cursor-pointer items-center gap-3 rounded-md border border-border bg-background px-3 py-2.5 text-sm transition-colors hover:bg-muted/50 has-[:checked]:border-primary has-[:checked]:bg-primary/5"
                         >
                           <Checkbox
                             checked={selectedPackages.includes(pkg.package)}
                             onCheckedChange={() => togglePackage(pkg.package)}
                           />
-                          <span className="font-medium">{packageLabel(pkg.package)}</span>
-                          <span className="text-muted-foreground">
-                            (
-                            {pkg.package}
-                            )
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate font-medium">{appDisplayName(pkg.app_name, pkg.package)}</span>
+                            <span className="block truncate font-mono text-xs text-muted-foreground">
+                              {packageAlias(pkg.package)}
+                              {packageAlias(pkg.package) !== pkg.package && (
+                                <>
+                                  {' / '}
+                                  {pkg.package}
+                                </>
+                              )}
+                            </span>
                           </span>
                         </label>
                       ))}

@@ -61,3 +61,4 @@
 | [x] | REFACTOR-011 | prod 主机 Caddy 独立化迁移 | P1 | completed |
 | [x] | REFACTOR-012 | prod 镜像解冻（faynosync-* → ttpos-*） | P1 | completed |
 | [ ] | QUAL-004 | 修复 rotted 集成套件并重塑单 owner 测试 | P2 | pending |
+| [x] | BUG-018 | 修正测试构建应用端卡片与名称 | P1 | completed |
