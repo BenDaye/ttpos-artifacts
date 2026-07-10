@@ -1,12 +1,13 @@
 import type { TFunction } from 'i18next'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Checkbox } from '@ttpos/ui/components/checkbox'
+import { Field, FieldError, FieldGroup, FieldLabel } from '@ttpos/ui/components/field'
 import { FileInput } from '@ttpos/ui/components/file-input'
 import { Input } from '@ttpos/ui/components/input'
-import { Label } from '@ttpos/ui/components/label'
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -136,31 +137,42 @@ export function UploadVersionDialog({ open, onOpenChange, appName }: Props) {
       loading={upload.isPending}
       onSubmit={() => handleSubmit()}
     >
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label className="flex items-center justify-between">
+      <FieldGroup className="grid gap-4 sm:grid-cols-2">
+        <Field>
+          <FieldLabel className="flex w-full items-center justify-between">
             <span>{t('upload_dialog.app_name', { defaultValue: 'App name' })}</span>
             <span className="text-xs text-muted-foreground">
               {t('upload_dialog.app_name_locked', { defaultValue: 'Locked to this app' })}
             </span>
-          </Label>
+          </FieldLabel>
           <Input value={appName} disabled readOnly />
-        </div>
+        </Field>
         <FormBlock label={t('upload_dialog.version', { defaultValue: 'Version' })} error={errors.version?.message}>
-          <Input placeholder="1.2.3" autoFocus {...form.register('version')} />
+          <Input
+            placeholder="1.2.3"
+            autoFocus
+            aria-invalid={Boolean(errors.version)}
+            {...form.register('version')}
+          />
         </FormBlock>
         <FormBlock label={t('upload_dialog.channel', { defaultValue: 'Channel' })} error={errors.channel?.message}>
           <Select
             value={form.watch('channel')}
             onValueChange={next => form.setValue('channel', next ?? '', { shouldDirty: true, shouldTouch: true, shouldValidate: true })}
           >
-            <SelectTrigger aria-label={t('upload_dialog.channel', { defaultValue: 'Channel' })}>
-              <SelectValue />
+            <SelectTrigger
+              className="w-full"
+              aria-label={t('upload_dialog.channel', { defaultValue: 'Channel' })}
+              aria-invalid={Boolean(errors.channel)}
+            >
+              <SelectValue placeholder={t('upload_dialog.channel_placeholder', { defaultValue: 'Select channel' })} />
             </SelectTrigger>
-            <SelectContent>
-              {(channels.data ?? []).map(c => (
-                <SelectItem key={c.ChannelName} value={c.ChannelName}>{c.ChannelName}</SelectItem>
-              ))}
+            <SelectContent alignItemWithTrigger={false}>
+              <SelectGroup>
+                {(channels.data ?? []).map(c => (
+                  <SelectItem key={c.ChannelName} value={c.ChannelName}>{c.ChannelName}</SelectItem>
+                ))}
+              </SelectGroup>
             </SelectContent>
           </Select>
         </FormBlock>
@@ -169,28 +181,44 @@ export function UploadVersionDialog({ open, onOpenChange, appName }: Props) {
             value={form.watch('platform')}
             onValueChange={next => form.setValue('platform', next ?? '', { shouldDirty: true, shouldTouch: true, shouldValidate: true })}
           >
-            <SelectTrigger aria-label={t('upload_dialog.platform', { defaultValue: 'Platform' })}>
-              <SelectValue />
+            <SelectTrigger
+              className="w-full"
+              aria-label={t('upload_dialog.platform', { defaultValue: 'Platform' })}
+              aria-invalid={Boolean(errors.platform)}
+            >
+              <SelectValue placeholder={t('upload_dialog.platform_placeholder', { defaultValue: 'Select platform' })} />
             </SelectTrigger>
-            <SelectContent>
-              {(platforms.data ?? []).map(p => (
-                <SelectItem key={p.PlatformName} value={p.PlatformName}>{p.PlatformName}</SelectItem>
-              ))}
+            <SelectContent alignItemWithTrigger={false}>
+              <SelectGroup>
+                {(platforms.data ?? []).map(p => (
+                  <SelectItem key={p.PlatformName} value={p.PlatformName}>{p.PlatformName}</SelectItem>
+                ))}
+              </SelectGroup>
             </SelectContent>
           </Select>
         </FormBlock>
-        <FormBlock label={t('upload_dialog.arch', { defaultValue: 'Architecture' })} error={errors.arch?.message}>
+        <FormBlock
+          label={t('upload_dialog.arch', { defaultValue: 'Architecture' })}
+          error={errors.arch?.message}
+          className={availableUpdaters.length > 1 ? undefined : 'sm:col-span-2'}
+        >
           <Select
             value={form.watch('arch')}
             onValueChange={next => form.setValue('arch', next ?? '', { shouldDirty: true, shouldTouch: true, shouldValidate: true })}
           >
-            <SelectTrigger aria-label={t('upload_dialog.arch', { defaultValue: 'Architecture' })}>
-              <SelectValue />
+            <SelectTrigger
+              className="w-full"
+              aria-label={t('upload_dialog.arch', { defaultValue: 'Architecture' })}
+              aria-invalid={Boolean(errors.arch)}
+            >
+              <SelectValue placeholder={t('upload_dialog.arch_placeholder', { defaultValue: 'Select architecture' })} />
             </SelectTrigger>
-            <SelectContent>
-              {(archs.data ?? []).map(a => (
-                <SelectItem key={a.ArchID} value={a.ArchID}>{a.ArchID}</SelectItem>
-              ))}
+            <SelectContent alignItemWithTrigger={false}>
+              <SelectGroup>
+                {(archs.data ?? []).map(a => (
+                  <SelectItem key={a.ArchID} value={a.ArchID}>{a.ArchID}</SelectItem>
+                ))}
+              </SelectGroup>
             </SelectContent>
           </Select>
         </FormBlock>
@@ -203,26 +231,28 @@ export function UploadVersionDialog({ open, onOpenChange, appName }: Props) {
                 form.setValue('signature', '', { shouldDirty: true, shouldTouch: true, shouldValidate: true })
               }}
             >
-              <SelectTrigger aria-label={t('upload_dialog.updater', { defaultValue: 'Updater' })}>
-                <SelectValue />
+              <SelectTrigger className="w-full" aria-label={t('upload_dialog.updater', { defaultValue: 'Updater' })}>
+                <SelectValue placeholder={t('upload_dialog.updater_placeholder', { defaultValue: 'Select updater' })} />
               </SelectTrigger>
-              <SelectContent>
-                {availableUpdaters.map(updater => (
-                  <SelectItem key={updater.type} value={updater.type}>
-                    {`${getUpdaterLabel(updater.type)}${updater.default ? ` (${t('upload_dialog.default_updater', { defaultValue: 'default' })})` : ''}`}
-                  </SelectItem>
-                ))}
+              <SelectContent alignItemWithTrigger={false}>
+                <SelectGroup>
+                  {availableUpdaters.map(updater => (
+                    <SelectItem key={updater.type} value={updater.type}>
+                      {`${getUpdaterLabel(updater.type)}${updater.default ? ` (${t('upload_dialog.default_updater', { defaultValue: 'default' })})` : ''}`}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
               </SelectContent>
             </Select>
           </FormBlock>
         )}
         {selectedUpdater === 'tauri' && (
-          <FormBlock label={t('upload_dialog.signature', { defaultValue: 'Signature' })}>
+          <FormBlock label={t('upload_dialog.signature', { defaultValue: 'Signature' })} className="sm:col-span-2">
             <Input placeholder="Tauri signature" {...form.register('signature')} />
           </FormBlock>
         )}
-      </div>
-      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+      </FieldGroup>
+      <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2">
         <FlagCheckbox
           label={t('upload_dialog.publish', { defaultValue: 'Publish' })}
           checked={form.watch('publish')}
@@ -239,12 +269,12 @@ export function UploadVersionDialog({ open, onOpenChange, appName }: Props) {
           onChange={v => form.setValue('intermediate', v)}
         />
       </div>
-      <div className="mt-3 space-y-2">
-        <Label>{t('upload_dialog.changelog', { defaultValue: 'Changelog' })}</Label>
+      <Field className="mt-4">
+        <FieldLabel>{t('upload_dialog.changelog', { defaultValue: 'Changelog' })}</FieldLabel>
         <Textarea rows={4} placeholder={t('upload_dialog.changelog_placeholder', { defaultValue: 'What\'s new in this build…' })} {...form.register('changelog')} />
-      </div>
-      <div className="mt-3 space-y-2">
-        <Label>{t('upload_dialog.files', { defaultValue: 'Artifacts' })}</Label>
+      </Field>
+      <Field className="mt-4">
+        <FieldLabel>{t('upload_dialog.files', { defaultValue: 'Artifacts' })}</FieldLabel>
         <FileInput
           multiple
           files={files}
@@ -257,7 +287,7 @@ export function UploadVersionDialog({ open, onOpenChange, appName }: Props) {
             return `${selected.length} ${t('upload_dialog.file_count', { defaultValue: 'file(s) selected' })}`
           }}
         />
-      </div>
+      </Field>
     </EntityFormDialog>
   )
 }
@@ -266,17 +296,19 @@ function FormBlock({
   label,
   error,
   children,
+  className,
 }: {
   label: string
   error?: string
   children: React.ReactNode
+  className?: string
 }) {
   return (
-    <div className="space-y-2">
-      <Label>{label}</Label>
+    <Field data-invalid={Boolean(error)} className={className}>
+      <FieldLabel>{label}</FieldLabel>
       {children}
-      {error && <p className="text-xs text-destructive">{error}</p>}
-    </div>
+      <FieldError>{error}</FieldError>
+    </Field>
   )
 }
 
