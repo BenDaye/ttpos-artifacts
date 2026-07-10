@@ -86,6 +86,9 @@ test.describe('App detail — version management', () => {
   })
 
   test('upload version button opens upload dialog with app pre-filled', async ({ page }) => {
+    await expect(page.getByRole('button', { name: 'Build Test Package' })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Upload version' })).toBeVisible()
+
     await page.getByRole('button', { name: 'Upload version' }).click()
 
     const dialog = page.getByRole('dialog', { name: 'Upload new version' })
@@ -116,8 +119,8 @@ test.describe('App detail — version management', () => {
     const dialog = page.getByRole('dialog', { name: 'Upload new version' })
     await dialog.getByPlaceholder('1.2.3').fill('1.1.0')
     await chooseSelectOption(page, dialog, 'Channel', 'stable')
-    await chooseSelectOption(page, dialog, 'Architecture', 'arm64')
     await chooseSelectOption(page, dialog, 'Platform', 'android')
+    await chooseSelectOption(page, dialog, 'Architecture', 'arm64')
     await dialog.locator('input[type="file"]').setInputFiles({
       name: 'cashier-1.1.0.apk',
       mimeType: 'application/octet-stream',

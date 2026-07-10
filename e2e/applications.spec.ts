@@ -114,6 +114,59 @@ test.describe('Applications page', () => {
     await expect(page.getByRole('heading', { name: 'Create application' })).toBeVisible()
   })
 
+  test('build test package button triggers build and opens status sheet', async ({ page }) => {
+    const runUrl = 'https://github.com/ttpos/actions/runs/123'
+
+    await page.route('**/build/capabilities', route =>
+      route.fulfill({
+        status: 200,
+        json: {
+          platforms: ['android'],
+          packages: [
+            { package: 'pos', app_name: 'TTPOS-Cashier', platforms: ['android'] },
+          ],
+        },
+      }))
+    await page.route('**/build/trigger', (route) => {
+      expect(route.request().method()).toBe('POST')
+      expect(route.request().postDataJSON()).toEqual({
+        packages: ['pos'],
+        platforms: ['android'],
+        branch: 'new-test',
+      })
+      return route.fulfill({
+        status: 200,
+        json: {
+          correlation_id: 'build-123',
+          env: 'test',
+          build_count: 1,
+          run_url: runUrl,
+          status: 'queued',
+          targets: [
+            { package: 'pos', app_name: 'TTPOS-Cashier', platform: 'android' },
+          ],
+        },
+      })
+    })
+
+    await page.goto('/applications')
+
+    await page.getByRole('button', { name: 'Build Test Package' }).click()
+
+    const dialog = page.getByRole('dialog', { name: 'Trigger Test Build' })
+    await expect(dialog).toBeVisible()
+    await dialog.locator('label', { hasText: 'TTPOS-Cashier' }).click()
+    await dialog.getByRole('button', { name: 'Android' }).click()
+    await dialog.getByLabel('Branch').fill('new-test')
+    await dialog.getByRole('button', { name: 'Trigger build' }).click()
+
+    const statusSheet = page.getByLabel('Build Status')
+    await expect(statusSheet.getByRole('heading', { name: 'Build Status' })).toBeVisible()
+    await expect(statusSheet.getByText('TTPOS-Cashier')).toBeVisible()
+    await expect(statusSheet.getByText('android', { exact: true })).toBeVisible()
+    await expect(statusSheet.getByRole('link', { name: 'View Actions run' })).toHaveAttribute('href', runUrl)
+  })
+
   test('card view drag reorders applications and posts new order', async ({ page }) => {
     await page.goto('/applications')
     await page.getByRole('button', { name: 'Card view' }).click()

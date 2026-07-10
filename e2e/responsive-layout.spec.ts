@@ -205,14 +205,18 @@ test.describe('Responsive layout', () => {
 
       const actionGroup = page.getByTestId('applications-header-actions')
       const layoutSwitcher = page.getByTestId('layout-switcher')
+      const buildButton = page.getByRole('button', { name: 'Build Test Package' }).first()
       const newAppButton = page.getByRole('button', { name: 'New app' }).first()
 
       const actionBox = await visibleBox(actionGroup)
       const layoutBox = await visibleBox(layoutSwitcher)
-      const buttonBox = await visibleBox(newAppButton)
+      const buildBox = await visibleBox(buildButton)
+      const newAppBox = await visibleBox(newAppButton)
 
-      expect(Math.round(buttonBox.y)).toBeGreaterThanOrEqual(Math.round(layoutBox.y + layoutBox.height - 1))
-      expect(Math.round(buttonBox.width)).toBeGreaterThanOrEqual(Math.round(actionBox.width - 2))
+      expect(Math.round(buildBox.y)).toBeGreaterThanOrEqual(Math.round(layoutBox.y + layoutBox.height - 1))
+      expect(Math.round(newAppBox.y)).toBeGreaterThanOrEqual(Math.round(buildBox.y + buildBox.height - 1))
+      expect(Math.round(buildBox.width)).toBeGreaterThanOrEqual(Math.round(actionBox.width - 2))
+      expect(Math.round(newAppBox.width)).toBeGreaterThanOrEqual(Math.round(actionBox.width - 2))
       await expectNoDocumentOverflow(page)
     })
 

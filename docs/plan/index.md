@@ -38,3 +38,4 @@
 | [x] | PLAN-034 | server 对抗式评审报告与推进计划 | — |
 | [x] | PLAN-035 | 单租户焊死 + 清尸（single-owner lockdown） | REFACTOR-008 |
 | [x] | PLAN-039 | /dl 短链 per-platform latest 回退（/apps/latest opt-in artifact fallback） | BUG-017 |
+| [x] | PLAN-041 | 构建测试包入口迁移到 Applications | BUG-021 |
