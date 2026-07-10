@@ -96,6 +96,7 @@ body {
   }
 
   .dialog-size-downloads {
+    max-width: min(96vw, calc(var(--spacing) * 168));
     width: min(96vw, calc(var(--spacing) * 168));
   }
 
