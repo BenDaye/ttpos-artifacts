@@ -19,6 +19,8 @@ import {
 import { cn } from '@ttpos/ui/lib/utils'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/features/auth/auth-store'
+import { useBuildActivityStore } from '@/features/build-trigger/build-activity-store'
+import { BuildStatusController } from '@/features/build-trigger/components/build-status-controller'
 import { useUiStore } from '@/shared/stores/ui-store'
 import { AppVersionBadge } from './app-version-badge'
 import { LanguageSwitcher } from './language-switcher'
@@ -68,11 +70,13 @@ function AppShellContent({
   const { t } = useTranslation('common')
   const { setOpenMobile } = useSidebar()
   const clearAuth = useAuthStore(s => s.clear)
+  const clearBuildActivity = useBuildActivityStore(s => s.clearActiveBuild)
   const router = useRouter()
   const pathname = useRouterState({ select: s => s.location.pathname })
 
   const handleLogout = () => {
     setOpenMobile(false)
+    clearBuildActivity()
     clearAuth()
     void router.navigate({ to: '/signin' })
   }
@@ -139,6 +143,7 @@ function AppShellContent({
         <header className="sticky top-0 z-30 flex h-14 min-w-0 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur">
           <SidebarTrigger className="md:hidden" />
           <div className="min-w-0 flex-1" />
+          <BuildStatusController />
           <LanguageSwitcher />
           <ThemeSwitcher />
         </header>
