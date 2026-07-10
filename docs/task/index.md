@@ -63,3 +63,4 @@
 | [ ] | QUAL-004 | 修复 rotted 集成套件并重塑单 owner 测试 | P2 | pending |
 | [x] | BUG-018 | 修正测试构建应用端卡片与名称 | P1 | completed |
 | [x] | BUG-019 | Fix Upload version form rhythm | P1 | completed |
+| [x] | BUG-020 | 收敛版本详情弹层视觉层级 | P1 | completed |
