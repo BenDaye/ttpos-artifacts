@@ -12,7 +12,7 @@ import {
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { packageLabel } from '../constants'
+import { appDisplayName, packageAlias } from '../constants'
 import { BUILD_TIMEOUT_MS, useBuildCompletion } from '../hooks'
 
 interface Props {
@@ -100,7 +100,7 @@ export function BuildStatusSheet({
           <ul className="space-y-2">
             {results.map((result) => {
               const { target, status } = result
-              const displayName = packageLabel(target.package)
+              const displayName = appDisplayName(target.app_name, target.package)
               const key = `${target.package}-${target.platform}`
 
               return (
@@ -111,10 +111,14 @@ export function BuildStatusSheet({
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium">
                       {displayName}
-                      <span className="ml-1.5 text-muted-foreground">
-                        (
-                        {target.package}
-                        )
+                      <span className="ml-1.5 font-mono text-xs text-muted-foreground">
+                        {packageAlias(target.package)}
+                        {packageAlias(target.package) !== target.package && (
+                          <>
+                            {' / '}
+                            {target.package}
+                          </>
+                        )}
                       </span>
                     </p>
                     <p className="text-xs text-muted-foreground">{target.platform}</p>

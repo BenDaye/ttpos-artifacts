@@ -1,18 +1,17 @@
-// Presentation-only labels for the self-serve build form. The buildable set
-// (which packages, which platforms) is NOT here — it comes from the server's
-// /build/capabilities (derived from the build-*.yaml workflow matrices). These
-// maps are only Chinese display names; an unknown id falls back to the id.
+// Presentation-only aliases for the self-serve build form. The buildable set
+// and FaynoSync app names are NOT here; they come from the server's
+// /build/capabilities, derived from the build-*.yaml workflow matrices.
 
 export const MAX_BUILD_COUNT = 12
 
-const PACKAGE_LABELS: Record<string, string> = {
-  pos: '收银',
-  assistant: '助手',
-  kds: '厨显',
-  tablet: '菜牌',
-  shop: '商城',
-  qds: '叫号',
-  kiosk: '自助机',
+const PACKAGE_ALIASES: Record<string, string> = {
+  pos: 'cashier',
+  assistant: 'assistant',
+  kds: 'kitchen',
+  tablet: 'menu',
+  shop: 'shop',
+  qds: 'queue',
+  kiosk: 'kiosk',
 }
 
 const PLATFORM_LABELS: Record<string, string> = {
@@ -22,8 +21,12 @@ const PLATFORM_LABELS: Record<string, string> = {
   macos: 'macOS',
 }
 
-export function packageLabel(pkg: string): string {
-  return PACKAGE_LABELS[pkg] ?? pkg
+export function packageAlias(pkg: string): string {
+  return PACKAGE_ALIASES[pkg] ?? pkg
+}
+
+export function appDisplayName(appName: string | undefined, pkg: string): string {
+  return appName?.trim() || packageAlias(pkg)
 }
 
 export function platformLabel(platform: string): string {
