@@ -278,7 +278,7 @@ jobs:
         if: steps.check.outputs.should_run == 'true'
         run: |
           flutter --version
-          dart pub global activate melos
+          dart pub global activate melos 7.7.0
 
       - name: Melos Init
         if: steps.check.outputs.should_run == 'true'
