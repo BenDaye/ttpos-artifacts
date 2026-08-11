@@ -47,16 +47,16 @@ jobs:
         env:
           ACTOR: ${{ github.actor }}
         run: |
-          # 只有 tc(qiuxiang)和 Ben(BenDaye)可触发 env=prod 构建。
+          # 只有 Ben(BenDaye)可触发 env=prod 构建。
           # github-actions[bot] 放行: 经 auto-build 编排 / 自动 release-push 触发的子构建(其入口已在 auto-build 处把关)。
-          ALLOWED="qiuxiang BenDaye github-actions[bot]"
+          ALLOWED="BenDaye github-actions[bot]"
           for u in $ALLOWED; do
             if [ "$ACTOR" = "$u" ]; then
               echo "授权通过: $ACTOR"
               exit 0
             fi
           done
-          echo "::error::env=prod 仅允许 tc(qiuxiang) / Ben(BenDaye) 触发, 当前触发人: $ACTOR"
+          echo "::error::env=prod 仅允许 Ben(BenDaye) 触发, 当前触发人: $ACTOR"
           exit 1
 
   build:
