@@ -28,7 +28,6 @@ on:
           - kds
           - tablet
           - shop
-          - kiosk
         default: "all"
       base_url:
         description: "API基础URL"
@@ -90,7 +89,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        package: [pos, assistant, kds, tablet, shop, kiosk]
+        package: [pos, assistant, kds, tablet, shop]
         include:
           - package: pos
             app_name: TTPOS
@@ -107,9 +106,6 @@ jobs:
           - package: shop
             app_name: TTPOS-Shop
             faynosync_name: "TTPOS Shop"
-          - package: kiosk
-            app_name: TTPOS-Kiosk
-            faynosync_name: "TTPOS Kiosk"
     steps:
       - name: 检查是否需要构建此应用端
         id: check
@@ -205,7 +201,6 @@ jobs:
           IOS_KDS_PROFILE_BASE64: ${{ secrets.IOS_KDS_PROFILE_BASE64 }}
           IOS_TABLET_PROFILE_BASE64: ${{ secrets.IOS_TABLET_PROFILE_BASE64 }}
           IOS_SHOP_PROFILE_BASE64: ${{ secrets.IOS_SHOP_PROFILE_BASE64 }}
-          IOS_KIOSK_PROFILE_BASE64: ${{ secrets.IOS_KIOSK_PROFILE_BASE64 }}
         run: |
           set -e
           PROFILE_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
@@ -330,7 +325,6 @@ jobs:
           SENTRYDSN_ASSISTANT: ${{ secrets.SENTRYDSN_ASSISTANT }}
           SENTRYDSN_TABLET: ${{ secrets.SENTRYDSN_TABLET }}
           SENTRYDSN_SHOP: ${{ secrets.SENTRYDSN_SHOP }}
-          SENTRYDSN_KIOSK: ${{ secrets.SENTRYDSN_KIOSK }}
         run: |
           ENV_PATH="apps/${{ matrix.package }}/.env.${{ env.ENV_SUFFIX }}.local"
           case "${{ matrix.package }}" in
@@ -339,7 +333,6 @@ jobs:
             tablet)    DSN="$SENTRYDSN_TABLET" ;;
             kds)       DSN="$SENTRYDSN_KDS" ;;
             shop)      DSN="$SENTRYDSN_SHOP" ;;
-            kiosk)     DSN="$SENTRYDSN_KIOSK" ;;
           esac
           sed -i '' "s|^SENTRY_DSN=.*|SENTRY_DSN=${DSN}|" "$ENV_PATH"
 
