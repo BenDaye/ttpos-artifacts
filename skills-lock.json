@@ -1,11 +1,6 @@
 {
   "version": 1,
   "skills": {
-    "bkd": {
-      "source": "zzci/skills",
-      "sourceType": "github",
-      "computedHash": "204ac9b584cb27ac63dc2bbfef5b462af5125b701f4a161124eb5820a0565f77"
-    },
     "shadcn": {
       "source": "shadcn/ui",
       "sourceType": "github",
