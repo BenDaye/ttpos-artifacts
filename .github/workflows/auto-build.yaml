@@ -170,7 +170,7 @@ jobs:
             -f correlation_id=${{ inputs.correlation_id }}
 
       - name: 触发 iOS 构建
-        if: (inputs.platform == 'all' || inputs.platform == 'ios') && (inputs.package == 'all' || !contains(fromJSON('["menu","mobile","member","qds"]'), inputs.package))
+        if: (inputs.platform == 'all' || inputs.platform == 'ios') && (inputs.package == 'all' || !contains(fromJSON('["menu","mobile","member","qds","kiosk"]'), inputs.package))
         run: |
           gh workflow run build-ios.yaml \
             --repo ${{ github.repository }} \

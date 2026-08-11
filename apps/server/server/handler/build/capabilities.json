@@ -31,7 +31,6 @@
       "app_name": "TTPOS Kiosk",
       "platforms": [
         "android",
-        "ios",
         "windows",
         "macos"
       ]
