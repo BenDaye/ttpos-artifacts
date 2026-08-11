@@ -9,8 +9,8 @@
 - 先读后写：改动前确认当前分支、脏工作树、相关文件和既有实现；不要覆盖用户已有改动。
 - 不运行破坏性 Git 命令；需要提交时使用 Conventional Commit，格式为 `<type>: <中文描述>`。
 - 不创建非必要说明文件。临时产物放 `tmp/`，任务状态、计划和验收记录优先放 `docs/task/`、`docs/plan/` 或既有文档。
-- 功能、缺陷、重构和跨模块计划按 PMA 三阶段执行：investigate -> proposal -> implement；明确的文档整理或单文件配置收敛可按用户要求直接处理。
-- 开发任务使用 `/pma`：先调查，再 proposal，获批后实现，并同步 `docs/task/*.md`。后端用 `/pma-bun`，前端用 `/pma-web`，代码评审用 `/pma-cr`，复杂编排按需用 `/bkd`。
+- 功能、缺陷、重构和跨模块计划按三阶段执行：investigate -> proposal -> implement；明确的文档整理或单文件配置收敛可按用户要求直接处理。
+- 开发任务先调查，再 proposal，获批后实现，并同步 `docs/task/*.md`；复杂编排按需用 `/bkd`。
 - 不创建非必要说明文件。临时产物放 `tmp/`。
 
 ## 工具使用
@@ -37,7 +37,7 @@
 - `packages/`：`config`（共享 tsconfig 等）、`shared`（共享 TS 代码）、`ui`（`@ttpos/ui`，shadcn base-mira 共享 UI 组件包，源码直出无构建，`exports` 映射 `components/*`/`lib/*`/`hooks/*`/`globals.css`）。
 - `.github/workflows/`：TTPOS Flutter 多平台构建与 FaynoSync 分发流程（`build-dashboard.yaml` / `build-mcp.yaml` / `build-server.yaml` 对应三镜像；`build-web.yaml` 属 Flutter，勿动）。
 - `deploy/`：本项目的部署产物——app compose（接入外部 `caddy-net`）+ 贡献给主机 Caddy 的**站点片段** `deploy/Caddyfile` + splice 脚本。**Caddy 本体、全局配置、网络与别的项目路由都归主机 infra，不进本仓库**（详见 PLAN-037）；container_name/网络别名保持 `faynosync-*`，Caddy 反代依赖，勿改名。
-- `docs/`：changelog、PMA plan/task 和项目决策记录。
+- `docs/`：changelog、plan/task 文档和项目决策记录。
 
 ## 常用命令
 

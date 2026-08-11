@@ -6,31 +6,6 @@
       "sourceType": "github",
       "computedHash": "204ac9b584cb27ac63dc2bbfef5b462af5125b701f4a161124eb5820a0565f77"
     },
-    "pma": {
-      "source": "zzci/skills",
-      "sourceType": "github",
-      "computedHash": "26cf6e586d34576c795b443d0a25a90e32d9740638c6439bbfe594759ddae206"
-    },
-    "pma-bun": {
-      "source": "zzci/skills",
-      "sourceType": "github",
-      "computedHash": "e6d6e0627b6907eb686b5d31477a3c6610046d35c6048d7bb279cdaa2f775917"
-    },
-    "pma-cr": {
-      "source": "zzci/skills",
-      "sourceType": "github",
-      "computedHash": "86d5ee301a0456c2061f721c37653be8dcceae84efc688739fe6de241bb18dbe"
-    },
-    "pma-go": {
-      "source": "zzci/skills",
-      "sourceType": "github",
-      "computedHash": "0ec22acdbe31c6222b6b346dc0d9d2a2f0710a8df8866e042ee6abe7480e6b4a"
-    },
-    "pma-web": {
-      "source": "zzci/skills",
-      "sourceType": "github",
-      "computedHash": "6d5d00fdd091e7400db2720d9b5081f86c22cabd1ac920c09810bda2f12e4319"
-    },
     "shadcn": {
       "source": "shadcn/ui",
       "sourceType": "github",
