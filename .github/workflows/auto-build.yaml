@@ -125,14 +125,14 @@ jobs:
         env:
           ACTOR: ${{ github.actor }}
         run: |
-          ALLOWED="qiuxiang BenDaye"
+          ALLOWED="BenDaye"
           for u in $ALLOWED; do
             if [ "$ACTOR" = "$u" ]; then
               echo "授权通过: $ACTOR"
               exit 0
             fi
           done
-          echo "::error::env=prod 仅允许 tc(qiuxiang) / Ben(BenDaye) 手动触发总控, 当前触发人: $ACTOR"
+          echo "::error::env=prod 仅允许 Ben(BenDaye) 手动触发总控, 当前触发人: $ACTOR"
           exit 1
 
   trigger-builds:
