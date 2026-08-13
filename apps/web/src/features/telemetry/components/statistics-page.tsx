@@ -18,6 +18,14 @@ const tooltipStyle = {
   fontSize: '12px',
 } as const
 
+/**
+ * recharts 的 DefaultTooltipContent 把 itemStyle.color 硬编码成 #000，
+ * contentStyle 覆盖不到；不显式给出就会在暗色模式下变成深底黑字。
+ */
+const tooltipItemStyle = {
+  color: 'var(--popover-foreground)',
+} as const
+
 const axisTickStyle = {
   fontSize: '12px',
 } as const
@@ -173,6 +181,7 @@ function DailyTrendCard({
           <Tooltip
             cursor={{ stroke: 'var(--accent)' }}
             contentStyle={tooltipStyle}
+            itemStyle={tooltipItemStyle}
           />
           <Line
             type="monotone"
@@ -211,7 +220,7 @@ function BucketChartCard({ title, data }: { title: string, data: BucketDatum[] }
           <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
           <XAxis dataKey="name" tickLine={false} stroke="var(--muted-foreground)" tick={axisTickStyle} />
           <YAxis tickLine={false} stroke="var(--muted-foreground)" tick={axisTickStyle} allowDecimals={false} />
-          <Tooltip cursor={{ fill: 'var(--accent)' }} contentStyle={tooltipStyle} />
+          <Tooltip cursor={{ fill: 'var(--accent)' }} contentStyle={tooltipStyle} itemStyle={tooltipItemStyle} />
           <Bar dataKey="count" fill="var(--chart-1)" />
         </BarChart>
       </ResponsiveContainer>
@@ -244,7 +253,7 @@ function VersionUsageCard({
           <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
           <XAxis dataKey="name" tickLine={false} stroke="var(--muted-foreground)" tick={axisTickStyle} />
           <YAxis tickLine={false} stroke="var(--muted-foreground)" tick={axisTickStyle} allowDecimals={false} />
-          <Tooltip cursor={{ fill: 'var(--accent)' }} contentStyle={tooltipStyle} />
+          <Tooltip cursor={{ fill: 'var(--accent)' }} contentStyle={tooltipStyle} itemStyle={tooltipItemStyle} />
           <Bar dataKey="count" fill="var(--chart-2)" />
         </BarChart>
       </ResponsiveContainer>
