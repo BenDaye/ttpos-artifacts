@@ -78,9 +78,9 @@ test.describe('App detail — version management', () => {
 
   test('version filter bar exposes channel/platform/arch popovers + search', async ({ page }) => {
     await expect(page.getByPlaceholder(/Search version/i)).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Channels' })).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Platforms' })).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Architectures' })).toBeVisible()
+    await expect(page.getByRole('combobox', { name: 'Channels' })).toBeVisible()
+    await expect(page.getByRole('combobox', { name: 'Platforms' })).toBeVisible()
+    await expect(page.getByRole('combobox', { name: 'Architectures' })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Published only' })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Critical only' })).toBeVisible()
   })

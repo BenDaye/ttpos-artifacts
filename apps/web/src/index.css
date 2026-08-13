@@ -148,19 +148,4 @@ body {
       height: calc(100svh - ((var(--spacing) * 14) + (var(--spacing) * 12)));
     }
   }
-
-  .tabs-indicator {
-    left: var(--active-tab-left);
-    top: var(--active-tab-top);
-    height: var(--active-tab-height);
-    width: var(--active-tab-width);
-  }
-
-  .select-popup-available {
-    max-height: var(--available-height);
-  }
-
-  .select-popup-width {
-    width: var(--anchor-width);
-  }
 }

@@ -1,14 +1,15 @@
 import type { ReactNode } from 'react'
-import { CircleNotchIcon } from '@phosphor-icons/react'
-import { Button } from '@ttpos/ui/components/button'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@ttpos/ui/components/dialog'
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@ttpos/ui/components/alert-dialog'
+import { Spinner } from '@ttpos/ui/components/spinner'
 import { useTranslation } from 'react-i18next'
 
 export interface ConfirmDialogProps {
@@ -36,32 +37,28 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
   const { t } = useTranslation('common')
   return (
-    <Dialog open={open} onOpenChange={next => !loading && onOpenChange(next)}>
-      <DialogContent className="dialog-size-confirm">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          {description && <DialogDescription>{description}</DialogDescription>}
-        </DialogHeader>
-        <DialogFooter>
-          <Button
-            variant="ghost"
-            onClick={() => onOpenChange(false)}
-            disabled={loading}
-          >
+    <AlertDialog open={open} onOpenChange={next => !loading && onOpenChange(next)}>
+      <AlertDialogContent className="dialog-size-confirm">
+        <AlertDialogHeader>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          {description && <AlertDialogDescription>{description}</AlertDialogDescription>}
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel variant="ghost" disabled={loading}>
             {cancelLabel ?? t('actions.cancel')}
-          </Button>
-          <Button
+          </AlertDialogCancel>
+          <AlertDialogAction
             variant={destructive ? 'destructive' : 'default'}
             onClick={() => {
               void onConfirm()
             }}
             disabled={loading}
           >
-            {loading && <CircleNotchIcon className="size-4 animate-spin" />}
+            {loading && <Spinner />}
             {confirmLabel ?? t('actions.confirm')}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   )
 }
