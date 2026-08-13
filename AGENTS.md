@@ -21,8 +21,8 @@
 
 - 交互组件使用成熟 headless UI；不要手写 focus trap、scroll lock、ARIA、键盘导航。
 - 视觉以 **shadcn base-mira + taupe 主题（preset b5x2IxUsi）**为准（`packages/ui/src/styles/globals.css` 承载主题变量，OKLCH 紫色系）；正文字体为 **JetBrains Mono 全站等宽**（`apps/web/src/index.css` 的 `html { font-mono }` 承载，`--font-mono`/`--font-heading` 定义在 globals.css）；`DESIGN.md` 已退役，不再作为视觉事实来源。
-- UI 组件统一从 `packages/ui`（`@ttpos/ui`）引入，alias `@ttpos/ui/components/*`；新组件优先用 `bunx shadcn@latest add` 落到 `packages/ui`，保持 `style=base-mira`、`iconLibrary=phosphor`、`baseColor=taupe` 与双端 `components.json` 一致。图标统一用 `@phosphor-icons/react`（`*Icon` 后缀别名），**禁止再引入 `lucide-react`**。
-- UI 基座保持 `@base-ui-components/react`（headless primitives），**禁止引入 `radix-ui` 依赖**。
+- UI 组件统一从 `packages/ui`（`@ttpos/ui`）引入，alias `@ttpos/ui/components/*`；新组件优先用 `bunx shadcn@latest add -c packages/ui` 落到 `packages/ui`，保持 `style=base-mira`、`iconLibrary=phosphor`、`baseColor=taupe` 与双端 `components.json` 一致。**不要在 `apps/web` 下跑 shadcn 命令**：`apps/web/components.json` 的 `tailwind.css` 指向不含主题变量的 `src/index.css`，shadcn 会回退解析出错误 preset（neutral/inter，非 b5x2IxUsi）并把变量写错地方。图标统一用 `@phosphor-icons/react`（`*Icon` 后缀别名），**禁止再引入 `lucide-react`**。
+- UI 基座保持 `@base-ui/react`（headless primitives，v1 起由 `@base-ui-components/react` 改名），**禁止引入 `radix-ui` 依赖**。
 
 ## 仓库地图
 

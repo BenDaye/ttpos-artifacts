@@ -197,6 +197,52 @@ func TestShortLatestDownloadKnownNameWithoutArtifactIsNotFound(t *testing.T) {
 	assert.Equal(t, "no-store", w.Header().Get("Cloudflare-CDN-Cache-Control"))
 }
 
+// shortLinkTargetRepoStub also implements the artifact-latest repository
+// method, which shortLinkRepoStub deliberately does not. The opt-in in
+// info.FetchLatestVersionOfApp is guarded by a type assertion, so only a stub
+// carrying both methods can prove /dl still elects the artifact-latest way.
+type shortLinkTargetRepoStub struct {
+	shortLinkRepoStub
+	targetCalled bool
+	legacyCalled bool
+	gotChannel   string
+	gotPlatform  string
+	gotArch      string
+	gotPackage   string
+}
+
+func (r *shortLinkTargetRepoStub) FetchLatestVersionOfApp(string, string, context.Context, string) ([]*model.SpecificAppWithoutIDs, error) {
+	r.legacyCalled = true
+	return r.apps, r.fetchErr
+}
+
+func (r *shortLinkTargetRepoStub) FetchLatestVersionOfAppForTarget(_, channel, platform, arch, pkg string, _ context.Context, _ string) ([]*model.SpecificAppWithoutIDs, error) {
+	r.targetCalled = true
+	r.gotChannel, r.gotPlatform, r.gotArch, r.gotPackage = channel, platform, arch, pkg
+	return r.apps, r.fetchErr
+}
+
+// TestShortLatestDownloadElectsArtifactLatest is the regression guard for
+// BUG-017. /dl must keep asking for "newest version that actually ships this
+// artifact"; if the resolve parameter or the target triple ever stops reaching
+// the query, a partially released version silently 404s the platforms it
+// skipped again — and nothing else in the system would notice.
+func TestShortLatestDownloadElectsArtifactLatest(t *testing.T) {
+	repo := &shortLinkTargetRepoStub{
+		shortLinkRepoStub: shortLinkRepoStub{appName: "TTPOS", apps: shortLinkAppFixture()},
+	}
+
+	w := performShortLinkRequest(t, repo, "cashier.apk")
+
+	assert.Equal(t, http.StatusFound, w.Code)
+	assert.True(t, repo.targetCalled, "/dl must use the artifact-latest election")
+	assert.False(t, repo.legacyCalled, "/dl must not fall back to the legacy election")
+	assert.Equal(t, "prod", repo.gotChannel)
+	assert.Equal(t, "android", repo.gotPlatform)
+	assert.Equal(t, "arm64", repo.gotArch)
+	assert.Equal(t, "apk", repo.gotPackage)
+}
+
 func TestShortLatestDownloadResolveFailureIsServerError(t *testing.T) {
 	repo := &shortLinkRepoStub{resolveErr: errors.New("mongo is down")}
 

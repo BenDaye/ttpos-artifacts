@@ -69,4 +69,4 @@
 | [x] | BUG-020 | 收敛版本详情弹层视觉层级 | P1 | completed |
 | [x] | BUG-021 | 构建测试包入口迁移到 Applications | P1 | completed |
 | [x] | BUG-022 | Keep build status across private routes | P1 | completed |
-| [x] | ENH-020 | 短链数据化：新增 app 后短链自动可用 | P1 | implemented |
+| [x] | ENH-020 | 短链数据化：新增 app 后短链自动可用 | P1 | deployed |
