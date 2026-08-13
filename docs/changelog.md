@@ -1,5 +1,15 @@
 # 变更日志
 
+## 2026-08-13 [auto-build]
+
+下线 Dashboard 自助构建触发，并修复 iOS 无法发到 TestFlight：
+
+- **下线自助构建触发功能**：该功能 `env` 被服务端常量锁死为 test，而实际发版场景是 prod，两者不相交；test/dev 构建由 PM/QA 直接用 gh api 完成，入口无真实用户。删除 `apps/server/server/handler/build/`（含 `/build/trigger`、`/build/capabilities` 路由与限流配置）、`apps/web/src/features/build-trigger/`、相关 i18n 文案与 e2e 用例，以及 `scripts/gen-build-capabilities.ts` 与其 `gen:build-caps` / `check:build-caps` 脚本。
+- **删除 `dispatch.yaml`**：`repository_dispatch` 入口近四个月零运行记录。它还使 `auto-build` 的 prod 触发人白名单被跳过——白名单条件限定 `github.event_name == 'workflow_dispatch'`，而该文件走 `workflow_call`，等于为一个从未启用的功能保留了绕过通道。一并删除 `auto-build` 的 `workflow_call` 段（唯一调用方即该文件，留着就是死入口），prod 白名单改为无条件生效。
+- **接通 iOS TestFlight 分发**：`build-ios.yaml` 的 TestFlight 上传步一直存在，但受 `distribute_appstore`（默认 false）门控，而 `auto-build` 从未传过该参数，导致经总控触发的 iOS 构建永远跳过上传，却仍向 FaynoSync 写入标注 `distribute: appstore` 的占位版本元数据——看起来发了，实际没发。`auto-build` 新增该 input（默认 true）并透传给 iOS 触发步；因跨 workflow 经 API 传值时 boolean 会退化为字符串，`build-ios` 的两处条件改为同时接受 `true` 与 `'true'`。
+- 未改动：`package` / `platform` 仍是单选 choice，`concurrency` 分组、`correlation_id` 链路与其余 4 个 `build-*.yaml` 保持原样。
+- 验证：`bun run lint`、web `typecheck` + `test`（11 文件 44 用例）、`test:e2e`（90 用例）、server `go build` / `go vet` / 单元包 `go test`、全部 workflow 的 YAML 解析与 `actionlint` 均通过。workflow 的运行时行为（TestFlight 是否真的上传）需实跑验证。
+
 ## 2026-07-10 [BUG-022]
 
 构建状态跨页面保留：
