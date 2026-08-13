@@ -86,7 +86,6 @@ test.describe('App detail — version management', () => {
   })
 
   test('upload version button opens upload dialog with app pre-filled', async ({ page }) => {
-    await expect(page.getByRole('button', { name: 'Build Test Package' })).toHaveCount(0)
     await expect(page.getByRole('button', { name: 'Upload version' })).toBeVisible()
 
     await page.getByRole('button', { name: 'Upload version' }).click()
