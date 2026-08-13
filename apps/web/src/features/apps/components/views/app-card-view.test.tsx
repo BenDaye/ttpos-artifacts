@@ -11,7 +11,7 @@ vi.mock('react-i18next', () => ({
 }))
 
 function makeApp(id: string, name: string): AppSummary {
-  return { ID: id, AppName: name, Logo: '', Description: '', Sort: 0, Updated_at: '2025-01-01T00:00:00Z' }
+  return { ID: id, AppName: name, Logo: '', Description: '', ShortLink: '', Sort: 0, Updated_at: '2025-01-01T00:00:00Z' }
 }
 
 const apps = [makeApp('a', 'App A'), makeApp('b', 'App B'), makeApp('c', 'App C')]

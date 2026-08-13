@@ -24,6 +24,7 @@ export function AppFormDialog({ open, onOpenChange, app }: Props) {
   const mutation = editing ? update : create
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
+  const [shortLink, setShortLink] = useState('')
   const [logo, setLogo] = useState<File | null>(null)
   const [isPrivate, setIsPrivate] = useState(false)
 
@@ -44,6 +45,7 @@ export function AppFormDialog({ open, onOpenChange, app }: Props) {
     seededKeyRef.current = seedKey
     setName(app?.AppName ?? '')
     setDescription(app?.Description ?? '')
+    setShortLink(app?.ShortLink ?? '')
     setLogo(null)
     setIsPrivate(false)
   }, [open, app])
@@ -61,6 +63,7 @@ export function AppFormDialog({ open, onOpenChange, app }: Props) {
           id: app.ID,
           app: trimmed,
           description: description.trim(),
+          short_link: shortLink.trim(),
           logo,
         })
       }
@@ -68,6 +71,7 @@ export function AppFormDialog({ open, onOpenChange, app }: Props) {
         await create.mutateAsync({
           app: trimmed,
           description: description.trim(),
+          short_link: shortLink.trim(),
           private: isPrivate,
           logo,
         })
@@ -111,6 +115,22 @@ export function AppFormDialog({ open, onOpenChange, app }: Props) {
             value={description}
             onChange={e => setDescription(e.target.value)}
           />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="app-short-link">
+            {t('form.short_link', { defaultValue: 'Download short link (optional)' })}
+          </Label>
+          <Input
+            id="app-short-link"
+            value={shortLink}
+            onChange={e => setShortLink(e.target.value)}
+            placeholder="my-app"
+          />
+          <p className="text-xs text-muted-foreground">
+            {t('form.short_link_hint', {
+              defaultValue: 'Used as /dl/<name>.apk, .exe and .dmg. Lowercase letters, digits and hyphens; leave empty to use the app name.',
+            })}
+          </p>
         </div>
         <div className="space-y-2">
           <Label htmlFor="app-logo">{t('form.logo', { defaultValue: 'Logo (optional)' })}</Label>

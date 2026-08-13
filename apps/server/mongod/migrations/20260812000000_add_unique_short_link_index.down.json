@@ -1,0 +1,6 @@
+[
+  {
+    "dropIndexes": "apps_meta",
+    "index": "unique_owner_short_link"
+  }
+]

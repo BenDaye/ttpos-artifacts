@@ -52,6 +52,7 @@
 | [x] | ENH-016 | MCP server 增加 Streamable HTTP(SSE)双模并补部署交付物 | P2 | completed |
 | [ ] | ENH-017 | CI 改用 turbo --affected 替代手写 paths 过滤 | P3 | pending |
 | [ ] | ENH-018 | Docker 构建改用 turbo prune 剪枝上下文 | P3 | pending |
+| [x] | ENH-019 | 给 Caddy splice 脚本补漂移门（--check） | P1 | completed |
 | [x] | BUG-015 | 修复 FaynoSync CI 重传覆盖失败 | P1 | completed |
 | [x] | BUG-016 | 删光构建物后版本显示 Unknown platform/architecture | P2 | completed |
 | [x] | BUG-017 | /dl 短链在部分平台发版时对缺失平台 404 | P1 | deployed |
@@ -68,3 +69,4 @@
 | [x] | BUG-020 | 收敛版本详情弹层视觉层级 | P1 | completed |
 | [x] | BUG-021 | 构建测试包入口迁移到 Applications | P1 | completed |
 | [x] | BUG-022 | Keep build status across private routes | P1 | completed |
+| [x] | ENH-020 | 短链数据化：新增 app 后短链自动可用 | P1 | implemented |

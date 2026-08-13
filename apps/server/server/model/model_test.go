@@ -42,8 +42,9 @@ func assertKeys(t *testing.T, name string, got, want []string) {
 
 func TestAppJSONContract(t *testing.T) {
 	// Owner/Private 已由 SEC-007 收紧为 json:"-",不再进 wire;Tuf 仍按默认 key 输出。
+	// ShortLink 由 ENH-020 追加:dashboard 要据它渲染 app 的 /dl 短链,必须进 wire。
 	assertKeys(t, "App", topLevelKeys(t, App{}),
-		[]string{"ID", "AppName", "Logo", "Tuf", "Description", "Updated_at", "Sort"})
+		[]string{"ID", "AppName", "Logo", "Tuf", "Description", "ShortLink", "Updated_at", "Sort"})
 }
 
 func TestChannelJSONContract(t *testing.T) {

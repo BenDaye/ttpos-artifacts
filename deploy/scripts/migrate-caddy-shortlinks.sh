@@ -31,6 +31,10 @@ Options:
                               Default: /etc/caddy/Caddyfile
   --apply                     Backup target and replace it with the candidate.
   --reload                    Reload Caddy after --apply.
+  --check                     Drift gate: exit 2 when the target differs from
+                              the candidate on any functional line. Whole-line
+                              comments and blank lines are ignored. Never
+                              writes; cannot be combined with --apply.
   -h, --help                  Show this help.
 
 Examples:
@@ -59,6 +63,17 @@ Examples:
     --api-upstream api:9000 \
     --dashboard-upstream dashboard:3000 \
     --mcp-upstream none
+
+  # Drift gate for cron/CI. Fetch the live host file first, then assert it still
+  # matches this repo. Exits 2 (not 0) when it has drifted, so the caller fails.
+  ./deploy/scripts/migrate-caddy-shortlinks.sh \
+    --source-site update.ttpos.dev \
+    --target tmp/prod-host.Caddyfile \
+    --site http://update.ttpos.com \
+    --api-upstream faynosync-prod-api:9000 \
+    --dashboard-upstream faynosync-prod-dashboard:3000 \
+    --mcp-upstream none \
+    --validate none --check
 USAGE
 }
 
@@ -82,6 +97,7 @@ caddy_container="${CADDY_CONTAINER:-caddy}"
 container_config="${CONTAINER_CADDYFILE:-/etc/caddy/Caddyfile}"
 apply=0
 reload=0
+check=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -141,6 +157,10 @@ while [[ $# -gt 0 ]]; do
       reload=1
       shift
       ;;
+    --check)
+      check=1
+      shift
+      ;;
     -h|--help)
       usage
       exit 0
@@ -172,6 +192,10 @@ esac
 
 if [[ $reload -eq 1 && $apply -ne 1 ]]; then
   die "--reload requires --apply"
+fi
+
+if [[ $check -eq 1 && $apply -eq 1 ]]; then
+  die "--check cannot be combined with --apply"
 fi
 
 if [[ -z "$output_path" ]]; then
@@ -405,6 +429,49 @@ if cmp -s "$target_caddyfile" "$output_path"; then
   echo "result: target already matches candidate"
 else
   echo "result: candidate differs from target"
+fi
+
+if [[ $check -eq 1 ]]; then
+  # Drift gate. Whole-line comments carry no Caddy behavior and legitimately
+  # differ per host (prod's /dl block was patched by hand and never picked up
+  # this repo's explanatory comments), so a byte-exact gate would fail from day
+  # one and get ignored. Compare functional lines only.
+  drift="$(python3 - "$target_caddyfile" "$output_path" <<'PY'
+from __future__ import annotations
+
+import difflib
+import sys
+from pathlib import Path
+
+
+def functional(path: str) -> list[str]:
+    lines = []
+    for raw in Path(path).read_text().splitlines():
+        stripped = raw.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        lines.append(stripped)
+    return lines
+
+
+target, candidate = sys.argv[1], sys.argv[2]
+diff = difflib.unified_diff(
+    functional(target),
+    functional(candidate),
+    fromfile="target",
+    tofile="candidate",
+    lineterm="",
+)
+sys.stdout.write("\n".join(diff))
+PY
+)"
+  if [[ -n "$drift" ]]; then
+    echo "check: FAILED — target has drifted from the repo-derived candidate"
+    printf '%s\n' "$drift"
+    exit 2
+  fi
+  echo "check: OK — target matches the candidate on every functional line"
+  exit 0
 fi
 
 if [[ $apply -ne 1 ]]; then

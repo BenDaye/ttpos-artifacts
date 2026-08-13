@@ -600,15 +600,23 @@ curl -X GET --location 'http://localhost:9000/apps/latest?app_name=secondapp&cha
 
 ### Short Latest Download Shortcut
 
-This is the public latest download shortcut. In production deployment, Caddy owns the public `/dl/*` entry point and rewrites known aliases to `/apps/latest`; FaynoSync still owns the latest artifact lookup and redirects directly to the latest artifact download URL. The Go API no longer registers a `/dl/:target` handler.
+This is the public latest download shortcut, served by the API itself — the reverse proxy no longer holds a short link table (ENH-020).
 
-`GET /dl/<app_alias>.<package>`
+`GET /dl/<short_link>.<package>`
 
-App aliases: `cashier -> TTPOS`, `assistant -> TTPOS Go`, `menu -> TTPOS Menu`, `kitchen -> TTPOS Kitchen`, and `shop -> TTPOS Shop`.
+The name resolves against each app's `short_link` field, falling back to the app identifier when the app has no short link configured, so publishing a short link is an app edit rather than a proxy config change. The target is lower-cased before lookup, so printed URLs are case-insensitive, and split on its **last** dot.
 
-Package targets: `apk -> android/arm64/apk`, `exe -> windows/amd64/exe`, and `dmg -> macos/arm64/dmg`.
+Package targets: `apk -> android/arm64/apk`, `exe -> windows/amd64/exe`, and `dmg -> macos/arm64/dmg`. The channel is fixed to `prod`.
 
-When the aliases are valid and exactly one artifact matches, the endpoint returns `302 Found` with `Location` set to the final `/download?key=...` URL. Successful redirects include `Cloudflare-CDN-Cache-Control: public, max-age=300` and `Cache-Control: no-cache`. In production, failed `/dl/*` responses must be `no-store` and must not include public/max-age cache headers.
+Version election uses the `/apps/latest` `resolve=artifact-latest` semantics, so a partially released version resolves to the newest version that actually ships the requested artifact instead of 404ing the platforms it skipped.
+
+Responses:
+
+- `302 Found` — `Location` is the final artifact download URL, with `Cloudflare-CDN-Cache-Control: public, max-age=300` and `Cache-Control: no-cache`.
+- `400 Bad Request` — unknown short link name, or an extension outside the table above.
+- `404 Not Found` — the name resolves to an app, but no published version ships a matching artifact.
+
+Every non-2xx/3xx response carries `Cache-Control: no-store` and `Cloudflare-CDN-Cache-Control: no-store` so a transient dead end is never cached at the edge.
 
 ###### Short Request:
 ```

@@ -35,6 +35,8 @@ export interface AppSummary {
   AppName: string
   Logo: string
   Description: string
+  // 公开下载短链的名字，对应 /dl/<ShortLink>.<ext>；留空表示未设置
+  ShortLink: string
   // 排序权重，后端按该值升序返回；拖拽排序后全量重写
   Sort: number
   Updated_at: string

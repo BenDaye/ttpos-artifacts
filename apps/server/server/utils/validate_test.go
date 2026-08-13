@@ -114,3 +114,47 @@ func TestIsValidArchName(t *testing.T) {
 		}
 	}
 }
+
+func TestIsValidShortLink(t *testing.T) {
+	valid := []string{
+		"cashier",
+		"assistant",
+		"my-app",
+		"app2",
+		"a",
+	}
+	for _, v := range valid {
+		if !IsValidShortLink(v) {
+			t.Errorf("expected %q to be a valid short link", v)
+		}
+	}
+
+	invalid := []string{
+		"",          // empty means "not configured"; callers must skip validation
+		"Cashier",   // uppercase never matches the lower-cased /dl lookup
+		"my app",    // spaces are not URL-safe here
+		"my_app",    // underscore is not in the allowed set
+		"my.app",    // a dot would make the /dl extension ambiguous
+		"cashier/x", // path separators would escape the route segment
+	}
+	for _, v := range invalid {
+		if IsValidShortLink(v) {
+			t.Errorf("expected %q to be an invalid short link", v)
+		}
+	}
+}
+
+func TestNormalizeShortLink(t *testing.T) {
+	cases := map[string]string{
+		"  Cashier ": "cashier",
+		"CASHIER":    "cashier",
+		"cashier":    "cashier",
+		"   ":        "",
+		"":           "",
+	}
+	for input, want := range cases {
+		if got := NormalizeShortLink(input); got != want {
+			t.Errorf("NormalizeShortLink(%q) = %q, want %q", input, got, want)
+		}
+	}
+}

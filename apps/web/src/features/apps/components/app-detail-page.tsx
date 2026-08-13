@@ -1,5 +1,5 @@
 import type { AppVersion, ArtifactEntry } from '@ttpos/shared'
-import { ArrowLeftIcon, BookOpenIcon, CubeIcon, DownloadSimpleIcon, FilePlusIcon, PencilSimpleIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react'
+import { ArrowLeftIcon, BookOpenIcon, CopyIcon, CubeIcon, DownloadSimpleIcon, FilePlusIcon, PencilSimpleIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react'
 import { Link } from '@tanstack/react-router'
 import { Badge } from '@ttpos/ui/components/badge'
 import { Button, buttonVariants } from '@ttpos/ui/components/button'
@@ -15,9 +15,11 @@ import { EmptyState } from '@/shared/components/empty-state'
 import { ErrorState } from '@/shared/components/error-state'
 import { PageHeader } from '@/shared/components/page-header'
 import { useSelectedEntity } from '@/shared/hooks/use-selected-entity'
+import { env } from '@/shared/lib/env'
 import { formatDateTime } from '@/shared/lib/format'
 import { appsApi, buildDeleteArtifactPayload } from '../api'
 import {
+  useAppsListQuery,
   useAppVersionsQuery,
   useDeleteArtifactMutation,
   useDeleteVersionMutation,
@@ -156,6 +158,8 @@ export function AppDetailPage({ appName }: { appName: string }) {
         )}
       />
 
+      <AppShortLinks appName={appName} />
+
       <VersionFilterBar value={filters} onChange={setFilters} />
 
       {versionsQuery.isPending && (
@@ -239,6 +243,80 @@ export function AppDetailPage({ appName }: { appName: string }) {
         onConfirm={onDeleteArtifact}
       />
     </div>
+  )
+}
+
+// SHORT_LINK_EXTENSIONS mirrors the extension table the API's /dl route owns.
+// Keep the two in sync: an extension listed here but unknown to the server
+// renders a link that always 400s.
+const SHORT_LINK_EXTENSIONS = ['apk', 'exe', 'dmg'] as const
+
+// AppShortLinks surfaces the app's public download links on the app's own page.
+// They are derived, never configured here — that is the point of storing the
+// name on the app instead of in a separate table, so nobody has to remember a
+// second place to look.
+function AppShortLinks({ appName }: { appName: string }) {
+  const { t } = useTranslation(['apps', 'common'])
+  const appsQuery = useAppsListQuery()
+  const app = appsQuery.data?.apps.find(item => item.AppName === appName)
+  const base = env.API_URL.replace(/\/+$/, '')
+  const slug = app?.ShortLink?.trim()
+
+  if (!app || !base) {
+    return null
+  }
+
+  const onCopy = async (url: string) => {
+    try {
+      await navigator.clipboard.writeText(url)
+      toast.success(t('short_links.copied', { defaultValue: 'Link copied' }))
+    }
+    catch {
+      toast.error(t('common:states.error'))
+    }
+  }
+
+  return (
+    <Card>
+      <CardContent className="space-y-3">
+        <div className="space-y-1">
+          <p className="text-sm font-medium">
+            {t('short_links.title', { defaultValue: 'Download short links' })}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {slug
+              ? t('short_links.hint', {
+                  defaultValue: 'Always resolve to the latest published build for that platform.',
+                })
+              : t('short_links.unset', {
+                  defaultValue: 'No short link name set. Edit the application to add one.',
+                })}
+          </p>
+        </div>
+        {slug && (
+          <ul className="grid gap-2 sm:grid-cols-3">
+            {SHORT_LINK_EXTENSIONS.map((extension) => {
+              const url = `${base}/dl/${slug}.${extension}`
+              return (
+                <li key={extension} className="flex min-w-0 items-center gap-2">
+                  <code className="min-w-0 flex-1 truncate rounded bg-muted px-2 py-1 text-xs">
+                    {`/dl/${slug}.${extension}`}
+                  </code>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    aria-label={t('short_links.copy', { defaultValue: 'Copy link' })}
+                    onClick={() => onCopy(url)}
+                  >
+                    <CopyIcon className="size-4" />
+                  </Button>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
   )
 }
 

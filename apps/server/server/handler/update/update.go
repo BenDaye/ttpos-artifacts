@@ -131,8 +131,26 @@ func UpdateItem(c *gin.Context, repository db.AppRepository, itemType string) {
 			}
 		}
 		description := params["description"]
+		shortLink := shortLinkUpdate(params)
+		if shortLink != nil && *shortLink != "" {
+			if !utils.IsValidShortLink(*shortLink) {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "invalid short link: use lowercase letters, digits and hyphens only"})
+				return
+			}
+			takenBy, err := repository.ShortLinkTakenBy(*shortLink, owner, ctx)
+			if err != nil {
+				logrus.Error(err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to validate short link"})
+				return
+			}
+			// 允许本 app 保持自己的短链名,只拒绝被别的 app 占用的。
+			if !takenBy.IsZero() && takenBy != objectID {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "short link is already used by another app"})
+				return
+			}
+		}
 		tuf := utils.GetBoolParam(params["tuf"])
-		result, resultError = repository.UpdateApp(objectID, paramValue, logoLink, tuf, description, owner, ctx)
+		result, resultError = repository.UpdateApp(objectID, paramValue, logoLink, tuf, description, shortLink, owner, ctx)
 	default:
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid item type"})
 		return
@@ -319,4 +337,22 @@ func UpdateSpecificApp(c *gin.Context, repository db.AppRepository, db *mongo.Da
 	}
 
 	c.JSON(http.StatusOK, gin.H{"updatedResult.Updated": result})
+}
+
+// shortLinkUpdate reads the app update payload's short_link field, telling
+// "caller did not mention it" apart from "caller wants it cleared".
+//
+// nil  — the key is absent; UpdateApp leaves the stored value alone.
+// ""   — the key is present but empty; the caller is clearing the short link.
+// else — the normalized name to store.
+//
+// The distinction matters because a short link is a public URL already printed
+// on QR codes: a partial update that happens to omit the field must not wipe it.
+func shortLinkUpdate(params map[string]string) *string {
+	raw, provided := params["short_link"]
+	if !provided {
+		return nil
+	}
+	normalized := utils.NormalizeShortLink(raw)
+	return &normalized
 }

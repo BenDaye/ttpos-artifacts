@@ -95,13 +95,19 @@ func (m *mockAppRepoForGenerate) ListArchs(ctx context.Context, owner string) ([
 func (m *mockAppRepoForGenerate) DeleteArch(id primitive.ObjectID, owner string, ctx context.Context) (int64, error) {
 	return 0, nil
 }
-func (m *mockAppRepoForGenerate) CreateApp(appName string, logo string, description string, private bool, tuf bool, owner string, ctx context.Context) (interface{}, error) {
+func (m *mockAppRepoForGenerate) CreateApp(appName string, logo string, description string, shortLink string, private bool, tuf bool, owner string, ctx context.Context) (interface{}, error) {
 	return nil, nil
+}
+func (m *mockAppRepoForGenerate) ResolveShortLinkApp(shortLink string, owner string, ctx context.Context) (string, error) {
+	return "", nil
+}
+func (m *mockAppRepoForGenerate) ShortLinkTakenBy(shortLink string, owner string, ctx context.Context) (primitive.ObjectID, error) {
+	return primitive.NilObjectID, nil
 }
 func (m *mockAppRepoForGenerate) DeleteApp(id primitive.ObjectID, owner string, ctx context.Context) (int64, error) {
 	return 0, nil
 }
-func (m *mockAppRepoForGenerate) UpdateApp(id primitive.ObjectID, appName string, logo string, tuf bool, description string, owner string, ctx context.Context) (interface{}, error) {
+func (m *mockAppRepoForGenerate) UpdateApp(id primitive.ObjectID, appName string, logo string, tuf bool, description string, shortLink *string, owner string, ctx context.Context) (interface{}, error) {
 	return nil, nil
 }
 func (m *mockAppRepoForGenerate) UpdateChannel(id primitive.ObjectID, paramValue string, owner string, ctx context.Context) (interface{}, error) {

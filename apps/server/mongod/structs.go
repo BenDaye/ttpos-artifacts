@@ -34,10 +34,15 @@ type AppRepository interface {
 	CreateArch(archName string, owner string, ctx context.Context) (interface{}, error)
 	ListArchs(ctx context.Context, owner string) ([]*model.Arch, error)
 	DeleteArch(id primitive.ObjectID, owner string, ctx context.Context) (int64, error)
-	CreateApp(appName string, logo string, description string, private bool, tuf bool, owner string, ctx context.Context) (interface{}, error)
+	CreateApp(appName string, logo string, description string, shortLink string, private bool, tuf bool, owner string, ctx context.Context) (interface{}, error)
+	ResolveShortLinkApp(shortLink string, owner string, ctx context.Context) (string, error)
+	ShortLinkTakenBy(shortLink string, owner string, ctx context.Context) (primitive.ObjectID, error)
 	ListApps(ctx context.Context, owner string) ([]*model.App, error)
 	DeleteApp(id primitive.ObjectID, owner string, ctx context.Context) (int64, error)
-	UpdateApp(id primitive.ObjectID, appName string, logo string, tuf bool, description string, owner string, ctx context.Context) (interface{}, error)
+	// shortLink 为 nil 表示调用方没提供该字段,保持库里原值不动;非 nil(含空串)才写入。
+	// 空串是「清空短链」的合法意图,必须与「没传」区分开——短链是已印在物料上的
+	// 公开 URL,不能被一次漏传字段的局部更新静默抹掉。
+	UpdateApp(id primitive.ObjectID, appName string, logo string, tuf bool, description string, shortLink *string, owner string, ctx context.Context) (interface{}, error)
 	UpdateChannel(id primitive.ObjectID, paramValue string, owner string, ctx context.Context) (interface{}, error)
 	UpdatePlatform(id primitive.ObjectID, platformName string, updaters []model.Updater, owner string, ctx context.Context) (interface{}, error)
 	UpdateArch(id primitive.ObjectID, paramValue string, owner string, ctx context.Context) (interface{}, error)

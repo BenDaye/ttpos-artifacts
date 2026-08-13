@@ -81,7 +81,9 @@
     "description_label": "描述",
     "logo": "Logo（可选）",
     "private": "私有（下载需鉴权）",
-    "tuf": "启用 TUF 元数据"
+    "tuf": "启用 TUF 元数据",
+    "short_link": "下载短链名（可选）",
+    "short_link_hint": "用作 /dl/<名字>.apk、.exe、.dmg。仅小写字母、数字和连字符；留空则使用应用名。"
   },
   "empty": {
     "title": "暂无应用",
@@ -156,5 +158,12 @@
     "channel_required": "请选择渠道。",
     "platform_required": "请选择平台。",
     "arch_required": "请选择架构。"
+  },
+  "short_links": {
+    "title": "下载短链",
+    "hint": "始终指向该平台最新已发布的版本。",
+    "unset": "尚未设置短链名，编辑应用即可添加。",
+    "copy": "复制链接",
+    "copied": "链接已复制"
   }
 }

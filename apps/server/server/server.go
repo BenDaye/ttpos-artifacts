@@ -134,6 +134,8 @@ func StartServer(config *viper.Viper, flags map[string]interface{}) {
 
 	router.GET("/checkVersion", handler.FindLatestVersion)
 	router.GET("/apps/latest", handler.FetchLatestVersionOfApp)
+	// 公开下载短链。映射由每个 app 的 short_link 字段决定,不再是反代里的静态表。
+	router.GET("/dl/:target", handler.ShortLatestDownload)
 	loginLimiter := utils.NewIPRateLimiter(rate.Every(loginRateInterval), loginRateBurst)
 	signupLimiter := utils.NewIPRateLimiter(rate.Every(signupRateInterval), signupRateBurst)
 	router.POST("/signup", utils.RateLimitMiddleware(signupLimiter), handler.SignUp)
