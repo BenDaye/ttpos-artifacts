@@ -67,7 +67,7 @@ export function VersionFilterBar({ value, onChange }: Props) {
           value={value.search}
           onChange={e => onChange({ ...value, search: e.target.value })}
           placeholder={t('filter.search_placeholder', { defaultValue: 'Search version…' })}
-          className="h-8 pl-8 text-sm"
+          className="pl-8"
         />
       </div>
       <div className="flex max-w-full min-w-0 gap-2 overflow-x-auto pb-1 sm:contents" data-testid="version-filter-controls">
@@ -100,8 +100,8 @@ export function VersionFilterBar({ value, onChange }: Props) {
           onClick={() => onChange({ ...value, criticalOnly: !value.criticalOnly })}
         />
         {totalActive > 0 && (
-          <Button variant="ghost" size="sm" className="shrink-0" onClick={reset}>
-            <XIcon className="size-3.5" />
+          <Button variant="ghost" className="shrink-0" onClick={reset}>
+            <XIcon />
             {t('filter.clear', { defaultValue: 'Clear' })}
             {' '}
             (
@@ -127,8 +127,8 @@ function MultiSelectFilter({ label, options, selected, onChange }: MultiProps) {
     <Combobox items={options} multiple value={selected} onValueChange={onChange}>
       <ComboboxTrigger
         render={(
-          <Button variant="outline" size="sm" aria-label={label} className="h-8 max-w-full shrink-0 gap-1.5">
-            <FunnelIcon className="size-3.5" />
+          <Button variant="outline" aria-label={label} className="max-w-full shrink-0">
+            <FunnelIcon />
             <span className="min-w-0 truncate">{label}</span>
             {selected.length > 0 && (
               <Badge variant="secondary" className="px-2 py-0 text-xs">{selected.length}</Badge>
@@ -158,8 +158,7 @@ function ToggleChip({ label, active, onClick }: { label: string, active: boolean
   return (
     <Button
       variant={active ? 'default' : 'outline'}
-      size="sm"
-      className="h-8 shrink-0"
+      className="shrink-0"
       onClick={onClick}
       aria-pressed={active}
     >

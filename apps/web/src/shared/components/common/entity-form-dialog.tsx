@@ -60,7 +60,7 @@ export function EntityFormDialog({
               {cancelLabel ?? t('actions.cancel')}
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading && <CircleNotchIcon className="size-4 animate-spin" />}
+              {loading && <CircleNotchIcon className="animate-spin" />}
               {submitLabel ?? t('actions.save')}
             </Button>
           </DialogFooter>

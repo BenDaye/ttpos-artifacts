@@ -111,23 +111,19 @@ export function DownloadArtifactsDialog({
                       <div className="flex shrink-0 items-center gap-1">
                         <Button
                           variant="outline"
-                          size="sm"
-                          className="h-7 px-2.5 text-xs"
                           disabled={resolving === a.link}
                           onClick={() => onCopy(a.link)}
                         >
                           {copied === a.link
-                            ? <CheckIcon className="size-3" />
-                            : <CopyIcon className="size-3" />}
+                            ? <CheckIcon />
+                            : <CopyIcon />}
                           {t('download_dialog.copy_url', { defaultValue: 'Copy URL' })}
                         </Button>
                         <Button
-                          size="sm"
-                          className="h-7 px-2.5 text-xs"
                           disabled={resolving === a.link}
                           onClick={() => onDownload(a.link)}
                         >
-                          <DownloadSimpleIcon className="size-3" />
+                          <DownloadSimpleIcon />
                           {t('actions.download', { defaultValue: 'Download' })}
                         </Button>
                       </div>

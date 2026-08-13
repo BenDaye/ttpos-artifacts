@@ -97,11 +97,10 @@ export function UpdaterSelector({ value, onChange }: Props) {
                     <Button
                       type="button"
                       variant="ghost"
-                      size="sm"
-                      className="mt-2 h-7 px-2 text-xs"
+                      className="mt-2"
                       onClick={() => setDefault(option.type)}
                     >
-                      <StarIcon className="size-3" />
+                      <StarIcon />
                       {t('form.set_default', { defaultValue: 'Use as default updater' })}
                     </Button>
                   )}

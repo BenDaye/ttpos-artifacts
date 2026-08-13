@@ -128,7 +128,7 @@ export function SignInPage() {
               )}
             />
             <Button type="submit" className="w-full" disabled={mutation.isPending}>
-              {mutation.isPending && <CircleNotchIcon className="size-4 animate-spin" />}
+              {mutation.isPending && <CircleNotchIcon className="animate-spin" />}
               {t('signin.submit', { defaultValue: 'Sign in' })}
             </Button>
           </form>

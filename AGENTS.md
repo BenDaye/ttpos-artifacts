@@ -23,6 +23,8 @@
 - 视觉以 **shadcn base-mira + taupe 主题（preset b5x2IxUsi）**为准（`packages/ui/src/styles/globals.css` 承载主题变量，OKLCH 紫色系）；正文字体为 **JetBrains Mono 全站等宽**（`apps/web/src/index.css` 的 `html { font-mono }` 承载，`--font-mono`/`--font-heading` 定义在 globals.css）；`DESIGN.md` 已退役，不再作为视觉事实来源。
 - UI 组件统一从 `packages/ui`（`@ttpos/ui`）引入，alias `@ttpos/ui/components/*`；新组件优先用 `bunx shadcn@latest add -c packages/ui` 落到 `packages/ui`，保持 `style=base-mira`、`iconLibrary=phosphor`、`baseColor=taupe` 与双端 `components.json` 一致。**不要在 `apps/web` 下跑 shadcn 命令**：`apps/web/components.json` 的 `tailwind.css` 指向不含主题变量的 `src/index.css`，shadcn 会回退解析出错误 preset（neutral/inter，非 b5x2IxUsi）并把变量写错地方。图标统一用 `@phosphor-icons/react`（`*Icon` 后缀别名），**禁止再引入 `lucide-react`**。
 - UI 基座保持 `@base-ui/react`（headless primitives，v1 起由 `@base-ui-components/react` 改名），**禁止引入 `radix-ui` 依赖**。
+- **控件尺寸走 variant，不用 className 覆盖**：`h-7`(28px) 是本主题的标准控件高度，`Button`/`Input`/`Toggle` 的 default、`DropdownMenuItem` 的 `min-h-7` 都对齐它。页头、区块、对话框 footer 的操作按钮一律用 default；`sm`(h-6) 只用于对话框内的行内密集操作条，且同一容器内不与 default 混用。禁止用 `className` 写 `h-8`/`h-9`/`h-auto` 绕开尺寸阶梯——需要别的高度就换 size（`xs`/`sm`/`default`/`lg`、`icon-*`）。
+- **按钮内的图标不写 `size-*`**：`buttonVariants` 等组件已按 size 联动 svg 尺寸（default 14px、sm 12px、icon 14px），显式 `className="size-4"` 会破坏联动，让小按钮里的图标显得过大。只有非按钮上下文的装饰图标（`Input` 前缀图标、裸 `<button>` 拖拽把手、卡片 logo 占位）才自己指定尺寸。
 
 ## 仓库地图
 

@@ -151,20 +151,18 @@ function BoardColumn({ app, versions, total, isLoading, isError, onSelect, onEdi
           <Button
             variant="ghost"
             size="icon"
-            className="size-7"
             aria-label={t('common:actions.edit')}
             onClick={() => onEdit(app)}
           >
-            <PencilSimpleIcon className="size-3.5" />
+            <PencilSimpleIcon />
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className="size-7"
             aria-label={t('common:actions.delete')}
             onClick={() => onDelete(app)}
           >
-            <TrashIcon className="size-3.5 text-destructive" />
+            <TrashIcon className="text-destructive" />
           </Button>
         </div>
       </div>

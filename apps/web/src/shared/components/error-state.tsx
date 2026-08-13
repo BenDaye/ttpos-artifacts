@@ -40,7 +40,7 @@ export function ErrorState({ title, description, onRetry, retryLabel, className 
       </EmptyHeader>
       {onRetry && (
         <EmptyContent className="mt-1">
-          <Button variant="outline" size="sm" onClick={onRetry}>
+          <Button variant="outline" onClick={onRetry}>
             {retryLabel ?? t('actions.retry', { defaultValue: 'Retry' })}
           </Button>
         </EmptyContent>
