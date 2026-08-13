@@ -2,12 +2,15 @@ import type { TelemetryRange } from '../api'
 import { FunnelIcon, XIcon } from '@phosphor-icons/react'
 import { Badge } from '@ttpos/ui/components/badge'
 import { Button } from '@ttpos/ui/components/button'
-import { Checkbox } from '@ttpos/ui/components/checkbox'
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@ttpos/ui/components/popover'
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+  ComboboxTrigger,
+} from '@ttpos/ui/components/combobox'
 import { ToggleGroup, ToggleGroupItem } from '@ttpos/ui/components/toggle-group'
 import { useTranslation } from 'react-i18next'
 import { useAppsListQuery } from '@/features/apps/hooks'
@@ -75,25 +78,25 @@ export function TelemetryFilterBar({ value, onChange }: Props) {
           ))}
         </ToggleGroup>
         <span className="mx-1 hidden h-6 w-px shrink-0 bg-border sm:block" aria-hidden />
-        <MultiSelectPopover
+        <MultiSelectFilter
           label={t('filter.apps', { defaultValue: 'Apps' })}
           options={apps.data?.apps.map(a => a.AppName) ?? []}
           selected={value.apps}
           onChange={next => onChange({ ...value, apps: next })}
         />
-        <MultiSelectPopover
+        <MultiSelectFilter
           label={t('filter.channels', { defaultValue: 'Channels' })}
           options={channels.data?.map(c => c.ChannelName) ?? []}
           selected={value.channels}
           onChange={next => onChange({ ...value, channels: next })}
         />
-        <MultiSelectPopover
+        <MultiSelectFilter
           label={t('filter.platforms', { defaultValue: 'Platforms' })}
           options={platforms.data?.map(p => p.PlatformName) ?? []}
           selected={value.platforms}
           onChange={next => onChange({ ...value, platforms: next })}
         />
-        <MultiSelectPopover
+        <MultiSelectFilter
           label={t('filter.architectures', { defaultValue: 'Architectures' })}
           options={archs.data?.map(a => a.ArchID) ?? []}
           selected={value.architectures}
@@ -121,15 +124,13 @@ interface MultiProps {
   onChange: (next: string[]) => void
 }
 
-function MultiSelectPopover({ label, options, selected, onChange }: MultiProps) {
-  const toggle = (name: string) => {
-    onChange(selected.includes(name) ? selected.filter(x => x !== name) : [...selected, name])
-  }
+function MultiSelectFilter({ label, options, selected, onChange }: MultiProps) {
+  const { t } = useTranslation('common')
   return (
-    <Popover>
-      <PopoverTrigger
+    <Combobox items={options} multiple value={selected} onValueChange={onChange}>
+      <ComboboxTrigger
         render={(
-          <Button variant="outline" size="sm" className="h-8 max-w-full shrink-0 gap-1.5">
+          <Button variant="outline" size="sm" aria-label={label} className="h-8 max-w-full shrink-0 gap-1.5">
             <FunnelIcon className="size-3.5" />
             <span className="min-w-0 truncate">{label}</span>
             {selected.length > 0 && (
@@ -138,20 +139,20 @@ function MultiSelectPopover({ label, options, selected, onChange }: MultiProps) 
           </Button>
         )}
       />
-      <PopoverContent align="start" className="w-56 p-2">
-        {options.length === 0
-          ? <p className="px-2 py-3 text-xs text-muted-foreground">—</p>
-          : (
-              <div className="max-h-60 overflow-auto">
-                {options.map(o => (
-                  <label key={o} className="flex min-w-0 cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent">
-                    <Checkbox checked={selected.includes(o)} onCheckedChange={() => toggle(o)} />
-                    <span className="truncate">{o}</span>
-                  </label>
-                ))}
-              </div>
-            )}
-      </PopoverContent>
-    </Popover>
+      <ComboboxContent className="w-56">
+        <ComboboxInput
+          showTrigger={false}
+          placeholder={t('actions.search', { defaultValue: 'Search…' })}
+        />
+        <ComboboxEmpty>{t('states.no_results', { defaultValue: 'No results' })}</ComboboxEmpty>
+        <ComboboxList>
+          {(option: string) => (
+            <ComboboxItem key={option} value={option}>
+              <span className="truncate">{option}</span>
+            </ComboboxItem>
+          )}
+        </ComboboxList>
+      </ComboboxContent>
+    </Combobox>
   )
 }

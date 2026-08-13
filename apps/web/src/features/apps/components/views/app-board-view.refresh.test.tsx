@@ -97,7 +97,8 @@ describe('appBoardView 详情弹层随 mutation 即时刷新', () => {
       throw new Error('expected at least one delete-artifact button in dialog')
     }
     fireEvent.click(firstDeleteButton)
-    const confirm = await screen.findByRole('dialog', { name: 'Delete artifact?' })
+    // ConfirmDialog 基于 shadcn AlertDialog，role 为 alertdialog（破坏性操作语义）
+    const confirm = await screen.findByRole('alertdialog', { name: 'Delete artifact?' })
     fireEvent.click(within(confirm).getByRole('button', { name: 'common:actions.delete' }))
 
     // 详情弹层仍打开：alpha 消失、beta 保留 —— 证明读视图随 refetch 即时刷新（非冻结快照）

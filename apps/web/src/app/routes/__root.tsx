@@ -1,7 +1,7 @@
 import { createRootRoute, Outlet } from '@tanstack/react-router'
+import { Spinner } from '@ttpos/ui/components/spinner'
 import { Suspense } from 'react'
 import { ErrorBoundary } from '@/shared/components/error-boundary'
-import { LoadingSpinner } from '@/shared/components/loading-spinner'
 
 export const Route = createRootRoute({
   component: RootComponent,
@@ -16,7 +16,12 @@ export const Route = createRootRoute({
 function RootComponent() {
   return (
     <ErrorBoundary>
-      <Suspense fallback={<LoadingSpinner fullScreen />}>
+      <Suspense fallback={(
+        <div className="flex min-h-svh items-center justify-center text-muted-foreground">
+          <Spinner className="size-6" />
+        </div>
+      )}
+      >
         <Outlet />
       </Suspense>
     </ErrorBoundary>

@@ -244,7 +244,7 @@ test.describe('Responsive layout', () => {
 
       const controls = page.getByTestId('telemetry-filter-controls')
       const rangeGroup = page.getByTestId('telemetry-range-group')
-      const appsFilter = page.getByRole('button', { name: 'Apps' })
+      const appsFilter = page.getByRole('combobox', { name: 'Apps' })
 
       const controlsBox = await visibleBox(controls)
       const rangeBox = await visibleBox(rangeGroup)
