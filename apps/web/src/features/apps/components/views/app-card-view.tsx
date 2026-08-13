@@ -71,7 +71,7 @@ export function AppCardView({ apps, onSelect, onEdit, onDelete, onReorder, canRe
                 onEdit(app)
               }}
             >
-              <PencilSimpleIcon className="size-4" />
+              <PencilSimpleIcon />
             </Button>
             <Button
               variant="ghost"
@@ -82,7 +82,7 @@ export function AppCardView({ apps, onSelect, onEdit, onDelete, onReorder, canRe
                 onDelete(app)
               }}
             >
-              <TrashIcon className="size-4 text-destructive" />
+              <TrashIcon className="text-destructive" />
             </Button>
           </div>
         </div>

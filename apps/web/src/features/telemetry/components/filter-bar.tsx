@@ -103,8 +103,8 @@ export function TelemetryFilterBar({ value, onChange }: Props) {
           onChange={next => onChange({ ...value, architectures: next })}
         />
         {totalActive > 0 && (
-          <Button variant="ghost" size="sm" className="shrink-0" onClick={reset}>
-            <XIcon className="size-3.5" />
+          <Button variant="ghost" className="shrink-0" onClick={reset}>
+            <XIcon />
             {t('filter.clear', { defaultValue: 'Clear' })}
             {' '}
             (
@@ -130,8 +130,8 @@ function MultiSelectFilter({ label, options, selected, onChange }: MultiProps) {
     <Combobox items={options} multiple value={selected} onValueChange={onChange}>
       <ComboboxTrigger
         render={(
-          <Button variant="outline" size="sm" aria-label={label} className="h-8 max-w-full shrink-0 gap-1.5">
-            <FunnelIcon className="size-3.5" />
+          <Button variant="outline" aria-label={label} className="max-w-full shrink-0">
+            <FunnelIcon />
             <span className="min-w-0 truncate">{label}</span>
             {selected.length > 0 && (
               <Badge variant="secondary" className="px-2 py-0 text-xs">{selected.length}</Badge>

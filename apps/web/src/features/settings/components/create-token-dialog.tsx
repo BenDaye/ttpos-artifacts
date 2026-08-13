@@ -110,7 +110,7 @@ export function CreateTokenDialog({ open, onOpenChange }: Props) {
                     toast.success(t('common:actions.copied', { defaultValue: 'Copied' }))
                   }}
                 >
-                  <CopyIcon className="size-4" />
+                  <CopyIcon />
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">

@@ -41,7 +41,7 @@ export function TokensPanel() {
     <div className="min-w-0 max-w-full">
       <div className="mb-4 flex flex-wrap justify-end gap-2">
         <Button onClick={() => setCreating(true)}>
-          <PlusIcon className="size-4" />
+          <PlusIcon />
           {t('tokens.create', { defaultValue: 'Create token' })}
         </Button>
       </div>
@@ -65,7 +65,7 @@ export function TokensPanel() {
           description={t('tokens.empty_description', { defaultValue: 'Create one for CI uploads.' })}
           action={(
             <Button onClick={() => setCreating(true)}>
-              <PlusIcon className="size-4" />
+              <PlusIcon />
               {t('tokens.create', { defaultValue: 'Create token' })}
             </Button>
           )}
@@ -138,7 +138,7 @@ export function TokensPanel() {
                     aria-label={t('tokens.revoke', { defaultValue: 'Revoke' })}
                     onClick={() => setRevoking(token.id)}
                   >
-                    <TrashIcon className="size-4 text-destructive" />
+                    <TrashIcon className="text-destructive" />
                   </Button>
                 </CardContent>
               </Card>

@@ -26,7 +26,7 @@ export function LayoutSwitcher({ className }: { className?: string }) {
           aria-label={t(labelKey)}
           onClick={() => setLayout(value)}
         >
-          <Icon className="size-4" />
+          <Icon />
         </ToggleGroupItem>
       ))}
     </ToggleGroup>

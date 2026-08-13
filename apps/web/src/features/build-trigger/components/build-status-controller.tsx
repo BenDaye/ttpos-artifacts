@@ -28,12 +28,10 @@ export function BuildStatusController() {
       <Button
         type="button"
         variant="outline"
-        size="sm"
         aria-label={statusLabel}
-        className="h-9 gap-2 px-2 sm:px-3"
         onClick={() => setStatusOpen(true)}
       >
-        <HammerIcon className="size-4" />
+        <HammerIcon />
         <span className="hidden sm:inline">{statusLabel}</span>
       </Button>
       <BuildStatusSheet

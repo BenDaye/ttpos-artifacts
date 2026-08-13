@@ -73,7 +73,7 @@ export function ChannelsPage() {
         description={t('description', { defaultValue: 'Manage release channels for your applications.' })}
         actions={(
           <Button onClick={() => setCreating(true)}>
-            <PlusIcon className="size-4" />
+            <PlusIcon />
             {t('common:actions.create')}
           </Button>
         )}
@@ -110,7 +110,7 @@ export function ChannelsPage() {
           description={t('empty.description', { defaultValue: 'Create your first channel to start tagging releases.' })}
           action={(
             <Button onClick={() => setCreating(true)}>
-              <PlusIcon className="size-4" />
+              <PlusIcon />
               {t('common:actions.create')}
             </Button>
           )}
@@ -164,7 +164,7 @@ export function ChannelsPage() {
                         aria-label={t('common:actions.edit')}
                         onClick={() => setEditing(channel)}
                       >
-                        <PencilSimpleIcon className="size-4" />
+                        <PencilSimpleIcon />
                       </Button>
                       <Button
                         variant="ghost"
@@ -172,7 +172,7 @@ export function ChannelsPage() {
                         aria-label={t('common:actions.delete')}
                         onClick={() => setDeleting(channel)}
                       >
-                        <TrashIcon className="size-4 text-destructive" />
+                        <TrashIcon className="text-destructive" />
                       </Button>
                     </div>
                   </CardContent>

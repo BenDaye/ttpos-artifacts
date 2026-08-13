@@ -159,7 +159,7 @@ export function TriggerBuildDialog({ open, onOpenChange, onBuildTriggered }: Pro
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <Label>{appsLabel}</Label>
-                      <Button type="button" variant="ghost" size="sm" className="h-auto px-2 py-1 text-xs" onClick={toggleAllPackages}>
+                      <Button type="button" variant="ghost" size="sm" onClick={toggleAllPackages}>
                         {allPackagesSelected
                           ? t('build_trigger.deselect_all', { defaultValue: '反选' })
                           : t('build_trigger.select_all', { defaultValue: '全选' })}
@@ -196,7 +196,7 @@ export function TriggerBuildDialog({ open, onOpenChange, onBuildTriggered }: Pro
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <Label>{t('build_trigger.platforms', { defaultValue: '平台' })}</Label>
-                      <Button type="button" variant="ghost" size="sm" className="h-auto px-2 py-1 text-xs" onClick={toggleAllPlatforms}>
+                      <Button type="button" variant="ghost" size="sm" onClick={toggleAllPlatforms}>
                         {allPlatformsSelected
                           ? t('build_trigger.deselect_all', { defaultValue: '反选' })
                           : t('build_trigger.select_all', { defaultValue: '全选' })}
@@ -275,7 +275,7 @@ export function TriggerBuildDialog({ open, onOpenChange, onBuildTriggered }: Pro
               {t('common:actions.cancel')}
             </Button>
             <Button type="submit" disabled={!canSubmit || trigger.isPending || isLoading}>
-              {trigger.isPending && <CircleNotchIcon className="size-4 animate-spin" />}
+              {trigger.isPending && <CircleNotchIcon className="animate-spin" />}
               {t('build_trigger.submit', { defaultValue: '触发构建' })}
             </Button>
           </DialogFooter>
