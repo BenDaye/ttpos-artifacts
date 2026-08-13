@@ -77,7 +77,7 @@ export function ArchitecturesPage() {
         description={t('description')}
         actions={(
           <Button onClick={() => setCreating(true)}>
-            <PlusIcon className="size-4" />
+            <PlusIcon />
             {t('common:actions.create')}
           </Button>
         )}
@@ -114,7 +114,7 @@ export function ArchitecturesPage() {
           description={t('empty.description')}
           action={(
             <Button onClick={() => setCreating(true)}>
-              <PlusIcon className="size-4" />
+              <PlusIcon />
               {t('common:actions.create')}
             </Button>
           )}
@@ -168,7 +168,7 @@ export function ArchitecturesPage() {
                         aria-label={t('common:actions.edit')}
                         onClick={() => setEditing(arch)}
                       >
-                        <PencilSimpleIcon className="size-4" />
+                        <PencilSimpleIcon />
                       </Button>
                       <Button
                         variant="ghost"
@@ -176,7 +176,7 @@ export function ArchitecturesPage() {
                         aria-label={t('common:actions.delete')}
                         onClick={() => setDeleting(arch)}
                       >
-                        <TrashIcon className="size-4 text-destructive" />
+                        <TrashIcon className="text-destructive" />
                       </Button>
                     </div>
                   </CardContent>

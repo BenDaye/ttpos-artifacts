@@ -132,12 +132,10 @@ export function BuildStatusSheet({
                         </Badge>
                         <Button
                           variant="ghost"
-                          size="sm"
-                          className="h-7 px-2"
                           disabled={downloading === target.app_name}
                           onClick={() => handleDownload(target.app_name)}
                         >
-                          <DownloadSimpleIcon className="size-3.5" />
+                          <DownloadSimpleIcon />
                           {t('build_trigger.download', { defaultValue: '下载' })}
                         </Button>
                       </>

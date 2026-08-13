@@ -146,12 +146,12 @@ export function AppDetailPage({ appName }: { appName: string }) {
         }
         actions={(
           <div className="grid w-full min-w-0 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
-            <Link to="/applications" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'w-full sm:w-auto')}>
-              <ArrowLeftIcon className="size-4" />
+            <Link to="/applications" className={cn(buttonVariants({ variant: 'outline' }), 'w-full sm:w-auto')}>
+              <ArrowLeftIcon />
               {t('detail.back')}
             </Link>
-            <Button size="sm" className="w-full sm:w-auto" onClick={() => setUploading(true)}>
-              <PlusIcon className="size-4" />
+            <Button className="w-full sm:w-auto" onClick={() => setUploading(true)}>
+              <PlusIcon />
               {t('upload', { defaultValue: 'Upload version' })}
             </Button>
           </div>
@@ -183,7 +183,7 @@ export function AppDetailPage({ appName }: { appName: string }) {
           })}
           action={(
             <Button onClick={() => setUploading(true)}>
-              <PlusIcon className="size-4" />
+              <PlusIcon />
               {t('upload', { defaultValue: 'Upload version' })}
             </Button>
           )}
@@ -304,11 +304,11 @@ function AppShortLinks({ appName }: { appName: string }) {
                   </code>
                   <Button
                     variant="ghost"
-                    size="sm"
+                    size="icon-sm"
                     aria-label={t('short_links.copy', { defaultValue: 'Copy link' })}
                     onClick={() => onCopy(url)}
                   >
-                    <CopyIcon className="size-4" />
+                    <CopyIcon />
                   </Button>
                 </li>
               )
@@ -399,17 +399,16 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
               )}
             </div>
             <div className="flex shrink-0 items-center gap-1">
-              <Button variant="ghost" size="icon" className="size-8" aria-label={t('common:actions.edit')} onClick={onEdit}>
-                <PencilSimpleIcon className="size-4" />
+              <Button variant="ghost" size="icon" aria-label={t('common:actions.edit')} onClick={onEdit}>
+                <PencilSimpleIcon />
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
-                className="size-8"
                 aria-label={t('common:actions.delete')}
                 onClick={onDelete}
               >
-                <TrashIcon className="size-4 text-destructive" />
+                <TrashIcon className="text-destructive" />
               </Button>
             </div>
           </div>
@@ -418,11 +417,10 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
             {changelog.length > 0 && (
               <Button
                 variant="link"
-                size="sm"
-                className="h-auto min-w-0 max-w-full px-2 py-2 text-primary no-underline hover:no-underline"
+                className="min-w-0 max-w-full text-primary no-underline hover:no-underline"
                 onClick={() => setShowChangelog(true)}
               >
-                <BookOpenIcon className="size-3.5" />
+                <BookOpenIcon />
                 <span className="min-w-0 truncate">
                   {t('changelog')}
                   {' '}
@@ -435,11 +433,10 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
             {artifacts.length > 0 && (
               <Button
                 variant="link"
-                size="sm"
-                className="h-auto min-w-0 max-w-full px-2 py-2 text-primary no-underline hover:no-underline"
+                className="min-w-0 max-w-full text-primary no-underline hover:no-underline"
                 onClick={() => setShowDownloads(true)}
               >
-                <DownloadSimpleIcon className="size-3.5" />
+                <DownloadSimpleIcon />
                 <span className="min-w-0 truncate">
                   {t('actions.download')}
                   {' '}
@@ -451,11 +448,10 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
             )}
             <Button
               variant="link"
-              size="sm"
-              className="h-auto min-w-0 max-w-full px-2 py-2 text-primary no-underline hover:no-underline"
+              className="min-w-0 max-w-full text-primary no-underline hover:no-underline"
               onClick={() => setShowAddArtifact(true)}
             >
-              <FilePlusIcon className="size-3.5" />
+              <FilePlusIcon />
               <span className="min-w-0 truncate">{t('add_artifact.button', { defaultValue: 'Add artifact' })}</span>
             </Button>
           </div>
@@ -520,22 +516,20 @@ function VersionRow({ version, onEdit, onDelete, onDeleteArtifact }: VersionRowP
                       <div className="flex shrink-0 flex-wrap items-center gap-2">
                         <Button
                           variant="link"
-                          size="sm"
-                          className="h-auto min-w-0 max-w-full px-2 py-2 text-primary no-underline hover:no-underline"
+                          className="min-w-0 max-w-full text-primary no-underline hover:no-underline"
                           disabled={downloading === a.link}
                           onClick={() => onDownload(a.link)}
                         >
-                          <DownloadSimpleIcon className="size-3" />
+                          <DownloadSimpleIcon />
                           <span className="min-w-0 truncate">{t('actions.download', { defaultValue: 'Download' })}</span>
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="size-8"
                           aria-label={t('common:actions.delete')}
                           onClick={() => onDeleteArtifact(a)}
                         >
-                          <TrashIcon className="size-3.5 text-destructive" />
+                          <TrashIcon className="text-destructive" />
                         </Button>
                       </div>
                     </div>

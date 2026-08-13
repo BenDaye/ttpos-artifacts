@@ -61,8 +61,8 @@ export function UsersPanel() {
             </div>
             {me.data.is_admin
               ? (
-                  <Button variant="outline" size="sm" className="max-w-full" onClick={() => setAdminEdit(true)}>
-                    <KeyIcon className="size-4" />
+                  <Button variant="outline" className="max-w-full" onClick={() => setAdminEdit(true)}>
+                    <KeyIcon />
                     <span className="min-w-0 truncate">{t('users.change_credentials', { defaultValue: 'Change credentials' })}</span>
                   </Button>
                 )
@@ -77,8 +77,8 @@ export function UsersPanel() {
 
       <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
         <h2 className="text-base font-medium">{t('users.team_title', { defaultValue: 'Team users' })}</h2>
-        <Button size="sm" onClick={() => setCreating(true)} disabled={!me.data?.is_admin}>
-          <PlusIcon className="size-4" />
+        <Button onClick={() => setCreating(true)} disabled={!me.data?.is_admin}>
+          <PlusIcon />
           {t('users.create', { defaultValue: 'New user' })}
         </Button>
       </div>
@@ -109,7 +109,7 @@ export function UsersPanel() {
           description={t('users.empty_description', { defaultValue: 'Invite teammates to grant scoped access.' })}
           action={(
             <Button onClick={() => setCreating(true)}>
-              <PlusIcon className="size-4" />
+              <PlusIcon />
               {t('users.create', { defaultValue: 'New user' })}
             </Button>
           )}
@@ -137,7 +137,7 @@ export function UsersPanel() {
                 </div>
                 <div className="flex shrink-0 items-center gap-1">
                   <Button variant="ghost" size="icon" aria-label={t('common:actions.edit')} onClick={() => setEditing(user)}>
-                    <PencilSimpleIcon className="size-4" />
+                    <PencilSimpleIcon />
                   </Button>
                   <Button
                     variant="ghost"
@@ -145,7 +145,7 @@ export function UsersPanel() {
                     aria-label={t('common:actions.delete')}
                     onClick={() => setDeleting(user)}
                   >
-                    <TrashIcon className="size-4 text-destructive" />
+                    <TrashIcon className="text-destructive" />
                   </Button>
                 </div>
               </CardContent>

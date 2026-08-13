@@ -123,7 +123,7 @@ export function SignUpPage() {
               )}
             />
             <Button type="submit" className="w-full" disabled={mutation.isPending}>
-              {mutation.isPending && <CircleNotchIcon className="size-4 animate-spin" />}
+              {mutation.isPending && <CircleNotchIcon className="animate-spin" />}
               {t('signup.submit', { defaultValue: 'Create account' })}
             </Button>
           </form>

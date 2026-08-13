@@ -78,7 +78,7 @@ export function PlatformsPage() {
         description={t('description')}
         actions={(
           <Button onClick={() => setCreating(true)}>
-            <PlusIcon className="size-4" />
+            <PlusIcon />
             {t('common:actions.create')}
           </Button>
         )}
@@ -115,7 +115,7 @@ export function PlatformsPage() {
           description={t('empty.description')}
           action={(
             <Button onClick={() => setCreating(true)}>
-              <PlusIcon className="size-4" />
+              <PlusIcon />
               {t('common:actions.create')}
             </Button>
           )}
@@ -176,7 +176,7 @@ export function PlatformsPage() {
                         aria-label={t('common:actions.edit')}
                         onClick={() => setEditing(platform)}
                       >
-                        <PencilSimpleIcon className="size-4" />
+                        <PencilSimpleIcon />
                       </Button>
                       <Button
                         variant="ghost"
@@ -184,7 +184,7 @@ export function PlatformsPage() {
                         aria-label={t('common:actions.delete')}
                         onClick={() => setDeleting(platform)}
                       >
-                        <TrashIcon className="size-4 text-destructive" />
+                        <TrashIcon className="text-destructive" />
                       </Button>
                     </div>
                   </CardContent>

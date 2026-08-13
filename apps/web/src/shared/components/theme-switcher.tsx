@@ -26,21 +26,21 @@ export function ThemeSwitcher() {
       <DropdownMenuTrigger
         render={(
           <Button variant="ghost" size="icon" aria-label={t('theme.label', { defaultValue: 'Theme' })}>
-            <Icon className="size-4" />
+            <Icon />
           </Button>
         )}
       />
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={() => setMode('light')}>
-          <SunIcon className="size-4" />
+          <SunIcon />
           {t('theme.light')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setMode('dark')}>
-          <MoonIcon className="size-4" />
+          <MoonIcon />
           {t('theme.dark')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setMode('auto')}>
-          <MonitorIcon className="size-4" />
+          <MonitorIcon />
           {t('theme.auto')}
         </DropdownMenuItem>
       </DropdownMenuContent>

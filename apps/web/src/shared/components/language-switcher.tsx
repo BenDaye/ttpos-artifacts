@@ -19,7 +19,7 @@ export function LanguageSwitcher() {
       <DropdownMenuTrigger
         render={(
           <Button variant="ghost" size="icon" aria-label={t('language.label')}>
-            <TranslateIcon className="size-4" />
+            <TranslateIcon />
           </Button>
         )}
       />

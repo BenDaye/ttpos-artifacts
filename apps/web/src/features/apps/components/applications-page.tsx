@@ -119,7 +119,7 @@ export function ApplicationsPage() {
           description={t('empty.description')}
           action={(
             <Button onClick={() => setCreating(true)}>
-              <PlusIcon className="size-4" />
+              <PlusIcon />
               {t('create', { defaultValue: 'New app' })}
             </Button>
           )}
@@ -171,12 +171,12 @@ export function ApplicationsPage() {
         actions={(
           <div className="grid w-full min-w-0 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center" data-testid="applications-header-actions">
             <LayoutSwitcher className="justify-self-start" />
-            <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => setBuildTriggering(true)}>
-              <HammerIcon className="size-4" />
+            <Button variant="outline" className="w-full sm:w-auto" onClick={() => setBuildTriggering(true)}>
+              <HammerIcon />
               {t('build_trigger.button', { defaultValue: 'Build Test Package' })}
             </Button>
             <Button className="w-full sm:w-auto" onClick={() => setCreating(true)}>
-              <PlusIcon className="size-4" />
+              <PlusIcon />
               {t('create', { defaultValue: 'New app' })}
             </Button>
           </div>
