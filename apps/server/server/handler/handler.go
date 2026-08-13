@@ -59,6 +59,7 @@ type AppHandler interface {
 	UpdateAdmin(*gin.Context)
 	GetTelemetry(*gin.Context)
 	SquirrelReleases(*gin.Context)
+	ShortLatestDownload(*gin.Context)
 	CreateToken(*gin.Context)
 	ListTokens(*gin.Context)
 	DeleteToken(*gin.Context)
@@ -278,6 +279,21 @@ func (ch *appHandler) SquirrelReleases(c *gin.Context) {
 	})
 
 	info.FindLatestVersion(c, ch.repository, ch.database, ch.redisClient, ch.performanceMode)
+}
+
+// ShortLatestDownload serves the public /dl/<name>.<ext> download short links
+// printed on the website and in QR codes.
+//
+//	GET /dl/:target
+//
+// The name resolves against each app's own short_link field (falling back to
+// the app identifier), so publishing a new short link is a dashboard edit
+// rather than a reverse-proxy config change plus a release. The extension
+// carries the platform target. Version election is delegated unchanged to the
+// /apps/latest artifact-latest path, so a partially released version still
+// resolves to the newest version that actually ships the requested artifact.
+func (ch *appHandler) ShortLatestDownload(c *gin.Context) {
+	serveShortLatestDownload(c, ch.repository, ch.redisClient, ch.performanceMode)
 }
 
 // setLatestQuery rewrites the request query string from path-derived values so a

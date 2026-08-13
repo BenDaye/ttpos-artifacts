@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
@@ -179,7 +180,24 @@ var (
 	channelRegex   = regexp.MustCompile(`^[a-zA-Z0-9]*$`)
 	platformRegex  = regexp.MustCompile(`^[a-zA-Z0-9-]*$`)
 	archRegex      = regexp.MustCompile(`^[a-zA-Z0-9]*$`)
+	shortLinkRegex = regexp.MustCompile(`^[a-z0-9-]+$`)
 )
+
+// IsValidShortLink reports whether input is usable as the name part of a
+// /dl/<name>.<ext> download short link. A dot is deliberately excluded: the
+// route splits the target on its last dot, so a dot inside the name would make
+// the extension ambiguous. Callers treat an empty string as "not configured"
+// and must not run it through here.
+func IsValidShortLink(input string) bool {
+	return shortLinkRegex.MatchString(input)
+}
+
+// NormalizeShortLink trims and lower-cases a user-supplied short link name so
+// the stored value matches what /dl looks up — that route lower-cases the
+// requested target, so a stored "Cashier" could never be reached.
+func NormalizeShortLink(input string) string {
+	return strings.ToLower(strings.TrimSpace(input))
+}
 
 func IsValidAppName(input string) bool {
 	return appNameRegex.MatchString(input)

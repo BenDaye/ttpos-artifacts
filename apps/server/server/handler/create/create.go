@@ -105,9 +105,26 @@ func CreateItem(c *gin.Context, repository db.AppRepository, itemType string) {
 			}
 		}
 		description := params["description"]
+		shortLink := utils.NormalizeShortLink(params["short_link"])
+		if shortLink != "" {
+			if !utils.IsValidShortLink(shortLink) {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "invalid short link: use lowercase letters, digits and hyphens only"})
+				return
+			}
+			takenBy, err := repository.ShortLinkTakenBy(shortLink, owner, ctx)
+			if err != nil {
+				logrus.Error(err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to validate short link"})
+				return
+			}
+			if !takenBy.IsZero() {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "short link is already used by another app"})
+				return
+			}
+		}
 		private := utils.GetBoolParam(params["private"])
 		tuf := utils.GetBoolParam(params["tuf"])
-		result, createErr = repository.CreateApp(paramValue, logoLink, description, private, tuf, owner, ctx)
+		result, createErr = repository.CreateApp(paramValue, logoLink, description, shortLink, private, tuf, owner, ctx)
 	default:
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid item type"})
 		return

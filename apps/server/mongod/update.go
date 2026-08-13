@@ -202,7 +202,7 @@ func (c *appRepository) UpdateArch(id primitive.ObjectID, archID string, owner s
 }
 
 // UpdateApp updates an existing app_name document
-func (c *appRepository) UpdateApp(id primitive.ObjectID, appName string, logo string, tuf bool, description string, owner string, ctx context.Context) (interface{}, error) {
+func (c *appRepository) UpdateApp(id primitive.ObjectID, appName string, logo string, tuf bool, description string, shortLink *string, owner string, ctx context.Context) (interface{}, error) {
 	filter := bson.D{{Key: "_id", Value: id}}
 	updateFields := bson.D{{Key: "app_name", Value: appName}}
 	if logo != "" {
@@ -210,6 +210,11 @@ func (c *appRepository) UpdateApp(id primitive.ObjectID, appName string, logo st
 	}
 	if description != "" {
 		updateFields = append(updateFields, bson.E{Key: "description", Value: description})
+	}
+	// nil = 调用方没提供,原值不动;非 nil 才写,空串即清空短链。空串不会命中
+	// unique_owner_short_link 这个 partial index(过滤条件为非空字符串)。
+	if shortLink != nil {
+		updateFields = append(updateFields, bson.E{Key: "short_link", Value: *shortLink})
 	}
 	updateFields = append(updateFields, bson.E{Key: "tuf", Value: tuf})
 	update := bson.D{{Key: "$set", Value: updateFields}}

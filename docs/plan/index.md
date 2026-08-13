@@ -40,3 +40,4 @@
 | [x] | PLAN-039 | /dl 短链 per-platform latest 回退（/apps/latest opt-in artifact fallback） | BUG-017 |
 | [x] | PLAN-041 | 构建测试包入口迁移到 Applications | BUG-021 |
 | [x] | PLAN-042 | Keep build status across private routes | BUG-022 |
+| [x] | PLAN-043 | 短链数据化：从反代配置表改为 app 的派生属性 | ENH-020 |

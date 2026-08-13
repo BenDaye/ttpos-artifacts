@@ -67,6 +67,7 @@ export interface UpdateVersionPayload {
 export interface CreateAppPayload {
   app: string
   description?: string
+  short_link?: string
   private?: boolean
   tuf?: boolean
   logo?: File | null
@@ -76,6 +77,7 @@ export interface UpdateAppPayload {
   id: string
   app?: string
   description?: string
+  short_link?: string
   logo?: File | null
 }
 

@@ -69,6 +69,7 @@ const app: AppSummary = {
   AppName: 'App A',
   Logo: '',
   Description: '',
+  ShortLink: '',
   Sort: 0,
   Updated_at: '2025-01-01T00:00:00Z',
 }

@@ -1,0 +1,21 @@
+[
+  {
+    "createIndexes": "apps_meta",
+    "indexes": [
+      {
+        "key": {
+          "owner": 1,
+          "short_link": 1
+        },
+        "name": "unique_owner_short_link",
+        "unique": true,
+        "partialFilterExpression": {
+          "short_link": {
+            "$type": "string",
+            "$gt": ""
+          }
+        }
+      }
+    ]
+  }
+]

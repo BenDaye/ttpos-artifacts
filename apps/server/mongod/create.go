@@ -419,13 +419,16 @@ func (c *appRepository) CreateArch(archID string, owner string, ctx context.Cont
 }
 
 // CreateApp creates a new app_name document
-func (c *appRepository) CreateApp(appName string, logo string, description string, private bool, tuf bool, owner string, ctx context.Context) (interface{}, error) {
+func (c *appRepository) CreateApp(appName string, logo string, description string, shortLink string, private bool, tuf bool, owner string, ctx context.Context) (interface{}, error) {
 	document := bson.D{{Key: "app_name", Value: appName}}
 	if logo != "" {
 		document = append(document, bson.E{Key: "logo", Value: logo})
 	}
 	if description != "" {
 		document = append(document, bson.E{Key: "description", Value: description})
+	}
+	if shortLink != "" {
+		document = append(document, bson.E{Key: "short_link", Value: shortLink})
 	}
 	if private == true {
 		document = append(document, bson.E{Key: "private", Value: private})

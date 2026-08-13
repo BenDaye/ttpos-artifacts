@@ -610,6 +610,59 @@ func (c *appRepository) resolveLatestAppMeta(ctx context.Context, metaCollection
 	return selectAppMetaByNormalizedIdentifier(candidates, appIdentifier)
 }
 
+// ResolveShortLinkApp maps the name part of a public /dl/<name>.<ext> short link
+// to the app identifier the latest-version queries expect.
+//
+// An explicitly configured short_link always wins. Otherwise the name is
+// resolved as a plain app identifier, so an app whose short link was never set
+// still gets a working link off its own identifier. ErrAppNameNotFound means
+// the name matches nothing, which the /dl handler reports as an unsupported
+// target rather than a missing artifact.
+func (c *appRepository) ResolveShortLinkApp(shortLink string, owner string, ctx context.Context) (string, error) {
+	if shortLink == "" {
+		return "", ErrAppNameNotFound
+	}
+
+	metaCollection := c.client.Database(c.config.Database).Collection("apps_meta")
+
+	var appMeta latestAppMeta
+	filter := bson.D{{Key: "short_link", Value: shortLink}, {Key: "owner", Value: owner}}
+	err := metaCollection.FindOne(ctx, filter).Decode(&appMeta)
+	if err == nil {
+		return appMeta.AppName, nil
+	}
+	if !errors.Is(err, mongo.ErrNoDocuments) {
+		return "", err
+	}
+
+	resolved, err := c.resolveLatestAppMeta(ctx, metaCollection, shortLink, owner)
+	if err != nil {
+		return "", err
+	}
+	return resolved.AppName, nil
+}
+
+// ShortLinkTakenBy reports the id of the app already using shortLink under
+// owner, or NilObjectID when the name is free. The /app/create and /app/update
+// handlers call it so a collision surfaces as a 400 instead of a duplicate-key
+// error from the unique_owner_short_link index.
+func (c *appRepository) ShortLinkTakenBy(shortLink string, owner string, ctx context.Context) (primitive.ObjectID, error) {
+	if shortLink == "" {
+		return primitive.NilObjectID, nil
+	}
+
+	metaCollection := c.client.Database(c.config.Database).Collection("apps_meta")
+	var appMeta latestAppMeta
+	filter := bson.D{{Key: "short_link", Value: shortLink}, {Key: "owner", Value: owner}}
+	if err := metaCollection.FindOne(ctx, filter).Decode(&appMeta); err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return primitive.NilObjectID, nil
+		}
+		return primitive.NilObjectID, err
+	}
+	return appMeta.ID, nil
+}
+
 func selectAppMetaByNormalizedIdentifier(candidates []latestAppMeta, appIdentifier string) (latestAppMeta, error) {
 	normalizedIdentifier := NormalizeAppIdentifier(appIdentifier)
 	if normalizedIdentifier == "" {

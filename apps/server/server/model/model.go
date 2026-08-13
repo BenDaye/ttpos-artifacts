@@ -46,8 +46,11 @@ type App struct {
 	Private     bool               `bson:"private" json:"-"`
 	Tuf         bool               `bson:"tuf"`
 	Description string             `bson:"description" json:"Description"`
-	Owner       string             `bson:"owner" json:"-"`
-	Updated_at  primitive.DateTime `bson:"updated_at" json:"Updated_at"`
+	// ShortLink 是公开下载短链 /dl/<short_link>.<ext> 的名字。留空表示未配置,
+	// 此时短链回退用 app 标识符解析(见 mongod.ResolveShortLinkApp)。
+	ShortLink  string             `bson:"short_link,omitempty" json:"ShortLink"`
+	Owner      string             `bson:"owner" json:"-"`
+	Updated_at primitive.DateTime `bson:"updated_at" json:"Updated_at"`
 	// Sort 为 owner 维度内的持久化排序索引,升序;新增字段纯追加,正常对外暴露。
 	Sort int `bson:"sort" json:"Sort"`
 }

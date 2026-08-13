@@ -1,6 +1,7 @@
 # 本项目贡献给主机 Caddy 的【站点片段】，不是完整 Caddyfile（边界详见 docs/plan/PLAN-037.md）。
 # 只含本项目自己的站点块；全局配置、别的项目、Caddy 本体与网络都归主机 infra，勿写进这里。
-# 本文件是 /dl 短链契约的单一事实来源，apps/server/server/caddy_config_test.go 对它做断言，勿随意改路由。
+# apps/server/server/caddy_config_test.go 对本文件做路由断言，勿随意改路由。
+# /dl 短链不在这里：映射是每个 app 的 short_link 字段，由 API 解析（ENH-020/PLAN-043）。
 #
 # 用法：deploy/scripts/migrate-caddy-shortlinks.sh 把本片段 splice 进主机自有 Caddyfile
 #   （如 vm-node02 /opt/caddy/Caddyfile）后 reload；prod 形态由该脚本带参派生，不另存第二份。
@@ -16,28 +17,8 @@ update.ttpos.dev {
 		max_size 1GB
 	}
 
-	# /dl 公开短链入口由 Caddy 承载；/apps/latest 仍是 latest artifact 的事实查询源。
-	map {path} {short_latest_app} {short_latest_platform} {short_latest_arch} {short_latest_package} {
-		~(?i)^/dl/cashier\.apk$ ttpos android arm64 apk
-		~(?i)^/dl/cashier\.exe$ ttpos windows amd64 exe
-		~(?i)^/dl/cashier\.dmg$ ttpos macos arm64 dmg
-		~(?i)^/dl/assistant\.apk$ ttpos_go android arm64 apk
-		~(?i)^/dl/assistant\.exe$ ttpos_go windows amd64 exe
-		~(?i)^/dl/assistant\.dmg$ ttpos_go macos arm64 dmg
-		~(?i)^/dl/menu\.apk$ ttpos_menu android arm64 apk
-		~(?i)^/dl/menu\.exe$ ttpos_menu windows amd64 exe
-		~(?i)^/dl/menu\.dmg$ ttpos_menu macos arm64 dmg
-		~(?i)^/dl/kitchen\.apk$ ttpos_kitchen android arm64 apk
-		~(?i)^/dl/kitchen\.exe$ ttpos_kitchen windows amd64 exe
-		~(?i)^/dl/kitchen\.dmg$ ttpos_kitchen macos arm64 dmg
-		~(?i)^/dl/shop\.apk$ ttpos_shop android arm64 apk
-		~(?i)^/dl/shop\.exe$ ttpos_shop windows amd64 exe
-		~(?i)^/dl/shop\.dmg$ ttpos_shop macos arm64 dmg
-		default "" "" "" ""
-	}
-
-	@known_short_latest `{short_latest_app} != ""`
-
+	# /dl 公开短链已回归 API：映射由每个 app 的 short_link 字段决定（ENH-020/PLAN-043），
+	# 缓存头也由 API 按状态码打。这里不再有短链表，新增 app 不需要动本文件。
 	route {
 		# MCP server（Streamable HTTP）挂在 /mcp 路径下，复用 API 域名、不另起子域名。
 		# handle 保留路径，容器收到 /mcp；flush_interval -1 适配 SSE 流式响应。
@@ -47,29 +28,7 @@ update.ttpos.dev {
 			}
 		}
 
-		handle /dl/* {
-			header {
-				Cloudflare-CDN-Cache-Control "no-store"
-				Cache-Control "no-store"
-				match status 4xx 5xx
-			}
-
-			handle @known_short_latest {
-				# resolve=artifact-latest：短链选「含该 platform/arch/package 制品的最新 published 版本」，
-				# 部分平台发版不再 404 未发平台（回退到上一个有制品的版本）。
-				rewrite * /apps/latest?owner=ttpos&app_name={short_latest_app}&channel=prod&platform={short_latest_platform}&arch={short_latest_arch}&package={short_latest_package}&resolve=artifact-latest
-				header {
-					Cloudflare-CDN-Cache-Control "public, max-age=300"
-					Cache-Control "no-cache"
-					match status 3xx
-				}
-				reverse_proxy faynosync-api:9000
-			}
-
-			respond "unsupported short latest download target" 400
-		}
-
-		# 其余路径仍反代到 FaynoSync API。
+		# 其余路径（含 /dl）反代到 FaynoSync API。
 		handle {
 			reverse_proxy faynosync-api:9000
 		}

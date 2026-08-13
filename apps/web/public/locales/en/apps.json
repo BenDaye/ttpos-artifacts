@@ -81,7 +81,9 @@
     "description_label": "Description",
     "logo": "Logo (optional)",
     "private": "Private (require auth to download)",
-    "tuf": "Enable TUF metadata"
+    "tuf": "Enable TUF metadata",
+    "short_link": "Download short link (optional)",
+    "short_link_hint": "Used as /dl/<name>.apk, .exe and .dmg. Lowercase letters, digits and hyphens; leave empty to use the app name."
   },
   "empty": {
     "title": "No applications yet",
@@ -156,5 +158,12 @@
     "channel_required": "Channel is required.",
     "platform_required": "Platform is required.",
     "arch_required": "Architecture is required."
+  },
+  "short_links": {
+    "title": "Download short links",
+    "hint": "Always resolve to the latest published build for that platform.",
+    "unset": "No short link name set. Edit the application to add one.",
+    "copy": "Copy link",
+    "copied": "Link copied"
   }
 }
