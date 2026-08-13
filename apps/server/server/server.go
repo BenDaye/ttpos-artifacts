@@ -10,7 +10,6 @@ import (
 	db "faynoSync/mongod"
 	"faynoSync/redisdb"
 	"faynoSync/server/handler"
-	"faynoSync/server/handler/build"
 	"faynoSync/server/ownership"
 	"faynoSync/server/tuf"
 	"faynoSync/server/utils"
@@ -202,33 +201,6 @@ func StartServer(config *viper.Viper, flags map[string]interface{}) {
 	router.GET("/token/list", authMiddleware, utils.AdminOnlyMiddleware(mongoDatabase), handler.ListTokens)
 	router.DELETE("/token/delete", authMiddleware, utils.AdminOnlyMiddleware(mongoDatabase), handler.DeleteToken)
 
-	// Self-serve test-build trigger (PLAN-040 Track 1). Reuses the upload
-	// permission; the handler adds app-scope, branch, env and cost guards.
-	buildCfg := newBuildConfig(config)
-	buildDispatcher := build.NewDispatcher(buildCfg)
-	buildUserInterval := config.GetInt("BUILD_USER_INTERVAL_SECONDS")
-	if buildUserInterval <= 0 {
-		buildUserInterval = 300 // 5 min per-user cooldown
-	}
-	buildGlobalPerHour := config.GetInt("BUILD_GLOBAL_PER_HOUR")
-	if buildGlobalPerHour <= 0 {
-		buildGlobalPerHour = 20
-	}
-	buildLimiter := build.NewTriggerLimiter(
-		time.Duration(buildUserInterval)*time.Second,
-		1,
-		buildGlobalPerHour,
-	)
-	router.POST("/build/trigger",
-		utils.CheckPermission(utils.PermissionUpload, utils.ResourceApps, mongoDatabase),
-		func(c *gin.Context) {
-			build.Trigger(c, mongoDatabase, buildDispatcher, buildLimiter, buildCfg)
-		})
-	// Workflow-derived capabilities (what the self-serve form may offer).
-	router.GET("/build/capabilities", func(c *gin.Context) {
-		c.JSON(http.StatusOK, build.GetCapabilities())
-	})
-
 	if config.GetBool("TUF_ENABLED") {
 		tuf.SetupRoutes(router, authMiddleware, mongoDatabase, redisClient, repo)
 	}
@@ -239,49 +211,6 @@ func StartServer(config *viper.Viper, flags map[string]interface{}) {
 		port = defaultServerPort
 	}
 	router.Run(":" + port)
-}
-
-// newBuildConfig assembles the self-serve build config from viper. GitHub App
-// credentials are optional at boot: when absent, the dispatcher returns a clear
-// error at call time rather than failing startup.
-func newBuildConfig(config *viper.Viper) build.Config {
-	workflowFile := config.GetString("BUILD_WORKFLOW_FILE")
-	if workflowFile == "" {
-		workflowFile = "auto-build.yaml"
-	}
-	// ttpos-artifacts ref holding the workflow (NOT the source branch to build).
-	workflowRef := config.GetString("BUILD_WORKFLOW_REF")
-	if workflowRef == "" {
-		workflowRef = "main"
-	}
-	baseURL := config.GetString("BUILD_BASE_URL_TEST")
-	if baseURL == "" {
-		baseURL = "https://api.ttpos.dev/api/v1"
-	}
-	baseWS := config.GetString("BUILD_BASE_WS_URL_TEST")
-	if baseWS == "" {
-		baseWS = "wss://api.ttpos.dev/ws"
-	}
-	maxLegs := config.GetInt("BUILD_MAX_LEGS")
-	if maxLegs <= 0 {
-		maxLegs = build.DefaultMaxLegs
-	}
-
-	privateKey := config.GetString("GITHUB_APP_PRIVATE_KEY")
-
-	return build.Config{
-		Token:          config.GetString("GITHUB_PAT"),
-		AppID:          config.GetInt64("GITHUB_APP_ID"),
-		InstallationID: config.GetInt64("GITHUB_APP_INSTALLATION_ID"),
-		PrivateKeyPEM:  privateKey,
-		Owner:          config.GetString("GITHUB_REPO_OWNER"),
-		Repo:           config.GetString("GITHUB_REPO_NAME"),
-		WorkflowFile:   workflowFile,
-		WorkflowRef:    workflowRef,
-		BaseURLTest:    baseURL,
-		BaseWSURLTest:  baseWS,
-		MaxLegs:        maxLegs,
-	}
 }
 
 func corsMiddleware(allowedOrigins []string) gin.HandlerFunc {

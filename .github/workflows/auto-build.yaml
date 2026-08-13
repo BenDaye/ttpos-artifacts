@@ -1,43 +1,6 @@
 name: "Dispatch: Auto Build"
 
 on:
-  workflow_call:
-    inputs:
-      branch:
-        description: "构建分支"
-        required: true
-        type: string
-      env:
-        description: "构建环境"
-        required: true
-        type: string
-      package:
-        description: "要构建的应用端"
-        required: false
-        type: string
-        default: "all"
-      platform:
-        description: "构建平台"
-        required: false
-        type: string
-        default: "all"
-      base_url:
-        description: "API基础URL"
-        required: true
-        type: string
-      base_ws_url:
-        description: "WebSocket基础URL"
-        required: true
-        type: string
-      faynosync:
-        required: false
-        type: string
-        default: "force"
-      correlation_id:
-        description: "自助触发关联ID(非空时各端版本号追加 +b<id> 后缀,用于免碰撞与完成检测;常规构建留空)"
-        required: false
-        type: string
-        default: ""
   workflow_dispatch:
     inputs:
       branch:
@@ -93,6 +56,11 @@ on:
         required: true
         type: string
         default: "wss://api.ttpos.com/ws"
+      distribute_appstore:
+        description: "iOS 是否分发到 TestFlight"
+        required: false
+        default: true
+        type: boolean
       faynosync:
         description: "FaynoSync 上传模式 (on=上传, force=覆盖上传)"
         required: false
@@ -120,8 +88,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 限制 prod 构建触发人
-        # 仅手动运行总控(workflow_dispatch)时校验; dispatch.yaml 的自动 release-push 走 workflow_call(event=repository_dispatch), 不受影响
-        if: ${{ inputs.env == 'prod' && github.event_name == 'workflow_dispatch' }}
+        # 总控只剩 workflow_dispatch 一个入口, 故 env=prod 一律校验触发人, 无例外。
+        if: ${{ inputs.env == 'prod' }}
         env:
           ACTOR: ${{ github.actor }}
         run: |
@@ -152,6 +120,7 @@ jobs:
           echo "平台: ${{ inputs.platform }}"
           echo "API URL: ${{ inputs.base_url }}"
           echo "WS URL: ${{ inputs.base_ws_url }}"
+          echo "iOS 分发 TestFlight: ${{ inputs.distribute_appstore }}"
           echo "FaynoSync: ${{ inputs.faynosync }}"
           echo "========================================="
 
@@ -181,6 +150,7 @@ jobs:
             -f base_url=${{ inputs.base_url }} \
             -f base_ws_url=${{ inputs.base_ws_url }} \
             -f faynosync=${{ inputs.faynosync }} \
+            -f distribute_appstore=${{ inputs.distribute_appstore }} \
             -f correlation_id=${{ inputs.correlation_id }}
 
       - name: 触发 Windows 构建
