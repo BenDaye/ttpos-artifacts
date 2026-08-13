@@ -1,6 +1,6 @@
 # PLAN-043 短链数据化：从反代配置表改为 app 的派生属性
 
-- **status**: implemented（代码完成、本机质量门全绿；两步上线待授权执行，见「上线顺序」）
+- **status**: deployed（PR #57 / squash `929a501`；`server-v1.0.5` + `web-v0.2.19` @ `cfc64b0`；staging 与 prod 均已切换，15 条短链逐条零回归。验收明细见 docs/task/ENH-020.md）
 - **task**: ENH-020
 - **createdAt**: 2026-08-12
 - **关联**: REFACTOR-007 / PLAN-033（把 /dl 迁到 Caddy，本计划就 /dl 部分反向）、BUG-017 / PLAN-039（`resolve=artifact-latest`，语义保留不动）、ENH-019（`--check` 漂移门，本计划会让它的主要守护对象消失）、PLAN-037（Caddy 边界）
