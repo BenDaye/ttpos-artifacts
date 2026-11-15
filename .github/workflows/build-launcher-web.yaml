@@ -1,0 +1,68 @@
+name: Build Launcher Web (preview)
+
+# 用 ttpos-flutter/launcher 的 Dockerfile 构建员工端（pos/shop/kds/tablet/assistant 等）的 Flutter Web 预览产物。
+# 只上传网页产物（artifact），不推镜像、不部署。接口地址在运行时通过 localStorage 的 DEV_API_BASE_OVERRIDE 指定。
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "ttpos-flutter 分支"
+        required: true
+        type: string
+        default: "feature/jp-edition"
+      targets:
+        description: "要构建的端（空格分隔）：pos shop kds tablet assistant kiosk qds"
+        required: true
+        type: string
+        default: "pos shop kds tablet assistant"
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.m.outputs.matrix }}
+    steps:
+      - id: m
+        run: |
+          json=$(printf '%s\n' ${{ inputs.targets }} | jq -R . | jq -cs .)
+          echo "matrix=$json" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ${{ fromJson(needs.plan.outputs.matrix) }}
+    steps:
+      - name: Checkout ttpos-flutter
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.PRIVATE_REPO_NAME }}
+          token: ${{ secrets.PRIVATE_REPO_PAT }}
+          ref: ${{ inputs.branch }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build ${{ matrix.target }} web
+        run: |
+          docker buildx build \
+            -f launcher/build/Dockerfile.flutter-web \
+            --build-arg TARGET_ID=${{ matrix.target }} \
+            --target artifact \
+            --output type=local,dest=out/${{ matrix.target }} \
+            .
+          ls -la out/${{ matrix.target }} | head
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: launcher-web-${{ matrix.target }}
+          path: out/${{ matrix.target }}
+          retention-days: 7
